@@ -101,10 +101,6 @@ linters-settings:
       # CAPO
       - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1
         alias: infrav1alpha1
-      - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6
-        alias: infrav1alpha6
-      - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7
-        alias: infrav1alpha7
       - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
         alias: infrav1
       - pkg: sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors

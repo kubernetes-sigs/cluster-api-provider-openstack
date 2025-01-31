@@ -28,8 +28,6 @@ import (
 	clientset "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset"
 	infrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha1"
 	fakeinfrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha1/fake"
-	infrastructurev1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha7"
-	fakeinfrastructurev1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha7/fake"
 	infrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1"
 	fakeinfrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1/fake"
 )
@@ -123,11 +121,6 @@ var (
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client
 func (c *Clientset) InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface {
 	return &fakeinfrastructurev1alpha1.FakeInfrastructureV1alpha1{Fake: &c.Fake}
-}
-
-// InfrastructureV1alpha7 retrieves the InfrastructureV1alpha7Client
-func (c *Clientset) InfrastructureV1alpha7() infrastructurev1alpha7.InfrastructureV1alpha7Interface {
-	return &fakeinfrastructurev1alpha7.FakeInfrastructureV1alpha7{Fake: &c.Fake}
 }
 
 // InfrastructureV1beta1 retrieves the InfrastructureV1beta1Client

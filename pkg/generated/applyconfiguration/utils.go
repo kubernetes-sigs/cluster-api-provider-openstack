@@ -23,10 +23,8 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	testing "k8s.io/client-go/testing"
 	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	apiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha1"
-	apiv1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha7"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 	internal "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/internal"
 )
@@ -46,82 +44,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1alpha1.ResolvedServerSpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ServerResources"):
 		return &apiv1alpha1.ServerResourcesApplyConfiguration{}
-
-		// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha7
-	case v1alpha7.SchemeGroupVersion.WithKind("AdditionalBlockDevice"):
-		return &apiv1alpha7.AdditionalBlockDeviceApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("AddressPair"):
-		return &apiv1alpha7.AddressPairApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("APIServerLoadBalancer"):
-		return &apiv1alpha7.APIServerLoadBalancerApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("Bastion"):
-		return &apiv1alpha7.BastionApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("BastionStatus"):
-		return &apiv1alpha7.BastionStatusApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("BindingProfile"):
-		return &apiv1alpha7.BindingProfileApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("BlockDeviceStorage"):
-		return &apiv1alpha7.BlockDeviceStorageApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("BlockDeviceVolume"):
-		return &apiv1alpha7.BlockDeviceVolumeApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("ExternalRouterIPParam"):
-		return &apiv1alpha7.ExternalRouterIPParamApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("FixedIP"):
-		return &apiv1alpha7.FixedIPApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("LoadBalancer"):
-		return &apiv1alpha7.LoadBalancerApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("NetworkFilter"):
-		return &apiv1alpha7.NetworkFilterApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("NetworkStatus"):
-		return &apiv1alpha7.NetworkStatusApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("NetworkStatusWithSubnets"):
-		return &apiv1alpha7.NetworkStatusWithSubnetsApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackCluster"):
-		return &apiv1alpha7.OpenStackClusterApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackClusterSpec"):
-		return &apiv1alpha7.OpenStackClusterSpecApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackClusterStatus"):
-		return &apiv1alpha7.OpenStackClusterStatusApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackClusterTemplate"):
-		return &apiv1alpha7.OpenStackClusterTemplateApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackClusterTemplateResource"):
-		return &apiv1alpha7.OpenStackClusterTemplateResourceApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackClusterTemplateSpec"):
-		return &apiv1alpha7.OpenStackClusterTemplateSpecApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackIdentityReference"):
-		return &apiv1alpha7.OpenStackIdentityReferenceApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackMachine"):
-		return &apiv1alpha7.OpenStackMachineApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackMachineSpec"):
-		return &apiv1alpha7.OpenStackMachineSpecApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackMachineStatus"):
-		return &apiv1alpha7.OpenStackMachineStatusApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackMachineTemplate"):
-		return &apiv1alpha7.OpenStackMachineTemplateApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackMachineTemplateResource"):
-		return &apiv1alpha7.OpenStackMachineTemplateResourceApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("OpenStackMachineTemplateSpec"):
-		return &apiv1alpha7.OpenStackMachineTemplateSpecApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("PortOpts"):
-		return &apiv1alpha7.PortOptsApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("RootVolume"):
-		return &apiv1alpha7.RootVolumeApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("Router"):
-		return &apiv1alpha7.RouterApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("RouterFilter"):
-		return &apiv1alpha7.RouterFilterApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("SecurityGroup"):
-		return &apiv1alpha7.SecurityGroupApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("SecurityGroupFilter"):
-		return &apiv1alpha7.SecurityGroupFilterApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("SecurityGroupRule"):
-		return &apiv1alpha7.SecurityGroupRuleApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("Subnet"):
-		return &apiv1alpha7.SubnetApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("SubnetFilter"):
-		return &apiv1alpha7.SubnetFilterApplyConfiguration{}
-	case v1alpha7.SchemeGroupVersion.WithKind("ValueSpec"):
-		return &apiv1alpha7.ValueSpecApplyConfiguration{}
 
 		// Group=infrastructure.cluster.x-k8s.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithKind("AdditionalBlockDevice"):

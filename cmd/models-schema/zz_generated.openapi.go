@@ -31,496 +31,455 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                      schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
-		"k8s.io/api/core/v1.Affinity":                                                              schema_k8sio_api_core_v1_Affinity(ref),
-		"k8s.io/api/core/v1.AppArmorProfile":                                                       schema_k8sio_api_core_v1_AppArmorProfile(ref),
-		"k8s.io/api/core/v1.AttachedVolume":                                                        schema_k8sio_api_core_v1_AttachedVolume(ref),
-		"k8s.io/api/core/v1.AvoidPods":                                                             schema_k8sio_api_core_v1_AvoidPods(ref),
-		"k8s.io/api/core/v1.AzureDiskVolumeSource":                                                 schema_k8sio_api_core_v1_AzureDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.AzureFilePersistentVolumeSource":                                       schema_k8sio_api_core_v1_AzureFilePersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.AzureFileVolumeSource":                                                 schema_k8sio_api_core_v1_AzureFileVolumeSource(ref),
-		"k8s.io/api/core/v1.Binding":                                                               schema_k8sio_api_core_v1_Binding(ref),
-		"k8s.io/api/core/v1.CSIPersistentVolumeSource":                                             schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CSIVolumeSource":                                                       schema_k8sio_api_core_v1_CSIVolumeSource(ref),
-		"k8s.io/api/core/v1.Capabilities":                                                          schema_k8sio_api_core_v1_Capabilities(ref),
-		"k8s.io/api/core/v1.CephFSPersistentVolumeSource":                                          schema_k8sio_api_core_v1_CephFSPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CephFSVolumeSource":                                                    schema_k8sio_api_core_v1_CephFSVolumeSource(ref),
-		"k8s.io/api/core/v1.CinderPersistentVolumeSource":                                          schema_k8sio_api_core_v1_CinderPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CinderVolumeSource":                                                    schema_k8sio_api_core_v1_CinderVolumeSource(ref),
-		"k8s.io/api/core/v1.ClientIPConfig":                                                        schema_k8sio_api_core_v1_ClientIPConfig(ref),
-		"k8s.io/api/core/v1.ClusterTrustBundleProjection":                                          schema_k8sio_api_core_v1_ClusterTrustBundleProjection(ref),
-		"k8s.io/api/core/v1.ComponentCondition":                                                    schema_k8sio_api_core_v1_ComponentCondition(ref),
-		"k8s.io/api/core/v1.ComponentStatus":                                                       schema_k8sio_api_core_v1_ComponentStatus(ref),
-		"k8s.io/api/core/v1.ComponentStatusList":                                                   schema_k8sio_api_core_v1_ComponentStatusList(ref),
-		"k8s.io/api/core/v1.ConfigMap":                                                             schema_k8sio_api_core_v1_ConfigMap(ref),
-		"k8s.io/api/core/v1.ConfigMapEnvSource":                                                    schema_k8sio_api_core_v1_ConfigMapEnvSource(ref),
-		"k8s.io/api/core/v1.ConfigMapKeySelector":                                                  schema_k8sio_api_core_v1_ConfigMapKeySelector(ref),
-		"k8s.io/api/core/v1.ConfigMapList":                                                         schema_k8sio_api_core_v1_ConfigMapList(ref),
-		"k8s.io/api/core/v1.ConfigMapNodeConfigSource":                                             schema_k8sio_api_core_v1_ConfigMapNodeConfigSource(ref),
-		"k8s.io/api/core/v1.ConfigMapProjection":                                                   schema_k8sio_api_core_v1_ConfigMapProjection(ref),
-		"k8s.io/api/core/v1.ConfigMapVolumeSource":                                                 schema_k8sio_api_core_v1_ConfigMapVolumeSource(ref),
-		"k8s.io/api/core/v1.Container":                                                             schema_k8sio_api_core_v1_Container(ref),
-		"k8s.io/api/core/v1.ContainerImage":                                                        schema_k8sio_api_core_v1_ContainerImage(ref),
-		"k8s.io/api/core/v1.ContainerPort":                                                         schema_k8sio_api_core_v1_ContainerPort(ref),
-		"k8s.io/api/core/v1.ContainerResizePolicy":                                                 schema_k8sio_api_core_v1_ContainerResizePolicy(ref),
-		"k8s.io/api/core/v1.ContainerState":                                                        schema_k8sio_api_core_v1_ContainerState(ref),
-		"k8s.io/api/core/v1.ContainerStateRunning":                                                 schema_k8sio_api_core_v1_ContainerStateRunning(ref),
-		"k8s.io/api/core/v1.ContainerStateTerminated":                                              schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
-		"k8s.io/api/core/v1.ContainerStateWaiting":                                                 schema_k8sio_api_core_v1_ContainerStateWaiting(ref),
-		"k8s.io/api/core/v1.ContainerStatus":                                                       schema_k8sio_api_core_v1_ContainerStatus(ref),
-		"k8s.io/api/core/v1.ContainerUser":                                                         schema_k8sio_api_core_v1_ContainerUser(ref),
-		"k8s.io/api/core/v1.DaemonEndpoint":                                                        schema_k8sio_api_core_v1_DaemonEndpoint(ref),
-		"k8s.io/api/core/v1.DownwardAPIProjection":                                                 schema_k8sio_api_core_v1_DownwardAPIProjection(ref),
-		"k8s.io/api/core/v1.DownwardAPIVolumeFile":                                                 schema_k8sio_api_core_v1_DownwardAPIVolumeFile(ref),
-		"k8s.io/api/core/v1.DownwardAPIVolumeSource":                                               schema_k8sio_api_core_v1_DownwardAPIVolumeSource(ref),
-		"k8s.io/api/core/v1.EmptyDirVolumeSource":                                                  schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref),
-		"k8s.io/api/core/v1.EndpointAddress":                                                       schema_k8sio_api_core_v1_EndpointAddress(ref),
-		"k8s.io/api/core/v1.EndpointPort":                                                          schema_k8sio_api_core_v1_EndpointPort(ref),
-		"k8s.io/api/core/v1.EndpointSubset":                                                        schema_k8sio_api_core_v1_EndpointSubset(ref),
-		"k8s.io/api/core/v1.Endpoints":                                                             schema_k8sio_api_core_v1_Endpoints(ref),
-		"k8s.io/api/core/v1.EndpointsList":                                                         schema_k8sio_api_core_v1_EndpointsList(ref),
-		"k8s.io/api/core/v1.EnvFromSource":                                                         schema_k8sio_api_core_v1_EnvFromSource(ref),
-		"k8s.io/api/core/v1.EnvVar":                                                                schema_k8sio_api_core_v1_EnvVar(ref),
-		"k8s.io/api/core/v1.EnvVarSource":                                                          schema_k8sio_api_core_v1_EnvVarSource(ref),
-		"k8s.io/api/core/v1.EphemeralContainer":                                                    schema_k8sio_api_core_v1_EphemeralContainer(ref),
-		"k8s.io/api/core/v1.EphemeralContainerCommon":                                              schema_k8sio_api_core_v1_EphemeralContainerCommon(ref),
-		"k8s.io/api/core/v1.EphemeralVolumeSource":                                                 schema_k8sio_api_core_v1_EphemeralVolumeSource(ref),
-		"k8s.io/api/core/v1.Event":                                                                 schema_k8sio_api_core_v1_Event(ref),
-		"k8s.io/api/core/v1.EventList":                                                             schema_k8sio_api_core_v1_EventList(ref),
-		"k8s.io/api/core/v1.EventSeries":                                                           schema_k8sio_api_core_v1_EventSeries(ref),
-		"k8s.io/api/core/v1.EventSource":                                                           schema_k8sio_api_core_v1_EventSource(ref),
-		"k8s.io/api/core/v1.ExecAction":                                                            schema_k8sio_api_core_v1_ExecAction(ref),
-		"k8s.io/api/core/v1.FCVolumeSource":                                                        schema_k8sio_api_core_v1_FCVolumeSource(ref),
-		"k8s.io/api/core/v1.FlexPersistentVolumeSource":                                            schema_k8sio_api_core_v1_FlexPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.FlexVolumeSource":                                                      schema_k8sio_api_core_v1_FlexVolumeSource(ref),
-		"k8s.io/api/core/v1.FlockerVolumeSource":                                                   schema_k8sio_api_core_v1_FlockerVolumeSource(ref),
-		"k8s.io/api/core/v1.GCEPersistentDiskVolumeSource":                                         schema_k8sio_api_core_v1_GCEPersistentDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.GRPCAction":                                                            schema_k8sio_api_core_v1_GRPCAction(ref),
-		"k8s.io/api/core/v1.GitRepoVolumeSource":                                                   schema_k8sio_api_core_v1_GitRepoVolumeSource(ref),
-		"k8s.io/api/core/v1.GlusterfsPersistentVolumeSource":                                       schema_k8sio_api_core_v1_GlusterfsPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.GlusterfsVolumeSource":                                                 schema_k8sio_api_core_v1_GlusterfsVolumeSource(ref),
-		"k8s.io/api/core/v1.HTTPGetAction":                                                         schema_k8sio_api_core_v1_HTTPGetAction(ref),
-		"k8s.io/api/core/v1.HTTPHeader":                                                            schema_k8sio_api_core_v1_HTTPHeader(ref),
-		"k8s.io/api/core/v1.HostAlias":                                                             schema_k8sio_api_core_v1_HostAlias(ref),
-		"k8s.io/api/core/v1.HostIP":                                                                schema_k8sio_api_core_v1_HostIP(ref),
-		"k8s.io/api/core/v1.HostPathVolumeSource":                                                  schema_k8sio_api_core_v1_HostPathVolumeSource(ref),
-		"k8s.io/api/core/v1.ISCSIPersistentVolumeSource":                                           schema_k8sio_api_core_v1_ISCSIPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.ISCSIVolumeSource":                                                     schema_k8sio_api_core_v1_ISCSIVolumeSource(ref),
-		"k8s.io/api/core/v1.ImageVolumeSource":                                                     schema_k8sio_api_core_v1_ImageVolumeSource(ref),
-		"k8s.io/api/core/v1.KeyToPath":                                                             schema_k8sio_api_core_v1_KeyToPath(ref),
-		"k8s.io/api/core/v1.Lifecycle":                                                             schema_k8sio_api_core_v1_Lifecycle(ref),
-		"k8s.io/api/core/v1.LifecycleHandler":                                                      schema_k8sio_api_core_v1_LifecycleHandler(ref),
-		"k8s.io/api/core/v1.LimitRange":                                                            schema_k8sio_api_core_v1_LimitRange(ref),
-		"k8s.io/api/core/v1.LimitRangeItem":                                                        schema_k8sio_api_core_v1_LimitRangeItem(ref),
-		"k8s.io/api/core/v1.LimitRangeList":                                                        schema_k8sio_api_core_v1_LimitRangeList(ref),
-		"k8s.io/api/core/v1.LimitRangeSpec":                                                        schema_k8sio_api_core_v1_LimitRangeSpec(ref),
-		"k8s.io/api/core/v1.LinuxContainerUser":                                                    schema_k8sio_api_core_v1_LinuxContainerUser(ref),
-		"k8s.io/api/core/v1.List":                                                                  schema_k8sio_api_core_v1_List(ref),
-		"k8s.io/api/core/v1.LoadBalancerIngress":                                                   schema_k8sio_api_core_v1_LoadBalancerIngress(ref),
-		"k8s.io/api/core/v1.LoadBalancerStatus":                                                    schema_k8sio_api_core_v1_LoadBalancerStatus(ref),
-		"k8s.io/api/core/v1.LocalObjectReference":                                                  schema_k8sio_api_core_v1_LocalObjectReference(ref),
-		"k8s.io/api/core/v1.LocalVolumeSource":                                                     schema_k8sio_api_core_v1_LocalVolumeSource(ref),
-		"k8s.io/api/core/v1.ModifyVolumeStatus":                                                    schema_k8sio_api_core_v1_ModifyVolumeStatus(ref),
-		"k8s.io/api/core/v1.NFSVolumeSource":                                                       schema_k8sio_api_core_v1_NFSVolumeSource(ref),
-		"k8s.io/api/core/v1.Namespace":                                                             schema_k8sio_api_core_v1_Namespace(ref),
-		"k8s.io/api/core/v1.NamespaceCondition":                                                    schema_k8sio_api_core_v1_NamespaceCondition(ref),
-		"k8s.io/api/core/v1.NamespaceList":                                                         schema_k8sio_api_core_v1_NamespaceList(ref),
-		"k8s.io/api/core/v1.NamespaceSpec":                                                         schema_k8sio_api_core_v1_NamespaceSpec(ref),
-		"k8s.io/api/core/v1.NamespaceStatus":                                                       schema_k8sio_api_core_v1_NamespaceStatus(ref),
-		"k8s.io/api/core/v1.Node":                                                                  schema_k8sio_api_core_v1_Node(ref),
-		"k8s.io/api/core/v1.NodeAddress":                                                           schema_k8sio_api_core_v1_NodeAddress(ref),
-		"k8s.io/api/core/v1.NodeAffinity":                                                          schema_k8sio_api_core_v1_NodeAffinity(ref),
-		"k8s.io/api/core/v1.NodeCondition":                                                         schema_k8sio_api_core_v1_NodeCondition(ref),
-		"k8s.io/api/core/v1.NodeConfigSource":                                                      schema_k8sio_api_core_v1_NodeConfigSource(ref),
-		"k8s.io/api/core/v1.NodeConfigStatus":                                                      schema_k8sio_api_core_v1_NodeConfigStatus(ref),
-		"k8s.io/api/core/v1.NodeDaemonEndpoints":                                                   schema_k8sio_api_core_v1_NodeDaemonEndpoints(ref),
-		"k8s.io/api/core/v1.NodeFeatures":                                                          schema_k8sio_api_core_v1_NodeFeatures(ref),
-		"k8s.io/api/core/v1.NodeList":                                                              schema_k8sio_api_core_v1_NodeList(ref),
-		"k8s.io/api/core/v1.NodeProxyOptions":                                                      schema_k8sio_api_core_v1_NodeProxyOptions(ref),
-		"k8s.io/api/core/v1.NodeRuntimeHandler":                                                    schema_k8sio_api_core_v1_NodeRuntimeHandler(ref),
-		"k8s.io/api/core/v1.NodeRuntimeHandlerFeatures":                                            schema_k8sio_api_core_v1_NodeRuntimeHandlerFeatures(ref),
-		"k8s.io/api/core/v1.NodeSelector":                                                          schema_k8sio_api_core_v1_NodeSelector(ref),
-		"k8s.io/api/core/v1.NodeSelectorRequirement":                                               schema_k8sio_api_core_v1_NodeSelectorRequirement(ref),
-		"k8s.io/api/core/v1.NodeSelectorTerm":                                                      schema_k8sio_api_core_v1_NodeSelectorTerm(ref),
-		"k8s.io/api/core/v1.NodeSpec":                                                              schema_k8sio_api_core_v1_NodeSpec(ref),
-		"k8s.io/api/core/v1.NodeStatus":                                                            schema_k8sio_api_core_v1_NodeStatus(ref),
-		"k8s.io/api/core/v1.NodeSystemInfo":                                                        schema_k8sio_api_core_v1_NodeSystemInfo(ref),
-		"k8s.io/api/core/v1.ObjectFieldSelector":                                                   schema_k8sio_api_core_v1_ObjectFieldSelector(ref),
-		"k8s.io/api/core/v1.ObjectReference":                                                       schema_k8sio_api_core_v1_ObjectReference(ref),
-		"k8s.io/api/core/v1.PersistentVolume":                                                      schema_k8sio_api_core_v1_PersistentVolume(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaim":                                                 schema_k8sio_api_core_v1_PersistentVolumeClaim(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimCondition":                                        schema_k8sio_api_core_v1_PersistentVolumeClaimCondition(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimList":                                             schema_k8sio_api_core_v1_PersistentVolumeClaimList(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimSpec":                                             schema_k8sio_api_core_v1_PersistentVolumeClaimSpec(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimStatus":                                           schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimTemplate":                                         schema_k8sio_api_core_v1_PersistentVolumeClaimTemplate(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource":                                     schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref),
-		"k8s.io/api/core/v1.PersistentVolumeList":                                                  schema_k8sio_api_core_v1_PersistentVolumeList(ref),
-		"k8s.io/api/core/v1.PersistentVolumeSource":                                                schema_k8sio_api_core_v1_PersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.PersistentVolumeSpec":                                                  schema_k8sio_api_core_v1_PersistentVolumeSpec(ref),
-		"k8s.io/api/core/v1.PersistentVolumeStatus":                                                schema_k8sio_api_core_v1_PersistentVolumeStatus(ref),
-		"k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource":                                      schema_k8sio_api_core_v1_PhotonPersistentDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.Pod":                                                                   schema_k8sio_api_core_v1_Pod(ref),
-		"k8s.io/api/core/v1.PodAffinity":                                                           schema_k8sio_api_core_v1_PodAffinity(ref),
-		"k8s.io/api/core/v1.PodAffinityTerm":                                                       schema_k8sio_api_core_v1_PodAffinityTerm(ref),
-		"k8s.io/api/core/v1.PodAntiAffinity":                                                       schema_k8sio_api_core_v1_PodAntiAffinity(ref),
-		"k8s.io/api/core/v1.PodAttachOptions":                                                      schema_k8sio_api_core_v1_PodAttachOptions(ref),
-		"k8s.io/api/core/v1.PodCondition":                                                          schema_k8sio_api_core_v1_PodCondition(ref),
-		"k8s.io/api/core/v1.PodDNSConfig":                                                          schema_k8sio_api_core_v1_PodDNSConfig(ref),
-		"k8s.io/api/core/v1.PodDNSConfigOption":                                                    schema_k8sio_api_core_v1_PodDNSConfigOption(ref),
-		"k8s.io/api/core/v1.PodExecOptions":                                                        schema_k8sio_api_core_v1_PodExecOptions(ref),
-		"k8s.io/api/core/v1.PodIP":                                                                 schema_k8sio_api_core_v1_PodIP(ref),
-		"k8s.io/api/core/v1.PodList":                                                               schema_k8sio_api_core_v1_PodList(ref),
-		"k8s.io/api/core/v1.PodLogOptions":                                                         schema_k8sio_api_core_v1_PodLogOptions(ref),
-		"k8s.io/api/core/v1.PodOS":                                                                 schema_k8sio_api_core_v1_PodOS(ref),
-		"k8s.io/api/core/v1.PodPortForwardOptions":                                                 schema_k8sio_api_core_v1_PodPortForwardOptions(ref),
-		"k8s.io/api/core/v1.PodProxyOptions":                                                       schema_k8sio_api_core_v1_PodProxyOptions(ref),
-		"k8s.io/api/core/v1.PodReadinessGate":                                                      schema_k8sio_api_core_v1_PodReadinessGate(ref),
-		"k8s.io/api/core/v1.PodResourceClaim":                                                      schema_k8sio_api_core_v1_PodResourceClaim(ref),
-		"k8s.io/api/core/v1.PodResourceClaimStatus":                                                schema_k8sio_api_core_v1_PodResourceClaimStatus(ref),
-		"k8s.io/api/core/v1.PodSchedulingGate":                                                     schema_k8sio_api_core_v1_PodSchedulingGate(ref),
-		"k8s.io/api/core/v1.PodSecurityContext":                                                    schema_k8sio_api_core_v1_PodSecurityContext(ref),
-		"k8s.io/api/core/v1.PodSignature":                                                          schema_k8sio_api_core_v1_PodSignature(ref),
-		"k8s.io/api/core/v1.PodSpec":                                                               schema_k8sio_api_core_v1_PodSpec(ref),
-		"k8s.io/api/core/v1.PodStatus":                                                             schema_k8sio_api_core_v1_PodStatus(ref),
-		"k8s.io/api/core/v1.PodStatusResult":                                                       schema_k8sio_api_core_v1_PodStatusResult(ref),
-		"k8s.io/api/core/v1.PodTemplate":                                                           schema_k8sio_api_core_v1_PodTemplate(ref),
-		"k8s.io/api/core/v1.PodTemplateList":                                                       schema_k8sio_api_core_v1_PodTemplateList(ref),
-		"k8s.io/api/core/v1.PodTemplateSpec":                                                       schema_k8sio_api_core_v1_PodTemplateSpec(ref),
-		"k8s.io/api/core/v1.PortStatus":                                                            schema_k8sio_api_core_v1_PortStatus(ref),
-		"k8s.io/api/core/v1.PortworxVolumeSource":                                                  schema_k8sio_api_core_v1_PortworxVolumeSource(ref),
-		"k8s.io/api/core/v1.PreferAvoidPodsEntry":                                                  schema_k8sio_api_core_v1_PreferAvoidPodsEntry(ref),
-		"k8s.io/api/core/v1.PreferredSchedulingTerm":                                               schema_k8sio_api_core_v1_PreferredSchedulingTerm(ref),
-		"k8s.io/api/core/v1.Probe":                                                                 schema_k8sio_api_core_v1_Probe(ref),
-		"k8s.io/api/core/v1.ProbeHandler":                                                          schema_k8sio_api_core_v1_ProbeHandler(ref),
-		"k8s.io/api/core/v1.ProjectedVolumeSource":                                                 schema_k8sio_api_core_v1_ProjectedVolumeSource(ref),
-		"k8s.io/api/core/v1.QuobyteVolumeSource":                                                   schema_k8sio_api_core_v1_QuobyteVolumeSource(ref),
-		"k8s.io/api/core/v1.RBDPersistentVolumeSource":                                             schema_k8sio_api_core_v1_RBDPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.RBDVolumeSource":                                                       schema_k8sio_api_core_v1_RBDVolumeSource(ref),
-		"k8s.io/api/core/v1.RangeAllocation":                                                       schema_k8sio_api_core_v1_RangeAllocation(ref),
-		"k8s.io/api/core/v1.ReplicationController":                                                 schema_k8sio_api_core_v1_ReplicationController(ref),
-		"k8s.io/api/core/v1.ReplicationControllerCondition":                                        schema_k8sio_api_core_v1_ReplicationControllerCondition(ref),
-		"k8s.io/api/core/v1.ReplicationControllerList":                                             schema_k8sio_api_core_v1_ReplicationControllerList(ref),
-		"k8s.io/api/core/v1.ReplicationControllerSpec":                                             schema_k8sio_api_core_v1_ReplicationControllerSpec(ref),
-		"k8s.io/api/core/v1.ReplicationControllerStatus":                                           schema_k8sio_api_core_v1_ReplicationControllerStatus(ref),
-		"k8s.io/api/core/v1.ResourceClaim":                                                         schema_k8sio_api_core_v1_ResourceClaim(ref),
-		"k8s.io/api/core/v1.ResourceFieldSelector":                                                 schema_k8sio_api_core_v1_ResourceFieldSelector(ref),
-		"k8s.io/api/core/v1.ResourceHealth":                                                        schema_k8sio_api_core_v1_ResourceHealth(ref),
-		"k8s.io/api/core/v1.ResourceQuota":                                                         schema_k8sio_api_core_v1_ResourceQuota(ref),
-		"k8s.io/api/core/v1.ResourceQuotaList":                                                     schema_k8sio_api_core_v1_ResourceQuotaList(ref),
-		"k8s.io/api/core/v1.ResourceQuotaSpec":                                                     schema_k8sio_api_core_v1_ResourceQuotaSpec(ref),
-		"k8s.io/api/core/v1.ResourceQuotaStatus":                                                   schema_k8sio_api_core_v1_ResourceQuotaStatus(ref),
-		"k8s.io/api/core/v1.ResourceRequirements":                                                  schema_k8sio_api_core_v1_ResourceRequirements(ref),
-		"k8s.io/api/core/v1.ResourceStatus":                                                        schema_k8sio_api_core_v1_ResourceStatus(ref),
-		"k8s.io/api/core/v1.SELinuxOptions":                                                        schema_k8sio_api_core_v1_SELinuxOptions(ref),
-		"k8s.io/api/core/v1.ScaleIOPersistentVolumeSource":                                         schema_k8sio_api_core_v1_ScaleIOPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.ScaleIOVolumeSource":                                                   schema_k8sio_api_core_v1_ScaleIOVolumeSource(ref),
-		"k8s.io/api/core/v1.ScopeSelector":                                                         schema_k8sio_api_core_v1_ScopeSelector(ref),
-		"k8s.io/api/core/v1.ScopedResourceSelectorRequirement":                                     schema_k8sio_api_core_v1_ScopedResourceSelectorRequirement(ref),
-		"k8s.io/api/core/v1.SeccompProfile":                                                        schema_k8sio_api_core_v1_SeccompProfile(ref),
-		"k8s.io/api/core/v1.Secret":                                                                schema_k8sio_api_core_v1_Secret(ref),
-		"k8s.io/api/core/v1.SecretEnvSource":                                                       schema_k8sio_api_core_v1_SecretEnvSource(ref),
-		"k8s.io/api/core/v1.SecretKeySelector":                                                     schema_k8sio_api_core_v1_SecretKeySelector(ref),
-		"k8s.io/api/core/v1.SecretList":                                                            schema_k8sio_api_core_v1_SecretList(ref),
-		"k8s.io/api/core/v1.SecretProjection":                                                      schema_k8sio_api_core_v1_SecretProjection(ref),
-		"k8s.io/api/core/v1.SecretReference":                                                       schema_k8sio_api_core_v1_SecretReference(ref),
-		"k8s.io/api/core/v1.SecretVolumeSource":                                                    schema_k8sio_api_core_v1_SecretVolumeSource(ref),
-		"k8s.io/api/core/v1.SecurityContext":                                                       schema_k8sio_api_core_v1_SecurityContext(ref),
-		"k8s.io/api/core/v1.SerializedReference":                                                   schema_k8sio_api_core_v1_SerializedReference(ref),
-		"k8s.io/api/core/v1.Service":                                                               schema_k8sio_api_core_v1_Service(ref),
-		"k8s.io/api/core/v1.ServiceAccount":                                                        schema_k8sio_api_core_v1_ServiceAccount(ref),
-		"k8s.io/api/core/v1.ServiceAccountList":                                                    schema_k8sio_api_core_v1_ServiceAccountList(ref),
-		"k8s.io/api/core/v1.ServiceAccountTokenProjection":                                         schema_k8sio_api_core_v1_ServiceAccountTokenProjection(ref),
-		"k8s.io/api/core/v1.ServiceList":                                                           schema_k8sio_api_core_v1_ServiceList(ref),
-		"k8s.io/api/core/v1.ServicePort":                                                           schema_k8sio_api_core_v1_ServicePort(ref),
-		"k8s.io/api/core/v1.ServiceProxyOptions":                                                   schema_k8sio_api_core_v1_ServiceProxyOptions(ref),
-		"k8s.io/api/core/v1.ServiceSpec":                                                           schema_k8sio_api_core_v1_ServiceSpec(ref),
-		"k8s.io/api/core/v1.ServiceStatus":                                                         schema_k8sio_api_core_v1_ServiceStatus(ref),
-		"k8s.io/api/core/v1.SessionAffinityConfig":                                                 schema_k8sio_api_core_v1_SessionAffinityConfig(ref),
-		"k8s.io/api/core/v1.SleepAction":                                                           schema_k8sio_api_core_v1_SleepAction(ref),
-		"k8s.io/api/core/v1.StorageOSPersistentVolumeSource":                                       schema_k8sio_api_core_v1_StorageOSPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.StorageOSVolumeSource":                                                 schema_k8sio_api_core_v1_StorageOSVolumeSource(ref),
-		"k8s.io/api/core/v1.Sysctl":                                                                schema_k8sio_api_core_v1_Sysctl(ref),
-		"k8s.io/api/core/v1.TCPSocketAction":                                                       schema_k8sio_api_core_v1_TCPSocketAction(ref),
-		"k8s.io/api/core/v1.Taint":                                                                 schema_k8sio_api_core_v1_Taint(ref),
-		"k8s.io/api/core/v1.Toleration":                                                            schema_k8sio_api_core_v1_Toleration(ref),
-		"k8s.io/api/core/v1.TopologySelectorLabelRequirement":                                      schema_k8sio_api_core_v1_TopologySelectorLabelRequirement(ref),
-		"k8s.io/api/core/v1.TopologySelectorTerm":                                                  schema_k8sio_api_core_v1_TopologySelectorTerm(ref),
-		"k8s.io/api/core/v1.TopologySpreadConstraint":                                              schema_k8sio_api_core_v1_TopologySpreadConstraint(ref),
-		"k8s.io/api/core/v1.TypedLocalObjectReference":                                             schema_k8sio_api_core_v1_TypedLocalObjectReference(ref),
-		"k8s.io/api/core/v1.TypedObjectReference":                                                  schema_k8sio_api_core_v1_TypedObjectReference(ref),
-		"k8s.io/api/core/v1.Volume":                                                                schema_k8sio_api_core_v1_Volume(ref),
-		"k8s.io/api/core/v1.VolumeDevice":                                                          schema_k8sio_api_core_v1_VolumeDevice(ref),
-		"k8s.io/api/core/v1.VolumeMount":                                                           schema_k8sio_api_core_v1_VolumeMount(ref),
-		"k8s.io/api/core/v1.VolumeMountStatus":                                                     schema_k8sio_api_core_v1_VolumeMountStatus(ref),
-		"k8s.io/api/core/v1.VolumeNodeAffinity":                                                    schema_k8sio_api_core_v1_VolumeNodeAffinity(ref),
-		"k8s.io/api/core/v1.VolumeProjection":                                                      schema_k8sio_api_core_v1_VolumeProjection(ref),
-		"k8s.io/api/core/v1.VolumeResourceRequirements":                                            schema_k8sio_api_core_v1_VolumeResourceRequirements(ref),
-		"k8s.io/api/core/v1.VolumeSource":                                                          schema_k8sio_api_core_v1_VolumeSource(ref),
-		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":                                        schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                                               schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
-		"k8s.io/api/core/v1.WindowsSecurityContextOptions":                                         schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                            schema_pkg_apis_meta_v1_APIGroup(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                        schema_pkg_apis_meta_v1_APIGroupList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                         schema_pkg_apis_meta_v1_APIResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                     schema_pkg_apis_meta_v1_APIResourceList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                         schema_pkg_apis_meta_v1_APIVersions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                        schema_pkg_apis_meta_v1_ApplyOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                           schema_pkg_apis_meta_v1_Condition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                       schema_pkg_apis_meta_v1_CreateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                       schema_pkg_apis_meta_v1_DeleteOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                            schema_pkg_apis_meta_v1_Duration(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldSelectorRequirement":                            schema_pkg_apis_meta_v1_FieldSelectorRequirement(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                            schema_pkg_apis_meta_v1_FieldsV1(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                          schema_pkg_apis_meta_v1_GetOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                           schema_pkg_apis_meta_v1_GroupKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                       schema_pkg_apis_meta_v1_GroupResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                        schema_pkg_apis_meta_v1_GroupVersion(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                            schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                    schema_pkg_apis_meta_v1_GroupVersionKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                                schema_pkg_apis_meta_v1_GroupVersionResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                       schema_pkg_apis_meta_v1_InternalEvent(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                       schema_pkg_apis_meta_v1_LabelSelector(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                            schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                                schema_pkg_apis_meta_v1_List(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                            schema_pkg_apis_meta_v1_ListMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                         schema_pkg_apis_meta_v1_ListOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                  schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                           schema_pkg_apis_meta_v1_MicroTime(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                          schema_pkg_apis_meta_v1_ObjectMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                      schema_pkg_apis_meta_v1_OwnerReference(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                               schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                           schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                               schema_pkg_apis_meta_v1_Patch(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                        schema_pkg_apis_meta_v1_PatchOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                       schema_pkg_apis_meta_v1_Preconditions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                           schema_pkg_apis_meta_v1_RootPaths(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                           schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                              schema_pkg_apis_meta_v1_Status(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                         schema_pkg_apis_meta_v1_StatusCause(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                       schema_pkg_apis_meta_v1_StatusDetails(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                               schema_pkg_apis_meta_v1_Table(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                               schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                        schema_pkg_apis_meta_v1_TableOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                            schema_pkg_apis_meta_v1_TableRow(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                   schema_pkg_apis_meta_v1_TableRowCondition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                                schema_pkg_apis_meta_v1_Time(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                           schema_pkg_apis_meta_v1_Timestamp(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                            schema_pkg_apis_meta_v1_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                       schema_pkg_apis_meta_v1_UpdateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                          schema_pkg_apis_meta_v1_WatchEvent(ref),
-		"k8s.io/apimachinery/pkg/runtime.RawExtension":                                             schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
-		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                 schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                  schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
-		"k8s.io/apimachinery/pkg/version.Info":                                                     schema_k8sio_apimachinery_pkg_version_Info(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPool":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPool(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolList":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolSpec":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolStatus":    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServer":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerList":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerStatus":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ResolvedServerSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResources(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_APIServerLoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AdditionalBlockDevice":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AdditionalBlockDevice(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AddressPair":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AddressPair(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Bastion":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Bastion(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BastionStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BastionStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BindingProfile(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceStorage":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceStorage(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceVolume":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ExternalRouterIPParam":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ExternalRouterIPParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.FixedIP":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_FixedIP(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.LoadBalancer":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_LoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatusWithSubnets":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatusWithSubnets(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackCluster":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackCluster(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference":       schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackIdentityReference(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachine":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachine(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.PortOpts":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_PortOpts(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RootVolume":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RootVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Router":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Router(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RouterFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RouterFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroup(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupRule":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupRule(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Subnet":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Subnet(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SubnetFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ValueSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ValueSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AdditionalBlockDevice(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AddressPair(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AllocationPool":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AllocationPool(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Bastion":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Bastion(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BastionStatus":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BastionStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BindingProfile(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceStorage":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceStorage(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceVolume":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FilterByNeutronTags":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FixedIP(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineResources(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ManagedSecurityGroups(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatusWithSubnets(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackCluster":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluster(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterList":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterStatus":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplate":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateList":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateResource":  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateSpec":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference":        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackIdentityReference(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachine":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachine(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineList":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineStatus":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplate":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateList":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource":  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedFixedIP(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachineSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpec":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpecFields":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpecFields(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResourceReference(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RootVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Router(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterParam":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty":   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalProperty(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalValue":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalValue(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupFilter":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupRuleSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupStatus":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupFilter":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerMetadata(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Subnet":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ValueSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabilityZone(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint":                                          schema_sigsk8sio_cluster_api_api_v1beta1_APIEndpoint(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Bootstrap":                                            schema_sigsk8sio_cluster_api_api_v1beta1_Bootstrap(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Cluster":                                              schema_sigsk8sio_cluster_api_api_v1beta1_Cluster(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterAvailabilityGate":                              schema_sigsk8sio_cluster_api_api_v1beta1_ClusterAvailabilityGate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClass":                                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassList":                                     schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassPatch":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassPatch(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassSpec":                                     schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatus":                                   schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariable":                           schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariable(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariableDefinition":                 schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefinition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassV1Beta2Status":                            schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassV1Beta2Status(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariable":                                 schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariableMetadata":                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariableMetadata(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterControlPlaneStatus":                            schema_sigsk8sio_cluster_api_api_v1beta1_ClusterControlPlaneStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterList":                                          schema_sigsk8sio_cluster_api_api_v1beta1_ClusterList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterNetwork":                                       schema_sigsk8sio_cluster_api_api_v1beta1_ClusterNetwork(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterSpec":                                          schema_sigsk8sio_cluster_api_api_v1beta1_ClusterSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterStatus":                                        schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterV1Beta2Status":                                 schema_sigsk8sio_cluster_api_api_v1beta1_ClusterV1Beta2Status(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterVariable":                                      schema_sigsk8sio_cluster_api_api_v1beta1_ClusterVariable(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Condition":                                            schema_sigsk8sio_cluster_api_api_v1beta1_Condition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClass":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClassNamingStrategy":                      schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClassNamingStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneTopology":                                 schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneVariables":                                schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneVariables(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ExternalPatchDefinition":                              schema_sigsk8sio_cluster_api_api_v1beta1_ExternalPatchDefinition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec":                                    schema_sigsk8sio_cluster_api_api_v1beta1_FailureDomainSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatch":                                            schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatchValue":                                       schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatchValue(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps":                                      schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate":                                  schema_sigsk8sio_cluster_api_api_v1beta1_LocalObjectTemplate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Machine":                                              schema_sigsk8sio_cluster_api_api_v1beta1_Machine(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineAddress(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeletionStatus":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeletionStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeployment":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeployment(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClass":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassNamingStrategy":                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassNamingStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassTemplate":                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassTemplate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentList":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentSpec":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStatus":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentTopology":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentV1Beta2Status":                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentV1Beta2Status(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentVariables":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentVariables(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRule":                                     schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRule(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleDrainConfig":                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleDrainConfig(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleList":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleMachineSelector":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleMachineSelector(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRulePodSelector":                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRulePodSelector(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleSpec":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheck":                                   schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheck(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckList":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckSpec":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckStatus":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckV1Beta2Status":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckV1Beta2Status(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineList":                                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineNamingStrategy":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineNamingStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClass":                                     schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassNamingStrategy":                       schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassNamingStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassTemplate":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassTemplate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolTopology":                                  schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolVariables":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolVariables(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineReadinessGate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineRollingUpdateDeployment":                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineRollingUpdateDeployment(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSet":                                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineSet(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetList":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetSpec":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetStatus":                                     schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetV1Beta2Status":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetV1Beta2Status(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSpec":                                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineStatus":                                        schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec":                                  schema_sigsk8sio_cluster_api_api_v1beta1_MachineTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineV1Beta2Status":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineV1Beta2Status(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.NetworkRanges":                                        schema_sigsk8sio_cluster_api_api_v1beta1_NetworkRanges(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta":                                           schema_sigsk8sio_cluster_api_api_v1beta1_ObjectMeta(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchDefinition":                                      schema_sigsk8sio_cluster_api_api_v1beta1_PatchDefinition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelector":                                        schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelector(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatch":                                   schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatch(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachineDeploymentClass":             schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachineDeploymentClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachinePoolClass":                   schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachinePoolClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.RemediationStrategy":                                  schema_sigsk8sio_cluster_api_api_v1beta1_RemediationStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Topology":                                             schema_sigsk8sio_cluster_api_api_v1beta1_Topology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.UnhealthyCondition":                                   schema_sigsk8sio_cluster_api_api_v1beta1_UnhealthyCondition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ValidationRule":                                       schema_sigsk8sio_cluster_api_api_v1beta1_ValidationRule(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchema":                                       schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchema(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchemaMetadata":                               schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchemaMetadata(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersClass":                                         schema_sigsk8sio_cluster_api_api_v1beta1_WorkersClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersStatus":                                        schema_sigsk8sio_cluster_api_api_v1beta1_WorkersStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersTopology":                                      schema_sigsk8sio_cluster_api_api_v1beta1_WorkersTopology(ref),
+		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                     schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
+		"k8s.io/api/core/v1.Affinity":                                                             schema_k8sio_api_core_v1_Affinity(ref),
+		"k8s.io/api/core/v1.AppArmorProfile":                                                      schema_k8sio_api_core_v1_AppArmorProfile(ref),
+		"k8s.io/api/core/v1.AttachedVolume":                                                       schema_k8sio_api_core_v1_AttachedVolume(ref),
+		"k8s.io/api/core/v1.AvoidPods":                                                            schema_k8sio_api_core_v1_AvoidPods(ref),
+		"k8s.io/api/core/v1.AzureDiskVolumeSource":                                                schema_k8sio_api_core_v1_AzureDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.AzureFilePersistentVolumeSource":                                      schema_k8sio_api_core_v1_AzureFilePersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.AzureFileVolumeSource":                                                schema_k8sio_api_core_v1_AzureFileVolumeSource(ref),
+		"k8s.io/api/core/v1.Binding":                                                              schema_k8sio_api_core_v1_Binding(ref),
+		"k8s.io/api/core/v1.CSIPersistentVolumeSource":                                            schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CSIVolumeSource":                                                      schema_k8sio_api_core_v1_CSIVolumeSource(ref),
+		"k8s.io/api/core/v1.Capabilities":                                                         schema_k8sio_api_core_v1_Capabilities(ref),
+		"k8s.io/api/core/v1.CephFSPersistentVolumeSource":                                         schema_k8sio_api_core_v1_CephFSPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CephFSVolumeSource":                                                   schema_k8sio_api_core_v1_CephFSVolumeSource(ref),
+		"k8s.io/api/core/v1.CinderPersistentVolumeSource":                                         schema_k8sio_api_core_v1_CinderPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CinderVolumeSource":                                                   schema_k8sio_api_core_v1_CinderVolumeSource(ref),
+		"k8s.io/api/core/v1.ClientIPConfig":                                                       schema_k8sio_api_core_v1_ClientIPConfig(ref),
+		"k8s.io/api/core/v1.ClusterTrustBundleProjection":                                         schema_k8sio_api_core_v1_ClusterTrustBundleProjection(ref),
+		"k8s.io/api/core/v1.ComponentCondition":                                                   schema_k8sio_api_core_v1_ComponentCondition(ref),
+		"k8s.io/api/core/v1.ComponentStatus":                                                      schema_k8sio_api_core_v1_ComponentStatus(ref),
+		"k8s.io/api/core/v1.ComponentStatusList":                                                  schema_k8sio_api_core_v1_ComponentStatusList(ref),
+		"k8s.io/api/core/v1.ConfigMap":                                                            schema_k8sio_api_core_v1_ConfigMap(ref),
+		"k8s.io/api/core/v1.ConfigMapEnvSource":                                                   schema_k8sio_api_core_v1_ConfigMapEnvSource(ref),
+		"k8s.io/api/core/v1.ConfigMapKeySelector":                                                 schema_k8sio_api_core_v1_ConfigMapKeySelector(ref),
+		"k8s.io/api/core/v1.ConfigMapList":                                                        schema_k8sio_api_core_v1_ConfigMapList(ref),
+		"k8s.io/api/core/v1.ConfigMapNodeConfigSource":                                            schema_k8sio_api_core_v1_ConfigMapNodeConfigSource(ref),
+		"k8s.io/api/core/v1.ConfigMapProjection":                                                  schema_k8sio_api_core_v1_ConfigMapProjection(ref),
+		"k8s.io/api/core/v1.ConfigMapVolumeSource":                                                schema_k8sio_api_core_v1_ConfigMapVolumeSource(ref),
+		"k8s.io/api/core/v1.Container":                                                            schema_k8sio_api_core_v1_Container(ref),
+		"k8s.io/api/core/v1.ContainerImage":                                                       schema_k8sio_api_core_v1_ContainerImage(ref),
+		"k8s.io/api/core/v1.ContainerPort":                                                        schema_k8sio_api_core_v1_ContainerPort(ref),
+		"k8s.io/api/core/v1.ContainerResizePolicy":                                                schema_k8sio_api_core_v1_ContainerResizePolicy(ref),
+		"k8s.io/api/core/v1.ContainerState":                                                       schema_k8sio_api_core_v1_ContainerState(ref),
+		"k8s.io/api/core/v1.ContainerStateRunning":                                                schema_k8sio_api_core_v1_ContainerStateRunning(ref),
+		"k8s.io/api/core/v1.ContainerStateTerminated":                                             schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
+		"k8s.io/api/core/v1.ContainerStateWaiting":                                                schema_k8sio_api_core_v1_ContainerStateWaiting(ref),
+		"k8s.io/api/core/v1.ContainerStatus":                                                      schema_k8sio_api_core_v1_ContainerStatus(ref),
+		"k8s.io/api/core/v1.ContainerUser":                                                        schema_k8sio_api_core_v1_ContainerUser(ref),
+		"k8s.io/api/core/v1.DaemonEndpoint":                                                       schema_k8sio_api_core_v1_DaemonEndpoint(ref),
+		"k8s.io/api/core/v1.DownwardAPIProjection":                                                schema_k8sio_api_core_v1_DownwardAPIProjection(ref),
+		"k8s.io/api/core/v1.DownwardAPIVolumeFile":                                                schema_k8sio_api_core_v1_DownwardAPIVolumeFile(ref),
+		"k8s.io/api/core/v1.DownwardAPIVolumeSource":                                              schema_k8sio_api_core_v1_DownwardAPIVolumeSource(ref),
+		"k8s.io/api/core/v1.EmptyDirVolumeSource":                                                 schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref),
+		"k8s.io/api/core/v1.EndpointAddress":                                                      schema_k8sio_api_core_v1_EndpointAddress(ref),
+		"k8s.io/api/core/v1.EndpointPort":                                                         schema_k8sio_api_core_v1_EndpointPort(ref),
+		"k8s.io/api/core/v1.EndpointSubset":                                                       schema_k8sio_api_core_v1_EndpointSubset(ref),
+		"k8s.io/api/core/v1.Endpoints":                                                            schema_k8sio_api_core_v1_Endpoints(ref),
+		"k8s.io/api/core/v1.EndpointsList":                                                        schema_k8sio_api_core_v1_EndpointsList(ref),
+		"k8s.io/api/core/v1.EnvFromSource":                                                        schema_k8sio_api_core_v1_EnvFromSource(ref),
+		"k8s.io/api/core/v1.EnvVar":                                                               schema_k8sio_api_core_v1_EnvVar(ref),
+		"k8s.io/api/core/v1.EnvVarSource":                                                         schema_k8sio_api_core_v1_EnvVarSource(ref),
+		"k8s.io/api/core/v1.EphemeralContainer":                                                   schema_k8sio_api_core_v1_EphemeralContainer(ref),
+		"k8s.io/api/core/v1.EphemeralContainerCommon":                                             schema_k8sio_api_core_v1_EphemeralContainerCommon(ref),
+		"k8s.io/api/core/v1.EphemeralVolumeSource":                                                schema_k8sio_api_core_v1_EphemeralVolumeSource(ref),
+		"k8s.io/api/core/v1.Event":                                                                schema_k8sio_api_core_v1_Event(ref),
+		"k8s.io/api/core/v1.EventList":                                                            schema_k8sio_api_core_v1_EventList(ref),
+		"k8s.io/api/core/v1.EventSeries":                                                          schema_k8sio_api_core_v1_EventSeries(ref),
+		"k8s.io/api/core/v1.EventSource":                                                          schema_k8sio_api_core_v1_EventSource(ref),
+		"k8s.io/api/core/v1.ExecAction":                                                           schema_k8sio_api_core_v1_ExecAction(ref),
+		"k8s.io/api/core/v1.FCVolumeSource":                                                       schema_k8sio_api_core_v1_FCVolumeSource(ref),
+		"k8s.io/api/core/v1.FlexPersistentVolumeSource":                                           schema_k8sio_api_core_v1_FlexPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.FlexVolumeSource":                                                     schema_k8sio_api_core_v1_FlexVolumeSource(ref),
+		"k8s.io/api/core/v1.FlockerVolumeSource":                                                  schema_k8sio_api_core_v1_FlockerVolumeSource(ref),
+		"k8s.io/api/core/v1.GCEPersistentDiskVolumeSource":                                        schema_k8sio_api_core_v1_GCEPersistentDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.GRPCAction":                                                           schema_k8sio_api_core_v1_GRPCAction(ref),
+		"k8s.io/api/core/v1.GitRepoVolumeSource":                                                  schema_k8sio_api_core_v1_GitRepoVolumeSource(ref),
+		"k8s.io/api/core/v1.GlusterfsPersistentVolumeSource":                                      schema_k8sio_api_core_v1_GlusterfsPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.GlusterfsVolumeSource":                                                schema_k8sio_api_core_v1_GlusterfsVolumeSource(ref),
+		"k8s.io/api/core/v1.HTTPGetAction":                                                        schema_k8sio_api_core_v1_HTTPGetAction(ref),
+		"k8s.io/api/core/v1.HTTPHeader":                                                           schema_k8sio_api_core_v1_HTTPHeader(ref),
+		"k8s.io/api/core/v1.HostAlias":                                                            schema_k8sio_api_core_v1_HostAlias(ref),
+		"k8s.io/api/core/v1.HostIP":                                                               schema_k8sio_api_core_v1_HostIP(ref),
+		"k8s.io/api/core/v1.HostPathVolumeSource":                                                 schema_k8sio_api_core_v1_HostPathVolumeSource(ref),
+		"k8s.io/api/core/v1.ISCSIPersistentVolumeSource":                                          schema_k8sio_api_core_v1_ISCSIPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.ISCSIVolumeSource":                                                    schema_k8sio_api_core_v1_ISCSIVolumeSource(ref),
+		"k8s.io/api/core/v1.ImageVolumeSource":                                                    schema_k8sio_api_core_v1_ImageVolumeSource(ref),
+		"k8s.io/api/core/v1.KeyToPath":                                                            schema_k8sio_api_core_v1_KeyToPath(ref),
+		"k8s.io/api/core/v1.Lifecycle":                                                            schema_k8sio_api_core_v1_Lifecycle(ref),
+		"k8s.io/api/core/v1.LifecycleHandler":                                                     schema_k8sio_api_core_v1_LifecycleHandler(ref),
+		"k8s.io/api/core/v1.LimitRange":                                                           schema_k8sio_api_core_v1_LimitRange(ref),
+		"k8s.io/api/core/v1.LimitRangeItem":                                                       schema_k8sio_api_core_v1_LimitRangeItem(ref),
+		"k8s.io/api/core/v1.LimitRangeList":                                                       schema_k8sio_api_core_v1_LimitRangeList(ref),
+		"k8s.io/api/core/v1.LimitRangeSpec":                                                       schema_k8sio_api_core_v1_LimitRangeSpec(ref),
+		"k8s.io/api/core/v1.LinuxContainerUser":                                                   schema_k8sio_api_core_v1_LinuxContainerUser(ref),
+		"k8s.io/api/core/v1.List":                                                                 schema_k8sio_api_core_v1_List(ref),
+		"k8s.io/api/core/v1.LoadBalancerIngress":                                                  schema_k8sio_api_core_v1_LoadBalancerIngress(ref),
+		"k8s.io/api/core/v1.LoadBalancerStatus":                                                   schema_k8sio_api_core_v1_LoadBalancerStatus(ref),
+		"k8s.io/api/core/v1.LocalObjectReference":                                                 schema_k8sio_api_core_v1_LocalObjectReference(ref),
+		"k8s.io/api/core/v1.LocalVolumeSource":                                                    schema_k8sio_api_core_v1_LocalVolumeSource(ref),
+		"k8s.io/api/core/v1.ModifyVolumeStatus":                                                   schema_k8sio_api_core_v1_ModifyVolumeStatus(ref),
+		"k8s.io/api/core/v1.NFSVolumeSource":                                                      schema_k8sio_api_core_v1_NFSVolumeSource(ref),
+		"k8s.io/api/core/v1.Namespace":                                                            schema_k8sio_api_core_v1_Namespace(ref),
+		"k8s.io/api/core/v1.NamespaceCondition":                                                   schema_k8sio_api_core_v1_NamespaceCondition(ref),
+		"k8s.io/api/core/v1.NamespaceList":                                                        schema_k8sio_api_core_v1_NamespaceList(ref),
+		"k8s.io/api/core/v1.NamespaceSpec":                                                        schema_k8sio_api_core_v1_NamespaceSpec(ref),
+		"k8s.io/api/core/v1.NamespaceStatus":                                                      schema_k8sio_api_core_v1_NamespaceStatus(ref),
+		"k8s.io/api/core/v1.Node":                                                                 schema_k8sio_api_core_v1_Node(ref),
+		"k8s.io/api/core/v1.NodeAddress":                                                          schema_k8sio_api_core_v1_NodeAddress(ref),
+		"k8s.io/api/core/v1.NodeAffinity":                                                         schema_k8sio_api_core_v1_NodeAffinity(ref),
+		"k8s.io/api/core/v1.NodeCondition":                                                        schema_k8sio_api_core_v1_NodeCondition(ref),
+		"k8s.io/api/core/v1.NodeConfigSource":                                                     schema_k8sio_api_core_v1_NodeConfigSource(ref),
+		"k8s.io/api/core/v1.NodeConfigStatus":                                                     schema_k8sio_api_core_v1_NodeConfigStatus(ref),
+		"k8s.io/api/core/v1.NodeDaemonEndpoints":                                                  schema_k8sio_api_core_v1_NodeDaemonEndpoints(ref),
+		"k8s.io/api/core/v1.NodeFeatures":                                                         schema_k8sio_api_core_v1_NodeFeatures(ref),
+		"k8s.io/api/core/v1.NodeList":                                                             schema_k8sio_api_core_v1_NodeList(ref),
+		"k8s.io/api/core/v1.NodeProxyOptions":                                                     schema_k8sio_api_core_v1_NodeProxyOptions(ref),
+		"k8s.io/api/core/v1.NodeRuntimeHandler":                                                   schema_k8sio_api_core_v1_NodeRuntimeHandler(ref),
+		"k8s.io/api/core/v1.NodeRuntimeHandlerFeatures":                                           schema_k8sio_api_core_v1_NodeRuntimeHandlerFeatures(ref),
+		"k8s.io/api/core/v1.NodeSelector":                                                         schema_k8sio_api_core_v1_NodeSelector(ref),
+		"k8s.io/api/core/v1.NodeSelectorRequirement":                                              schema_k8sio_api_core_v1_NodeSelectorRequirement(ref),
+		"k8s.io/api/core/v1.NodeSelectorTerm":                                                     schema_k8sio_api_core_v1_NodeSelectorTerm(ref),
+		"k8s.io/api/core/v1.NodeSpec":                                                             schema_k8sio_api_core_v1_NodeSpec(ref),
+		"k8s.io/api/core/v1.NodeStatus":                                                           schema_k8sio_api_core_v1_NodeStatus(ref),
+		"k8s.io/api/core/v1.NodeSystemInfo":                                                       schema_k8sio_api_core_v1_NodeSystemInfo(ref),
+		"k8s.io/api/core/v1.ObjectFieldSelector":                                                  schema_k8sio_api_core_v1_ObjectFieldSelector(ref),
+		"k8s.io/api/core/v1.ObjectReference":                                                      schema_k8sio_api_core_v1_ObjectReference(ref),
+		"k8s.io/api/core/v1.PersistentVolume":                                                     schema_k8sio_api_core_v1_PersistentVolume(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaim":                                                schema_k8sio_api_core_v1_PersistentVolumeClaim(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimCondition":                                       schema_k8sio_api_core_v1_PersistentVolumeClaimCondition(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimList":                                            schema_k8sio_api_core_v1_PersistentVolumeClaimList(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimSpec":                                            schema_k8sio_api_core_v1_PersistentVolumeClaimSpec(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimStatus":                                          schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimTemplate":                                        schema_k8sio_api_core_v1_PersistentVolumeClaimTemplate(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource":                                    schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref),
+		"k8s.io/api/core/v1.PersistentVolumeList":                                                 schema_k8sio_api_core_v1_PersistentVolumeList(ref),
+		"k8s.io/api/core/v1.PersistentVolumeSource":                                               schema_k8sio_api_core_v1_PersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.PersistentVolumeSpec":                                                 schema_k8sio_api_core_v1_PersistentVolumeSpec(ref),
+		"k8s.io/api/core/v1.PersistentVolumeStatus":                                               schema_k8sio_api_core_v1_PersistentVolumeStatus(ref),
+		"k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource":                                     schema_k8sio_api_core_v1_PhotonPersistentDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.Pod":                                                                  schema_k8sio_api_core_v1_Pod(ref),
+		"k8s.io/api/core/v1.PodAffinity":                                                          schema_k8sio_api_core_v1_PodAffinity(ref),
+		"k8s.io/api/core/v1.PodAffinityTerm":                                                      schema_k8sio_api_core_v1_PodAffinityTerm(ref),
+		"k8s.io/api/core/v1.PodAntiAffinity":                                                      schema_k8sio_api_core_v1_PodAntiAffinity(ref),
+		"k8s.io/api/core/v1.PodAttachOptions":                                                     schema_k8sio_api_core_v1_PodAttachOptions(ref),
+		"k8s.io/api/core/v1.PodCondition":                                                         schema_k8sio_api_core_v1_PodCondition(ref),
+		"k8s.io/api/core/v1.PodDNSConfig":                                                         schema_k8sio_api_core_v1_PodDNSConfig(ref),
+		"k8s.io/api/core/v1.PodDNSConfigOption":                                                   schema_k8sio_api_core_v1_PodDNSConfigOption(ref),
+		"k8s.io/api/core/v1.PodExecOptions":                                                       schema_k8sio_api_core_v1_PodExecOptions(ref),
+		"k8s.io/api/core/v1.PodIP":                                                                schema_k8sio_api_core_v1_PodIP(ref),
+		"k8s.io/api/core/v1.PodList":                                                              schema_k8sio_api_core_v1_PodList(ref),
+		"k8s.io/api/core/v1.PodLogOptions":                                                        schema_k8sio_api_core_v1_PodLogOptions(ref),
+		"k8s.io/api/core/v1.PodOS":                                                                schema_k8sio_api_core_v1_PodOS(ref),
+		"k8s.io/api/core/v1.PodPortForwardOptions":                                                schema_k8sio_api_core_v1_PodPortForwardOptions(ref),
+		"k8s.io/api/core/v1.PodProxyOptions":                                                      schema_k8sio_api_core_v1_PodProxyOptions(ref),
+		"k8s.io/api/core/v1.PodReadinessGate":                                                     schema_k8sio_api_core_v1_PodReadinessGate(ref),
+		"k8s.io/api/core/v1.PodResourceClaim":                                                     schema_k8sio_api_core_v1_PodResourceClaim(ref),
+		"k8s.io/api/core/v1.PodResourceClaimStatus":                                               schema_k8sio_api_core_v1_PodResourceClaimStatus(ref),
+		"k8s.io/api/core/v1.PodSchedulingGate":                                                    schema_k8sio_api_core_v1_PodSchedulingGate(ref),
+		"k8s.io/api/core/v1.PodSecurityContext":                                                   schema_k8sio_api_core_v1_PodSecurityContext(ref),
+		"k8s.io/api/core/v1.PodSignature":                                                         schema_k8sio_api_core_v1_PodSignature(ref),
+		"k8s.io/api/core/v1.PodSpec":                                                              schema_k8sio_api_core_v1_PodSpec(ref),
+		"k8s.io/api/core/v1.PodStatus":                                                            schema_k8sio_api_core_v1_PodStatus(ref),
+		"k8s.io/api/core/v1.PodStatusResult":                                                      schema_k8sio_api_core_v1_PodStatusResult(ref),
+		"k8s.io/api/core/v1.PodTemplate":                                                          schema_k8sio_api_core_v1_PodTemplate(ref),
+		"k8s.io/api/core/v1.PodTemplateList":                                                      schema_k8sio_api_core_v1_PodTemplateList(ref),
+		"k8s.io/api/core/v1.PodTemplateSpec":                                                      schema_k8sio_api_core_v1_PodTemplateSpec(ref),
+		"k8s.io/api/core/v1.PortStatus":                                                           schema_k8sio_api_core_v1_PortStatus(ref),
+		"k8s.io/api/core/v1.PortworxVolumeSource":                                                 schema_k8sio_api_core_v1_PortworxVolumeSource(ref),
+		"k8s.io/api/core/v1.PreferAvoidPodsEntry":                                                 schema_k8sio_api_core_v1_PreferAvoidPodsEntry(ref),
+		"k8s.io/api/core/v1.PreferredSchedulingTerm":                                              schema_k8sio_api_core_v1_PreferredSchedulingTerm(ref),
+		"k8s.io/api/core/v1.Probe":                                                                schema_k8sio_api_core_v1_Probe(ref),
+		"k8s.io/api/core/v1.ProbeHandler":                                                         schema_k8sio_api_core_v1_ProbeHandler(ref),
+		"k8s.io/api/core/v1.ProjectedVolumeSource":                                                schema_k8sio_api_core_v1_ProjectedVolumeSource(ref),
+		"k8s.io/api/core/v1.QuobyteVolumeSource":                                                  schema_k8sio_api_core_v1_QuobyteVolumeSource(ref),
+		"k8s.io/api/core/v1.RBDPersistentVolumeSource":                                            schema_k8sio_api_core_v1_RBDPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.RBDVolumeSource":                                                      schema_k8sio_api_core_v1_RBDVolumeSource(ref),
+		"k8s.io/api/core/v1.RangeAllocation":                                                      schema_k8sio_api_core_v1_RangeAllocation(ref),
+		"k8s.io/api/core/v1.ReplicationController":                                                schema_k8sio_api_core_v1_ReplicationController(ref),
+		"k8s.io/api/core/v1.ReplicationControllerCondition":                                       schema_k8sio_api_core_v1_ReplicationControllerCondition(ref),
+		"k8s.io/api/core/v1.ReplicationControllerList":                                            schema_k8sio_api_core_v1_ReplicationControllerList(ref),
+		"k8s.io/api/core/v1.ReplicationControllerSpec":                                            schema_k8sio_api_core_v1_ReplicationControllerSpec(ref),
+		"k8s.io/api/core/v1.ReplicationControllerStatus":                                          schema_k8sio_api_core_v1_ReplicationControllerStatus(ref),
+		"k8s.io/api/core/v1.ResourceClaim":                                                        schema_k8sio_api_core_v1_ResourceClaim(ref),
+		"k8s.io/api/core/v1.ResourceFieldSelector":                                                schema_k8sio_api_core_v1_ResourceFieldSelector(ref),
+		"k8s.io/api/core/v1.ResourceHealth":                                                       schema_k8sio_api_core_v1_ResourceHealth(ref),
+		"k8s.io/api/core/v1.ResourceQuota":                                                        schema_k8sio_api_core_v1_ResourceQuota(ref),
+		"k8s.io/api/core/v1.ResourceQuotaList":                                                    schema_k8sio_api_core_v1_ResourceQuotaList(ref),
+		"k8s.io/api/core/v1.ResourceQuotaSpec":                                                    schema_k8sio_api_core_v1_ResourceQuotaSpec(ref),
+		"k8s.io/api/core/v1.ResourceQuotaStatus":                                                  schema_k8sio_api_core_v1_ResourceQuotaStatus(ref),
+		"k8s.io/api/core/v1.ResourceRequirements":                                                 schema_k8sio_api_core_v1_ResourceRequirements(ref),
+		"k8s.io/api/core/v1.ResourceStatus":                                                       schema_k8sio_api_core_v1_ResourceStatus(ref),
+		"k8s.io/api/core/v1.SELinuxOptions":                                                       schema_k8sio_api_core_v1_SELinuxOptions(ref),
+		"k8s.io/api/core/v1.ScaleIOPersistentVolumeSource":                                        schema_k8sio_api_core_v1_ScaleIOPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.ScaleIOVolumeSource":                                                  schema_k8sio_api_core_v1_ScaleIOVolumeSource(ref),
+		"k8s.io/api/core/v1.ScopeSelector":                                                        schema_k8sio_api_core_v1_ScopeSelector(ref),
+		"k8s.io/api/core/v1.ScopedResourceSelectorRequirement":                                    schema_k8sio_api_core_v1_ScopedResourceSelectorRequirement(ref),
+		"k8s.io/api/core/v1.SeccompProfile":                                                       schema_k8sio_api_core_v1_SeccompProfile(ref),
+		"k8s.io/api/core/v1.Secret":                                                               schema_k8sio_api_core_v1_Secret(ref),
+		"k8s.io/api/core/v1.SecretEnvSource":                                                      schema_k8sio_api_core_v1_SecretEnvSource(ref),
+		"k8s.io/api/core/v1.SecretKeySelector":                                                    schema_k8sio_api_core_v1_SecretKeySelector(ref),
+		"k8s.io/api/core/v1.SecretList":                                                           schema_k8sio_api_core_v1_SecretList(ref),
+		"k8s.io/api/core/v1.SecretProjection":                                                     schema_k8sio_api_core_v1_SecretProjection(ref),
+		"k8s.io/api/core/v1.SecretReference":                                                      schema_k8sio_api_core_v1_SecretReference(ref),
+		"k8s.io/api/core/v1.SecretVolumeSource":                                                   schema_k8sio_api_core_v1_SecretVolumeSource(ref),
+		"k8s.io/api/core/v1.SecurityContext":                                                      schema_k8sio_api_core_v1_SecurityContext(ref),
+		"k8s.io/api/core/v1.SerializedReference":                                                  schema_k8sio_api_core_v1_SerializedReference(ref),
+		"k8s.io/api/core/v1.Service":                                                              schema_k8sio_api_core_v1_Service(ref),
+		"k8s.io/api/core/v1.ServiceAccount":                                                       schema_k8sio_api_core_v1_ServiceAccount(ref),
+		"k8s.io/api/core/v1.ServiceAccountList":                                                   schema_k8sio_api_core_v1_ServiceAccountList(ref),
+		"k8s.io/api/core/v1.ServiceAccountTokenProjection":                                        schema_k8sio_api_core_v1_ServiceAccountTokenProjection(ref),
+		"k8s.io/api/core/v1.ServiceList":                                                          schema_k8sio_api_core_v1_ServiceList(ref),
+		"k8s.io/api/core/v1.ServicePort":                                                          schema_k8sio_api_core_v1_ServicePort(ref),
+		"k8s.io/api/core/v1.ServiceProxyOptions":                                                  schema_k8sio_api_core_v1_ServiceProxyOptions(ref),
+		"k8s.io/api/core/v1.ServiceSpec":                                                          schema_k8sio_api_core_v1_ServiceSpec(ref),
+		"k8s.io/api/core/v1.ServiceStatus":                                                        schema_k8sio_api_core_v1_ServiceStatus(ref),
+		"k8s.io/api/core/v1.SessionAffinityConfig":                                                schema_k8sio_api_core_v1_SessionAffinityConfig(ref),
+		"k8s.io/api/core/v1.SleepAction":                                                          schema_k8sio_api_core_v1_SleepAction(ref),
+		"k8s.io/api/core/v1.StorageOSPersistentVolumeSource":                                      schema_k8sio_api_core_v1_StorageOSPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.StorageOSVolumeSource":                                                schema_k8sio_api_core_v1_StorageOSVolumeSource(ref),
+		"k8s.io/api/core/v1.Sysctl":                                                               schema_k8sio_api_core_v1_Sysctl(ref),
+		"k8s.io/api/core/v1.TCPSocketAction":                                                      schema_k8sio_api_core_v1_TCPSocketAction(ref),
+		"k8s.io/api/core/v1.Taint":                                                                schema_k8sio_api_core_v1_Taint(ref),
+		"k8s.io/api/core/v1.Toleration":                                                           schema_k8sio_api_core_v1_Toleration(ref),
+		"k8s.io/api/core/v1.TopologySelectorLabelRequirement":                                     schema_k8sio_api_core_v1_TopologySelectorLabelRequirement(ref),
+		"k8s.io/api/core/v1.TopologySelectorTerm":                                                 schema_k8sio_api_core_v1_TopologySelectorTerm(ref),
+		"k8s.io/api/core/v1.TopologySpreadConstraint":                                             schema_k8sio_api_core_v1_TopologySpreadConstraint(ref),
+		"k8s.io/api/core/v1.TypedLocalObjectReference":                                            schema_k8sio_api_core_v1_TypedLocalObjectReference(ref),
+		"k8s.io/api/core/v1.TypedObjectReference":                                                 schema_k8sio_api_core_v1_TypedObjectReference(ref),
+		"k8s.io/api/core/v1.Volume":                                                               schema_k8sio_api_core_v1_Volume(ref),
+		"k8s.io/api/core/v1.VolumeDevice":                                                         schema_k8sio_api_core_v1_VolumeDevice(ref),
+		"k8s.io/api/core/v1.VolumeMount":                                                          schema_k8sio_api_core_v1_VolumeMount(ref),
+		"k8s.io/api/core/v1.VolumeMountStatus":                                                    schema_k8sio_api_core_v1_VolumeMountStatus(ref),
+		"k8s.io/api/core/v1.VolumeNodeAffinity":                                                   schema_k8sio_api_core_v1_VolumeNodeAffinity(ref),
+		"k8s.io/api/core/v1.VolumeProjection":                                                     schema_k8sio_api_core_v1_VolumeProjection(ref),
+		"k8s.io/api/core/v1.VolumeResourceRequirements":                                           schema_k8sio_api_core_v1_VolumeResourceRequirements(ref),
+		"k8s.io/api/core/v1.VolumeSource":                                                         schema_k8sio_api_core_v1_VolumeSource(ref),
+		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":                                       schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                                              schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
+		"k8s.io/api/core/v1.WindowsSecurityContextOptions":                                        schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                           schema_pkg_apis_meta_v1_APIGroup(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                       schema_pkg_apis_meta_v1_APIGroupList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                        schema_pkg_apis_meta_v1_APIResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                    schema_pkg_apis_meta_v1_APIResourceList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                        schema_pkg_apis_meta_v1_APIVersions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                       schema_pkg_apis_meta_v1_ApplyOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                          schema_pkg_apis_meta_v1_Condition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                      schema_pkg_apis_meta_v1_CreateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                      schema_pkg_apis_meta_v1_DeleteOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                           schema_pkg_apis_meta_v1_Duration(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldSelectorRequirement":                           schema_pkg_apis_meta_v1_FieldSelectorRequirement(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                           schema_pkg_apis_meta_v1_FieldsV1(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                         schema_pkg_apis_meta_v1_GetOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                          schema_pkg_apis_meta_v1_GroupKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                      schema_pkg_apis_meta_v1_GroupResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                       schema_pkg_apis_meta_v1_GroupVersion(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                           schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                   schema_pkg_apis_meta_v1_GroupVersionKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                               schema_pkg_apis_meta_v1_GroupVersionResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                      schema_pkg_apis_meta_v1_InternalEvent(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                      schema_pkg_apis_meta_v1_LabelSelector(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                           schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                               schema_pkg_apis_meta_v1_List(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                           schema_pkg_apis_meta_v1_ListMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                        schema_pkg_apis_meta_v1_ListOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                 schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                          schema_pkg_apis_meta_v1_MicroTime(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                         schema_pkg_apis_meta_v1_ObjectMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                     schema_pkg_apis_meta_v1_OwnerReference(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                              schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                          schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                              schema_pkg_apis_meta_v1_Patch(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                       schema_pkg_apis_meta_v1_PatchOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                      schema_pkg_apis_meta_v1_Preconditions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                          schema_pkg_apis_meta_v1_RootPaths(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                          schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                             schema_pkg_apis_meta_v1_Status(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                        schema_pkg_apis_meta_v1_StatusCause(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                      schema_pkg_apis_meta_v1_StatusDetails(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                              schema_pkg_apis_meta_v1_Table(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                              schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                       schema_pkg_apis_meta_v1_TableOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                           schema_pkg_apis_meta_v1_TableRow(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                  schema_pkg_apis_meta_v1_TableRowCondition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                               schema_pkg_apis_meta_v1_Time(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                          schema_pkg_apis_meta_v1_Timestamp(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                           schema_pkg_apis_meta_v1_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                      schema_pkg_apis_meta_v1_UpdateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                         schema_pkg_apis_meta_v1_WatchEvent(ref),
+		"k8s.io/apimachinery/pkg/runtime.RawExtension":                                            schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
+		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                 schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
+		"k8s.io/apimachinery/pkg/version.Info":                                                    schema_k8sio_apimachinery_pkg_version_Info(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPool":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPool(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolStatus":   schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServer":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ResolvedServerSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResources(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AdditionalBlockDevice(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AddressPair(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AllocationPool":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AllocationPool(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Bastion":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Bastion(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BastionStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BastionStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BindingProfile(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceStorage":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceStorage(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceVolume":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolume(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FilterByNeutronTags":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FixedIP(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineResources(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ManagedSecurityGroups(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatusWithSubnets(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackCluster":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluster(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplate(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateResource(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference":       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackIdentityReference(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachine":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachine(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplate(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateResource(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedFixedIP(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachineSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpec":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpecFields":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpecFields(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResourceReference(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RootVolume(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Router(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty":  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalProperty(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalValue":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalValue(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupFilter":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupRuleSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupStatus":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupFilter":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerMetadata(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Subnet":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ValueSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabilityZone(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint":                                         schema_sigsk8sio_cluster_api_api_v1beta1_APIEndpoint(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Bootstrap":                                           schema_sigsk8sio_cluster_api_api_v1beta1_Bootstrap(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Cluster":                                             schema_sigsk8sio_cluster_api_api_v1beta1_Cluster(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterAvailabilityGate":                             schema_sigsk8sio_cluster_api_api_v1beta1_ClusterAvailabilityGate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClass":                                        schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassList":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassPatch":                                   schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassPatch(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassSpec":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatus":                                  schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariable":                          schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariable(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariableDefinition":                schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefinition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassV1Beta2Status":                           schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariable":                                schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariableMetadata":                        schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariableMetadata(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterControlPlaneStatus":                           schema_sigsk8sio_cluster_api_api_v1beta1_ClusterControlPlaneStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterList":                                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterNetwork":                                      schema_sigsk8sio_cluster_api_api_v1beta1_ClusterNetwork(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterSpec":                                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterStatus":                                       schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterV1Beta2Status":                                schema_sigsk8sio_cluster_api_api_v1beta1_ClusterV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterVariable":                                     schema_sigsk8sio_cluster_api_api_v1beta1_ClusterVariable(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Condition":                                           schema_sigsk8sio_cluster_api_api_v1beta1_Condition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClass":                                   schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClassNamingStrategy":                     schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClassNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneTopology":                                schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneVariables":                               schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneVariables(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ExternalPatchDefinition":                             schema_sigsk8sio_cluster_api_api_v1beta1_ExternalPatchDefinition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec":                                   schema_sigsk8sio_cluster_api_api_v1beta1_FailureDomainSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatch":                                           schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatchValue":                                      schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatchValue(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps":                                     schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate":                                 schema_sigsk8sio_cluster_api_api_v1beta1_LocalObjectTemplate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Machine":                                             schema_sigsk8sio_cluster_api_api_v1beta1_Machine(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress":                                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineAddress(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeletionStatus":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeletionStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeployment":                                   schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeployment(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClass":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassNamingStrategy":                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassTemplate":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassTemplate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentList":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentSpec":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStatus":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentTopology":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentV1Beta2Status":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentVariables":                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentVariables(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRule":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRule(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleDrainConfig":                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleDrainConfig(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleList":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleMachineSelector":                     schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleMachineSelector(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRulePodSelector":                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRulePodSelector(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleSpec":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheck":                                  schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheck(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckList":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckSpec":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckStatus":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology":                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckV1Beta2Status":                     schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineList":                                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineNamingStrategy":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClass":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassNamingStrategy":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassTemplate":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassTemplate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolTopology":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolVariables":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolVariables(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineReadinessGate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineRollingUpdateDeployment":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineRollingUpdateDeployment(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSet":                                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineSet(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetList":                                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetSpec":                                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetStatus":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetV1Beta2Status":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSpec":                                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineStatus":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineV1Beta2Status":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.NetworkRanges":                                       schema_sigsk8sio_cluster_api_api_v1beta1_NetworkRanges(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta":                                          schema_sigsk8sio_cluster_api_api_v1beta1_ObjectMeta(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchDefinition":                                     schema_sigsk8sio_cluster_api_api_v1beta1_PatchDefinition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelector":                                       schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelector(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatch":                                  schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatch(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachineDeploymentClass":            schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachineDeploymentClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachinePoolClass":                  schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachinePoolClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.RemediationStrategy":                                 schema_sigsk8sio_cluster_api_api_v1beta1_RemediationStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Topology":                                            schema_sigsk8sio_cluster_api_api_v1beta1_Topology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.UnhealthyCondition":                                  schema_sigsk8sio_cluster_api_api_v1beta1_UnhealthyCondition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ValidationRule":                                      schema_sigsk8sio_cluster_api_api_v1beta1_ValidationRule(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchema":                                      schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchema(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchemaMetadata":                              schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchemaMetadata(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersClass":                                        schema_sigsk8sio_cluster_api_api_v1beta1_WorkersClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersStatus":                                       schema_sigsk8sio_cluster_api_api_v1beta1_WorkersStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersTopology":                                     schema_sigsk8sio_cluster_api_api_v1beta1_WorkersTopology(ref),
 	}
 }
 
@@ -17239,2349 +17198,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResource
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_APIServerLoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"enabled": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Enabled defines whether a load balancer should be created.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"additionalPorts": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalPorts adds additional tcp ports to the load balancer.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: 0,
-										Type:    []string{"integer"},
-										Format:  "int32",
-									},
-								},
-							},
-						},
-					},
-					"allowedCidrs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"provider": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Octavia Provider Used to create load balancer",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AdditionalBlockDevice(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "AdditionalBlockDevice is a block device to attach to the server.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the block device in the context of a machine. If the block device is a volume, the Cinder volume will be named as a combination of the machine name and this name. Also, this name will be used for tagging the block device. Information about the block device tag can be obtained from the OpenStack metadata API or the config drive.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"sizeGiB": {
-						SchemaProps: spec.SchemaProps{
-							Description: "SizeGiB is the size of the block device in gibibytes (GiB).",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-					"storage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Storage specifies the storage type of the block device and additional storage options.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceStorage"),
-						},
-					},
-				},
-				Required: []string{"name", "sizeGiB", "storage"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceStorage"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AddressPair(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ipAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"macAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Bastion(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Bastion represents basic information about the bastion node.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"enabled": {
-						SchemaProps: spec.SchemaProps{
-							Default: false,
-							Type:    []string{"boolean"},
-							Format:  "",
-						},
-					},
-					"instance": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Instance for the bastion itself",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"),
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BastionStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"sshKeyName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"state": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ip": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"floatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BindingProfile(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ovsHWOffload": {
-						SchemaProps: spec.SchemaProps{
-							Description: "OVSHWOffload enables or disables the OVS hardware offload feature.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"trustedVF": {
-						SchemaProps: spec.SchemaProps{
-							Description: "TrustedVF enables or disables the “trusted mode” for the VF.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceStorage(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "BlockDeviceStorage is the storage type of a block device to create and contains additional storage options.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"type": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Type is the type of block device to create. This can be either \"Volume\" or \"Local\".",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"volume": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Volume contains additional storage options for a volume block device.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceVolume"),
-						},
-					},
-				},
-				Required: []string{"type"},
-			},
-			VendorExtensible: spec.VendorExtensible{
-				Extensions: spec.Extensions{
-					"x-kubernetes-unions": []interface{}{
-						map[string]interface{}{
-							"discriminator": "type",
-							"fields-to-discriminateBy": map[string]interface{}{
-								"volume": "Volume",
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceVolume"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceVolume(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "BlockDeviceVolume contains additional storage options for a volume block device.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"type": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Type is the Cinder volume type of the volume. If omitted, the default Cinder volume type that is configured in the OpenStack cloud will be used.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AvailabilityZone is the volume availability zone to create the volume in. If omitted, the availability zone of the server will be used. The availability zone must NOT contain spaces otherwise it will lead to volume that belongs to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for further information.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ExternalRouterIPParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"fixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The FixedIP in the corresponding subnet",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The subnet in which the FixedIP is used for the Gateway of this router",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"),
-						},
-					},
-				},
-				Required: []string{"subnet"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_FixedIP(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Subnet is an openstack subnet query that will return the id of a subnet to create the fixed IP of a port in. This query must not return more than one subnet.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"),
-						},
-					},
-					"ipAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-				Required: []string{"subnet"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_LoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "LoadBalancer represents basic information about the associated OpenStack LoadBalancer.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"ip": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"internalIP": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"allowedCIDRs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id", "ip", "internalIP"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "NetworkStatus contains basic information about an existing neutron network.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatusWithSubnets(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "NetworkStatusWithSubnets represents basic information about an existing neutron network and an associated set of subnets.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"subnets": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Subnet"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Subnet"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackCluster(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackCluster is the Schema for the openstackclusters API.\n\nDeprecated: v1alpha7.OpenStackCluster has been replaced by v1beta1.OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec"),
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterStatus"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterStatus"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterList contains a list of OpenStackCluster.\n\nDeprecated: v1alpha7.OpenStackClusterList has been replaced by v1beta1.OpenStackClusterList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackCluster"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackCluster"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterSpec defines the desired state of OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"cloudName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the cloud to use from the clouds secret",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"nodeCidr": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a network, a subnet with NodeCIDR, and a router connected to this subnet. If you leave this empty, no network will be created.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"router": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR is set this option can be used to detect an existing router. If specified, no new router will be created.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RouterFilter"),
-						},
-					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR cannot be set this can be used to detect an existing network.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter"),
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR cannot be set this can be used to detect an existing subnet.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"),
-						},
-					},
-					"networkMtu": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID. This value will be used only if the Cluster actuator creates the network. If leaved empty, the network will have the default MTU defined in Openstack network service. To use this field, the Openstack installation requires the net-mtu neutron API extension.",
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-					"dnsNameservers": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "DNSNameservers is the list of nameservers for OpenStack Subnet being created. Set this value when you need create a new network/subnet while the access through DNS is required.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"externalRouterIPs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ExternalRouterIPs is an array of externalIPs on the respective subnets. This is necessary if the router needs a fixed ip in a specific subnet.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ExternalRouterIPParam"),
-									},
-								},
-							},
-						},
-					},
-					"externalNetworkId": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ExternalNetworkID is the ID of an external OpenStack Network. This is necessary to get public internet to the VMs.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerLoadBalancer": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerLoadBalancer configures the optional LoadBalancer for the APIServer. It must be activated by setting `enabled: true`.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer"),
-						},
-					},
-					"disableAPIServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating IP to the API server. This allows for the creation of clusters when attaching a floating IP to the API server (and hence, in many cases, exposing the API server to the internet) is not possible or desirable, e.g. if using a shared VLAN for communication between management and workload clusters or when the management cluster is inside the project network. This option requires that the API server use a VIP on the cluster network so that the underlying machines can change without changing ControlPlaneEndpoint.Host. When using a managed load balancer, this VIP will be managed automatically. If not using a managed load balancer, cluster configuration will fail without additional configuration to manage the VIP on the control plane machines, which falls outside of the scope of this controller.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"apiServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFloatingIP is the floatingIP which will be associated with the API server. The floatingIP will be created if it does not already exist. If not specified, a new floatingIP is allocated. This field is not used if DisableAPIServerFloatingIP is set to true.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerFixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFixedIP is the fixed IP which will be associated with the API server. In the case where the API server has a floating IP but not a managed load balancer, this field is not used. If a managed load balancer is used and this field is not specified, a fixed IP will be dynamically allocated for the load balancer. If a managed load balancer is not used AND the API server floating IP is disabled, this field MUST be specified and should correspond to a pre-allocated port that holds the fixed IP to be used as a VIP.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerPort": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerPort is the port on which the listener on the APIServer will be created",
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-					"managedSecurityGroups": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ManagedSecurityGroups determines whether OpenStack security groups for the cluster will be managed by the OpenStack provider or whether pre-existing security groups will be specified as part of the configuration. By default, the managed security groups have rules that allow the Kubelet, etcd, the Kubernetes API server and the Calico CNI plugin to function correctly.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"allowAllInClusterTraffic": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AllowAllInClusterTraffic is only used when managed security groups are in use. If set to true, the rules for the managed security groups are configured so that all ingress and egress between cluster nodes is permitted, allowing CNIs other than Calico to be used.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"disablePortSecurity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Tags for all resources in cluster",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneEndpoint": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint"),
-						},
-					},
-					"controlPlaneAvailabilityZones": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneAvailabilityZones is the az to deploy control plane to",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneOmitAvailabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler to make a decision on which az to use based on other scheduling constraints",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"bastion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Bastion is the OpenStack instance to login the nodes\n\nAs a rolling update is not ideal during a bastion host session, we prevent changes to a running bastion configuration. Set `enabled: false` to make changes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Bastion"),
-						},
-					},
-					"identityRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a identity to be used when reconciling this cluster",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RouterFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter", "sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterStatus defines the observed state of OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ready": {
-						SchemaProps: spec.SchemaProps{
-							Default: false,
-							Type:    []string{"boolean"},
-							Format:  "",
-						},
-					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network contains information about the created OpenStack Network.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatusWithSubnets"),
-						},
-					},
-					"externalNetwork": {
-						SchemaProps: spec.SchemaProps{
-							Description: "externalNetwork contains information about the external network used for default ingress and egress traffic.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatus"),
-						},
-					},
-					"router": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Router describes the default cluster router",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Router"),
-						},
-					},
-					"apiServerLoadBalancer": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerLoadBalancer describes the api server load balancer if one exists",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.LoadBalancer"),
-						},
-					},
-					"failureDomains": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomains represent OpenStack availability zones",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"),
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneSecurityGroups contains all the information about the OpenStack Security Group that needs to be applied to control plane nodes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup"),
-						},
-					},
-					"workerSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Description: "WorkerSecurityGroup contains all the information about the OpenStack Security Group that needs to be applied to worker nodes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup"),
-						},
-					},
-					"bastionSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup"),
-						},
-					},
-					"bastion": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BastionStatus"),
-						},
-					},
-					"failureReason": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureReason will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a succinct value suitable for machine interpretation.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"failureMessage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"ready"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BastionStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.LoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatusWithSubnets", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Router", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup", "sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplate(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplate is the Schema for the openstackclustertemplates API.\n\nDeprecated: v1alpha7.OpenStackClusterTemplate has been replaced by v1beta1.OpenStackClusterTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateSpec"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateList contains a list of OpenStackClusterTemplate.\n\nDeprecated: v1alpha7.OpenStackClusterTemplateList has been replaced by v1beta1.OpenStackClusterTemplateList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplate"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplate"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec"),
-						},
-					},
-				},
-				Required: []string{"spec"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"template": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateResource"),
-						},
-					},
-				},
-				Required: []string{"template"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateResource"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackIdentityReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackIdentityReference is a reference to an infrastructure provider identity to be used to provision cluster resources.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind of the identity. Must be supported by the infrastructure provider and may be either cluster or namespace-scoped.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the infrastructure identity to be used. Must be either a cluster-scoped resource, or namespaced-scoped resource the same namespace as the resource(s) being provisioned.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"kind", "name"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachine(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachine is the Schema for the openstackmachines API.\n\nDeprecated: v1alpha7.OpenStackMachine has been replaced by v1beta1.OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"),
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineStatus"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineStatus"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineList contains a list of OpenStackMachine.\n\nDeprecated: v1alpha7.OpenStackMachineList has been replaced by v1beta1.OpenStackMachineList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachine"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachine"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineSpec defines the desired state of OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"providerID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ProviderID is the unique identifier as specified by the cloud provider.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"instanceID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InstanceID is the OpenStack instance ID for this machine.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"cloudName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the cloud to use from the clouds secret",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"flavor": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The flavor reference for the flavor for your server instance.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"flavorID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"image": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the image to use for your server instance. If the RootVolume is specified, this will be ignored and use rootVolume directly.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"imageUUID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The uuid of the image to use for your server instance. if it's empty, Image name will be used",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"sshKeyName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The ssh key to inject in the instance",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"ports": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Ports to be attached to the server instance. They are created if a port with the given name does not already exist. If not specified a default port will be added for the default cluster network.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.PortOpts"),
-									},
-								},
-							},
-						},
-					},
-					"floatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The floatingIP which will be associated to the machine, only used for master. The floatingIP should have been created and haven't been associated.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"securityGroups": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The names of the security groups to assign to the instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter"),
-									},
-								},
-							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether the server instance is created on a trunk port or not.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Machine tags Requires Nova api 2.52 minimum!",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"serverMetadata": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"configDrive": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Config Drive support",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"rootVolume": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The volume metadata to boot from",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RootVolume"),
-						},
-					},
-					"additionalBlockDevices": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-map-keys": []interface{}{
-									"name",
-								},
-								"x-kubernetes-list-type": "map",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AdditionalBlockDevice"),
-									},
-								},
-							},
-						},
-					},
-					"serverGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The server group to assign the machine to",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"identityRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a identity to be used when reconciling this cluster. If not specified, the identity ref of the cluster will be used instead.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineStatus defines the observed state of OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ready": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Ready is true when the provider resource is ready.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"addresses": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Addresses contains the OpenStack instance associated addresses.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/api/core/v1.NodeAddress"),
-									},
-								},
-							},
-						},
-					},
-					"instanceState": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InstanceState is the state of the OpenStack instance for this machine.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"failureReason": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"failureMessage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"conditions": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.Condition"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplate(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.\n\nDeprecated: v1alpha7.OpenStackMachineTemplate has been replaced by v1beta1.OpenStackMachineTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateSpec"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateList contains a list of OpenStackMachineTemplate.\n\nDeprecated: v1alpha7.OpenStackMachineTemplateList has been replaced by v1beta1.OpenStackMachineTemplateList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplate"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplate"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Spec is the specification of the desired behavior of the machine.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"),
-						},
-					},
-				},
-				Required: []string{"spec"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"template": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateResource"),
-						},
-					},
-				},
-				Required: []string{"template"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateResource"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_PortOpts(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter"),
-						},
-					},
-					"nameSuffix": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Used to make the name of the port unique. If unspecified, instead the 0-based index of the port in the list is used.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"adminStateUp": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"macAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"fixedIPs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.FixedIP"),
-									},
-								},
-							},
-						},
-					},
-					"securityGroupFilters": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The names, uuids, filters or any combination these of the security groups to assign to the instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter"),
-									},
-								},
-							},
-						},
-					},
-					"allowedAddressPairs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AddressPair"),
-									},
-								},
-							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"hostId": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The ID of the host where the port is allocated",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"vnicType": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The virtual network interface card (vNIC) type that is bound to the neutron port.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"profile": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API. See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile"),
-						},
-					},
-					"disablePortSecurity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"propagateUplinkStatus": {
-						SchemaProps: spec.SchemaProps{
-							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.) These tags are applied in addition to the instance's tags, which will also be applied to the port.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"valueSpecs": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-map-keys": []interface{}{
-									"name",
-								},
-								"x-kubernetes-list-type": "map",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ValueSpec"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ValueSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RootVolume(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"diskSize": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"volumeType": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Router(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Router represents basic information about the associated OpenStack Neutron Router.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"ips": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RouterFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroup(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SecurityGroup represents the basic information of the associated OpenStack Neutron Security Group.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"rules": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupRule"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupRule"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupRule(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"direction": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"etherType": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"securityGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"portRangeMin": {
-						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
-						},
-					},
-					"portRangeMax": {
-						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
-						},
-					},
-					"protocol": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"remoteGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"remoteIPPrefix": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-				},
-				Required: []string{"description", "name", "direction", "etherType", "securityGroupID", "portRangeMin", "portRangeMax", "protocol", "remoteGroupID", "remoteIPPrefix"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Subnet(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Subnet represents basic information about the associated OpenStack Neutron Subnet.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"cidr": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id", "cidr"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SubnetFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipVersion": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"gateway_ip": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"cidr": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipv6AddressMode": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipv6RaMode": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ValueSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "ValueSpec represents a single value_spec key-value pair.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the key-value pair. This is just for identifying the pair and will not be sent to the OpenStack API.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"key": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Key is the key in the key-value pair.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"value": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Value is the value in the key-value pair.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"name", "key", "value"},
-			},
-		},
 	}
 }
 

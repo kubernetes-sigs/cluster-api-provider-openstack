@@ -102,8 +102,8 @@ providers:
   type: InfrastructureProvider
   versions:
   # This is only for clusterctl upgrade tests
-  - name: v0.9.0
-    value: "https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.9.0/infrastructure-components.yaml"
+  - name: v0.10.0
+    value: "https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/v0.10.0/infrastructure-components.yaml"
     type: url
     contract: v1beta1
     files:

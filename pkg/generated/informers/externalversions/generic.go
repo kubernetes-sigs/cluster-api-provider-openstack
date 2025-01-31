@@ -24,7 +24,6 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	v1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
@@ -57,16 +56,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("openstackservers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha1().OpenStackServers().Informer()}, nil
-
-		// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha7
-	case v1alpha7.SchemeGroupVersion.WithResource("openstackclusters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha7().OpenStackClusters().Informer()}, nil
-	case v1alpha7.SchemeGroupVersion.WithResource("openstackclustertemplates"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha7().OpenStackClusterTemplates().Informer()}, nil
-	case v1alpha7.SchemeGroupVersion.WithResource("openstackmachines"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha7().OpenStackMachines().Informer()}, nil
-	case v1alpha7.SchemeGroupVersion.WithResource("openstackmachinetemplates"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha7().OpenStackMachineTemplates().Informer()}, nil
 
 		// Group=infrastructure.cluster.x-k8s.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("openstackclusters"):
