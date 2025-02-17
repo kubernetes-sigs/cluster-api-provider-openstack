@@ -10,7 +10,7 @@ require (
 	github.com/itchyny/gojq v0.12.17
 	github.com/onsi/ginkgo/v2 v2.22.2
 	go.uber.org/mock v0.5.0
-	k8s.io/code-generator v0.31.5
+	k8s.io/code-generator v0.31.6
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20221129083400-679ae3e9e6b6
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20230926180527-c93e2abcb28e
@@ -54,7 +54,7 @@ require (
 	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gophercloud/gophercloud/v2 v2.4.0 // indirect
+	github.com/gophercloud/gophercloud/v2 v2.5.0 // indirect
 	github.com/gophercloud/utils/v2 v2.0.0-20240812072210-8ce1fc0f2894 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
@@ -121,13 +121,13 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.31.5 // indirect
-	k8s.io/apiextensions-apiserver v0.31.5 // indirect
-	k8s.io/apimachinery v0.31.5 // indirect
-	k8s.io/apiserver v0.31.5 // indirect
-	k8s.io/client-go v0.31.5 // indirect
+	k8s.io/api v0.31.6 // indirect
+	k8s.io/apiextensions-apiserver v0.31.6 // indirect
+	k8s.io/apimachinery v0.31.6 // indirect
+	k8s.io/apiserver v0.31.6 // indirect
+	k8s.io/client-go v0.31.6 // indirect
 	k8s.io/cluster-bootstrap v0.30.3 // indirect
-	k8s.io/component-base v0.31.5 // indirect
+	k8s.io/component-base v0.31.6 // indirect
 	k8s.io/gengo v0.0.0-20201203183100-97869a43a9d9 // indirect
 	k8s.io/gengo/v2 v2.0.0-20240826214909-a7b603a56eb7 // indirect
 	k8s.io/klog v0.2.0 // indirect
