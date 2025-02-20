@@ -78,17 +78,17 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		}
 	} else {
 		var err error
-		network, err = s.GetNetworkByParam(openStackCluster.Spec.ExternalNetwork, ExternalNetworksOnly)
+		network, err = s.GetNetworkByParam(&openStackCluster.Spec.ExternalNetwork.Network, ExternalNetworksOnly)
 		if err != nil {
 			return fmt.Errorf("failed to get external network: %w", err)
 		}
 	}
 
-	openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
-		ID:   network.ID,
-		Name: network.Name,
-		Tags: network.Tags,
-	}
+	openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatusWithSubnets{}
+	openStackCluster.Status.ExternalNetwork.ID = network.ID
+	openStackCluster.Status.ExternalNetwork.Name = network.Name
+	openStackCluster.Status.ExternalNetwork.Tags = openStackCluster.Spec.Tags
+
 	s.scope.Logger().Info("External network found", "id", network.ID)
 	return nil
 }

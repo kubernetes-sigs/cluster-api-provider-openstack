@@ -208,6 +208,8 @@ func Test_ReconcileNetwork(t *testing.T) {
 func Test_ReconcileExternalNetwork(t *testing.T) {
 	fakeNetworkID := "d08803fc-2fa5-4179-b9f7-8c43d0af2fe6"
 	fakeNetworkname := "external-network"
+	fakeSubnetID := "d08803fc-2fa5-4179-b9d7-8c43d0af2fe6"
+	fakeCIDR := "10.0.0.0/24"
 
 	// Use gomega to match the ListOptsBuilder argument
 	getExternalNetwork := func(g Gomega, listOpts networks.ListOpts, ret []networks.Network) func(networks.ListOptsBuilder) ([]networks.Network, error) {
@@ -233,8 +235,10 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by ID",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						ID: ptr.To(fakeNetworkID),
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							ID: ptr.To(fakeNetworkID),
+						},
 					},
 				},
 			},
@@ -246,14 +250,24 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						ID: ptr.To(fakeNetworkID),
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							ID: ptr.To(fakeNetworkID),
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
-						ID:   fakeNetworkID,
-						Name: fakeNetworkname,
+					ExternalNetwork: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   fakeNetworkID,
+							Name: fakeNetworkname,
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   fakeSubnetID,
+								CIDR: fakeCIDR,
+							},
+						},
 					},
 				},
 			},
@@ -263,8 +277,10 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by name",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+						},
 					},
 				},
 			},
@@ -279,14 +295,24 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
-						ID:   fakeNetworkID,
-						Name: fakeNetworkname,
+					ExternalNetwork: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   fakeNetworkID,
+							Name: fakeNetworkname,
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   fakeSubnetID,
+								CIDR: fakeCIDR,
+							},
+						},
 					},
 				},
 			},
@@ -296,8 +322,10 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by ID when external network by id not found",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						ID: ptr.To(fakeNetworkID),
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							ID: ptr.To(fakeNetworkID),
+						},
 					},
 				},
 			},
@@ -306,8 +334,10 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						ID: ptr.To(fakeNetworkID),
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							ID: ptr.To(fakeNetworkID),
+						},
 					},
 				},
 			},
@@ -317,8 +347,10 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by ID when external network by name not found",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+						},
 					},
 				},
 			},
@@ -328,8 +360,10 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
-						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+					ExternalNetwork: &infrav1.ExternalNetworkParam{
+						Network: infrav1.NetworkParam{
+							Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
+						},
 					},
 				},
 			},
@@ -387,9 +421,17 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
-						ID:   fakeNetworkID,
-						Name: fakeNetworkname,
+					ExternalNetwork: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   fakeNetworkID,
+							Name: fakeNetworkname,
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   fakeSubnetID,
+								CIDR: fakeCIDR,
+							},
+						},
 					},
 				},
 			},

@@ -167,6 +167,16 @@ type NetworkParam struct {
 	Filter *NetworkFilter `json:"filter,omitempty"`
 }
 
+// ExternalNetworkParam specifies an OpenStack external network. It may be specified by either ID or Filter, but not both.
+// +kubebuilder:validation:MinProperties:=1
+type ExternalNetworkParam struct {
+	// Network specifies an OpenStack external network.  It may be specified by either ID or Filter, but not both.
+	Network NetworkParam `json:"network"`
+	// Subnets specifies an list of OpenStack external network subnet.  Each may be specified by either ID or Filter, but not both.
+	// +optional
+	Subnets []SubnetParam `json:"subnets,omitempty"`
+}
+
 // NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.
 // +kubebuilder:validation:MinProperties:=1
 type NetworkFilter struct {

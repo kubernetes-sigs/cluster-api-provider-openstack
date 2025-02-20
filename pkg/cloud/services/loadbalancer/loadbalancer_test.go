@@ -76,8 +76,13 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			},
 		},
 		Status: infrav1.OpenStackClusterStatus{
-			ExternalNetwork: &infrav1.NetworkStatus{
-				ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
+			ExternalNetwork: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
+				},
+				Subnets: []infrav1.Subnet{
+					{ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111"},
+				},
 			},
 			Network: &infrav1.NetworkStatusWithSubnets{
 				Subnets: []infrav1.Subnet{

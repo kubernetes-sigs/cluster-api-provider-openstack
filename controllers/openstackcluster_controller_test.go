@@ -257,8 +257,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: ptr.To(true),
 			APIServerFixedIP:           ptr.To("10.0.0.1"),
-			ExternalNetwork: &infrav1.NetworkParam{
-				ID: ptr.To(externalNetworkID),
+			ExternalNetwork: &infrav1.ExternalNetworkParam{
+				Network: infrav1.NetworkParam{
+					ID: ptr.To(externalNetworkID),
+				},
 			},
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
@@ -327,8 +329,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			DisableAPIServerFloatingIP: ptr.To(true),
 			APIServerFixedIP:           ptr.To("10.0.0.1"),
-			ExternalNetwork: &infrav1.NetworkParam{
-				ID: ptr.To(externalNetworkID),
+			ExternalNetwork: &infrav1.ExternalNetworkParam{
+				Network: infrav1.NetworkParam{
+					ID: ptr.To(externalNetworkID),
+				},
 			},
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
