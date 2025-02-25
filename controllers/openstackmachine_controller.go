@@ -583,7 +583,28 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 			}
 			return openStackCluster.Spec.IdentityRef
 		}()
-		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
+		// If user has provided .spec.ports (non-empty), skip .Status.Network entirely
+		// Otherwise, fall back to openStackCluster.Status.Network.ID
+		// This supports HCP - Hosted Control Plane usage
+		defaultNetworkID := ""
+		if len(openStackMachine.Spec.Ports) == 0 {
+			if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+				return nil, fmt.Errorf(
+					"no user-defined ports and openStackCluster.Status.Network is nil/empty; cannot create server",
+				)
+			}
+			defaultNetworkID = openStackCluster.Status.Network.ID
+		}
+
+		defaultSecGroup := getManagedSecurityGroup(openStackCluster, machine)
+		var secGroup *string
+		// If the user explicitly provided security groups in OpenStackMachine, skip the cluster’s managed SG.
+		if len(openStackMachine.Spec.SecurityGroups) > 0 {
+			secGroup = nil
+		} else {
+			secGroup = defaultSecGroup
+		}
+		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, secGroup, defaultNetworkID)
 		machineServer = &infrav1alpha1.OpenStackServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
