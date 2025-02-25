@@ -365,6 +365,14 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
+	if machineServer != nil {
+		openStackMachine.Status.OpenStackServerRef = &corev1.TypedLocalObjectReference{
+			APIGroup: &infrav1alpha1.SchemeGroupVersion.Group,
+			Kind:     machineServer.Kind,
+			Name:     machineServer.Name,
+		}
+	}
+
 	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
