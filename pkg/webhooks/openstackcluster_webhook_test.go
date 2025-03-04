@@ -165,6 +165,94 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Changing security group rules on the OpenStackCluster.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules is allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						ControlPlaneNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Name:                "foobar",
+								Description:         ptr.To("foobar"),
+								PortRangeMin:        ptr.To(80),
+								PortRangeMax:        ptr.To(80),
+								Protocol:            ptr.To("tcp"),
+								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane"},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						ControlPlaneNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Name:                "foobar",
+								Description:         ptr.To("foobar"),
+								PortRangeMin:        ptr.To(80),
+								PortRangeMax:        ptr.To(80),
+								Protocol:            ptr.To("tcp"),
+								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane", "worker"},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing security group rules on the OpenStackCluster.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules is allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						WorkerNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Name:                "foobar",
+								Description:         ptr.To("foobar"),
+								PortRangeMin:        ptr.To(80),
+								PortRangeMax:        ptr.To(80),
+								Protocol:            ptr.To("tcp"),
+								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"worker"},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						WorkerNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Name:                "foobar",
+								Description:         ptr.To("foobar"),
+								PortRangeMin:        ptr.To(80),
+								PortRangeMax:        ptr.To(80),
+								Protocol:            ptr.To("tcp"),
+								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"worker", "controlplane"},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Changing CIDRs on the OpenStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs is allowed",
 			oldTemplate: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
