@@ -151,6 +151,8 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
   - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
+  # Newer crypto requires go 1.23
+  - dependency-name: "golang.org/x/crypto"
   labels:
     - "area/dependency"
     - "ok-to-test"
