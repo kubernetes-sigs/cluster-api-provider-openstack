@@ -158,6 +158,7 @@ updates:
   # These dependencies are skipped because they require a newer version of go:
   - dependency-name: "golang.org/x/crypto"
   - dependency-name: "github.com/a8m/envsubst"
+  - dependency-name: "golang.org/x/text"
   labels:
     - "area/dependency"
     - "ok-to-test"
