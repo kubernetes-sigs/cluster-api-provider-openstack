@@ -48,6 +48,8 @@ updates:
   - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
   # For now we deploy CAPI from an unreleased commit
   - dependency-name: "sigs.k8s.io/cluster-api*"
+  # These dependencies are skipped because they require a newer version of go:
+  - dependency-name: "github.com/a8m/envsubst"
   labels:
     - "area/dependency"
     - "ok-to-test"
@@ -99,6 +101,8 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
   - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
+  # These dependencies are skipped because they require a newer version of go:
+  - dependency-name: "github.com/a8m/envsubst"
   labels:
     - "area/dependency"
     - "ok-to-test"
@@ -151,8 +155,9 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
   - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
-  # Newer crypto requires go 1.23
+  # These dependencies are skipped because they require a newer version of go:
   - dependency-name: "golang.org/x/crypto"
+  - dependency-name: "github.com/a8m/envsubst"
   labels:
     - "area/dependency"
     - "ok-to-test"
