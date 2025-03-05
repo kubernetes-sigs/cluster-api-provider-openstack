@@ -219,9 +219,8 @@ func (r *orcImageReconciler) reconcileNormal(ctx context.Context, orcImage *orcv
 			addStatus(withIncrementDownloadAttempts())
 
 			return ctrl.Result{}, nil
-		} else {
-			return ctrl.Result{}, r.uploadImageContent(ctx, orcImage, imageClient, glanceImage)
 		}
+		return ctrl.Result{}, r.uploadImageContent(ctx, orcImage, imageClient, glanceImage)
 
 	// Error cases
 	case images.ImageStatusKilled:
