@@ -154,6 +154,3 @@ require (
 )
 
 replace github.com/k-orc/openstack-resource-controller => ./orc
-
-// Remove as soon as commit 4cf22c51d3b540795ccd0dd4bcdcd9cad44d94d4 is included in a release of prometheus/common
-replace github.com/prometheus/common => github.com/prometheus/common v0.55.1-0.20240715210123-4cf22c51d3b5
