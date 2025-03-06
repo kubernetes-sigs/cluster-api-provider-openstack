@@ -119,7 +119,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	oldObj.Spec.Bastion = &infrav1.Bastion{}
 	newObj.Spec.Bastion = &infrav1.Bastion{}
 
-	// Allow changes to the managed allNodesSecurityGroupRules.
+	// Allow changes to the managed securityGroupRules.
 	if newObj.Spec.ManagedSecurityGroups != nil {
 		if oldObj.Spec.ManagedSecurityGroups == nil {
 			oldObj.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
@@ -127,6 +127,12 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 		oldObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
 		newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+
+		oldObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+
+		oldObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
 
 		// Allow change to the allowAllInClusterTraffic.
 		oldObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
