@@ -159,6 +159,7 @@ updates:
   - dependency-name: "golang.org/x/crypto"
   - dependency-name: "github.com/a8m/envsubst"
   - dependency-name: "golang.org/x/text"
+  - dependency-name: "github.com/onsi/ginkgo/v2"
   labels:
     - "area/dependency"
     - "ok-to-test"
