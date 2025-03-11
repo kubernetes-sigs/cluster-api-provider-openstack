@@ -1006,6 +1006,28 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Expect(additionalVolume.AvailabilityZone).To(Equal(failureDomain))
 				Expect(additionalVolume.VolumeType).To(Equal(volumeTypeAlt))
 			}
+
+			// This last block tests a scenario where an external agent deletes a server (e.g. a user via Horizon).
+			// We want to ensure that the OpenStackMachine conditions are updated to reflect the server deletion.
+			// Context: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2474
+			shared.Logf("Deleting a server")
+			serverToDelete := allServers[controlPlaneMachines[0].Spec.InfrastructureRef.Name]
+			err = shared.DeleteOpenStackServer(ctx, e2eCtx, serverToDelete.ID)
+			Expect(err).NotTo(HaveOccurred())
+			shared.Logf("Waiting for the OpenStackMachine to have a condition that the server has been unexpectedly deleted")
+			Eventually(func() bool {
+				openStackMachine := &infrav1.OpenStackMachine{}
+				err := e2eCtx.Environment.BootstrapClusterProxy.GetClient().Get(ctx, crclient.ObjectKey{Name: controlPlaneMachines[0].Name, Namespace: controlPlaneMachines[0].Namespace}, openStackMachine)
+				if err != nil {
+					return false
+				}
+				for _, condition := range openStackMachine.Status.Conditions {
+					if condition.Type == infrav1.InstanceReadyCondition && condition.Status == corev1.ConditionFalse && condition.Reason == infrav1.InstanceDeletedReason && condition.Message == "server has been unexpectedly deleted" {
+						return true
+					}
+				}
+				return false
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-delete-machine")...).Should(BeTrue())
 		})
 	})
 })
