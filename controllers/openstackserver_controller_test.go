@@ -31,8 +31,11 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/conditions"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -545,6 +548,187 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 
 			_, err := reconciler.reconcileNormal(ctx, scopeWithLogger, &tt.osServer)
 			g.Expect(err).ToNot(HaveOccurred())
+		})
+	}
+}
+
+func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
+	tests := []struct {
+		name            string
+		openStackServer *infrav1alpha1.OpenStackServer
+		setupMocks      func(r *recorders)
+		wantServer      *servers.Server
+		wantErr         bool
+		wantCondition   *clusterv1.Condition
+	}{
+		{
+			name: "instanceID set in status but server not found",
+			openStackServer: &infrav1alpha1.OpenStackServer{
+				Status: infrav1alpha1.OpenStackServerStatus{
+					InstanceID: ptr.To(instanceUUID),
+				},
+			},
+			setupMocks: func(r *recorders) {
+				r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+			},
+			wantErr: false,
+			wantCondition: &clusterv1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  corev1.ConditionFalse,
+				Reason:  infrav1.InstanceNotFoundReason,
+				Message: infrav1.ServerUnexpectedDeletedMessage,
+			},
+		},
+		{
+			name: "instanceID set in status but server not found with error",
+			openStackServer: &infrav1alpha1.OpenStackServer{
+				Status: infrav1alpha1.OpenStackServerStatus{
+					InstanceID: ptr.To(instanceUUID),
+				},
+			},
+			setupMocks: func(r *recorders) {
+				r.compute.GetServer(instanceUUID).Return(nil, fmt.Errorf("error"))
+			},
+			wantErr: true,
+			wantCondition: &clusterv1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  corev1.ConditionFalse,
+				Reason:  infrav1.OpenStackErrorReason,
+				Message: "get server \"" + instanceUUID + "\" detail failed: error",
+			},
+		},
+		{
+			name: "instanceStatus is nil but server found with machine name",
+			openStackServer: &infrav1alpha1.OpenStackServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: openStackServerName,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{},
+			},
+			setupMocks: func(r *recorders) {
+				r.compute.ListServers(servers.ListOpts{
+					Name: "^" + openStackServerName + "$",
+				}).Return([]servers.Server{{ID: instanceUUID}}, nil)
+			},
+			wantErr: false,
+			wantServer: &servers.Server{
+				ID: instanceUUID,
+			},
+		},
+		{
+			name: "instanceStatus is nil and server not found and then created",
+			openStackServer: &infrav1alpha1.OpenStackServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: openStackServerName,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
+					},
+				},
+			},
+			setupMocks: func(r *recorders) {
+				r.compute.ListServers(servers.ListOpts{
+					Name: "^" + openStackServerName + "$",
+				}).Return([]servers.Server{}, nil)
+				r.compute.CreateServer(gomock.Any(), gomock.Any()).Return(&servers.Server{ID: instanceUUID}, nil)
+			},
+			wantErr: false,
+			wantServer: &servers.Server{
+				ID: instanceUUID,
+			},
+			// It's off but no condition is set because the server creation was kicked off but we
+			// don't know the result yet in this function.
+		},
+		{
+			name: "instanceStatus is nil and server not found and then created with error",
+			openStackServer: &infrav1alpha1.OpenStackServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: openStackServerName,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
+					},
+				},
+			},
+			setupMocks: func(r *recorders) {
+				r.compute.ListServers(servers.ListOpts{
+					Name: "^" + openStackServerName + "$",
+				}).Return([]servers.Server{}, nil)
+				r.compute.CreateServer(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+			},
+			wantErr: true,
+			wantCondition: &clusterv1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  corev1.ConditionFalse,
+				Reason:  infrav1.InstanceCreateFailedReason,
+				Message: "error creating Openstack instance: " + "error",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+			log := testr.New(t)
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			scopeWithLogger := scope.NewWithLogger(mockScopeFactory, log)
+
+			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
+			imageRecorder := mockScopeFactory.ImageClient.EXPECT()
+			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
+			volumeRecorder := mockScopeFactory.VolumeClient.EXPECT()
+
+			recorders := &recorders{
+				compute: computeRecorder,
+				image:   imageRecorder,
+				network: networkRecorder,
+				volume:  volumeRecorder,
+			}
+
+			if tt.setupMocks != nil {
+				tt.setupMocks(recorders)
+			}
+
+			computeService, err := compute.NewService(scopeWithLogger)
+			g.Expect(err).ToNot(HaveOccurred())
+
+			reconciler := OpenStackServerReconciler{}
+			status, err := reconciler.getOrCreateServer(ctx, log, tt.openStackServer, computeService, []string{portUUID})
+
+			// Check error result
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+			} else {
+				g.Expect(err).ToNot(HaveOccurred())
+			}
+
+			// Check instance status
+			if tt.wantServer != nil {
+				g.Expect(status.ID()).To(Equal(tt.wantServer.ID))
+			}
+
+			// Check the condition is set correctly
+			if tt.wantCondition != nil {
+				// print openstackServer conditions
+				for _, condition := range tt.openStackServer.Status.Conditions {
+					t.Logf("Condition: %s, Status: %s, Reason: %s", condition.Type, condition.Status, condition.Reason)
+				}
+				conditionType := conditions.Get(tt.openStackServer, tt.wantCondition.Type)
+				g.Expect(conditionType).ToNot(BeNil())
+				g.Expect(conditionType.Status).To(Equal(tt.wantCondition.Status))
+				g.Expect(conditionType.Reason).To(Equal(tt.wantCondition.Reason))
+				g.Expect(conditionType.Message).To(Equal(tt.wantCondition.Message))
+			}
 		})
 	}
 }
