@@ -184,7 +184,7 @@ $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/wit
 $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
-e2e-prerequisites: e2e-templates e2e-image test-e2e-image-prerequisites ## Build all artifacts required by e2e tests
+e2e-prerequisites: $(GINKGO) e2e-templates e2e-image test-e2e-image-prerequisites ## Build all artifacts required by e2e tests
 
 # Can be run manually, e.g. via:
 # export OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
@@ -197,6 +197,12 @@ test-e2e: $(GINKGO) e2e-prerequisites ## Run e2e tests
 		-focus="$(E2E_GINKGO_FOCUS)" $(_SKIP_ARGS) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- \
 			-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
 			-data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
+
+# Pre-compile tests
+# This is not required, but it will make the tests start faster
+.PHONY: build-e2e-tests
+build-e2e-tests: $(GINKGO)
+	$(GINKGO) build -tags=e2e ./test/e2e/suites/e2e/...
 
 .PHONY: e2e-image
 e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"

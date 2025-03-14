@@ -63,22 +63,7 @@ ARTIFACTS=${ARTIFACTS:-/tmp/${CLUSTER_NAME}-artifacts}
 devstackdir="${ARTIFACTS}/devstack"
 mkdir -p "$devstackdir"
 
-# retry $1 times with $2 sleep in between
-function retry {
-    attempt=0
-    max_attempts=${1}
-    interval=${2}
-    shift; shift
-    until [[ "$attempt" -ge "$max_attempts" ]] ; do
-        attempt=$((attempt+1))
-        set +e
-        eval "$*" && return || echo "failed $attempt times: $*"
-        set -e
-        sleep "$interval"
-    done
-    echo "error: reached max attempts at retry($*)"
-    return 1
-}
+source "${REPO_ROOT}/hack/ci/common.sh"
 
 function ensure_openstack_client {
     if ! command -v openstack;
@@ -100,12 +85,6 @@ function ensure_openstack_client {
         # Ensure openstack cli can load fully including all plugins
         openstack help >/dev/null
     fi
-}
-
-function wait_for_ssh {
-    local ip=$1 && shift
-
-    retry 10 30 "$(get_ssh_cmd) ${ip} -- true"
 }
 
 function start_sshuttle {
@@ -173,19 +152,6 @@ function wait_for_devstack {
         # Fail early if any cloud-init service failed
         $ssh_cmd "$ip" -- sudo systemctl status --full "$service" || exit 1
     done
-}
-
-function get_ssh_cmd {
-    local private_key_file=$(get_ssh_private_key_file)
-    if [ -z "$private_key_file" ]; then
-        # If there's no private key file use the public key instead
-        # This allows us to specify a private key which is held only on a
-        # hardware device and therefore has no key file
-        private_key_file=$(get_ssh_public_key_file)
-    fi
-
-    echo "ssh -i ${private_key_file} -l cloud " \
-         "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PasswordAuthentication=no "
 }
 
 function create_devstack {
