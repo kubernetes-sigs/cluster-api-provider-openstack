@@ -365,11 +365,6 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
-	if result != nil {
-		return *result, nil
-	}
-
 	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -383,9 +378,9 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	if instanceStatus == nil {
-		msg := "server has been unexpectedly deleted"
-		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, msg)
-		openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, errors.New(msg))
+		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, infrav1.ServerUnexpectedDeletedMessage)
+		openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, errors.New(infrav1.ServerUnexpectedDeletedMessage)) //nolint:stylecheck // This error is not used as an error
+		return ctrl.Result{}, nil
 	}
 
 	instanceNS, err := instanceStatus.NetworkStatus()
@@ -411,6 +406,11 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		}
 
 		conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
+	}
+
+	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
+	if result != nil {
+		return *result, nil
 	}
 
 	scope.Logger().Info("Reconciled Machine create successfully")
