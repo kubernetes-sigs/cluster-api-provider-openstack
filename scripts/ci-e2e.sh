@@ -80,25 +80,41 @@ if [ -n "${BOSKOS_HOST:-}" ]; then
   HEART_BEAT_PID=$!
 fi
 
-"hack/ci/create_devstack.sh"
+# Run e2e prerequisites concurrently with devstack build to save time
+build_out=$(mktemp)
+(
+    # Run prerequisites at low priority to avoid slowing down devstack tasks,
+    # which generally take much longer
+    ionice nice make e2e-image e2e-prerequisites build-e2e-tests
 
-# Upload image for e2e clusterctl upgrade tests
-source "${REPO_ROOT}/hack/ci/${RESOURCE_TYPE}.sh"
-CONTAINER_ARCHIVE="/tmp/capo-e2e-image.tar"
-SSH_KEY="$(get_ssh_private_key_file)"
-SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o PasswordAuthentication=no"
-CONTROLLER_IP=${CONTROLLER_IP:-"10.0.3.15"}
+    container_archive=$(mktemp --suffix=.tar)
+    ionice nice docker save -o "${container_archive}" gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
 
-make e2e-image
-docker save -o "${CONTAINER_ARCHIVE}" gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
-scp -i "${SSH_KEY}" ${SSH_ARGS} "${CONTAINER_ARCHIVE}" "cloud@${CONTROLLER_IP}:capo-e2e-image.tar"
-ssh -i "${SSH_KEY}" ${SSH_ARGS} "cloud@${CONTROLLER_IP}" -- sudo chown root:root capo-e2e-image.tar
-ssh -i "${SSH_KEY}" ${SSH_ARGS} "cloud@${CONTROLLER_IP}" -- sudo chmod u=rw,g=r,o=r capo-e2e-image.tar
-ssh -i "${SSH_KEY}" ${SSH_ARGS} "cloud@${CONTROLLER_IP}" -- sudo mv capo-e2e-image.tar /var/www/html/capo-e2e-image.tar
+    # Wait for SSH to become available in the provisioning devstack
+    # infrastructure before uploading image archive
+    CONTROLLER_IP=${CONTROLLER_IP:-"10.0.3.15"}
+    source "${REPO_ROOT}/hack/ci/${RESOURCE_TYPE}.sh"
+    source "${REPO_ROOT}/hack/ci/common.sh"
+    wait_for_ssh "${CONTROLLER_IP}"
 
-export OPENSTACK_CLOUD_YAML_FILE
-OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
-make test-e2e
+    retry 10 10 scp $(get_ssh_common_args) "${container_archive}" "cloud@${CONTROLLER_IP}:capo-e2e-image.tar"
+    retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo chown root:root capo-e2e-image.tar
+    retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo chmod u=rw,g=r,o=r capo-e2e-image.tar
+    retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo mv capo-e2e-image.tar /var/www/html/capo-e2e-image.tar
+) >"$build_out" 2>&1 &
+build_pid=$!
+
+# Build the devstack environment
+hack/ci/create_devstack.sh
+
+# Wait for and capture exit of build process
+# Log build output and exit if the build failed
+wait $build_pid
+ret=$?
+cat "$build_out"
+[ "$ret" != 0 ] && exit "$ret"
+
+make test-e2e OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
 test_status="${?}"
 
 # If Boskos is being used then release the resource back to Boskos.
