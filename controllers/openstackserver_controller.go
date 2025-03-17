@@ -106,7 +106,7 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 	if cluster != nil {
 		if annotations.IsPaused(cluster, openStackServer) {
-			scope.Logger().Info("OpenStackServer %s/%s linked to a Cluster that is paused. Won't reconcile", openStackServer.Namespace, openStackServer.Name)
+			scope.Logger().Info("OpenStackServer linked to a Cluster that is paused. Won't reconcile")
 			return reconcile.Result{}, nil
 		}
 	}
