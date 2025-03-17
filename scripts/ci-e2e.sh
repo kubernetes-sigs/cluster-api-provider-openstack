@@ -81,7 +81,7 @@ if [ -n "${BOSKOS_HOST:-}" ]; then
 fi
 
 # Run e2e prerequisites concurrently with devstack build to save time
-build_out=$(mktemp)
+prerequisites_log="${ARTIFACTS}/logs/e2e-prerequisites.log"
 (
     # Run prerequisites at low priority to avoid slowing down devstack tasks,
     # which generally take much longer
@@ -101,18 +101,18 @@ build_out=$(mktemp)
     retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo chown root:root capo-e2e-image.tar
     retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo chmod u=rw,g=r,o=r capo-e2e-image.tar
     retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo mv capo-e2e-image.tar /var/www/html/capo-e2e-image.tar
-) >"$build_out" 2>&1 &
+) >"$prerequisites_log" 2>&1 &
 build_pid=$!
 
 # Build the devstack environment
 hack/ci/create_devstack.sh
 
-# Wait for and capture exit of build process
-# Log build output and exit if the build failed
-wait $build_pid
-ret=$?
-cat "$build_out"
-[ "$ret" != 0 ] && exit "$ret"
+# Check exit of prerequisites build, waiting for it to complete if necessary
+if ! wait $build_pid; then
+    echo "Building e2e prerequisites failed"
+    cat "$prerequisites_log"
+    exit 1
+fi
 
 make test-e2e OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
 test_status="${?}"
