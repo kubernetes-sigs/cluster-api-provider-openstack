@@ -1029,6 +1029,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: instanceState
       type:
         scalar: string
+    - name: openStackServerRef
+      type:
+        namedType: io.k8s.api.core.v1.TypedLocalObjectReference
     - name: ready
       type:
         scalar: boolean
