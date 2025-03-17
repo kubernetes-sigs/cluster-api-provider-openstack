@@ -253,7 +253,7 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.FloatingIP != "" {
 		statusFloatingIP = &openStackCluster.Status.Bastion.FloatingIP
 	}
-	if openStackCluster.Spec.Bastion.FloatingIP != nil {
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.FloatingIP != nil {
 		specFloatingIP = openStackCluster.Spec.Bastion.FloatingIP
 	}
 
