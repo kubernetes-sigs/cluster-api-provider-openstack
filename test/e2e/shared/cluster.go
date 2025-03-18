@@ -42,13 +42,13 @@ func createClusterctlLocalRepository(config *clusterctl.E2EConfig, repositoryFol
 
 	// Ensuring a CNI file is defined in the config and register a FileTransformation to inject the referenced file as in place of the CNI_RESOURCES envSubst variable.
 	Expect(config.Variables).To(HaveKey(capie2e.CNIPath), "Missing %s variable in the config", capie2e.CNIPath)
-	cniPath := config.GetVariable(capie2e.CNIPath)
+	cniPath := config.MustGetVariable(capie2e.CNIPath)
 	Expect(cniPath).To(BeAnExistingFile(), "The %s variable should resolve to an existing file", capie2e.CNIPath)
 	createRepositoryInput.RegisterClusterResourceSetConfigMapTransformation(cniPath, capie2e.CNIResources)
 
 	// Ensuring a CCM file is defined in the config and register a FileTransformation to inject the referenced file as in place of the CCM_RESOURCES envSubst variable.
 	Expect(config.Variables).To(HaveKey(CCMPath), "Missing %s variable in the config", CCMPath)
-	ccmPath := config.GetVariable(CCMPath)
+	ccmPath := config.MustGetVariable(CCMPath)
 	Expect(ccmPath).To(BeAnExistingFile(), "The %s variable should resolve to an existing file", CCMPath)
 	createRepositoryInput.RegisterClusterResourceSetConfigMapTransformation(ccmPath, CCMResources)
 
@@ -69,7 +69,7 @@ func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme,
 	// try to use an existing cluster
 	if useExistingCluster {
 		// If the kubeContext is locked: try to use the default kubeconfig with the current context
-		kubeContext := config.GetVariable(KubeContext)
+		kubeContext := config.GetVariableOrEmpty(KubeContext)
 		if kubeContext != "" {
 			testKubeconfigPath := clientcmd.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
 			kubecfg, err := clientcmd.LoadFromFile(testKubeconfigPath)
