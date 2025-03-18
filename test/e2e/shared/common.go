@@ -85,8 +85,10 @@ func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace
 				panic(r)
 			}()
 			framework.DeleteAllClustersAndWait(ctx, framework.DeleteAllClustersAndWaitInput{
-				Client:    e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				Namespace: namespace.Name,
+				ClusterProxy:         e2eCtx.Environment.BootstrapClusterProxy,
+				ClusterctlConfigPath: e2eCtx.Settings.ConfigPath,
+				Namespace:            namespace.Name,
+				ArtifactFolder:       e2eCtx.Settings.ArtifactFolder,
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-delete-cluster")...)
 		}()
 
@@ -118,9 +120,11 @@ func ClusterForSpec(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.N
 func dumpSpecResources(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace, directory ...string) {
 	paths := append([]string{e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), "resources"}, directory...)
 	framework.DumpAllResources(ctx, framework.DumpAllResourcesInput{
-		Lister:    e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-		Namespace: namespace.Name,
-		LogPath:   filepath.Join(paths...),
+		Lister:               e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+		KubeConfigPath:       e2eCtx.Environment.BootstrapClusterProxy.GetKubeconfigPath(),
+		ClusterctlConfigPath: e2eCtx.Settings.ConfigPath,
+		Namespace:            namespace.Name,
+		LogPath:              filepath.Join(paths...),
 	})
 }
 
@@ -232,7 +236,7 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 	if openStackCluster.Status.Bastion == nil {
 		Logf("Skipping log collection for machine %q since no bastion is available", m.Name)
 	} else {
-		srvUser := o.E2EContext.E2EConfig.GetVariable(SSHUserMachine)
+		srvUser := o.E2EContext.E2EConfig.MustGetVariable(SSHUserMachine)
 		executeCommands(
 			ctx,
 			o.E2EContext.Settings.ArtifactFolder,
