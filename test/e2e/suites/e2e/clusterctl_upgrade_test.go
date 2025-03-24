@@ -59,7 +59,7 @@ var _ = Describe("When testing clusterctl upgrades (v0.10=>current) [clusterctl-
 			InitWithControlPlaneProviders:   []string{"kubeadm:" + OldCAPIVersion},
 			MgmtFlavor:                      shared.FlavorDefault,
 			WorkloadFlavor:                  shared.FlavorWithoutORC,
-			InitWithKubernetesVersion:       e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion),
+			InitWithKubernetesVersion:       e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
 		}
 	})
 })

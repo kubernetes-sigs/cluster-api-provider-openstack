@@ -100,7 +100,7 @@ var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
 
 	upgradeImage = shared.DownloadImage{
 		Name:         "capo-upgrade-from",
-		ArtifactPath: "ubuntu/2024-05-28/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_IMAGE_NAME_UPGRADE_FROM") + ".img",
+		ArtifactPath: "ubuntu/2024-05-28/" + e2eCtx.E2EConfig.MustGetVariable("OPENSTACK_IMAGE_NAME_UPGRADE_FROM") + ".img",
 	}
 })
 
