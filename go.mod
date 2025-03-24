@@ -1,6 +1,7 @@
 module sigs.k8s.io/cluster-api-provider-openstack
 
 go 1.22.0
+toolchain go1.24.1
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -12,14 +13,14 @@ require (
 	github.com/gophercloud/utils/v2 v2.0.0-20240812072210-8ce1fc0f2894
 	github.com/hashicorp/go-version v1.7.0
 	github.com/k-orc/openstack-resource-controller v0.0.0-00010101000000-000000000000
-	github.com/onsi/ginkgo/v2 v2.22.2
-	github.com/onsi/gomega v1.36.2
+	github.com/onsi/ginkgo/v2 v2.23.3
+	github.com/onsi/gomega v1.36.3
 	github.com/prometheus/client_golang v1.21.1
 	github.com/spf13/pflag v1.0.6
 	github.com/ulikunitz/xz v0.5.12
 	go.uber.org/mock v0.5.0
-	golang.org/x/crypto v0.33.0
-	golang.org/x/text v0.22.0
+	golang.org/x/crypto v0.36.0
+	golang.org/x/text v0.23.0
 	gopkg.in/ini.v1 v1.67.0
 	k8s.io/api v0.30.11
 	k8s.io/apiextensions-apiserver v0.30.11
@@ -28,8 +29,8 @@ require (
 	k8s.io/component-base v0.30.11
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661
-	sigs.k8s.io/cluster-api v1.8.10
-	sigs.k8s.io/cluster-api/test v1.8.10
+	sigs.k8s.io/cluster-api v1.8.11
+	sigs.k8s.io/cluster-api/test v1.8.11
 	sigs.k8s.io/controller-runtime v0.18.7
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
 	sigs.k8s.io/yaml v1.4.0
@@ -130,18 +131,18 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/term v0.29.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.28.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240311132316-a219d84964c2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240314234333-6e1732d8331c // indirect
 	google.golang.org/grpc v1.62.2 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
