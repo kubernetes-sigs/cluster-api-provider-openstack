@@ -160,6 +160,7 @@ updates:
   - dependency-name: "github.com/a8m/envsubst"
   - dependency-name: "golang.org/x/text"
   - dependency-name: "github.com/onsi/ginkgo/v2"
+  - dependency-name: "github.com/onsi/gomega"
   labels:
     - "area/dependency"
     - "ok-to-test"
