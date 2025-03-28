@@ -88,7 +88,7 @@ type OpenStackClusterSpec struct {
 	// If ExternalNetwork is not defined and there are no external networks
 	// the controller will proceed as though DisableExternalNetwork was set.
 	// +optional
-	ExternalNetwork *NetworkParam `json:"externalNetwork,omitempty"`
+	ExternalNetwork *ExternalNetworkParam `json:"externalNetwork,omitempty"`
 
 	// DisableExternalNetwork specifies whether or not to attempt to connect the cluster
 	// to an external network. This allows for the creation of clusters when connecting
@@ -208,7 +208,7 @@ type OpenStackClusterStatus struct {
 
 	// ExternalNetwork contains information about the external network used for default ingress and egress traffic.
 	// +optional
-	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
+	ExternalNetwork *NetworkStatusWithSubnets `json:"externalNetwork,omitempty"`
 
 	// Router describes the default cluster router
 	// +optional
