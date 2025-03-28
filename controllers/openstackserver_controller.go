@@ -169,7 +169,7 @@ func patchServer(ctx context.Context, patchHelper *patch.Helper, openStackServer
 	return patchHelper.Patch(ctx, openStackServer, options...)
 }
 
-func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, _ controller.Options) error {
+func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	const imageRefPath = "spec.image.imageRef.name"
 
 	log := ctrl.LoggerFrom(ctx)
@@ -189,6 +189,7 @@ func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ct
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
+		WithOptions(options).
 		For(&infrav1alpha1.OpenStackServer{}).
 		Watches(&orcv1alpha1.Image{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
