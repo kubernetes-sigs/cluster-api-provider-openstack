@@ -8,6 +8,7 @@
     - [cloud-init based images](#cloud-init-based-images)
     - [Ignition based images](#ignition-based-images)
   - [SSH key pair](#ssh-key-pair)
+  - [ORC](#orc)
   - [OpenStack credential](#openstack-credential)
     - [Generate credentials](#generate-credentials)
   - [CA certificates](#ca-certificates)
@@ -28,6 +29,9 @@
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
   - [Ports](#ports)
+    - [Port network and IP addresses](#port-network-and-ip-addresses)
+      - [Examples](#examples)
+    - [Port Security](#port-security)
   - [Security groups](#security-groups)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
@@ -125,6 +129,27 @@ The key pair name must be exposed as an environment variable `OPENSTACK_SSH_KEY_
 In order to access cluster nodes via SSH, you must either
 [access nodes through the bastion host](#accessing-nodes-through-the-bastion-host-via-ssh)
 or [configure custom security groups](#security-groups) with rules allowing ingress for port 22.
+
+## ORC
+
+ORC ([OpenStack Resource Controller](https://github.com/k-orc/openstack-resource-controller)) provides a set of Kubernetes controllers and is required by CAPO to 
+manage some OpenStack resources. ORC is a separate project and is not part of CAPO, therefore it needs to be installed separately.
+
+To install ORC, run the following command:
+
+```bash
+ORC_VERSION=v1.0.0
+kubectl apply -f "https://github.com/k-orc/openstack-resource-controller/releases/download/${ORC_VERSION}/install.yaml"
+```
+
+We also publish a Kustomize module which can be used to install ORC:
+
+```bash
+kubectl apply --server-side -k "https://github.com/k-orc/openstack-resource-controller/dist?ref=${ORC_VERSION}"
+```
+
+In most cases, the default configuration should be sufficient.
+Check the [ORC documentation](https://k-orc.cloud) for more information.
 
 ## OpenStack credential
 
@@ -467,15 +492,11 @@ Together, `network` and `fixedIPs` define the network a port will be created on,
 
 `network` is a filter which uniquely describes the Neutron network the port will be created be on. Machine creation will fail if the result is empty or not unique. If a network `id` is specified in the filter then no separate OpenStack query is required. This has the advantages of being both faster and unambiguous in all circumstances, so it is the preferred way to specify a network where possible.
 
-The available fields are described in [the CRD](https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api-provider-openstack/infrastructure.cluster.x-k8s.io/OpenStackMachine/v1alpha6@v0.7.1#spec-ports-network).
-
 If `network` is not specified at all, it may be possible to infer the network from any uniquely defined subnets in `fixedIPs`. As this may result in additional OpenStack queries and the potential for ambiguity is greater, this is not recommended.
 
 `fixedIPs` describes a list of addresses from the target `network` which will be allocated to the port. A `fixedIP` is either a specific `ipAddress`, a `subnet` from which an ip address will be allocated, or both. If only `ipAddress` is specified, it must be valid in at least one of the subnets defined in the current network. If both are defined, `ipAddress` must be valid in the specified subnet.
 
 `subnet` is a filter which uniquely describe the Neutron subnet an address will be allocated from. Its operation is analogous to `network`, described above.
-
-`fixedIPs`, including all fields available in the `subnet` filter, are described in [the CRD](https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api-provider-openstack/infrastructure.cluster.x-k8s.io/OpenStackMachine/v1alpha6@v0.7.1#spec-ports-fixedIPs).
 
 If no `fixedIPs` are specified, the port will get an address from every subnet in the network.
 
@@ -571,14 +592,17 @@ set to `true`, the rules for the managed security groups permit all traffic
 between cluster nodes on all ports and protocols (API server and node port traffic is still
 permitted from anywhere, as with the default rules).
 
-We can add security group rules that authorize traffic from all nodes via `allNodesSecurityGroupRules`.
-It takes a list of security groups rules that should be applied to selected nodes.
-The following rule fields are mutually exclusive: `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix`.
+We can add additional security group rules that authorize traffic between nodes and/or from the outside
+world using `allNodesSecurityGroupRules`, `controlPlaneNodesSecurityGroupRules` and `workerNodesSecurityGroupRules`.
+These properties take a list of security group rules that should be applied to all nodes, control plane nodes only
+or worker nodes only respectively.
+
+In a rule definition, the fields `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix` are mutually exclusive.
 If none of these fields are set, the rule will have a remote IP prefix of `0.0.0.0/0` per Neutron default.
 
 Valid values for `remoteManagedGroups` are `controlplane`, `worker` and `bastion`.
 
-To apply a security group rule that will allow BGP between the control plane and workers, you can follow this example:
+For example, to apply a security group rule to all nodes to permit BGP traffic between the nodes, use the following:
 
 ```yaml
 managedSecurityGroups:
@@ -593,7 +617,29 @@ managedSecurityGroups:
     portRangeMax: 179
     protocol: tcp
     description: "Allow BGP between control plane and workers"
-  ```
+```
+
+Or to enable traffic from anywhere to node port services on worker nodes only,
+which is **required for the OVN load-balancer provider**, the following can be used:
+
+```yaml
+managedSecurityGroups:
+  workerNodesSecurityGroupRules:
+  - remoteIPPrefix: 0.0.0.0/0
+    direction: ingress
+    etherType: IPv4
+    name: Node Port (TCP, anywhere)
+    portRangeMin: 30000
+    portRangeMax: 32767
+    protocol: tcp
+  - remoteIPPrefix: 0.0.0.0/0
+    direction: ingress
+    etherType: IPv4
+    name: Node Port (UDP, anywhere)
+    portRangeMin: 30000
+    portRangeMax: 32767
+    protocol: udp
+```
 
 If this is not flexible enough, pre-existing security groups can be added to the
 spec of an `OpenStackMachineTemplate`, e.g.:

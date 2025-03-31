@@ -19,14 +19,14 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	apiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha1"
+	apiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
+	applyconfigurationapiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha1"
 	scheme "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/scheme"
 )
 
@@ -38,36 +38,37 @@ type OpenStackServersGetter interface {
 
 // OpenStackServerInterface has methods to work with OpenStackServer resources.
 type OpenStackServerInterface interface {
-	Create(ctx context.Context, openStackServer *v1alpha1.OpenStackServer, opts v1.CreateOptions) (*v1alpha1.OpenStackServer, error)
-	Update(ctx context.Context, openStackServer *v1alpha1.OpenStackServer, opts v1.UpdateOptions) (*v1alpha1.OpenStackServer, error)
+	Create(ctx context.Context, openStackServer *apiv1alpha1.OpenStackServer, opts v1.CreateOptions) (*apiv1alpha1.OpenStackServer, error)
+	Update(ctx context.Context, openStackServer *apiv1alpha1.OpenStackServer, opts v1.UpdateOptions) (*apiv1alpha1.OpenStackServer, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, openStackServer *v1alpha1.OpenStackServer, opts v1.UpdateOptions) (*v1alpha1.OpenStackServer, error)
+	UpdateStatus(ctx context.Context, openStackServer *apiv1alpha1.OpenStackServer, opts v1.UpdateOptions) (*apiv1alpha1.OpenStackServer, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.OpenStackServer, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.OpenStackServerList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apiv1alpha1.OpenStackServer, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apiv1alpha1.OpenStackServerList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.OpenStackServer, err error)
-	Apply(ctx context.Context, openStackServer *apiv1alpha1.OpenStackServerApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.OpenStackServer, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apiv1alpha1.OpenStackServer, err error)
+	Apply(ctx context.Context, openStackServer *applyconfigurationapiv1alpha1.OpenStackServerApplyConfiguration, opts v1.ApplyOptions) (result *apiv1alpha1.OpenStackServer, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, openStackServer *apiv1alpha1.OpenStackServerApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.OpenStackServer, err error)
+	ApplyStatus(ctx context.Context, openStackServer *applyconfigurationapiv1alpha1.OpenStackServerApplyConfiguration, opts v1.ApplyOptions) (result *apiv1alpha1.OpenStackServer, err error)
 	OpenStackServerExpansion
 }
 
 // openStackServers implements OpenStackServerInterface
 type openStackServers struct {
-	*gentype.ClientWithListAndApply[*v1alpha1.OpenStackServer, *v1alpha1.OpenStackServerList, *apiv1alpha1.OpenStackServerApplyConfiguration]
+	*gentype.ClientWithListAndApply[*apiv1alpha1.OpenStackServer, *apiv1alpha1.OpenStackServerList, *applyconfigurationapiv1alpha1.OpenStackServerApplyConfiguration]
 }
 
 // newOpenStackServers returns a OpenStackServers
 func newOpenStackServers(c *InfrastructureV1alpha1Client, namespace string) *openStackServers {
 	return &openStackServers{
-		gentype.NewClientWithListAndApply[*v1alpha1.OpenStackServer, *v1alpha1.OpenStackServerList, *apiv1alpha1.OpenStackServerApplyConfiguration](
+		gentype.NewClientWithListAndApply[*apiv1alpha1.OpenStackServer, *apiv1alpha1.OpenStackServerList, *applyconfigurationapiv1alpha1.OpenStackServerApplyConfiguration](
 			"openstackservers",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.OpenStackServer { return &v1alpha1.OpenStackServer{} },
-			func() *v1alpha1.OpenStackServerList { return &v1alpha1.OpenStackServerList{} }),
+			func() *apiv1alpha1.OpenStackServer { return &apiv1alpha1.OpenStackServer{} },
+			func() *apiv1alpha1.OpenStackServerList { return &apiv1alpha1.OpenStackServerList{} },
+		),
 	}
 }

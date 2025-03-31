@@ -85,8 +85,10 @@ func DumpSpecResourcesAndCleanup(ctx context.Context, specName string, namespace
 				panic(r)
 			}()
 			framework.DeleteAllClustersAndWait(ctx, framework.DeleteAllClustersAndWaitInput{
-				Client:    e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-				Namespace: namespace.Name,
+				ClusterProxy:         e2eCtx.Environment.BootstrapClusterProxy,
+				ClusterctlConfigPath: e2eCtx.Settings.ConfigPath,
+				Namespace:            namespace.Name,
+				ArtifactFolder:       e2eCtx.Settings.ArtifactFolder,
 			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-delete-cluster")...)
 		}()
 
@@ -118,9 +120,11 @@ func ClusterForSpec(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.N
 func dumpSpecResources(ctx context.Context, e2eCtx *E2EContext, namespace *corev1.Namespace, directory ...string) {
 	paths := append([]string{e2eCtx.Settings.ArtifactFolder, "clusters", e2eCtx.Environment.BootstrapClusterProxy.GetName(), "resources"}, directory...)
 	framework.DumpAllResources(ctx, framework.DumpAllResourcesInput{
-		Lister:    e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
-		Namespace: namespace.Name,
-		LogPath:   filepath.Join(paths...),
+		Lister:               e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+		KubeConfigPath:       e2eCtx.Environment.BootstrapClusterProxy.GetKubeconfigPath(),
+		ClusterctlConfigPath: e2eCtx.Settings.ConfigPath,
+		Namespace:            namespace.Name,
+		LogPath:              filepath.Join(paths...),
 	})
 }
 
@@ -191,6 +195,21 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 		return fmt.Errorf("couldn't create directory %q for logs: %s", outputPath, err)
 	}
 
+	if m.Spec.ProviderID == nil {
+		return fmt.Errorf("unable to get logs for machine since it has no provider ID")
+	}
+	providerID := getIDFromProviderID(*m.Spec.ProviderID)
+
+	consolLog, err := GetOpenStackServerConsoleLog(o.E2EContext, providerID)
+	if err != nil {
+		return fmt.Errorf("error getting console log for machine: %s", err)
+	}
+	logFile := path.Join(outputPath, "console.log")
+	if err := os.WriteFile(logFile, []byte(consolLog), 0o600); err != nil {
+		return fmt.Errorf("error writing log file: %s", err)
+	}
+	Logf("Console log for machine %q saved", m.Name)
+
 	openStackCluster, err := getOpenStackClusterFromMachine(ctx, managementClusterClient, m)
 	if err != nil {
 		return fmt.Errorf("error getting OpenStackCluster for Machine: %s", err)
@@ -201,7 +220,7 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 	}
 	ip := m.Status.Addresses[0].Address
 
-	srv, err := GetOpenStackServerWithIP(o.E2EContext, getIDFromProviderID(*m.Spec.ProviderID), openStackCluster)
+	srv, err := GetOpenStackServerWithIP(o.E2EContext, providerID, openStackCluster)
 	if err != nil {
 		return fmt.Errorf("error getting OpenStack server: %w", err)
 	}
@@ -217,7 +236,7 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 	if openStackCluster.Status.Bastion == nil {
 		Logf("Skipping log collection for machine %q since no bastion is available", m.Name)
 	} else {
-		srvUser := o.E2EContext.E2EConfig.GetVariable(SSHUserMachine)
+		srvUser := o.E2EContext.E2EConfig.MustGetVariable(SSHUserMachine)
 		executeCommands(
 			ctx,
 			o.E2EContext.Settings.ArtifactFolder,

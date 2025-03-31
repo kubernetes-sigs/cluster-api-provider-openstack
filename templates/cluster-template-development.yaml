@@ -6,8 +6,21 @@ spec:
   topology:
     class: dev-test
     version: ${KUBERNETES_VERSION}
+    controlPlane:
+      replicas: ${CONTROL_PLANE_MACHINE_COUNT}
     workers:
       machineDeployments:
       - class: default-worker
         name: md-0
-        replicas: 1
+        replicas: ${WORKER_MACHINE_COUNT}
+    variables:
+    - name: identityRef
+      value:
+        name: ${CLOUD_CONFIG_SECRET:=dev-test-cloud-config}
+        cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
+    - name: imageName
+      value: ${IMAGE_NAME:=flatcar_production}
+    - name: addImageVersion
+      value: ${ADD_IMAGE_VERSION:=false}
+    - name: injectIgnitionSysext
+      value: ${INJECT_IGNITION_SYSEXT:=true}

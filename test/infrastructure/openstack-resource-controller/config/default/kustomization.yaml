@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+# openstack-resource-controller is not a provider, but by adding this label
+# we can get this installed by Cluster APIs Tiltfile and by the clusterctl machinery we use in E2E tests.
+- pairs:
+    cluster.x-k8s.io/provider: "runtime-extension-openstack-resource-controller"
+
+resources:
+- https://github.com/k-orc/openstack-resource-controller/releases/download/v1.0.0/install.yaml

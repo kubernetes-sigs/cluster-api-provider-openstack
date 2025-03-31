@@ -19,179 +19,35 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-	json "encoding/json"
-	"fmt"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	typedapiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1"
 )
 
-// FakeOpenStackMachines implements OpenStackMachineInterface
-type FakeOpenStackMachines struct {
+// fakeOpenStackMachines implements OpenStackMachineInterface
+type fakeOpenStackMachines struct {
+	*gentype.FakeClientWithListAndApply[*v1beta1.OpenStackMachine, *v1beta1.OpenStackMachineList, *apiv1beta1.OpenStackMachineApplyConfiguration]
 	Fake *FakeInfrastructureV1beta1
-	ns   string
 }
 
-var openstackmachinesResource = v1beta1.SchemeGroupVersion.WithResource("openstackmachines")
-
-var openstackmachinesKind = v1beta1.SchemeGroupVersion.WithKind("OpenStackMachine")
-
-// Get takes name of the openStackMachine, and returns the corresponding openStackMachine object, and an error if there is any.
-func (c *FakeOpenStackMachines) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.OpenStackMachine, err error) {
-	emptyResult := &v1beta1.OpenStackMachine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(openstackmachinesResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeOpenStackMachines(fake *FakeInfrastructureV1beta1, namespace string) typedapiv1beta1.OpenStackMachineInterface {
+	return &fakeOpenStackMachines{
+		gentype.NewFakeClientWithListAndApply[*v1beta1.OpenStackMachine, *v1beta1.OpenStackMachineList, *apiv1beta1.OpenStackMachineApplyConfiguration](
+			fake.Fake,
+			namespace,
+			v1beta1.SchemeGroupVersion.WithResource("openstackmachines"),
+			v1beta1.SchemeGroupVersion.WithKind("OpenStackMachine"),
+			func() *v1beta1.OpenStackMachine { return &v1beta1.OpenStackMachine{} },
+			func() *v1beta1.OpenStackMachineList { return &v1beta1.OpenStackMachineList{} },
+			func(dst, src *v1beta1.OpenStackMachineList) { dst.ListMeta = src.ListMeta },
+			func(list *v1beta1.OpenStackMachineList) []*v1beta1.OpenStackMachine {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1beta1.OpenStackMachineList, items []*v1beta1.OpenStackMachine) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1beta1.OpenStackMachine), err
-}
-
-// List takes label and field selectors, and returns the list of OpenStackMachines that match those selectors.
-func (c *FakeOpenStackMachines) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.OpenStackMachineList, err error) {
-	emptyResult := &v1beta1.OpenStackMachineList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(openstackmachinesResource, openstackmachinesKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1beta1.OpenStackMachineList{ListMeta: obj.(*v1beta1.OpenStackMachineList).ListMeta}
-	for _, item := range obj.(*v1beta1.OpenStackMachineList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested openStackMachines.
-func (c *FakeOpenStackMachines) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(openstackmachinesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a openStackMachine and creates it.  Returns the server's representation of the openStackMachine, and an error, if there is any.
-func (c *FakeOpenStackMachines) Create(ctx context.Context, openStackMachine *v1beta1.OpenStackMachine, opts v1.CreateOptions) (result *v1beta1.OpenStackMachine, err error) {
-	emptyResult := &v1beta1.OpenStackMachine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(openstackmachinesResource, c.ns, openStackMachine, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackMachine), err
-}
-
-// Update takes the representation of a openStackMachine and updates it. Returns the server's representation of the openStackMachine, and an error, if there is any.
-func (c *FakeOpenStackMachines) Update(ctx context.Context, openStackMachine *v1beta1.OpenStackMachine, opts v1.UpdateOptions) (result *v1beta1.OpenStackMachine, err error) {
-	emptyResult := &v1beta1.OpenStackMachine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(openstackmachinesResource, c.ns, openStackMachine, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackMachine), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeOpenStackMachines) UpdateStatus(ctx context.Context, openStackMachine *v1beta1.OpenStackMachine, opts v1.UpdateOptions) (result *v1beta1.OpenStackMachine, err error) {
-	emptyResult := &v1beta1.OpenStackMachine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(openstackmachinesResource, "status", c.ns, openStackMachine, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackMachine), err
-}
-
-// Delete takes name of the openStackMachine and deletes it. Returns an error if one occurs.
-func (c *FakeOpenStackMachines) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(openstackmachinesResource, c.ns, name, opts), &v1beta1.OpenStackMachine{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeOpenStackMachines) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(openstackmachinesResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1beta1.OpenStackMachineList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched openStackMachine.
-func (c *FakeOpenStackMachines) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.OpenStackMachine, err error) {
-	emptyResult := &v1beta1.OpenStackMachine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackmachinesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackMachine), err
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied openStackMachine.
-func (c *FakeOpenStackMachines) Apply(ctx context.Context, openStackMachine *apiv1beta1.OpenStackMachineApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.OpenStackMachine, err error) {
-	if openStackMachine == nil {
-		return nil, fmt.Errorf("openStackMachine provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(openStackMachine)
-	if err != nil {
-		return nil, err
-	}
-	name := openStackMachine.Name
-	if name == nil {
-		return nil, fmt.Errorf("openStackMachine.Name must be provided to Apply")
-	}
-	emptyResult := &v1beta1.OpenStackMachine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackmachinesResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackMachine), err
-}
-
-// ApplyStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-func (c *FakeOpenStackMachines) ApplyStatus(ctx context.Context, openStackMachine *apiv1beta1.OpenStackMachineApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.OpenStackMachine, err error) {
-	if openStackMachine == nil {
-		return nil, fmt.Errorf("openStackMachine provided to Apply must not be nil")
-	}
-	data, err := json.Marshal(openStackMachine)
-	if err != nil {
-		return nil, err
-	}
-	name := openStackMachine.Name
-	if name == nil {
-		return nil, fmt.Errorf("openStackMachine.Name must be provided to Apply")
-	}
-	emptyResult := &v1beta1.OpenStackMachine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(openstackmachinesResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.OpenStackMachine), err
 }

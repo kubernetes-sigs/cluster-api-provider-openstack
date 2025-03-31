@@ -24,10 +24,10 @@ jobs:
       id: vars
       run: echo "go_version=$(make go-version)" >> $GITHUB_OUTPUT
     - name: Set up Go
-      uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # tag=v5.2.0
+      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # tag=v5.4.0
       with:
         go-version: ${{ steps.vars.outputs.go_version }}
-    - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # tag=v4.2.0
+    - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # tag=v4.2.3
       name: Restore go cache
       with:
         path: |

@@ -657,17 +657,17 @@ func GetOpenStackServerWithIP(e2eCtx *E2EContext, id string, openStackCluster *i
 }
 
 func GetTenantProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, *string, error) {
-	openstackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloud)
+	openstackCloud := e2eCtx.E2EConfig.MustGetVariable(OpenStackCloud)
 	return getProviderClient(e2eCtx, openstackCloud)
 }
 
 func GetAdminProviderClient(e2eCtx *E2EContext) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, *string, error) {
-	openstackCloud := e2eCtx.E2EConfig.GetVariable(OpenStackCloudAdmin)
+	openstackCloud := e2eCtx.E2EConfig.MustGetVariable(OpenStackCloudAdmin)
 	return getProviderClient(e2eCtx, openstackCloud)
 }
 
 func getProviderClient(e2eCtx *E2EContext, openstackCloud string) (*gophercloud.ProviderClient, *clientconfig.ClientOpts, *string, error) {
-	openStackCloudYAMLFile := e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)
+	openStackCloudYAMLFile := e2eCtx.E2EConfig.MustGetVariable(OpenStackCloudYAMLFile)
 
 	clouds := getParsedOpenStackCloudYAML(openStackCloudYAMLFile)
 	cloud := clouds.Clouds[openstackCloud]
@@ -846,6 +846,21 @@ func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Ne
 	return net, nil
 }
 
+func DeleteOpenStackServer(ctx context.Context, e2eCtx *E2EContext, id string) error {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return err
+	}
+
+	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
+	if err != nil {
+		return fmt.Errorf("error creating compute client: %s", err)
+	}
+
+	return servers.Delete(ctx, computeClient, id).ExtractErr()
+}
+
 func DeleteOpenStackNetwork(ctx context.Context, e2eCtx *E2EContext, id string) error {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {
@@ -928,4 +943,18 @@ func DumpOpenStackLoadBalancers(e2eCtx *E2EContext, filter loadbalancers.ListOpt
 		return nil, fmt.Errorf("error getting load balancers: %s", err)
 	}
 	return loadBalancersList, nil
+}
+
+func GetOpenStackServerConsoleLog(e2eCtx *E2EContext, id string) (string, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return "", nil
+	}
+
+	computeClient, err := clients.NewComputeClient(providerClient, clientOpts)
+	if err != nil {
+		return "", fmt.Errorf("unable to create compute client: %w", err)
+	}
+	return computeClient.GetConsoleOutput(id)
 }

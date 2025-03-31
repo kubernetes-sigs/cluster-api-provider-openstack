@@ -21,7 +21,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/format"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,9 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
@@ -237,81 +234,6 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		It("should allow apiServerPort 65535", func() {
 			u := unstructuredClusterWithAPIPort(math.MaxUint16)
 			Expect(createObj(u)).To(Succeed(), "OpenStackCluster creation should succeed")
-		})
-	})
-
-	Context("v1alpha7", func() {
-		var cluster *infrav1alpha7.OpenStackCluster //nolint: staticcheck
-
-		BeforeEach(func() {
-			// Initialise a basic cluster object in the correct namespace
-			cluster = &infrav1alpha7.OpenStackCluster{} //nolint: staticcheck
-			cluster.Namespace = namespace.Name
-			cluster.GenerateName = clusterNamePrefix
-		})
-
-		It("should restore cluster spec idempotently after controller writes to controlPlaneEndpoint", func() {
-			// Set identityRef.Kind, as it will be lost if the restorer does not execute
-			cluster.Spec.IdentityRef = &infrav1alpha7.OpenStackIdentityReference{
-				Kind: "FakeKind",
-				Name: "identity-ref",
-			}
-			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
-
-			// Fetch the infrav1 version of the cluster
-			infrav1Cluster := &infrav1.OpenStackCluster{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, infrav1Cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
-
-			// Update the infrav1 cluster to set the control plane endpoint
-			infrav1Cluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
-				Host: "foo",
-				Port: 1234,
-			}
-			Expect(k8sClient.Update(ctx, infrav1Cluster)).To(Succeed(), "Setting control plane endpoint should succeed")
-
-			// Fetch the v1alpha7 version of the cluster and ensure that both the new control plane endpoint and the identityRef.Kind are present
-			cluster = &infrav1alpha7.OpenStackCluster{} //nolint:staticcheck
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Cluster.Name, Namespace: infrav1Cluster.Namespace}, cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
-			Expect(cluster.Spec.ControlPlaneEndpoint).To(Equal(*infrav1Cluster.Spec.ControlPlaneEndpoint), "Control plane endpoint should be restored")
-			Expect(cluster.Spec.IdentityRef.Kind).To(Equal("FakeKind"), "IdentityRef.Kind should be restored")
-		})
-
-		It("should not enable an explicitly disabled bastion when converting to v1beta1", func() {
-			cluster.Spec.Bastion = &infrav1alpha7.Bastion{Enabled: false}
-			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
-
-			// Fetch the infrav1 version of the cluster
-			infrav1Cluster := &infrav1.OpenStackCluster{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, infrav1Cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
-
-			infrav1Bastion := infrav1Cluster.Spec.Bastion
-
-			// NOTE(mdbooth): It may be reasonable to remove the
-			// bastion if it is disabled with no other properties.
-			// It would be reasonable to update the assertions
-			// accordingly if we did that.
-			Expect(infrav1Bastion).ToNot(BeNil(), "Bastion should not have been removed")
-			Expect(infrav1Bastion.Enabled).To(Equal(ptr.To(false)), "Bastion should remain disabled")
-		})
-
-		It("should downgrade cleanly from infrav1", func() {
-			infrav1Cluster := &infrav1.OpenStackCluster{}
-			infrav1Cluster.Namespace = namespace.Name
-			infrav1Cluster.GenerateName = clusterNamePrefix
-			infrav1Cluster.Spec.IdentityRef.CloudName = "test-cloud"
-			infrav1Cluster.Spec.IdentityRef.Name = "test-credentials"
-			Expect(createObj(infrav1Cluster)).To(Succeed(), "infrav1 OpenStackCluster creation should succeed")
-
-			// Just fetching the object as v1alpha6 doesn't trigger
-			// validation failure, so we first fetch it and then
-			// patch the object with identical contents. The patch
-			// triggers a validation failure.
-			cluster := &infrav1alpha7.OpenStackCluster{} //nolint: staticcheck
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: infrav1Cluster.Name, Namespace: infrav1Cluster.Namespace}, cluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
-
-			setObjectGVK(cluster)
-			cluster.ManagedFields = nil
-			Expect(k8sClient.Patch(ctx, cluster, client.Apply, client.FieldOwner("test"), client.ForceOwnership)).To(Succeed(), format.Object(cluster, 4))
 		})
 	})
 })

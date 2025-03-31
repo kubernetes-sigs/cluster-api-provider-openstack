@@ -66,7 +66,7 @@ func CoreImages(e2eCtx *E2EContext) []DownloadImage {
 	return []DownloadImage{
 		{
 			Name:         "cirros",
-			ArtifactPath: "cirros/2022-12-05/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_BASTION_IMAGE_NAME") + ".img",
+			ArtifactPath: "cirros/2022-12-05/" + e2eCtx.E2EConfig.MustGetVariable("OPENSTACK_BASTION_IMAGE_NAME") + ".img",
 
 			// Specifying an image hash means we can't use
 			// web-download. This serves as an E2E test of image
@@ -79,7 +79,7 @@ func CoreImages(e2eCtx *E2EContext) []DownloadImage {
 		},
 		{
 			Name:         "capo-default",
-			ArtifactPath: "ubuntu/2024-05-28/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_IMAGE_NAME") + ".img",
+			ArtifactPath: "ubuntu/2024-11-21/" + e2eCtx.E2EConfig.MustGetVariable("OPENSTACK_IMAGE_NAME") + ".img",
 		},
 	}
 }
@@ -182,7 +182,7 @@ func WaitForGlanceImagesAvailable(ctx context.Context, e2eCtx *E2EContext, image
 
 			Expect(image).ToNot(BeNil(), "Did not find "+imageName+" in image list")
 
-			availableCondition := meta.FindStatusCondition(image.Status.Conditions, orcv1alpha1.OpenStackConditionAvailable)
+			availableCondition := meta.FindStatusCondition(image.Status.Conditions, orcv1alpha1.ConditionAvailable)
 			if availableCondition == nil || availableCondition.Status != metav1.ConditionTrue {
 				var msg string
 				if availableCondition == nil {
@@ -231,8 +231,8 @@ func DeleteAllORCImages(ctx context.Context, e2eCtx *E2EContext) {
 
 func generateCredentialsSecret(e2eCtx *E2EContext) *corev1.Secret {
 	// We run in Node1BeforeSuite, so OPENSTACK_CLOUD_YAML_B64 is not yet set
-	openStackCloudYAMLFile := e2eCtx.E2EConfig.GetVariable(OpenStackCloudYAMLFile)
-	caCertB64 := e2eCtx.E2EConfig.GetVariable(OpenStackCloudCACertB64)
+	openStackCloudYAMLFile := e2eCtx.E2EConfig.MustGetVariable(OpenStackCloudYAMLFile)
+	caCertB64 := e2eCtx.E2EConfig.MustGetVariable(OpenStackCloudCACertB64)
 	caCert, err := base64.StdEncoding.DecodeString(caCertB64)
 	Expect(err).NotTo(HaveOccurred(), "base64 decode CA Cert: "+caCertB64)
 
@@ -255,7 +255,7 @@ func generateORCImage(e2eCtx *E2EContext, name, glanceName, url string, download
 	applyConfig := orcapplyconfigv1alpha1.Image(name, imageNamespace).
 		WithSpec(orcapplyconfigv1alpha1.ImageSpec().
 			WithResource(orcapplyconfigv1alpha1.ImageResourceSpec().
-				WithName(glanceName).
+				WithName(orcv1alpha1.OpenStackName(glanceName)).
 				WithTags(E2EImageTag).
 				WithContent(orcapplyconfigv1alpha1.ImageContent().
 					WithContainerFormat(orcv1alpha1.ImageContainerFormatBare).
@@ -264,7 +264,7 @@ func generateORCImage(e2eCtx *E2EContext, name, glanceName, url string, download
 						WithURL(url)))).
 			WithCloudCredentialsRef(orcapplyconfigv1alpha1.CloudCredentialsReference().
 				WithSecretName(credentialsSecretName).
-				WithCloudName(e2eCtx.E2EConfig.GetVariable("OPENSTACK_CLOUD"))))
+				WithCloudName(e2eCtx.E2EConfig.MustGetVariable("OPENSTACK_CLOUD"))))
 
 	if downloadHash != nil {
 		applyConfig.Spec.Resource.Content.Download.

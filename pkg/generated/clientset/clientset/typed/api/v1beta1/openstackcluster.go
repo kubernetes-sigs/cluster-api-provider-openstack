@@ -19,14 +19,14 @@ limitations under the License.
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	applyconfigurationapiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 	scheme "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/scheme"
 )
 
@@ -38,36 +38,37 @@ type OpenStackClustersGetter interface {
 
 // OpenStackClusterInterface has methods to work with OpenStackCluster resources.
 type OpenStackClusterInterface interface {
-	Create(ctx context.Context, openStackCluster *v1beta1.OpenStackCluster, opts v1.CreateOptions) (*v1beta1.OpenStackCluster, error)
-	Update(ctx context.Context, openStackCluster *v1beta1.OpenStackCluster, opts v1.UpdateOptions) (*v1beta1.OpenStackCluster, error)
+	Create(ctx context.Context, openStackCluster *apiv1beta1.OpenStackCluster, opts v1.CreateOptions) (*apiv1beta1.OpenStackCluster, error)
+	Update(ctx context.Context, openStackCluster *apiv1beta1.OpenStackCluster, opts v1.UpdateOptions) (*apiv1beta1.OpenStackCluster, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, openStackCluster *v1beta1.OpenStackCluster, opts v1.UpdateOptions) (*v1beta1.OpenStackCluster, error)
+	UpdateStatus(ctx context.Context, openStackCluster *apiv1beta1.OpenStackCluster, opts v1.UpdateOptions) (*apiv1beta1.OpenStackCluster, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.OpenStackCluster, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.OpenStackClusterList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apiv1beta1.OpenStackCluster, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apiv1beta1.OpenStackClusterList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.OpenStackCluster, err error)
-	Apply(ctx context.Context, openStackCluster *apiv1beta1.OpenStackClusterApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.OpenStackCluster, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apiv1beta1.OpenStackCluster, err error)
+	Apply(ctx context.Context, openStackCluster *applyconfigurationapiv1beta1.OpenStackClusterApplyConfiguration, opts v1.ApplyOptions) (result *apiv1beta1.OpenStackCluster, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, openStackCluster *apiv1beta1.OpenStackClusterApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.OpenStackCluster, err error)
+	ApplyStatus(ctx context.Context, openStackCluster *applyconfigurationapiv1beta1.OpenStackClusterApplyConfiguration, opts v1.ApplyOptions) (result *apiv1beta1.OpenStackCluster, err error)
 	OpenStackClusterExpansion
 }
 
 // openStackClusters implements OpenStackClusterInterface
 type openStackClusters struct {
-	*gentype.ClientWithListAndApply[*v1beta1.OpenStackCluster, *v1beta1.OpenStackClusterList, *apiv1beta1.OpenStackClusterApplyConfiguration]
+	*gentype.ClientWithListAndApply[*apiv1beta1.OpenStackCluster, *apiv1beta1.OpenStackClusterList, *applyconfigurationapiv1beta1.OpenStackClusterApplyConfiguration]
 }
 
 // newOpenStackClusters returns a OpenStackClusters
 func newOpenStackClusters(c *InfrastructureV1beta1Client, namespace string) *openStackClusters {
 	return &openStackClusters{
-		gentype.NewClientWithListAndApply[*v1beta1.OpenStackCluster, *v1beta1.OpenStackClusterList, *apiv1beta1.OpenStackClusterApplyConfiguration](
+		gentype.NewClientWithListAndApply[*apiv1beta1.OpenStackCluster, *apiv1beta1.OpenStackClusterList, *applyconfigurationapiv1beta1.OpenStackClusterApplyConfiguration](
 			"openstackclusters",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.OpenStackCluster { return &v1beta1.OpenStackCluster{} },
-			func() *v1beta1.OpenStackClusterList { return &v1beta1.OpenStackClusterList{} }),
+			func() *apiv1beta1.OpenStackCluster { return &apiv1beta1.OpenStackCluster{} },
+			func() *apiv1beta1.OpenStackClusterList { return &apiv1beta1.OpenStackClusterList{} },
+		),
 	}
 }

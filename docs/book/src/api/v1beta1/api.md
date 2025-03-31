@@ -1951,6 +1951,34 @@ subnet in the list is taken into account.</p>
 </tr>
 <tr>
 <td>
+<code>controlPlaneNodesSecurityGroupRules</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupRuleSpec">
+[]SecurityGroupRuleSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workerNodesSecurityGroupRules</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupRuleSpec">
+[]SecurityGroupRuleSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>allowAllInClusterTraffic</code><br/>
 <em>
 bool
@@ -2702,9 +2730,7 @@ BastionStatus
 <td>
 <code>failureReason</code><br/>
 <em>
-<a href="https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.5.1/errors#ClusterStatusError">
-sigs.k8s.io/cluster-api/errors.ClusterStatusError
-</a>
+sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors.DeprecatedCAPIClusterStatusError
 </em>
 </td>
 <td>
@@ -3522,7 +3548,9 @@ InstanceState
 </td>
 <td>
 <em>(Optional)</em>
-<p>InstanceState is the state of the OpenStack instance for this machine.</p>
+<p>InstanceState is the state of the OpenStack instance for this machine.
+This field is not set anymore by the OpenStackMachine controller.
+Instead, it&rsquo;s set by the OpenStackServer controller.</p>
 </td>
 </tr>
 <tr>
@@ -3558,9 +3586,7 @@ MachineResources
 <td>
 <code>failureReason</code><br/>
 <em>
-<a href="https://pkg.go.dev/sigs.k8s.io/cluster-api@v1.5.1/errors#MachineStatusError">
-sigs.k8s.io/cluster-api/errors.MachineStatusError
-</a>
+sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors.DeprecatedCAPIMachineStatusError
 </em>
 </td>
 <td>

@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	apiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 )
 
 // OpenStackServerLister helps list OpenStackServers.
@@ -30,7 +30,7 @@ import (
 type OpenStackServerLister interface {
 	// List lists all OpenStackServers in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.OpenStackServer, err error)
+	List(selector labels.Selector) (ret []*apiv1alpha1.OpenStackServer, err error)
 	// OpenStackServers returns an object that can list and get OpenStackServers.
 	OpenStackServers(namespace string) OpenStackServerNamespaceLister
 	OpenStackServerListerExpansion
@@ -38,17 +38,17 @@ type OpenStackServerLister interface {
 
 // openStackServerLister implements the OpenStackServerLister interface.
 type openStackServerLister struct {
-	listers.ResourceIndexer[*v1alpha1.OpenStackServer]
+	listers.ResourceIndexer[*apiv1alpha1.OpenStackServer]
 }
 
 // NewOpenStackServerLister returns a new OpenStackServerLister.
 func NewOpenStackServerLister(indexer cache.Indexer) OpenStackServerLister {
-	return &openStackServerLister{listers.New[*v1alpha1.OpenStackServer](indexer, v1alpha1.Resource("openstackserver"))}
+	return &openStackServerLister{listers.New[*apiv1alpha1.OpenStackServer](indexer, apiv1alpha1.Resource("openstackserver"))}
 }
 
 // OpenStackServers returns an object that can list and get OpenStackServers.
 func (s *openStackServerLister) OpenStackServers(namespace string) OpenStackServerNamespaceLister {
-	return openStackServerNamespaceLister{listers.NewNamespaced[*v1alpha1.OpenStackServer](s.ResourceIndexer, namespace)}
+	return openStackServerNamespaceLister{listers.NewNamespaced[*apiv1alpha1.OpenStackServer](s.ResourceIndexer, namespace)}
 }
 
 // OpenStackServerNamespaceLister helps list and get OpenStackServers.
@@ -56,15 +56,15 @@ func (s *openStackServerLister) OpenStackServers(namespace string) OpenStackServ
 type OpenStackServerNamespaceLister interface {
 	// List lists all OpenStackServers in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.OpenStackServer, err error)
+	List(selector labels.Selector) (ret []*apiv1alpha1.OpenStackServer, err error)
 	// Get retrieves the OpenStackServer from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.OpenStackServer, error)
+	Get(name string) (*apiv1alpha1.OpenStackServer, error)
 	OpenStackServerNamespaceListerExpansion
 }
 
 // openStackServerNamespaceLister implements the OpenStackServerNamespaceLister
 // interface.
 type openStackServerNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.OpenStackServer]
+	listers.ResourceIndexer[*apiv1alpha1.OpenStackServer]
 }

@@ -95,7 +95,7 @@ func TestValidateRemoteManagedGroups(t *testing.T) {
 	}
 }
 
-func TestGetAllNodesRules(t *testing.T) {
+func TestGetRulesFromSpecs(t *testing.T) {
 	tests := []struct {
 		name                       string
 		remoteManagedGroups        map[string]string
@@ -273,13 +273,13 @@ func TestGetAllNodesRules(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRules, err := getAllNodesRules(tt.remoteManagedGroups, tt.allNodesSecurityGroupRules)
+			gotRules, err := getRulesFromSpecs(tt.remoteManagedGroups, tt.allNodesSecurityGroupRules)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getAllNodesRules() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getRulesFromSpecs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotRules, tt.wantRules) {
-				t.Errorf("getAllNodesRules() gotRules = %v, want %v", gotRules, tt.wantRules)
+				t.Errorf("getRulesFromSpecs() gotRules = %v, want %v", gotRules, tt.wantRules)
 			}
 		})
 	}
@@ -317,7 +317,7 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 			wantErr:                          false,
 		},
 		{
-			name: "Valid openStackCluster with securityGroups",
+			name: "Valid openStackCluster with default securityGroups",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
@@ -327,10 +327,11 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 			wantErr:                          false,
 		},
 		{
-			name: "Valid openStackCluster with securityGroups and allNodesSecurityGroupRules",
+			name: "Valid openStackCluster with default + additional security groups",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						// This should add 4 rules (two for the control plane group and two for the worker group)
 						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
 								Protocol:            ptr.To("tcp"),
@@ -339,14 +340,34 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane", "worker"},
 							},
 						},
+						// This should add one rule
+						ControlPlaneNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Protocol:            ptr.To("tcp"),
+								PortRangeMin:        ptr.To(9000),
+								PortRangeMax:        ptr.To(9000),
+								RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{"controlplane"},
+							},
+						},
+						// This should also add one rule
+						WorkerNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+							{
+								Protocol:       ptr.To("tcp"),
+								Direction:      "ingress",
+								EtherType:      ptr.To("IPv4"),
+								PortRangeMin:   ptr.To(30000),
+								PortRangeMax:   ptr.To(32767),
+								RemoteIPPrefix: ptr.To("0.0.0.0/0"),
+							},
+						},
 					},
 				},
 			},
-			expectedNumberSecurityGroupRules: 18,
+			expectedNumberSecurityGroupRules: 20,
 			wantErr:                          false,
 		},
 		{
-			name: "Valid openStackCluster with securityGroups with invalid allNodesSecurityGroupRules",
+			name: "Valid openStackCluster with invalid allNodesSecurityGroupRules",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{

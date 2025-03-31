@@ -19,23 +19,19 @@ limitations under the License.
 package clientset
 
 import (
-	"fmt"
-	"net/http"
+	fmt "fmt"
+	http "net/http"
 
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	infrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha1"
-	infrastructurev1alpha6 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha6"
-	infrastructurev1alpha7 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha7"
 	infrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface
-	InfrastructureV1alpha6() infrastructurev1alpha6.InfrastructureV1alpha6Interface
-	InfrastructureV1alpha7() infrastructurev1alpha7.InfrastructureV1alpha7Interface
 	InfrastructureV1beta1() infrastructurev1beta1.InfrastructureV1beta1Interface
 }
 
@@ -43,24 +39,12 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	infrastructureV1alpha1 *infrastructurev1alpha1.InfrastructureV1alpha1Client
-	infrastructureV1alpha6 *infrastructurev1alpha6.InfrastructureV1alpha6Client
-	infrastructureV1alpha7 *infrastructurev1alpha7.InfrastructureV1alpha7Client
 	infrastructureV1beta1  *infrastructurev1beta1.InfrastructureV1beta1Client
 }
 
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client
 func (c *Clientset) InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface {
 	return c.infrastructureV1alpha1
-}
-
-// InfrastructureV1alpha6 retrieves the InfrastructureV1alpha6Client
-func (c *Clientset) InfrastructureV1alpha6() infrastructurev1alpha6.InfrastructureV1alpha6Interface {
-	return c.infrastructureV1alpha6
-}
-
-// InfrastructureV1alpha7 retrieves the InfrastructureV1alpha7Client
-func (c *Clientset) InfrastructureV1alpha7() infrastructurev1alpha7.InfrastructureV1alpha7Interface {
-	return c.infrastructureV1alpha7
 }
 
 // InfrastructureV1beta1 retrieves the InfrastructureV1beta1Client
@@ -116,14 +100,6 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
-	cs.infrastructureV1alpha6, err = infrastructurev1alpha6.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
-	cs.infrastructureV1alpha7, err = infrastructurev1alpha7.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
 	cs.infrastructureV1beta1, err = infrastructurev1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -150,8 +126,6 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.infrastructureV1alpha1 = infrastructurev1alpha1.New(c)
-	cs.infrastructureV1alpha6 = infrastructurev1alpha6.New(c)
-	cs.infrastructureV1alpha7 = infrastructurev1alpha7.New(c)
 	cs.infrastructureV1beta1 = infrastructurev1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)

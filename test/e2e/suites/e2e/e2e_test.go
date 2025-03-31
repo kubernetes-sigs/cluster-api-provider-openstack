@@ -56,6 +56,8 @@ import (
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/internal/util/ssa"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
@@ -66,7 +68,7 @@ func flatcarImages(e2eCtx *shared.E2EContext) []shared.DownloadImage {
 	return []shared.DownloadImage{
 		{
 			Name:         "capo-flatcar",
-			ArtifactPath: "flatcar/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_FLATCAR_IMAGE_NAME") + ".img",
+			ArtifactPath: "flatcar/" + e2eCtx.E2EConfig.MustGetVariable("OPENSTACK_FLATCAR_IMAGE_NAME") + ".img",
 		},
 		{
 			Name: "flatcar-openstack",
@@ -275,7 +277,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 
 			shared.Logf("Create the bastion with a new flavor")
-			bastionNewFlavorName := ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackBastionFlavorAlt))
+			bastionNewFlavorName := ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackBastionFlavorAlt))
 			bastionNewFlavor, err := shared.GetFlavorFromName(e2eCtx, bastionNewFlavorName)
 			Expect(err).NotTo(HaveOccurred())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
@@ -837,9 +839,9 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		)
 
 		BeforeEach(func(ctx context.Context) {
-			failureDomain = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
-			failureDomainAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomainAlt)
-			volumeTypeAlt = e2eCtx.E2EConfig.GetVariable(shared.OpenStackVolumeTypeAlt)
+			failureDomain = e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackFailureDomain)
+			failureDomainAlt = e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackFailureDomainAlt)
+			volumeTypeAlt = e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackVolumeTypeAlt)
 
 			// We create the second compute host asynchronously, so
 			// we need to ensure the alternate failure domain exists
@@ -1006,6 +1008,56 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Expect(additionalVolume.AvailabilityZone).To(Equal(failureDomain))
 				Expect(additionalVolume.VolumeType).To(Equal(volumeTypeAlt))
 			}
+
+			// This last block tests a scenario where an external agent deletes a server (e.g. a user via Horizon).
+			// We want to ensure that the OpenStackMachine conditions are updated to reflect the server deletion.
+			// Context: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2474
+			shared.Logf("Deleting a server")
+			serverToDelete := allServers[controlPlaneMachines[0].Spec.InfrastructureRef.Name]
+			err = shared.DeleteOpenStackServer(ctx, e2eCtx, serverToDelete.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			shared.Logf("Waiting for the OpenStackMachine to have a condition that the server has been unexpectedly deleted")
+			retries := 0
+			Eventually(func() (clusterv1.Condition, error) {
+				k8sClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
+
+				openStackMachine := &infrav1.OpenStackMachine{}
+				err := k8sClient.Get(ctx, crclient.ObjectKey{Name: controlPlaneMachines[0].Name, Namespace: controlPlaneMachines[0].Namespace}, openStackMachine)
+				if err != nil {
+					return clusterv1.Condition{}, err
+				}
+				for _, condition := range openStackMachine.Status.Conditions {
+					if condition.Type == infrav1.InstanceReadyCondition {
+						return condition, nil
+					}
+				}
+
+				// Make some non-functional change to the object which will
+				// cause CAPO to reconcile it, otherwise we won't notice the
+				// server is gone until the configured controller-runtime
+				// resync.
+				retries++
+				applyConfig := v1beta1.OpenStackMachine(openStackMachine.Name, openStackMachine.Namespace).
+					WithAnnotations(map[string]string{
+						"e2e-test-retries": fmt.Sprintf("%d", retries),
+					})
+				err = k8sClient.Patch(ctx, openStackMachine, ssa.ApplyConfigPatch(applyConfig), crclient.ForceOwnership, crclient.FieldOwner("capo-e2e"))
+				if err != nil {
+					return clusterv1.Condition{}, err
+				}
+
+				return clusterv1.Condition{}, errors.New("condition InstanceReadyCondition not found")
+			}, time.Minute*3, time.Second*10).Should(MatchFields(
+				IgnoreExtras,
+				Fields{
+					"Type":     Equal(infrav1.InstanceReadyCondition),
+					"Status":   Equal(corev1.ConditionFalse),
+					"Reason":   Equal(infrav1.InstanceDeletedReason),
+					"Message":  Equal(infrav1.ServerUnexpectedDeletedMessage),
+					"Severity": Equal(clusterv1.ConditionSeverityError),
+				},
+			), "OpenStackMachine should be marked not ready with InstanceDeletedReason")
 		})
 	})
 })
@@ -1018,7 +1070,7 @@ func defaultConfigCluster(clusterName, namespace string) clusterctl.ConfigCluste
 		InfrastructureProvider: clusterctl.DefaultInfrastructureProvider,
 		Namespace:              namespace,
 		ClusterName:            clusterName,
-		KubernetesVersion:      e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion),
+		KubernetesVersion:      e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
 	}
 }
 
@@ -1081,16 +1133,16 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor)),
+					Flavor: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
-							Name: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),
 						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Name:      fmt.Sprintf("%s-cloud-config", clusterName),
-						CloudName: e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
+						CloudName: e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackCloud),
 					},
 				},
 			},
@@ -1107,16 +1159,16 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackNodeMachineFlavor)),
+					Flavor: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
-							Name: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.OpenStackImageName)),
+							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),
 						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
 					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Name:      fmt.Sprintf("%s-cloud-config", clusterName),
-						CloudName: e2eCtx.E2EConfig.GetVariable(shared.OpenStackCloud),
+						CloudName: e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackCloud),
 					},
 					Ports: *portOpts,
 					Tags:  machineTags,
@@ -1155,7 +1207,7 @@ func makeJoinBootstrapConfigTemplate(namespace, name string) *bootstrapv1.Kubead
 
 func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain string, replicas int32) *clusterv1.MachineDeployment {
 	if failureDomain == "" {
-		failureDomain = e2eCtx.E2EConfig.GetVariable(shared.OpenStackFailureDomain)
+		failureDomain = e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackFailureDomain)
 	}
 	return &clusterv1.MachineDeployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1199,7 +1251,7 @@ func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain 
 						Name:       mdName,
 						Namespace:  namespace,
 					},
-					Version: ptr.To(e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion)),
+					Version: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion)),
 				},
 			},
 		},

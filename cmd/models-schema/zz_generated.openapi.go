@@ -31,516 +31,456 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                      schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
-		"k8s.io/api/core/v1.Affinity":                                                              schema_k8sio_api_core_v1_Affinity(ref),
-		"k8s.io/api/core/v1.AppArmorProfile":                                                       schema_k8sio_api_core_v1_AppArmorProfile(ref),
-		"k8s.io/api/core/v1.AttachedVolume":                                                        schema_k8sio_api_core_v1_AttachedVolume(ref),
-		"k8s.io/api/core/v1.AvoidPods":                                                             schema_k8sio_api_core_v1_AvoidPods(ref),
-		"k8s.io/api/core/v1.AzureDiskVolumeSource":                                                 schema_k8sio_api_core_v1_AzureDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.AzureFilePersistentVolumeSource":                                       schema_k8sio_api_core_v1_AzureFilePersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.AzureFileVolumeSource":                                                 schema_k8sio_api_core_v1_AzureFileVolumeSource(ref),
-		"k8s.io/api/core/v1.Binding":                                                               schema_k8sio_api_core_v1_Binding(ref),
-		"k8s.io/api/core/v1.CSIPersistentVolumeSource":                                             schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CSIVolumeSource":                                                       schema_k8sio_api_core_v1_CSIVolumeSource(ref),
-		"k8s.io/api/core/v1.Capabilities":                                                          schema_k8sio_api_core_v1_Capabilities(ref),
-		"k8s.io/api/core/v1.CephFSPersistentVolumeSource":                                          schema_k8sio_api_core_v1_CephFSPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CephFSVolumeSource":                                                    schema_k8sio_api_core_v1_CephFSVolumeSource(ref),
-		"k8s.io/api/core/v1.CinderPersistentVolumeSource":                                          schema_k8sio_api_core_v1_CinderPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CinderVolumeSource":                                                    schema_k8sio_api_core_v1_CinderVolumeSource(ref),
-		"k8s.io/api/core/v1.ClientIPConfig":                                                        schema_k8sio_api_core_v1_ClientIPConfig(ref),
-		"k8s.io/api/core/v1.ClusterTrustBundleProjection":                                          schema_k8sio_api_core_v1_ClusterTrustBundleProjection(ref),
-		"k8s.io/api/core/v1.ComponentCondition":                                                    schema_k8sio_api_core_v1_ComponentCondition(ref),
-		"k8s.io/api/core/v1.ComponentStatus":                                                       schema_k8sio_api_core_v1_ComponentStatus(ref),
-		"k8s.io/api/core/v1.ComponentStatusList":                                                   schema_k8sio_api_core_v1_ComponentStatusList(ref),
-		"k8s.io/api/core/v1.ConfigMap":                                                             schema_k8sio_api_core_v1_ConfigMap(ref),
-		"k8s.io/api/core/v1.ConfigMapEnvSource":                                                    schema_k8sio_api_core_v1_ConfigMapEnvSource(ref),
-		"k8s.io/api/core/v1.ConfigMapKeySelector":                                                  schema_k8sio_api_core_v1_ConfigMapKeySelector(ref),
-		"k8s.io/api/core/v1.ConfigMapList":                                                         schema_k8sio_api_core_v1_ConfigMapList(ref),
-		"k8s.io/api/core/v1.ConfigMapNodeConfigSource":                                             schema_k8sio_api_core_v1_ConfigMapNodeConfigSource(ref),
-		"k8s.io/api/core/v1.ConfigMapProjection":                                                   schema_k8sio_api_core_v1_ConfigMapProjection(ref),
-		"k8s.io/api/core/v1.ConfigMapVolumeSource":                                                 schema_k8sio_api_core_v1_ConfigMapVolumeSource(ref),
-		"k8s.io/api/core/v1.Container":                                                             schema_k8sio_api_core_v1_Container(ref),
-		"k8s.io/api/core/v1.ContainerImage":                                                        schema_k8sio_api_core_v1_ContainerImage(ref),
-		"k8s.io/api/core/v1.ContainerPort":                                                         schema_k8sio_api_core_v1_ContainerPort(ref),
-		"k8s.io/api/core/v1.ContainerResizePolicy":                                                 schema_k8sio_api_core_v1_ContainerResizePolicy(ref),
-		"k8s.io/api/core/v1.ContainerState":                                                        schema_k8sio_api_core_v1_ContainerState(ref),
-		"k8s.io/api/core/v1.ContainerStateRunning":                                                 schema_k8sio_api_core_v1_ContainerStateRunning(ref),
-		"k8s.io/api/core/v1.ContainerStateTerminated":                                              schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
-		"k8s.io/api/core/v1.ContainerStateWaiting":                                                 schema_k8sio_api_core_v1_ContainerStateWaiting(ref),
-		"k8s.io/api/core/v1.ContainerStatus":                                                       schema_k8sio_api_core_v1_ContainerStatus(ref),
-		"k8s.io/api/core/v1.ContainerUser":                                                         schema_k8sio_api_core_v1_ContainerUser(ref),
-		"k8s.io/api/core/v1.DaemonEndpoint":                                                        schema_k8sio_api_core_v1_DaemonEndpoint(ref),
-		"k8s.io/api/core/v1.DownwardAPIProjection":                                                 schema_k8sio_api_core_v1_DownwardAPIProjection(ref),
-		"k8s.io/api/core/v1.DownwardAPIVolumeFile":                                                 schema_k8sio_api_core_v1_DownwardAPIVolumeFile(ref),
-		"k8s.io/api/core/v1.DownwardAPIVolumeSource":                                               schema_k8sio_api_core_v1_DownwardAPIVolumeSource(ref),
-		"k8s.io/api/core/v1.EmptyDirVolumeSource":                                                  schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref),
-		"k8s.io/api/core/v1.EndpointAddress":                                                       schema_k8sio_api_core_v1_EndpointAddress(ref),
-		"k8s.io/api/core/v1.EndpointPort":                                                          schema_k8sio_api_core_v1_EndpointPort(ref),
-		"k8s.io/api/core/v1.EndpointSubset":                                                        schema_k8sio_api_core_v1_EndpointSubset(ref),
-		"k8s.io/api/core/v1.Endpoints":                                                             schema_k8sio_api_core_v1_Endpoints(ref),
-		"k8s.io/api/core/v1.EndpointsList":                                                         schema_k8sio_api_core_v1_EndpointsList(ref),
-		"k8s.io/api/core/v1.EnvFromSource":                                                         schema_k8sio_api_core_v1_EnvFromSource(ref),
-		"k8s.io/api/core/v1.EnvVar":                                                                schema_k8sio_api_core_v1_EnvVar(ref),
-		"k8s.io/api/core/v1.EnvVarSource":                                                          schema_k8sio_api_core_v1_EnvVarSource(ref),
-		"k8s.io/api/core/v1.EphemeralContainer":                                                    schema_k8sio_api_core_v1_EphemeralContainer(ref),
-		"k8s.io/api/core/v1.EphemeralContainerCommon":                                              schema_k8sio_api_core_v1_EphemeralContainerCommon(ref),
-		"k8s.io/api/core/v1.EphemeralVolumeSource":                                                 schema_k8sio_api_core_v1_EphemeralVolumeSource(ref),
-		"k8s.io/api/core/v1.Event":                                                                 schema_k8sio_api_core_v1_Event(ref),
-		"k8s.io/api/core/v1.EventList":                                                             schema_k8sio_api_core_v1_EventList(ref),
-		"k8s.io/api/core/v1.EventSeries":                                                           schema_k8sio_api_core_v1_EventSeries(ref),
-		"k8s.io/api/core/v1.EventSource":                                                           schema_k8sio_api_core_v1_EventSource(ref),
-		"k8s.io/api/core/v1.ExecAction":                                                            schema_k8sio_api_core_v1_ExecAction(ref),
-		"k8s.io/api/core/v1.FCVolumeSource":                                                        schema_k8sio_api_core_v1_FCVolumeSource(ref),
-		"k8s.io/api/core/v1.FlexPersistentVolumeSource":                                            schema_k8sio_api_core_v1_FlexPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.FlexVolumeSource":                                                      schema_k8sio_api_core_v1_FlexVolumeSource(ref),
-		"k8s.io/api/core/v1.FlockerVolumeSource":                                                   schema_k8sio_api_core_v1_FlockerVolumeSource(ref),
-		"k8s.io/api/core/v1.GCEPersistentDiskVolumeSource":                                         schema_k8sio_api_core_v1_GCEPersistentDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.GRPCAction":                                                            schema_k8sio_api_core_v1_GRPCAction(ref),
-		"k8s.io/api/core/v1.GitRepoVolumeSource":                                                   schema_k8sio_api_core_v1_GitRepoVolumeSource(ref),
-		"k8s.io/api/core/v1.GlusterfsPersistentVolumeSource":                                       schema_k8sio_api_core_v1_GlusterfsPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.GlusterfsVolumeSource":                                                 schema_k8sio_api_core_v1_GlusterfsVolumeSource(ref),
-		"k8s.io/api/core/v1.HTTPGetAction":                                                         schema_k8sio_api_core_v1_HTTPGetAction(ref),
-		"k8s.io/api/core/v1.HTTPHeader":                                                            schema_k8sio_api_core_v1_HTTPHeader(ref),
-		"k8s.io/api/core/v1.HostAlias":                                                             schema_k8sio_api_core_v1_HostAlias(ref),
-		"k8s.io/api/core/v1.HostIP":                                                                schema_k8sio_api_core_v1_HostIP(ref),
-		"k8s.io/api/core/v1.HostPathVolumeSource":                                                  schema_k8sio_api_core_v1_HostPathVolumeSource(ref),
-		"k8s.io/api/core/v1.ISCSIPersistentVolumeSource":                                           schema_k8sio_api_core_v1_ISCSIPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.ISCSIVolumeSource":                                                     schema_k8sio_api_core_v1_ISCSIVolumeSource(ref),
-		"k8s.io/api/core/v1.ImageVolumeSource":                                                     schema_k8sio_api_core_v1_ImageVolumeSource(ref),
-		"k8s.io/api/core/v1.KeyToPath":                                                             schema_k8sio_api_core_v1_KeyToPath(ref),
-		"k8s.io/api/core/v1.Lifecycle":                                                             schema_k8sio_api_core_v1_Lifecycle(ref),
-		"k8s.io/api/core/v1.LifecycleHandler":                                                      schema_k8sio_api_core_v1_LifecycleHandler(ref),
-		"k8s.io/api/core/v1.LimitRange":                                                            schema_k8sio_api_core_v1_LimitRange(ref),
-		"k8s.io/api/core/v1.LimitRangeItem":                                                        schema_k8sio_api_core_v1_LimitRangeItem(ref),
-		"k8s.io/api/core/v1.LimitRangeList":                                                        schema_k8sio_api_core_v1_LimitRangeList(ref),
-		"k8s.io/api/core/v1.LimitRangeSpec":                                                        schema_k8sio_api_core_v1_LimitRangeSpec(ref),
-		"k8s.io/api/core/v1.LinuxContainerUser":                                                    schema_k8sio_api_core_v1_LinuxContainerUser(ref),
-		"k8s.io/api/core/v1.List":                                                                  schema_k8sio_api_core_v1_List(ref),
-		"k8s.io/api/core/v1.LoadBalancerIngress":                                                   schema_k8sio_api_core_v1_LoadBalancerIngress(ref),
-		"k8s.io/api/core/v1.LoadBalancerStatus":                                                    schema_k8sio_api_core_v1_LoadBalancerStatus(ref),
-		"k8s.io/api/core/v1.LocalObjectReference":                                                  schema_k8sio_api_core_v1_LocalObjectReference(ref),
-		"k8s.io/api/core/v1.LocalVolumeSource":                                                     schema_k8sio_api_core_v1_LocalVolumeSource(ref),
-		"k8s.io/api/core/v1.ModifyVolumeStatus":                                                    schema_k8sio_api_core_v1_ModifyVolumeStatus(ref),
-		"k8s.io/api/core/v1.NFSVolumeSource":                                                       schema_k8sio_api_core_v1_NFSVolumeSource(ref),
-		"k8s.io/api/core/v1.Namespace":                                                             schema_k8sio_api_core_v1_Namespace(ref),
-		"k8s.io/api/core/v1.NamespaceCondition":                                                    schema_k8sio_api_core_v1_NamespaceCondition(ref),
-		"k8s.io/api/core/v1.NamespaceList":                                                         schema_k8sio_api_core_v1_NamespaceList(ref),
-		"k8s.io/api/core/v1.NamespaceSpec":                                                         schema_k8sio_api_core_v1_NamespaceSpec(ref),
-		"k8s.io/api/core/v1.NamespaceStatus":                                                       schema_k8sio_api_core_v1_NamespaceStatus(ref),
-		"k8s.io/api/core/v1.Node":                                                                  schema_k8sio_api_core_v1_Node(ref),
-		"k8s.io/api/core/v1.NodeAddress":                                                           schema_k8sio_api_core_v1_NodeAddress(ref),
-		"k8s.io/api/core/v1.NodeAffinity":                                                          schema_k8sio_api_core_v1_NodeAffinity(ref),
-		"k8s.io/api/core/v1.NodeCondition":                                                         schema_k8sio_api_core_v1_NodeCondition(ref),
-		"k8s.io/api/core/v1.NodeConfigSource":                                                      schema_k8sio_api_core_v1_NodeConfigSource(ref),
-		"k8s.io/api/core/v1.NodeConfigStatus":                                                      schema_k8sio_api_core_v1_NodeConfigStatus(ref),
-		"k8s.io/api/core/v1.NodeDaemonEndpoints":                                                   schema_k8sio_api_core_v1_NodeDaemonEndpoints(ref),
-		"k8s.io/api/core/v1.NodeFeatures":                                                          schema_k8sio_api_core_v1_NodeFeatures(ref),
-		"k8s.io/api/core/v1.NodeList":                                                              schema_k8sio_api_core_v1_NodeList(ref),
-		"k8s.io/api/core/v1.NodeProxyOptions":                                                      schema_k8sio_api_core_v1_NodeProxyOptions(ref),
-		"k8s.io/api/core/v1.NodeRuntimeHandler":                                                    schema_k8sio_api_core_v1_NodeRuntimeHandler(ref),
-		"k8s.io/api/core/v1.NodeRuntimeHandlerFeatures":                                            schema_k8sio_api_core_v1_NodeRuntimeHandlerFeatures(ref),
-		"k8s.io/api/core/v1.NodeSelector":                                                          schema_k8sio_api_core_v1_NodeSelector(ref),
-		"k8s.io/api/core/v1.NodeSelectorRequirement":                                               schema_k8sio_api_core_v1_NodeSelectorRequirement(ref),
-		"k8s.io/api/core/v1.NodeSelectorTerm":                                                      schema_k8sio_api_core_v1_NodeSelectorTerm(ref),
-		"k8s.io/api/core/v1.NodeSpec":                                                              schema_k8sio_api_core_v1_NodeSpec(ref),
-		"k8s.io/api/core/v1.NodeStatus":                                                            schema_k8sio_api_core_v1_NodeStatus(ref),
-		"k8s.io/api/core/v1.NodeSystemInfo":                                                        schema_k8sio_api_core_v1_NodeSystemInfo(ref),
-		"k8s.io/api/core/v1.ObjectFieldSelector":                                                   schema_k8sio_api_core_v1_ObjectFieldSelector(ref),
-		"k8s.io/api/core/v1.ObjectReference":                                                       schema_k8sio_api_core_v1_ObjectReference(ref),
-		"k8s.io/api/core/v1.PersistentVolume":                                                      schema_k8sio_api_core_v1_PersistentVolume(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaim":                                                 schema_k8sio_api_core_v1_PersistentVolumeClaim(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimCondition":                                        schema_k8sio_api_core_v1_PersistentVolumeClaimCondition(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimList":                                             schema_k8sio_api_core_v1_PersistentVolumeClaimList(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimSpec":                                             schema_k8sio_api_core_v1_PersistentVolumeClaimSpec(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimStatus":                                           schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimTemplate":                                         schema_k8sio_api_core_v1_PersistentVolumeClaimTemplate(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource":                                     schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref),
-		"k8s.io/api/core/v1.PersistentVolumeList":                                                  schema_k8sio_api_core_v1_PersistentVolumeList(ref),
-		"k8s.io/api/core/v1.PersistentVolumeSource":                                                schema_k8sio_api_core_v1_PersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.PersistentVolumeSpec":                                                  schema_k8sio_api_core_v1_PersistentVolumeSpec(ref),
-		"k8s.io/api/core/v1.PersistentVolumeStatus":                                                schema_k8sio_api_core_v1_PersistentVolumeStatus(ref),
-		"k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource":                                      schema_k8sio_api_core_v1_PhotonPersistentDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.Pod":                                                                   schema_k8sio_api_core_v1_Pod(ref),
-		"k8s.io/api/core/v1.PodAffinity":                                                           schema_k8sio_api_core_v1_PodAffinity(ref),
-		"k8s.io/api/core/v1.PodAffinityTerm":                                                       schema_k8sio_api_core_v1_PodAffinityTerm(ref),
-		"k8s.io/api/core/v1.PodAntiAffinity":                                                       schema_k8sio_api_core_v1_PodAntiAffinity(ref),
-		"k8s.io/api/core/v1.PodAttachOptions":                                                      schema_k8sio_api_core_v1_PodAttachOptions(ref),
-		"k8s.io/api/core/v1.PodCondition":                                                          schema_k8sio_api_core_v1_PodCondition(ref),
-		"k8s.io/api/core/v1.PodDNSConfig":                                                          schema_k8sio_api_core_v1_PodDNSConfig(ref),
-		"k8s.io/api/core/v1.PodDNSConfigOption":                                                    schema_k8sio_api_core_v1_PodDNSConfigOption(ref),
-		"k8s.io/api/core/v1.PodExecOptions":                                                        schema_k8sio_api_core_v1_PodExecOptions(ref),
-		"k8s.io/api/core/v1.PodIP":                                                                 schema_k8sio_api_core_v1_PodIP(ref),
-		"k8s.io/api/core/v1.PodList":                                                               schema_k8sio_api_core_v1_PodList(ref),
-		"k8s.io/api/core/v1.PodLogOptions":                                                         schema_k8sio_api_core_v1_PodLogOptions(ref),
-		"k8s.io/api/core/v1.PodOS":                                                                 schema_k8sio_api_core_v1_PodOS(ref),
-		"k8s.io/api/core/v1.PodPortForwardOptions":                                                 schema_k8sio_api_core_v1_PodPortForwardOptions(ref),
-		"k8s.io/api/core/v1.PodProxyOptions":                                                       schema_k8sio_api_core_v1_PodProxyOptions(ref),
-		"k8s.io/api/core/v1.PodReadinessGate":                                                      schema_k8sio_api_core_v1_PodReadinessGate(ref),
-		"k8s.io/api/core/v1.PodResourceClaim":                                                      schema_k8sio_api_core_v1_PodResourceClaim(ref),
-		"k8s.io/api/core/v1.PodResourceClaimStatus":                                                schema_k8sio_api_core_v1_PodResourceClaimStatus(ref),
-		"k8s.io/api/core/v1.PodSchedulingGate":                                                     schema_k8sio_api_core_v1_PodSchedulingGate(ref),
-		"k8s.io/api/core/v1.PodSecurityContext":                                                    schema_k8sio_api_core_v1_PodSecurityContext(ref),
-		"k8s.io/api/core/v1.PodSignature":                                                          schema_k8sio_api_core_v1_PodSignature(ref),
-		"k8s.io/api/core/v1.PodSpec":                                                               schema_k8sio_api_core_v1_PodSpec(ref),
-		"k8s.io/api/core/v1.PodStatus":                                                             schema_k8sio_api_core_v1_PodStatus(ref),
-		"k8s.io/api/core/v1.PodStatusResult":                                                       schema_k8sio_api_core_v1_PodStatusResult(ref),
-		"k8s.io/api/core/v1.PodTemplate":                                                           schema_k8sio_api_core_v1_PodTemplate(ref),
-		"k8s.io/api/core/v1.PodTemplateList":                                                       schema_k8sio_api_core_v1_PodTemplateList(ref),
-		"k8s.io/api/core/v1.PodTemplateSpec":                                                       schema_k8sio_api_core_v1_PodTemplateSpec(ref),
-		"k8s.io/api/core/v1.PortStatus":                                                            schema_k8sio_api_core_v1_PortStatus(ref),
-		"k8s.io/api/core/v1.PortworxVolumeSource":                                                  schema_k8sio_api_core_v1_PortworxVolumeSource(ref),
-		"k8s.io/api/core/v1.PreferAvoidPodsEntry":                                                  schema_k8sio_api_core_v1_PreferAvoidPodsEntry(ref),
-		"k8s.io/api/core/v1.PreferredSchedulingTerm":                                               schema_k8sio_api_core_v1_PreferredSchedulingTerm(ref),
-		"k8s.io/api/core/v1.Probe":                                                                 schema_k8sio_api_core_v1_Probe(ref),
-		"k8s.io/api/core/v1.ProbeHandler":                                                          schema_k8sio_api_core_v1_ProbeHandler(ref),
-		"k8s.io/api/core/v1.ProjectedVolumeSource":                                                 schema_k8sio_api_core_v1_ProjectedVolumeSource(ref),
-		"k8s.io/api/core/v1.QuobyteVolumeSource":                                                   schema_k8sio_api_core_v1_QuobyteVolumeSource(ref),
-		"k8s.io/api/core/v1.RBDPersistentVolumeSource":                                             schema_k8sio_api_core_v1_RBDPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.RBDVolumeSource":                                                       schema_k8sio_api_core_v1_RBDVolumeSource(ref),
-		"k8s.io/api/core/v1.RangeAllocation":                                                       schema_k8sio_api_core_v1_RangeAllocation(ref),
-		"k8s.io/api/core/v1.ReplicationController":                                                 schema_k8sio_api_core_v1_ReplicationController(ref),
-		"k8s.io/api/core/v1.ReplicationControllerCondition":                                        schema_k8sio_api_core_v1_ReplicationControllerCondition(ref),
-		"k8s.io/api/core/v1.ReplicationControllerList":                                             schema_k8sio_api_core_v1_ReplicationControllerList(ref),
-		"k8s.io/api/core/v1.ReplicationControllerSpec":                                             schema_k8sio_api_core_v1_ReplicationControllerSpec(ref),
-		"k8s.io/api/core/v1.ReplicationControllerStatus":                                           schema_k8sio_api_core_v1_ReplicationControllerStatus(ref),
-		"k8s.io/api/core/v1.ResourceClaim":                                                         schema_k8sio_api_core_v1_ResourceClaim(ref),
-		"k8s.io/api/core/v1.ResourceFieldSelector":                                                 schema_k8sio_api_core_v1_ResourceFieldSelector(ref),
-		"k8s.io/api/core/v1.ResourceHealth":                                                        schema_k8sio_api_core_v1_ResourceHealth(ref),
-		"k8s.io/api/core/v1.ResourceQuota":                                                         schema_k8sio_api_core_v1_ResourceQuota(ref),
-		"k8s.io/api/core/v1.ResourceQuotaList":                                                     schema_k8sio_api_core_v1_ResourceQuotaList(ref),
-		"k8s.io/api/core/v1.ResourceQuotaSpec":                                                     schema_k8sio_api_core_v1_ResourceQuotaSpec(ref),
-		"k8s.io/api/core/v1.ResourceQuotaStatus":                                                   schema_k8sio_api_core_v1_ResourceQuotaStatus(ref),
-		"k8s.io/api/core/v1.ResourceRequirements":                                                  schema_k8sio_api_core_v1_ResourceRequirements(ref),
-		"k8s.io/api/core/v1.ResourceStatus":                                                        schema_k8sio_api_core_v1_ResourceStatus(ref),
-		"k8s.io/api/core/v1.SELinuxOptions":                                                        schema_k8sio_api_core_v1_SELinuxOptions(ref),
-		"k8s.io/api/core/v1.ScaleIOPersistentVolumeSource":                                         schema_k8sio_api_core_v1_ScaleIOPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.ScaleIOVolumeSource":                                                   schema_k8sio_api_core_v1_ScaleIOVolumeSource(ref),
-		"k8s.io/api/core/v1.ScopeSelector":                                                         schema_k8sio_api_core_v1_ScopeSelector(ref),
-		"k8s.io/api/core/v1.ScopedResourceSelectorRequirement":                                     schema_k8sio_api_core_v1_ScopedResourceSelectorRequirement(ref),
-		"k8s.io/api/core/v1.SeccompProfile":                                                        schema_k8sio_api_core_v1_SeccompProfile(ref),
-		"k8s.io/api/core/v1.Secret":                                                                schema_k8sio_api_core_v1_Secret(ref),
-		"k8s.io/api/core/v1.SecretEnvSource":                                                       schema_k8sio_api_core_v1_SecretEnvSource(ref),
-		"k8s.io/api/core/v1.SecretKeySelector":                                                     schema_k8sio_api_core_v1_SecretKeySelector(ref),
-		"k8s.io/api/core/v1.SecretList":                                                            schema_k8sio_api_core_v1_SecretList(ref),
-		"k8s.io/api/core/v1.SecretProjection":                                                      schema_k8sio_api_core_v1_SecretProjection(ref),
-		"k8s.io/api/core/v1.SecretReference":                                                       schema_k8sio_api_core_v1_SecretReference(ref),
-		"k8s.io/api/core/v1.SecretVolumeSource":                                                    schema_k8sio_api_core_v1_SecretVolumeSource(ref),
-		"k8s.io/api/core/v1.SecurityContext":                                                       schema_k8sio_api_core_v1_SecurityContext(ref),
-		"k8s.io/api/core/v1.SerializedReference":                                                   schema_k8sio_api_core_v1_SerializedReference(ref),
-		"k8s.io/api/core/v1.Service":                                                               schema_k8sio_api_core_v1_Service(ref),
-		"k8s.io/api/core/v1.ServiceAccount":                                                        schema_k8sio_api_core_v1_ServiceAccount(ref),
-		"k8s.io/api/core/v1.ServiceAccountList":                                                    schema_k8sio_api_core_v1_ServiceAccountList(ref),
-		"k8s.io/api/core/v1.ServiceAccountTokenProjection":                                         schema_k8sio_api_core_v1_ServiceAccountTokenProjection(ref),
-		"k8s.io/api/core/v1.ServiceList":                                                           schema_k8sio_api_core_v1_ServiceList(ref),
-		"k8s.io/api/core/v1.ServicePort":                                                           schema_k8sio_api_core_v1_ServicePort(ref),
-		"k8s.io/api/core/v1.ServiceProxyOptions":                                                   schema_k8sio_api_core_v1_ServiceProxyOptions(ref),
-		"k8s.io/api/core/v1.ServiceSpec":                                                           schema_k8sio_api_core_v1_ServiceSpec(ref),
-		"k8s.io/api/core/v1.ServiceStatus":                                                         schema_k8sio_api_core_v1_ServiceStatus(ref),
-		"k8s.io/api/core/v1.SessionAffinityConfig":                                                 schema_k8sio_api_core_v1_SessionAffinityConfig(ref),
-		"k8s.io/api/core/v1.SleepAction":                                                           schema_k8sio_api_core_v1_SleepAction(ref),
-		"k8s.io/api/core/v1.StorageOSPersistentVolumeSource":                                       schema_k8sio_api_core_v1_StorageOSPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.StorageOSVolumeSource":                                                 schema_k8sio_api_core_v1_StorageOSVolumeSource(ref),
-		"k8s.io/api/core/v1.Sysctl":                                                                schema_k8sio_api_core_v1_Sysctl(ref),
-		"k8s.io/api/core/v1.TCPSocketAction":                                                       schema_k8sio_api_core_v1_TCPSocketAction(ref),
-		"k8s.io/api/core/v1.Taint":                                                                 schema_k8sio_api_core_v1_Taint(ref),
-		"k8s.io/api/core/v1.Toleration":                                                            schema_k8sio_api_core_v1_Toleration(ref),
-		"k8s.io/api/core/v1.TopologySelectorLabelRequirement":                                      schema_k8sio_api_core_v1_TopologySelectorLabelRequirement(ref),
-		"k8s.io/api/core/v1.TopologySelectorTerm":                                                  schema_k8sio_api_core_v1_TopologySelectorTerm(ref),
-		"k8s.io/api/core/v1.TopologySpreadConstraint":                                              schema_k8sio_api_core_v1_TopologySpreadConstraint(ref),
-		"k8s.io/api/core/v1.TypedLocalObjectReference":                                             schema_k8sio_api_core_v1_TypedLocalObjectReference(ref),
-		"k8s.io/api/core/v1.TypedObjectReference":                                                  schema_k8sio_api_core_v1_TypedObjectReference(ref),
-		"k8s.io/api/core/v1.Volume":                                                                schema_k8sio_api_core_v1_Volume(ref),
-		"k8s.io/api/core/v1.VolumeDevice":                                                          schema_k8sio_api_core_v1_VolumeDevice(ref),
-		"k8s.io/api/core/v1.VolumeMount":                                                           schema_k8sio_api_core_v1_VolumeMount(ref),
-		"k8s.io/api/core/v1.VolumeMountStatus":                                                     schema_k8sio_api_core_v1_VolumeMountStatus(ref),
-		"k8s.io/api/core/v1.VolumeNodeAffinity":                                                    schema_k8sio_api_core_v1_VolumeNodeAffinity(ref),
-		"k8s.io/api/core/v1.VolumeProjection":                                                      schema_k8sio_api_core_v1_VolumeProjection(ref),
-		"k8s.io/api/core/v1.VolumeResourceRequirements":                                            schema_k8sio_api_core_v1_VolumeResourceRequirements(ref),
-		"k8s.io/api/core/v1.VolumeSource":                                                          schema_k8sio_api_core_v1_VolumeSource(ref),
-		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":                                        schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                                               schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
-		"k8s.io/api/core/v1.WindowsSecurityContextOptions":                                         schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                            schema_pkg_apis_meta_v1_APIGroup(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                        schema_pkg_apis_meta_v1_APIGroupList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                         schema_pkg_apis_meta_v1_APIResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                     schema_pkg_apis_meta_v1_APIResourceList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                         schema_pkg_apis_meta_v1_APIVersions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                        schema_pkg_apis_meta_v1_ApplyOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                           schema_pkg_apis_meta_v1_Condition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                       schema_pkg_apis_meta_v1_CreateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                       schema_pkg_apis_meta_v1_DeleteOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                            schema_pkg_apis_meta_v1_Duration(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldSelectorRequirement":                            schema_pkg_apis_meta_v1_FieldSelectorRequirement(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                            schema_pkg_apis_meta_v1_FieldsV1(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                          schema_pkg_apis_meta_v1_GetOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                           schema_pkg_apis_meta_v1_GroupKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                       schema_pkg_apis_meta_v1_GroupResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                        schema_pkg_apis_meta_v1_GroupVersion(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                            schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                    schema_pkg_apis_meta_v1_GroupVersionKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                                schema_pkg_apis_meta_v1_GroupVersionResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                       schema_pkg_apis_meta_v1_InternalEvent(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                       schema_pkg_apis_meta_v1_LabelSelector(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                            schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                                schema_pkg_apis_meta_v1_List(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                            schema_pkg_apis_meta_v1_ListMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                         schema_pkg_apis_meta_v1_ListOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                  schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                           schema_pkg_apis_meta_v1_MicroTime(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                          schema_pkg_apis_meta_v1_ObjectMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                      schema_pkg_apis_meta_v1_OwnerReference(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                               schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                           schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                               schema_pkg_apis_meta_v1_Patch(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                        schema_pkg_apis_meta_v1_PatchOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                       schema_pkg_apis_meta_v1_Preconditions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                           schema_pkg_apis_meta_v1_RootPaths(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                           schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                              schema_pkg_apis_meta_v1_Status(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                         schema_pkg_apis_meta_v1_StatusCause(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                       schema_pkg_apis_meta_v1_StatusDetails(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                               schema_pkg_apis_meta_v1_Table(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                               schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                        schema_pkg_apis_meta_v1_TableOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                            schema_pkg_apis_meta_v1_TableRow(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                   schema_pkg_apis_meta_v1_TableRowCondition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                                schema_pkg_apis_meta_v1_Time(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                           schema_pkg_apis_meta_v1_Timestamp(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                            schema_pkg_apis_meta_v1_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                       schema_pkg_apis_meta_v1_UpdateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                          schema_pkg_apis_meta_v1_WatchEvent(ref),
-		"k8s.io/apimachinery/pkg/runtime.RawExtension":                                             schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
-		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                 schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                  schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
-		"k8s.io/apimachinery/pkg/version.Info":                                                     schema_k8sio_apimachinery_pkg_version_Info(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPool":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPool(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolList":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolSpec":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolStatus":    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServer":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerList":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerStatus":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ResolvedServerSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResources(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.APIServerLoadBalancer":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_APIServerLoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.AddressPair":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_AddressPair(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Bastion":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Bastion(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.ExternalRouterIPParam":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_ExternalRouterIPParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.FixedIP":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_FixedIP(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Instance":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Instance(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.LoadBalancer":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_LoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Network":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Network(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_NetworkFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkParam":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_NetworkParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackCluster":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackCluster(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackIdentityReference":       schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackIdentityReference(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachine":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachine(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.PortOpts":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_PortOpts(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.RootVolume":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_RootVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Router":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Router(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroup":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroup(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupFilter":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroupFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupParam":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroupParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupRule":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroupRule(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Subnet":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Subnet(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SubnetFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SubnetParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.ValueSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_ValueSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_APIServerLoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AdditionalBlockDevice":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AdditionalBlockDevice(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AddressPair":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AddressPair(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Bastion":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Bastion(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BastionStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BastionStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BindingProfile(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceStorage":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceStorage(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceVolume":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ExternalRouterIPParam":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ExternalRouterIPParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.FixedIP":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_FixedIP(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.LoadBalancer":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_LoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatusWithSubnets":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatusWithSubnets(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackCluster":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackCluster(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference":       schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackIdentityReference(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachine":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachine(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.PortOpts":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_PortOpts(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RootVolume":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RootVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Router":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Router(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RouterFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RouterFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroup(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupRule":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupRule(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Subnet":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Subnet(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SubnetFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ValueSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ValueSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AdditionalBlockDevice(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AddressPair(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AllocationPool":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AllocationPool(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Bastion":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Bastion(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BastionStatus":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BastionStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BindingProfile(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceStorage":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceStorage(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceVolume":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FilterByNeutronTags":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FixedIP(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineResources(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ManagedSecurityGroups(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatusWithSubnets(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackCluster":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluster(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterList":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterStatus":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplate":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateList":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateResource":  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateSpec":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference":        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackIdentityReference(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachine":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachine(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineList":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineStatus":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplate":          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplate(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateList":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateList(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource":  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateResource(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedFixedIP(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachineSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpec":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpecFields":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpecFields(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResourceReference(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RootVolume(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Router(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterParam":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty":   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalProperty(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalValue":      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalValue(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupFilter":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupRuleSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupStatus":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupStatus(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupFilter":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerMetadata(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Subnet":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetFilter(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetParam(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ValueSpec(ref),
-		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabilityZone(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint":                                          schema_sigsk8sio_cluster_api_api_v1beta1_APIEndpoint(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Bootstrap":                                            schema_sigsk8sio_cluster_api_api_v1beta1_Bootstrap(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Cluster":                                              schema_sigsk8sio_cluster_api_api_v1beta1_Cluster(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClass":                                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassList":                                     schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassPatch":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassPatch(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassSpec":                                     schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatus":                                   schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariable":                           schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariable(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariableDefinition":                 schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefinition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariable":                                 schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariableMetadata":                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariableMetadata(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterList":                                          schema_sigsk8sio_cluster_api_api_v1beta1_ClusterList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterNetwork":                                       schema_sigsk8sio_cluster_api_api_v1beta1_ClusterNetwork(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterSpec":                                          schema_sigsk8sio_cluster_api_api_v1beta1_ClusterSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterStatus":                                        schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterVariable":                                      schema_sigsk8sio_cluster_api_api_v1beta1_ClusterVariable(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Condition":                                            schema_sigsk8sio_cluster_api_api_v1beta1_Condition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClass":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClassNamingStrategy":                      schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClassNamingStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneTopology":                                 schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneVariables":                                schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneVariables(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ExternalPatchDefinition":                              schema_sigsk8sio_cluster_api_api_v1beta1_ExternalPatchDefinition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec":                                    schema_sigsk8sio_cluster_api_api_v1beta1_FailureDomainSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatch":                                            schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatchValue":                                       schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatchValue(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps":                                      schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate":                                  schema_sigsk8sio_cluster_api_api_v1beta1_LocalObjectTemplate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Machine":                                              schema_sigsk8sio_cluster_api_api_v1beta1_Machine(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineAddress(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeployment":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeployment(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClass":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassNamingStrategy":                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassNamingStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassTemplate":                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassTemplate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentList":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentSpec":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStatus":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentTopology":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentVariables":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentVariables(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheck":                                   schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheck(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckList":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckSpec":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckStatus":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineList":                                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClass":                                     schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassNamingStrategy":                       schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassNamingStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassTemplate":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassTemplate(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolTopology":                                  schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolVariables":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolVariables(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineRollingUpdateDeployment":                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineRollingUpdateDeployment(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSet":                                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineSet(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetList":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetList(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetSpec":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetStatus":                                     schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSpec":                                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineStatus":                                        schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec":                                  schema_sigsk8sio_cluster_api_api_v1beta1_MachineTemplateSpec(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.NetworkRanges":                                        schema_sigsk8sio_cluster_api_api_v1beta1_NetworkRanges(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta":                                           schema_sigsk8sio_cluster_api_api_v1beta1_ObjectMeta(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchDefinition":                                      schema_sigsk8sio_cluster_api_api_v1beta1_PatchDefinition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelector":                                        schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelector(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatch":                                   schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatch(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachineDeploymentClass":             schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachineDeploymentClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachinePoolClass":                   schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachinePoolClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.RemediationStrategy":                                  schema_sigsk8sio_cluster_api_api_v1beta1_RemediationStrategy(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.Topology":                                             schema_sigsk8sio_cluster_api_api_v1beta1_Topology(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.UnhealthyCondition":                                   schema_sigsk8sio_cluster_api_api_v1beta1_UnhealthyCondition(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.ValidationRule":                                       schema_sigsk8sio_cluster_api_api_v1beta1_ValidationRule(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchema":                                       schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchema(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchemaMetadata":                               schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchemaMetadata(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersClass":                                         schema_sigsk8sio_cluster_api_api_v1beta1_WorkersClass(ref),
-		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersTopology":                                      schema_sigsk8sio_cluster_api_api_v1beta1_WorkersTopology(ref),
+		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                     schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
+		"k8s.io/api/core/v1.Affinity":                                                             schema_k8sio_api_core_v1_Affinity(ref),
+		"k8s.io/api/core/v1.AppArmorProfile":                                                      schema_k8sio_api_core_v1_AppArmorProfile(ref),
+		"k8s.io/api/core/v1.AttachedVolume":                                                       schema_k8sio_api_core_v1_AttachedVolume(ref),
+		"k8s.io/api/core/v1.AvoidPods":                                                            schema_k8sio_api_core_v1_AvoidPods(ref),
+		"k8s.io/api/core/v1.AzureDiskVolumeSource":                                                schema_k8sio_api_core_v1_AzureDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.AzureFilePersistentVolumeSource":                                      schema_k8sio_api_core_v1_AzureFilePersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.AzureFileVolumeSource":                                                schema_k8sio_api_core_v1_AzureFileVolumeSource(ref),
+		"k8s.io/api/core/v1.Binding":                                                              schema_k8sio_api_core_v1_Binding(ref),
+		"k8s.io/api/core/v1.CSIPersistentVolumeSource":                                            schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CSIVolumeSource":                                                      schema_k8sio_api_core_v1_CSIVolumeSource(ref),
+		"k8s.io/api/core/v1.Capabilities":                                                         schema_k8sio_api_core_v1_Capabilities(ref),
+		"k8s.io/api/core/v1.CephFSPersistentVolumeSource":                                         schema_k8sio_api_core_v1_CephFSPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CephFSVolumeSource":                                                   schema_k8sio_api_core_v1_CephFSVolumeSource(ref),
+		"k8s.io/api/core/v1.CinderPersistentVolumeSource":                                         schema_k8sio_api_core_v1_CinderPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CinderVolumeSource":                                                   schema_k8sio_api_core_v1_CinderVolumeSource(ref),
+		"k8s.io/api/core/v1.ClientIPConfig":                                                       schema_k8sio_api_core_v1_ClientIPConfig(ref),
+		"k8s.io/api/core/v1.ClusterTrustBundleProjection":                                         schema_k8sio_api_core_v1_ClusterTrustBundleProjection(ref),
+		"k8s.io/api/core/v1.ComponentCondition":                                                   schema_k8sio_api_core_v1_ComponentCondition(ref),
+		"k8s.io/api/core/v1.ComponentStatus":                                                      schema_k8sio_api_core_v1_ComponentStatus(ref),
+		"k8s.io/api/core/v1.ComponentStatusList":                                                  schema_k8sio_api_core_v1_ComponentStatusList(ref),
+		"k8s.io/api/core/v1.ConfigMap":                                                            schema_k8sio_api_core_v1_ConfigMap(ref),
+		"k8s.io/api/core/v1.ConfigMapEnvSource":                                                   schema_k8sio_api_core_v1_ConfigMapEnvSource(ref),
+		"k8s.io/api/core/v1.ConfigMapKeySelector":                                                 schema_k8sio_api_core_v1_ConfigMapKeySelector(ref),
+		"k8s.io/api/core/v1.ConfigMapList":                                                        schema_k8sio_api_core_v1_ConfigMapList(ref),
+		"k8s.io/api/core/v1.ConfigMapNodeConfigSource":                                            schema_k8sio_api_core_v1_ConfigMapNodeConfigSource(ref),
+		"k8s.io/api/core/v1.ConfigMapProjection":                                                  schema_k8sio_api_core_v1_ConfigMapProjection(ref),
+		"k8s.io/api/core/v1.ConfigMapVolumeSource":                                                schema_k8sio_api_core_v1_ConfigMapVolumeSource(ref),
+		"k8s.io/api/core/v1.Container":                                                            schema_k8sio_api_core_v1_Container(ref),
+		"k8s.io/api/core/v1.ContainerImage":                                                       schema_k8sio_api_core_v1_ContainerImage(ref),
+		"k8s.io/api/core/v1.ContainerPort":                                                        schema_k8sio_api_core_v1_ContainerPort(ref),
+		"k8s.io/api/core/v1.ContainerResizePolicy":                                                schema_k8sio_api_core_v1_ContainerResizePolicy(ref),
+		"k8s.io/api/core/v1.ContainerState":                                                       schema_k8sio_api_core_v1_ContainerState(ref),
+		"k8s.io/api/core/v1.ContainerStateRunning":                                                schema_k8sio_api_core_v1_ContainerStateRunning(ref),
+		"k8s.io/api/core/v1.ContainerStateTerminated":                                             schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
+		"k8s.io/api/core/v1.ContainerStateWaiting":                                                schema_k8sio_api_core_v1_ContainerStateWaiting(ref),
+		"k8s.io/api/core/v1.ContainerStatus":                                                      schema_k8sio_api_core_v1_ContainerStatus(ref),
+		"k8s.io/api/core/v1.ContainerUser":                                                        schema_k8sio_api_core_v1_ContainerUser(ref),
+		"k8s.io/api/core/v1.DaemonEndpoint":                                                       schema_k8sio_api_core_v1_DaemonEndpoint(ref),
+		"k8s.io/api/core/v1.DownwardAPIProjection":                                                schema_k8sio_api_core_v1_DownwardAPIProjection(ref),
+		"k8s.io/api/core/v1.DownwardAPIVolumeFile":                                                schema_k8sio_api_core_v1_DownwardAPIVolumeFile(ref),
+		"k8s.io/api/core/v1.DownwardAPIVolumeSource":                                              schema_k8sio_api_core_v1_DownwardAPIVolumeSource(ref),
+		"k8s.io/api/core/v1.EmptyDirVolumeSource":                                                 schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref),
+		"k8s.io/api/core/v1.EndpointAddress":                                                      schema_k8sio_api_core_v1_EndpointAddress(ref),
+		"k8s.io/api/core/v1.EndpointPort":                                                         schema_k8sio_api_core_v1_EndpointPort(ref),
+		"k8s.io/api/core/v1.EndpointSubset":                                                       schema_k8sio_api_core_v1_EndpointSubset(ref),
+		"k8s.io/api/core/v1.Endpoints":                                                            schema_k8sio_api_core_v1_Endpoints(ref),
+		"k8s.io/api/core/v1.EndpointsList":                                                        schema_k8sio_api_core_v1_EndpointsList(ref),
+		"k8s.io/api/core/v1.EnvFromSource":                                                        schema_k8sio_api_core_v1_EnvFromSource(ref),
+		"k8s.io/api/core/v1.EnvVar":                                                               schema_k8sio_api_core_v1_EnvVar(ref),
+		"k8s.io/api/core/v1.EnvVarSource":                                                         schema_k8sio_api_core_v1_EnvVarSource(ref),
+		"k8s.io/api/core/v1.EphemeralContainer":                                                   schema_k8sio_api_core_v1_EphemeralContainer(ref),
+		"k8s.io/api/core/v1.EphemeralContainerCommon":                                             schema_k8sio_api_core_v1_EphemeralContainerCommon(ref),
+		"k8s.io/api/core/v1.EphemeralVolumeSource":                                                schema_k8sio_api_core_v1_EphemeralVolumeSource(ref),
+		"k8s.io/api/core/v1.Event":                                                                schema_k8sio_api_core_v1_Event(ref),
+		"k8s.io/api/core/v1.EventList":                                                            schema_k8sio_api_core_v1_EventList(ref),
+		"k8s.io/api/core/v1.EventSeries":                                                          schema_k8sio_api_core_v1_EventSeries(ref),
+		"k8s.io/api/core/v1.EventSource":                                                          schema_k8sio_api_core_v1_EventSource(ref),
+		"k8s.io/api/core/v1.ExecAction":                                                           schema_k8sio_api_core_v1_ExecAction(ref),
+		"k8s.io/api/core/v1.FCVolumeSource":                                                       schema_k8sio_api_core_v1_FCVolumeSource(ref),
+		"k8s.io/api/core/v1.FlexPersistentVolumeSource":                                           schema_k8sio_api_core_v1_FlexPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.FlexVolumeSource":                                                     schema_k8sio_api_core_v1_FlexVolumeSource(ref),
+		"k8s.io/api/core/v1.FlockerVolumeSource":                                                  schema_k8sio_api_core_v1_FlockerVolumeSource(ref),
+		"k8s.io/api/core/v1.GCEPersistentDiskVolumeSource":                                        schema_k8sio_api_core_v1_GCEPersistentDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.GRPCAction":                                                           schema_k8sio_api_core_v1_GRPCAction(ref),
+		"k8s.io/api/core/v1.GitRepoVolumeSource":                                                  schema_k8sio_api_core_v1_GitRepoVolumeSource(ref),
+		"k8s.io/api/core/v1.GlusterfsPersistentVolumeSource":                                      schema_k8sio_api_core_v1_GlusterfsPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.GlusterfsVolumeSource":                                                schema_k8sio_api_core_v1_GlusterfsVolumeSource(ref),
+		"k8s.io/api/core/v1.HTTPGetAction":                                                        schema_k8sio_api_core_v1_HTTPGetAction(ref),
+		"k8s.io/api/core/v1.HTTPHeader":                                                           schema_k8sio_api_core_v1_HTTPHeader(ref),
+		"k8s.io/api/core/v1.HostAlias":                                                            schema_k8sio_api_core_v1_HostAlias(ref),
+		"k8s.io/api/core/v1.HostIP":                                                               schema_k8sio_api_core_v1_HostIP(ref),
+		"k8s.io/api/core/v1.HostPathVolumeSource":                                                 schema_k8sio_api_core_v1_HostPathVolumeSource(ref),
+		"k8s.io/api/core/v1.ISCSIPersistentVolumeSource":                                          schema_k8sio_api_core_v1_ISCSIPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.ISCSIVolumeSource":                                                    schema_k8sio_api_core_v1_ISCSIVolumeSource(ref),
+		"k8s.io/api/core/v1.ImageVolumeSource":                                                    schema_k8sio_api_core_v1_ImageVolumeSource(ref),
+		"k8s.io/api/core/v1.KeyToPath":                                                            schema_k8sio_api_core_v1_KeyToPath(ref),
+		"k8s.io/api/core/v1.Lifecycle":                                                            schema_k8sio_api_core_v1_Lifecycle(ref),
+		"k8s.io/api/core/v1.LifecycleHandler":                                                     schema_k8sio_api_core_v1_LifecycleHandler(ref),
+		"k8s.io/api/core/v1.LimitRange":                                                           schema_k8sio_api_core_v1_LimitRange(ref),
+		"k8s.io/api/core/v1.LimitRangeItem":                                                       schema_k8sio_api_core_v1_LimitRangeItem(ref),
+		"k8s.io/api/core/v1.LimitRangeList":                                                       schema_k8sio_api_core_v1_LimitRangeList(ref),
+		"k8s.io/api/core/v1.LimitRangeSpec":                                                       schema_k8sio_api_core_v1_LimitRangeSpec(ref),
+		"k8s.io/api/core/v1.LinuxContainerUser":                                                   schema_k8sio_api_core_v1_LinuxContainerUser(ref),
+		"k8s.io/api/core/v1.List":                                                                 schema_k8sio_api_core_v1_List(ref),
+		"k8s.io/api/core/v1.LoadBalancerIngress":                                                  schema_k8sio_api_core_v1_LoadBalancerIngress(ref),
+		"k8s.io/api/core/v1.LoadBalancerStatus":                                                   schema_k8sio_api_core_v1_LoadBalancerStatus(ref),
+		"k8s.io/api/core/v1.LocalObjectReference":                                                 schema_k8sio_api_core_v1_LocalObjectReference(ref),
+		"k8s.io/api/core/v1.LocalVolumeSource":                                                    schema_k8sio_api_core_v1_LocalVolumeSource(ref),
+		"k8s.io/api/core/v1.ModifyVolumeStatus":                                                   schema_k8sio_api_core_v1_ModifyVolumeStatus(ref),
+		"k8s.io/api/core/v1.NFSVolumeSource":                                                      schema_k8sio_api_core_v1_NFSVolumeSource(ref),
+		"k8s.io/api/core/v1.Namespace":                                                            schema_k8sio_api_core_v1_Namespace(ref),
+		"k8s.io/api/core/v1.NamespaceCondition":                                                   schema_k8sio_api_core_v1_NamespaceCondition(ref),
+		"k8s.io/api/core/v1.NamespaceList":                                                        schema_k8sio_api_core_v1_NamespaceList(ref),
+		"k8s.io/api/core/v1.NamespaceSpec":                                                        schema_k8sio_api_core_v1_NamespaceSpec(ref),
+		"k8s.io/api/core/v1.NamespaceStatus":                                                      schema_k8sio_api_core_v1_NamespaceStatus(ref),
+		"k8s.io/api/core/v1.Node":                                                                 schema_k8sio_api_core_v1_Node(ref),
+		"k8s.io/api/core/v1.NodeAddress":                                                          schema_k8sio_api_core_v1_NodeAddress(ref),
+		"k8s.io/api/core/v1.NodeAffinity":                                                         schema_k8sio_api_core_v1_NodeAffinity(ref),
+		"k8s.io/api/core/v1.NodeCondition":                                                        schema_k8sio_api_core_v1_NodeCondition(ref),
+		"k8s.io/api/core/v1.NodeConfigSource":                                                     schema_k8sio_api_core_v1_NodeConfigSource(ref),
+		"k8s.io/api/core/v1.NodeConfigStatus":                                                     schema_k8sio_api_core_v1_NodeConfigStatus(ref),
+		"k8s.io/api/core/v1.NodeDaemonEndpoints":                                                  schema_k8sio_api_core_v1_NodeDaemonEndpoints(ref),
+		"k8s.io/api/core/v1.NodeFeatures":                                                         schema_k8sio_api_core_v1_NodeFeatures(ref),
+		"k8s.io/api/core/v1.NodeList":                                                             schema_k8sio_api_core_v1_NodeList(ref),
+		"k8s.io/api/core/v1.NodeProxyOptions":                                                     schema_k8sio_api_core_v1_NodeProxyOptions(ref),
+		"k8s.io/api/core/v1.NodeRuntimeHandler":                                                   schema_k8sio_api_core_v1_NodeRuntimeHandler(ref),
+		"k8s.io/api/core/v1.NodeRuntimeHandlerFeatures":                                           schema_k8sio_api_core_v1_NodeRuntimeHandlerFeatures(ref),
+		"k8s.io/api/core/v1.NodeSelector":                                                         schema_k8sio_api_core_v1_NodeSelector(ref),
+		"k8s.io/api/core/v1.NodeSelectorRequirement":                                              schema_k8sio_api_core_v1_NodeSelectorRequirement(ref),
+		"k8s.io/api/core/v1.NodeSelectorTerm":                                                     schema_k8sio_api_core_v1_NodeSelectorTerm(ref),
+		"k8s.io/api/core/v1.NodeSpec":                                                             schema_k8sio_api_core_v1_NodeSpec(ref),
+		"k8s.io/api/core/v1.NodeStatus":                                                           schema_k8sio_api_core_v1_NodeStatus(ref),
+		"k8s.io/api/core/v1.NodeSystemInfo":                                                       schema_k8sio_api_core_v1_NodeSystemInfo(ref),
+		"k8s.io/api/core/v1.ObjectFieldSelector":                                                  schema_k8sio_api_core_v1_ObjectFieldSelector(ref),
+		"k8s.io/api/core/v1.ObjectReference":                                                      schema_k8sio_api_core_v1_ObjectReference(ref),
+		"k8s.io/api/core/v1.PersistentVolume":                                                     schema_k8sio_api_core_v1_PersistentVolume(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaim":                                                schema_k8sio_api_core_v1_PersistentVolumeClaim(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimCondition":                                       schema_k8sio_api_core_v1_PersistentVolumeClaimCondition(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimList":                                            schema_k8sio_api_core_v1_PersistentVolumeClaimList(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimSpec":                                            schema_k8sio_api_core_v1_PersistentVolumeClaimSpec(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimStatus":                                          schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimTemplate":                                        schema_k8sio_api_core_v1_PersistentVolumeClaimTemplate(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource":                                    schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref),
+		"k8s.io/api/core/v1.PersistentVolumeList":                                                 schema_k8sio_api_core_v1_PersistentVolumeList(ref),
+		"k8s.io/api/core/v1.PersistentVolumeSource":                                               schema_k8sio_api_core_v1_PersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.PersistentVolumeSpec":                                                 schema_k8sio_api_core_v1_PersistentVolumeSpec(ref),
+		"k8s.io/api/core/v1.PersistentVolumeStatus":                                               schema_k8sio_api_core_v1_PersistentVolumeStatus(ref),
+		"k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource":                                     schema_k8sio_api_core_v1_PhotonPersistentDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.Pod":                                                                  schema_k8sio_api_core_v1_Pod(ref),
+		"k8s.io/api/core/v1.PodAffinity":                                                          schema_k8sio_api_core_v1_PodAffinity(ref),
+		"k8s.io/api/core/v1.PodAffinityTerm":                                                      schema_k8sio_api_core_v1_PodAffinityTerm(ref),
+		"k8s.io/api/core/v1.PodAntiAffinity":                                                      schema_k8sio_api_core_v1_PodAntiAffinity(ref),
+		"k8s.io/api/core/v1.PodAttachOptions":                                                     schema_k8sio_api_core_v1_PodAttachOptions(ref),
+		"k8s.io/api/core/v1.PodCondition":                                                         schema_k8sio_api_core_v1_PodCondition(ref),
+		"k8s.io/api/core/v1.PodDNSConfig":                                                         schema_k8sio_api_core_v1_PodDNSConfig(ref),
+		"k8s.io/api/core/v1.PodDNSConfigOption":                                                   schema_k8sio_api_core_v1_PodDNSConfigOption(ref),
+		"k8s.io/api/core/v1.PodExecOptions":                                                       schema_k8sio_api_core_v1_PodExecOptions(ref),
+		"k8s.io/api/core/v1.PodIP":                                                                schema_k8sio_api_core_v1_PodIP(ref),
+		"k8s.io/api/core/v1.PodList":                                                              schema_k8sio_api_core_v1_PodList(ref),
+		"k8s.io/api/core/v1.PodLogOptions":                                                        schema_k8sio_api_core_v1_PodLogOptions(ref),
+		"k8s.io/api/core/v1.PodOS":                                                                schema_k8sio_api_core_v1_PodOS(ref),
+		"k8s.io/api/core/v1.PodPortForwardOptions":                                                schema_k8sio_api_core_v1_PodPortForwardOptions(ref),
+		"k8s.io/api/core/v1.PodProxyOptions":                                                      schema_k8sio_api_core_v1_PodProxyOptions(ref),
+		"k8s.io/api/core/v1.PodReadinessGate":                                                     schema_k8sio_api_core_v1_PodReadinessGate(ref),
+		"k8s.io/api/core/v1.PodResourceClaim":                                                     schema_k8sio_api_core_v1_PodResourceClaim(ref),
+		"k8s.io/api/core/v1.PodResourceClaimStatus":                                               schema_k8sio_api_core_v1_PodResourceClaimStatus(ref),
+		"k8s.io/api/core/v1.PodSchedulingGate":                                                    schema_k8sio_api_core_v1_PodSchedulingGate(ref),
+		"k8s.io/api/core/v1.PodSecurityContext":                                                   schema_k8sio_api_core_v1_PodSecurityContext(ref),
+		"k8s.io/api/core/v1.PodSignature":                                                         schema_k8sio_api_core_v1_PodSignature(ref),
+		"k8s.io/api/core/v1.PodSpec":                                                              schema_k8sio_api_core_v1_PodSpec(ref),
+		"k8s.io/api/core/v1.PodStatus":                                                            schema_k8sio_api_core_v1_PodStatus(ref),
+		"k8s.io/api/core/v1.PodStatusResult":                                                      schema_k8sio_api_core_v1_PodStatusResult(ref),
+		"k8s.io/api/core/v1.PodTemplate":                                                          schema_k8sio_api_core_v1_PodTemplate(ref),
+		"k8s.io/api/core/v1.PodTemplateList":                                                      schema_k8sio_api_core_v1_PodTemplateList(ref),
+		"k8s.io/api/core/v1.PodTemplateSpec":                                                      schema_k8sio_api_core_v1_PodTemplateSpec(ref),
+		"k8s.io/api/core/v1.PortStatus":                                                           schema_k8sio_api_core_v1_PortStatus(ref),
+		"k8s.io/api/core/v1.PortworxVolumeSource":                                                 schema_k8sio_api_core_v1_PortworxVolumeSource(ref),
+		"k8s.io/api/core/v1.PreferAvoidPodsEntry":                                                 schema_k8sio_api_core_v1_PreferAvoidPodsEntry(ref),
+		"k8s.io/api/core/v1.PreferredSchedulingTerm":                                              schema_k8sio_api_core_v1_PreferredSchedulingTerm(ref),
+		"k8s.io/api/core/v1.Probe":                                                                schema_k8sio_api_core_v1_Probe(ref),
+		"k8s.io/api/core/v1.ProbeHandler":                                                         schema_k8sio_api_core_v1_ProbeHandler(ref),
+		"k8s.io/api/core/v1.ProjectedVolumeSource":                                                schema_k8sio_api_core_v1_ProjectedVolumeSource(ref),
+		"k8s.io/api/core/v1.QuobyteVolumeSource":                                                  schema_k8sio_api_core_v1_QuobyteVolumeSource(ref),
+		"k8s.io/api/core/v1.RBDPersistentVolumeSource":                                            schema_k8sio_api_core_v1_RBDPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.RBDVolumeSource":                                                      schema_k8sio_api_core_v1_RBDVolumeSource(ref),
+		"k8s.io/api/core/v1.RangeAllocation":                                                      schema_k8sio_api_core_v1_RangeAllocation(ref),
+		"k8s.io/api/core/v1.ReplicationController":                                                schema_k8sio_api_core_v1_ReplicationController(ref),
+		"k8s.io/api/core/v1.ReplicationControllerCondition":                                       schema_k8sio_api_core_v1_ReplicationControllerCondition(ref),
+		"k8s.io/api/core/v1.ReplicationControllerList":                                            schema_k8sio_api_core_v1_ReplicationControllerList(ref),
+		"k8s.io/api/core/v1.ReplicationControllerSpec":                                            schema_k8sio_api_core_v1_ReplicationControllerSpec(ref),
+		"k8s.io/api/core/v1.ReplicationControllerStatus":                                          schema_k8sio_api_core_v1_ReplicationControllerStatus(ref),
+		"k8s.io/api/core/v1.ResourceClaim":                                                        schema_k8sio_api_core_v1_ResourceClaim(ref),
+		"k8s.io/api/core/v1.ResourceFieldSelector":                                                schema_k8sio_api_core_v1_ResourceFieldSelector(ref),
+		"k8s.io/api/core/v1.ResourceHealth":                                                       schema_k8sio_api_core_v1_ResourceHealth(ref),
+		"k8s.io/api/core/v1.ResourceQuota":                                                        schema_k8sio_api_core_v1_ResourceQuota(ref),
+		"k8s.io/api/core/v1.ResourceQuotaList":                                                    schema_k8sio_api_core_v1_ResourceQuotaList(ref),
+		"k8s.io/api/core/v1.ResourceQuotaSpec":                                                    schema_k8sio_api_core_v1_ResourceQuotaSpec(ref),
+		"k8s.io/api/core/v1.ResourceQuotaStatus":                                                  schema_k8sio_api_core_v1_ResourceQuotaStatus(ref),
+		"k8s.io/api/core/v1.ResourceRequirements":                                                 schema_k8sio_api_core_v1_ResourceRequirements(ref),
+		"k8s.io/api/core/v1.ResourceStatus":                                                       schema_k8sio_api_core_v1_ResourceStatus(ref),
+		"k8s.io/api/core/v1.SELinuxOptions":                                                       schema_k8sio_api_core_v1_SELinuxOptions(ref),
+		"k8s.io/api/core/v1.ScaleIOPersistentVolumeSource":                                        schema_k8sio_api_core_v1_ScaleIOPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.ScaleIOVolumeSource":                                                  schema_k8sio_api_core_v1_ScaleIOVolumeSource(ref),
+		"k8s.io/api/core/v1.ScopeSelector":                                                        schema_k8sio_api_core_v1_ScopeSelector(ref),
+		"k8s.io/api/core/v1.ScopedResourceSelectorRequirement":                                    schema_k8sio_api_core_v1_ScopedResourceSelectorRequirement(ref),
+		"k8s.io/api/core/v1.SeccompProfile":                                                       schema_k8sio_api_core_v1_SeccompProfile(ref),
+		"k8s.io/api/core/v1.Secret":                                                               schema_k8sio_api_core_v1_Secret(ref),
+		"k8s.io/api/core/v1.SecretEnvSource":                                                      schema_k8sio_api_core_v1_SecretEnvSource(ref),
+		"k8s.io/api/core/v1.SecretKeySelector":                                                    schema_k8sio_api_core_v1_SecretKeySelector(ref),
+		"k8s.io/api/core/v1.SecretList":                                                           schema_k8sio_api_core_v1_SecretList(ref),
+		"k8s.io/api/core/v1.SecretProjection":                                                     schema_k8sio_api_core_v1_SecretProjection(ref),
+		"k8s.io/api/core/v1.SecretReference":                                                      schema_k8sio_api_core_v1_SecretReference(ref),
+		"k8s.io/api/core/v1.SecretVolumeSource":                                                   schema_k8sio_api_core_v1_SecretVolumeSource(ref),
+		"k8s.io/api/core/v1.SecurityContext":                                                      schema_k8sio_api_core_v1_SecurityContext(ref),
+		"k8s.io/api/core/v1.SerializedReference":                                                  schema_k8sio_api_core_v1_SerializedReference(ref),
+		"k8s.io/api/core/v1.Service":                                                              schema_k8sio_api_core_v1_Service(ref),
+		"k8s.io/api/core/v1.ServiceAccount":                                                       schema_k8sio_api_core_v1_ServiceAccount(ref),
+		"k8s.io/api/core/v1.ServiceAccountList":                                                   schema_k8sio_api_core_v1_ServiceAccountList(ref),
+		"k8s.io/api/core/v1.ServiceAccountTokenProjection":                                        schema_k8sio_api_core_v1_ServiceAccountTokenProjection(ref),
+		"k8s.io/api/core/v1.ServiceList":                                                          schema_k8sio_api_core_v1_ServiceList(ref),
+		"k8s.io/api/core/v1.ServicePort":                                                          schema_k8sio_api_core_v1_ServicePort(ref),
+		"k8s.io/api/core/v1.ServiceProxyOptions":                                                  schema_k8sio_api_core_v1_ServiceProxyOptions(ref),
+		"k8s.io/api/core/v1.ServiceSpec":                                                          schema_k8sio_api_core_v1_ServiceSpec(ref),
+		"k8s.io/api/core/v1.ServiceStatus":                                                        schema_k8sio_api_core_v1_ServiceStatus(ref),
+		"k8s.io/api/core/v1.SessionAffinityConfig":                                                schema_k8sio_api_core_v1_SessionAffinityConfig(ref),
+		"k8s.io/api/core/v1.SleepAction":                                                          schema_k8sio_api_core_v1_SleepAction(ref),
+		"k8s.io/api/core/v1.StorageOSPersistentVolumeSource":                                      schema_k8sio_api_core_v1_StorageOSPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.StorageOSVolumeSource":                                                schema_k8sio_api_core_v1_StorageOSVolumeSource(ref),
+		"k8s.io/api/core/v1.Sysctl":                                                               schema_k8sio_api_core_v1_Sysctl(ref),
+		"k8s.io/api/core/v1.TCPSocketAction":                                                      schema_k8sio_api_core_v1_TCPSocketAction(ref),
+		"k8s.io/api/core/v1.Taint":                                                                schema_k8sio_api_core_v1_Taint(ref),
+		"k8s.io/api/core/v1.Toleration":                                                           schema_k8sio_api_core_v1_Toleration(ref),
+		"k8s.io/api/core/v1.TopologySelectorLabelRequirement":                                     schema_k8sio_api_core_v1_TopologySelectorLabelRequirement(ref),
+		"k8s.io/api/core/v1.TopologySelectorTerm":                                                 schema_k8sio_api_core_v1_TopologySelectorTerm(ref),
+		"k8s.io/api/core/v1.TopologySpreadConstraint":                                             schema_k8sio_api_core_v1_TopologySpreadConstraint(ref),
+		"k8s.io/api/core/v1.TypedLocalObjectReference":                                            schema_k8sio_api_core_v1_TypedLocalObjectReference(ref),
+		"k8s.io/api/core/v1.TypedObjectReference":                                                 schema_k8sio_api_core_v1_TypedObjectReference(ref),
+		"k8s.io/api/core/v1.Volume":                                                               schema_k8sio_api_core_v1_Volume(ref),
+		"k8s.io/api/core/v1.VolumeDevice":                                                         schema_k8sio_api_core_v1_VolumeDevice(ref),
+		"k8s.io/api/core/v1.VolumeMount":                                                          schema_k8sio_api_core_v1_VolumeMount(ref),
+		"k8s.io/api/core/v1.VolumeMountStatus":                                                    schema_k8sio_api_core_v1_VolumeMountStatus(ref),
+		"k8s.io/api/core/v1.VolumeNodeAffinity":                                                   schema_k8sio_api_core_v1_VolumeNodeAffinity(ref),
+		"k8s.io/api/core/v1.VolumeProjection":                                                     schema_k8sio_api_core_v1_VolumeProjection(ref),
+		"k8s.io/api/core/v1.VolumeResourceRequirements":                                           schema_k8sio_api_core_v1_VolumeResourceRequirements(ref),
+		"k8s.io/api/core/v1.VolumeSource":                                                         schema_k8sio_api_core_v1_VolumeSource(ref),
+		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":                                       schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                                              schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
+		"k8s.io/api/core/v1.WindowsSecurityContextOptions":                                        schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                           schema_pkg_apis_meta_v1_APIGroup(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                       schema_pkg_apis_meta_v1_APIGroupList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                        schema_pkg_apis_meta_v1_APIResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                    schema_pkg_apis_meta_v1_APIResourceList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                        schema_pkg_apis_meta_v1_APIVersions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                       schema_pkg_apis_meta_v1_ApplyOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                          schema_pkg_apis_meta_v1_Condition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                      schema_pkg_apis_meta_v1_CreateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                      schema_pkg_apis_meta_v1_DeleteOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                           schema_pkg_apis_meta_v1_Duration(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldSelectorRequirement":                           schema_pkg_apis_meta_v1_FieldSelectorRequirement(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                           schema_pkg_apis_meta_v1_FieldsV1(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                         schema_pkg_apis_meta_v1_GetOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                          schema_pkg_apis_meta_v1_GroupKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                      schema_pkg_apis_meta_v1_GroupResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                       schema_pkg_apis_meta_v1_GroupVersion(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                           schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                   schema_pkg_apis_meta_v1_GroupVersionKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                               schema_pkg_apis_meta_v1_GroupVersionResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                      schema_pkg_apis_meta_v1_InternalEvent(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                      schema_pkg_apis_meta_v1_LabelSelector(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                           schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                               schema_pkg_apis_meta_v1_List(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                           schema_pkg_apis_meta_v1_ListMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                        schema_pkg_apis_meta_v1_ListOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                 schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                          schema_pkg_apis_meta_v1_MicroTime(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                         schema_pkg_apis_meta_v1_ObjectMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                     schema_pkg_apis_meta_v1_OwnerReference(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                              schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                          schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                              schema_pkg_apis_meta_v1_Patch(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                       schema_pkg_apis_meta_v1_PatchOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                      schema_pkg_apis_meta_v1_Preconditions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                          schema_pkg_apis_meta_v1_RootPaths(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                          schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                             schema_pkg_apis_meta_v1_Status(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                        schema_pkg_apis_meta_v1_StatusCause(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                      schema_pkg_apis_meta_v1_StatusDetails(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                              schema_pkg_apis_meta_v1_Table(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                              schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                       schema_pkg_apis_meta_v1_TableOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                           schema_pkg_apis_meta_v1_TableRow(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                  schema_pkg_apis_meta_v1_TableRowCondition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                               schema_pkg_apis_meta_v1_Time(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                          schema_pkg_apis_meta_v1_Timestamp(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                           schema_pkg_apis_meta_v1_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                      schema_pkg_apis_meta_v1_UpdateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                         schema_pkg_apis_meta_v1_WatchEvent(ref),
+		"k8s.io/apimachinery/pkg/runtime.RawExtension":                                            schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
+		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                 schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
+		"k8s.io/apimachinery/pkg/version.Info":                                                    schema_k8sio_apimachinery_pkg_version_Info(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPool":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPool(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolStatus":   schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServer":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackServerStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackServerStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ResolvedServerSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResources(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AdditionalBlockDevice(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AddressPair(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AllocationPool":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AllocationPool(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Bastion":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Bastion(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BastionStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BastionStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BindingProfile(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceStorage":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceStorage(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceVolume":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolume(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FilterByNeutronTags":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FixedIP(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineResources(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ManagedSecurityGroups(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus":                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatusWithSubnets(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackCluster":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluster(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplate(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateResource(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference":       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackIdentityReference(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachine":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachine(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineList":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineSpec":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineStatus":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplate":         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplate(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateList":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource": schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateResource(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedFixedIP(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachineSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpec":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpecFields":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpecFields(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResourceReference(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RootVolume(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Router(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RouterParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalProperty":  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalProperty(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SchedulerHintAdditionalValue":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SchedulerHintAdditionalValue(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupFilter":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupRuleSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupStatus":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SecurityGroupStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupFilter":                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerMetadata(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Subnet":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ValueSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabilityZone(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint":                                         schema_sigsk8sio_cluster_api_api_v1beta1_APIEndpoint(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Bootstrap":                                           schema_sigsk8sio_cluster_api_api_v1beta1_Bootstrap(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Cluster":                                             schema_sigsk8sio_cluster_api_api_v1beta1_Cluster(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterAvailabilityGate":                             schema_sigsk8sio_cluster_api_api_v1beta1_ClusterAvailabilityGate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClass":                                        schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassList":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassPatch":                                   schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassPatch(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassSpec":                                    schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatus":                                  schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariable":                          schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariable(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariableDefinition":                schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefinition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassV1Beta2Status":                           schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariable":                                schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariableMetadata":                        schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariableMetadata(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterControlPlaneStatus":                           schema_sigsk8sio_cluster_api_api_v1beta1_ClusterControlPlaneStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterList":                                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterNetwork":                                      schema_sigsk8sio_cluster_api_api_v1beta1_ClusterNetwork(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterSpec":                                         schema_sigsk8sio_cluster_api_api_v1beta1_ClusterSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterStatus":                                       schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterV1Beta2Status":                                schema_sigsk8sio_cluster_api_api_v1beta1_ClusterV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ClusterVariable":                                     schema_sigsk8sio_cluster_api_api_v1beta1_ClusterVariable(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Condition":                                           schema_sigsk8sio_cluster_api_api_v1beta1_Condition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClass":                                   schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClassNamingStrategy":                     schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClassNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneTopology":                                schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneVariables":                               schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneVariables(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ExternalPatchDefinition":                             schema_sigsk8sio_cluster_api_api_v1beta1_ExternalPatchDefinition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec":                                   schema_sigsk8sio_cluster_api_api_v1beta1_FailureDomainSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.InfrastructureNamingStrategy":                        schema_sigsk8sio_cluster_api_api_v1beta1_InfrastructureNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatch":                                           schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.JSONPatchValue":                                      schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatchValue(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps":                                     schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate":                                 schema_sigsk8sio_cluster_api_api_v1beta1_LocalObjectTemplate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Machine":                                             schema_sigsk8sio_cluster_api_api_v1beta1_Machine(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress":                                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineAddress(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeletionStatus":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeletionStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeployment":                                   schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeployment(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClass":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassNamingStrategy":                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassTemplate":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassTemplate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentList":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentSpec":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStatus":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentTopology":                           schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentV1Beta2Status":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentVariables":                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentVariables(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRule":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRule(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleDrainConfig":                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleDrainConfig(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleList":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleMachineSelector":                     schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleMachineSelector(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRulePodSelector":                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRulePodSelector(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleSpec":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheck":                                  schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheck(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckList":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckSpec":                              schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckStatus":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology":                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckV1Beta2Status":                     schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineList":                                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineNamingStrategy":                               schema_sigsk8sio_cluster_api_api_v1beta1_MachineNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClass":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassNamingStrategy":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassNamingStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassTemplate":                            schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassTemplate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolTopology":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolVariables":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolVariables(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineReadinessGate(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineRollingUpdateDeployment":                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineRollingUpdateDeployment(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSet":                                          schema_sigsk8sio_cluster_api_api_v1beta1_MachineSet(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetList":                                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetList(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetSpec":                                      schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetStatus":                                    schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSetV1Beta2Status":                             schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineSpec":                                         schema_sigsk8sio_cluster_api_api_v1beta1_MachineSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineStatus":                                       schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec":                                 schema_sigsk8sio_cluster_api_api_v1beta1_MachineTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.MachineV1Beta2Status":                                schema_sigsk8sio_cluster_api_api_v1beta1_MachineV1Beta2Status(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.NetworkRanges":                                       schema_sigsk8sio_cluster_api_api_v1beta1_NetworkRanges(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta":                                          schema_sigsk8sio_cluster_api_api_v1beta1_ObjectMeta(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchDefinition":                                     schema_sigsk8sio_cluster_api_api_v1beta1_PatchDefinition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelector":                                       schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelector(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatch":                                  schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatch(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachineDeploymentClass":            schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachineDeploymentClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachinePoolClass":                  schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachinePoolClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.RemediationStrategy":                                 schema_sigsk8sio_cluster_api_api_v1beta1_RemediationStrategy(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.Topology":                                            schema_sigsk8sio_cluster_api_api_v1beta1_Topology(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.UnhealthyCondition":                                  schema_sigsk8sio_cluster_api_api_v1beta1_UnhealthyCondition(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.ValidationRule":                                      schema_sigsk8sio_cluster_api_api_v1beta1_ValidationRule(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchema":                                      schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchema(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.VariableSchemaMetadata":                              schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchemaMetadata(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersClass":                                        schema_sigsk8sio_cluster_api_api_v1beta1_WorkersClass(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersStatus":                                       schema_sigsk8sio_cluster_api_api_v1beta1_WorkersStatus(ref),
+		"sigs.k8s.io/cluster-api/api/v1beta1.WorkersTopology":                                     schema_sigsk8sio_cluster_api_api_v1beta1_WorkersTopology(ref),
 	}
 }
 
@@ -875,7 +815,7 @@ func schema_k8sio_api_core_v1_Binding(ref common.ReferenceCallback) common.OpenA
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Binding ties one object to another; for example, a pod is bound to a node by a scheduler. Deprecated in 1.7, please use the bindings subresource of pods instead.",
+				Description: "Binding ties one object to another; for example, a pod is bound to a node by a scheduler.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -919,7 +859,7 @@ func schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Represents storage that is managed by an external CSI volume driver (Beta feature)",
+				Description: "Represents storage that is managed by an external CSI volume driver",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"driver": {
@@ -4396,7 +4336,8 @@ func schema_k8sio_api_core_v1_GRPCAction(ref common.ReferenceCallback) common.Op
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "GRPCAction specifies an action involving a GRPC service.",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"port": {
 						SchemaProps: spec.SchemaProps{
@@ -5044,25 +4985,25 @@ func schema_k8sio_api_core_v1_LifecycleHandler(ref common.ReferenceCallback) com
 				Properties: map[string]spec.Schema{
 					"exec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Exec specifies the action to take.",
+							Description: "Exec specifies a command to execute in the container.",
 							Ref:         ref("k8s.io/api/core/v1.ExecAction"),
 						},
 					},
 					"httpGet": {
 						SchemaProps: spec.SchemaProps{
-							Description: "HTTPGet specifies the http request to perform.",
+							Description: "HTTPGet specifies an HTTP GET request to perform.",
 							Ref:         ref("k8s.io/api/core/v1.HTTPGetAction"),
 						},
 					},
 					"tcpSocket": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified.",
+							Description: "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for backward compatibility. There is no validation of this field and lifecycle hooks will fail at runtime when it is specified.",
 							Ref:         ref("k8s.io/api/core/v1.TCPSocketAction"),
 						},
 					},
 					"sleep": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Sleep represents the duration that the container should sleep before being terminated.",
+							Description: "Sleep represents a duration that the container should sleep.",
 							Ref:         ref("k8s.io/api/core/v1.SleepAction"),
 						},
 					},
@@ -5516,7 +5457,7 @@ func schema_k8sio_api_core_v1_LocalVolumeSource(ref common.ReferenceCallback) co
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Local represents directly-attached storage with node affinity (Beta feature)",
+				Description: "Local represents directly-attached storage with node affinity",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"path": {
@@ -5683,19 +5624,22 @@ func schema_k8sio_api_core_v1_NamespaceCondition(ref common.ReferenceCallback) c
 					},
 					"lastTransitionTime": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+							Description: "Last time the condition transitioned from one status to another.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"reason": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Unique, one-word, CamelCase reason for the condition's last transition.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"message": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Human-readable message indicating details about last transition.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
@@ -6553,7 +6497,7 @@ func schema_k8sio_api_core_v1_NodeStatus(ref common.ReferenceCallback) common.Op
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions is an array of current observed node conditions. More info: https://kubernetes.io/docs/concepts/nodes/node/#condition",
+							Description: "Conditions is an array of current observed node conditions. More info: https://kubernetes.io/docs/reference/node/node-status/#condition",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -6577,7 +6521,7 @@ func schema_k8sio_api_core_v1_NodeStatus(ref common.ReferenceCallback) common.Op
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "List of addresses reachable to the node. Queried from cloud provider, if available. More info: https://kubernetes.io/docs/concepts/nodes/node/#addresses Note: This field is declared as mergeable, but the merge key is not sufficiently unique, which can cause data corruption when it is merged. Callers should instead use a full-replacement patch. See https://pr.k8s.io/79391 for an example. Consumers should assume that addresses can change during the lifetime of a Node. However, there are some exceptions where this may not be possible, such as Pods that inherit a Node's address in its own status or consumers of the downward API (status.hostIP).",
+							Description: "List of addresses reachable to the node. Queried from cloud provider, if available. More info: https://kubernetes.io/docs/reference/node/node-status/#addresses Note: This field is declared as mergeable, but the merge key is not sufficiently unique, which can cause data corruption when it is merged. Callers should instead use a full-replacement patch. See https://pr.k8s.io/79391 for an example. Consumers should assume that addresses can change during the lifetime of a Node. However, there are some exceptions where this may not be possible, such as Pods that inherit a Node's address in its own status or consumers of the downward API (status.hostIP).",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -6598,7 +6542,7 @@ func schema_k8sio_api_core_v1_NodeStatus(ref common.ReferenceCallback) common.Op
 					},
 					"nodeInfo": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Set of ids/uuids to uniquely identify the node. More info: https://kubernetes.io/docs/concepts/nodes/node/#info",
+							Description: "Set of ids/uuids to uniquely identify the node. More info: https://kubernetes.io/docs/reference/node/node-status/#info",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/api/core/v1.NodeSystemInfo"),
 						},
@@ -7004,16 +6948,18 @@ func schema_k8sio_api_core_v1_PersistentVolumeClaimCondition(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "Type is the type of the condition. More info: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#:~:text=set%20to%20%27ResizeStarted%27.-,PersistentVolumeClaimCondition,-contains%20details%20about",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "Status is the status of the condition. Can be True, False, Unknown. More info: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#:~:text=state%20of%20pvc-,conditions.status,-(string)%2C%20required",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"lastProbeTime": {
@@ -7442,13 +7388,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 				Properties: map[string]spec.Schema{
 					"gcePersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
+							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin. Deprecated: GCEPersistentDisk is deprecated. All operations for the in-tree gcePersistentDisk type are redirected to the pd.csi.storage.gke.io CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 							Ref:         ref("k8s.io/api/core/v1.GCEPersistentDiskVolumeSource"),
 						},
 					},
 					"awsElasticBlockStore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
+							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree awsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
 							Ref:         ref("k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource"),
 						},
 					},
@@ -7460,7 +7406,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 					},
 					"glusterfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "glusterfs represents a Glusterfs volume that is attached to a host and exposed to the pod. Provisioned by an admin. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
+							Description: "glusterfs represents a Glusterfs volume that is attached to a host and exposed to the pod. Provisioned by an admin. Deprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
 							Ref:         ref("k8s.io/api/core/v1.GlusterfsPersistentVolumeSource"),
 						},
 					},
@@ -7472,7 +7418,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 					},
 					"rbd": {
 						SchemaProps: spec.SchemaProps{
-							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md",
+							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. Deprecated: RBD is deprecated and the in-tree rbd type is no longer supported. More info: https://examples.k8s.io/volumes/rbd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.RBDPersistentVolumeSource"),
 						},
 					},
@@ -7484,13 +7430,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 					},
 					"cinder": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
+							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. Deprecated: Cinder is deprecated. All operations for the in-tree cinder type are redirected to the cinder.csi.openstack.org CSI driver. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.CinderPersistentVolumeSource"),
 						},
 					},
 					"cephfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime",
+							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.CephFSPersistentVolumeSource"),
 						},
 					},
@@ -7502,55 +7448,55 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 					},
 					"flocker": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running",
+							Description: "flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running. Deprecated: Flocker is deprecated and the in-tree flocker type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.FlockerVolumeSource"),
 						},
 					},
 					"flexVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin.",
+							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin. Deprecated: FlexVolume is deprecated. Consider using a CSIDriver instead.",
 							Ref:         ref("k8s.io/api/core/v1.FlexPersistentVolumeSource"),
 						},
 					},
 					"azureFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod.",
+							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod. Deprecated: AzureFile is deprecated. All operations for the in-tree azureFile type are redirected to the file.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureFilePersistentVolumeSource"),
 						},
 					},
 					"vsphereVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine",
+							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine. Deprecated: VsphereVolume is deprecated. All operations for the in-tree vsphereVolume type are redirected to the csi.vsphere.vmware.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource"),
 						},
 					},
 					"quobyte": {
 						SchemaProps: spec.SchemaProps{
-							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime",
+							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime. Deprecated: Quobyte is deprecated and the in-tree quobyte type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.QuobyteVolumeSource"),
 						},
 					},
 					"azureDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.",
+							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod. Deprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type are redirected to the disk.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureDiskVolumeSource"),
 						},
 					},
 					"photonPersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine",
+							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine. Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource"),
 						},
 					},
 					"portworxVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine",
+							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine. Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate is on.",
 							Ref:         ref("k8s.io/api/core/v1.PortworxVolumeSource"),
 						},
 					},
 					"scaleIO": {
 						SchemaProps: spec.SchemaProps{
-							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.",
+							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes. Deprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.ScaleIOPersistentVolumeSource"),
 						},
 					},
@@ -7562,13 +7508,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 					},
 					"storageos": {
 						SchemaProps: spec.SchemaProps{
-							Description: "storageOS represents a StorageOS volume that is attached to the kubelet's host machine and mounted into the pod More info: https://examples.k8s.io/volumes/storageos/README.md",
+							Description: "storageOS represents a StorageOS volume that is attached to the kubelet's host machine and mounted into the pod. Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported. More info: https://examples.k8s.io/volumes/storageos/README.md",
 							Ref:         ref("k8s.io/api/core/v1.StorageOSPersistentVolumeSource"),
 						},
 					},
 					"csi": {
 						SchemaProps: spec.SchemaProps{
-							Description: "csi represents storage that is handled by an external CSI driver (Beta feature).",
+							Description: "csi represents storage that is handled by an external CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.CSIPersistentVolumeSource"),
 						},
 					},
@@ -7603,13 +7549,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"gcePersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
+							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin. Deprecated: GCEPersistentDisk is deprecated. All operations for the in-tree gcePersistentDisk type are redirected to the pd.csi.storage.gke.io CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 							Ref:         ref("k8s.io/api/core/v1.GCEPersistentDiskVolumeSource"),
 						},
 					},
 					"awsElasticBlockStore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
+							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree awsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
 							Ref:         ref("k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource"),
 						},
 					},
@@ -7621,7 +7567,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"glusterfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "glusterfs represents a Glusterfs volume that is attached to a host and exposed to the pod. Provisioned by an admin. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
+							Description: "glusterfs represents a Glusterfs volume that is attached to a host and exposed to the pod. Provisioned by an admin. Deprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
 							Ref:         ref("k8s.io/api/core/v1.GlusterfsPersistentVolumeSource"),
 						},
 					},
@@ -7633,7 +7579,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"rbd": {
 						SchemaProps: spec.SchemaProps{
-							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md",
+							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. Deprecated: RBD is deprecated and the in-tree rbd type is no longer supported. More info: https://examples.k8s.io/volumes/rbd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.RBDPersistentVolumeSource"),
 						},
 					},
@@ -7645,13 +7591,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"cinder": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
+							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. Deprecated: Cinder is deprecated. All operations for the in-tree cinder type are redirected to the cinder.csi.openstack.org CSI driver. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.CinderPersistentVolumeSource"),
 						},
 					},
 					"cephfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime",
+							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.CephFSPersistentVolumeSource"),
 						},
 					},
@@ -7663,55 +7609,55 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"flocker": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running",
+							Description: "flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running. Deprecated: Flocker is deprecated and the in-tree flocker type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.FlockerVolumeSource"),
 						},
 					},
 					"flexVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin.",
+							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin. Deprecated: FlexVolume is deprecated. Consider using a CSIDriver instead.",
 							Ref:         ref("k8s.io/api/core/v1.FlexPersistentVolumeSource"),
 						},
 					},
 					"azureFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod.",
+							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod. Deprecated: AzureFile is deprecated. All operations for the in-tree azureFile type are redirected to the file.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureFilePersistentVolumeSource"),
 						},
 					},
 					"vsphereVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine",
+							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine. Deprecated: VsphereVolume is deprecated. All operations for the in-tree vsphereVolume type are redirected to the csi.vsphere.vmware.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource"),
 						},
 					},
 					"quobyte": {
 						SchemaProps: spec.SchemaProps{
-							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime",
+							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime. Deprecated: Quobyte is deprecated and the in-tree quobyte type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.QuobyteVolumeSource"),
 						},
 					},
 					"azureDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.",
+							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod. Deprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type are redirected to the disk.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureDiskVolumeSource"),
 						},
 					},
 					"photonPersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine",
+							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine. Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource"),
 						},
 					},
 					"portworxVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine",
+							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine. Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate is on.",
 							Ref:         ref("k8s.io/api/core/v1.PortworxVolumeSource"),
 						},
 					},
 					"scaleIO": {
 						SchemaProps: spec.SchemaProps{
-							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.",
+							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes. Deprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.ScaleIOPersistentVolumeSource"),
 						},
 					},
@@ -7723,13 +7669,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"storageos": {
 						SchemaProps: spec.SchemaProps{
-							Description: "storageOS represents a StorageOS volume that is attached to the kubelet's host machine and mounted into the pod More info: https://examples.k8s.io/volumes/storageos/README.md",
+							Description: "storageOS represents a StorageOS volume that is attached to the kubelet's host machine and mounted into the pod. Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported. More info: https://examples.k8s.io/volumes/storageos/README.md",
 							Ref:         ref("k8s.io/api/core/v1.StorageOSPersistentVolumeSource"),
 						},
 					},
 					"csi": {
 						SchemaProps: spec.SchemaProps{
-							Description: "csi represents storage that is handled by an external CSI driver (Beta feature).",
+							Description: "csi represents storage that is handled by an external CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.CSIPersistentVolumeSource"),
 						},
 					},
@@ -8356,15 +8302,16 @@ func schema_k8sio_api_core_v1_PodDNSConfigOption(ref common.ReferenceCallback) c
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Required.",
+							Description: "Name is this DNS resolver option's name. Required.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"value": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Value is this DNS resolver option's value.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
@@ -8593,7 +8540,7 @@ func schema_k8sio_api_core_v1_PodLogOptions(ref common.ReferenceCallback) common
 					},
 					"tailLines": {
 						SchemaProps: spec.SchemaProps{
-							Description: "If set, the number of lines from the end of the logs to show. If not specified, logs are shown from the creation of the container or sinceSeconds or sinceTime",
+							Description: "If set, the number of lines from the end of the logs to show. If not specified, logs are shown from the creation of the container or sinceSeconds or sinceTime. Note that when \"TailLines\" is specified, \"Stream\" can only be set to nil or \"All\".",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
@@ -8609,6 +8556,13 @@ func schema_k8sio_api_core_v1_PodLogOptions(ref common.ReferenceCallback) common
 						SchemaProps: spec.SchemaProps{
 							Description: "insecureSkipTLSVerifyBackend indicates that the apiserver should not confirm the validity of the serving certificate of the backend it is connecting to.  This will make the HTTPS connection between the apiserver and the backend insecure. This means the apiserver cannot verify the log data it is receiving came from the real kubelet.  If the kubelet is configured to verify the apiserver's TLS credentials, it does not mean the connection to the real kubelet is vulnerable to a man in the middle attack (e.g. an attacker could not intercept the actual log data coming from the real kubelet).",
 							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"stream": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specify which container log stream to return to the client. Acceptable values are \"All\", \"Stdout\" and \"Stderr\". If not specified, \"All\" is used, and both stdout and stderr are returned interleaved. Note that when \"TailLines\" is specified, \"Stream\" can only be set to nil or \"All\".",
+							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
@@ -8944,6 +8898,13 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 						SchemaProps: spec.SchemaProps{
 							Description: "appArmorProfile is the AppArmor options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.",
 							Ref:         ref("k8s.io/api/core/v1.AppArmorProfile"),
+						},
+					},
+					"seLinuxChangePolicy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "seLinuxChangePolicy defines how the container's SELinux label is applied to all volumes used by the Pod. It has no effect on nodes that do not support SELinux or to volumes does not support SELinux. Valid values are \"MountOption\" and \"Recursive\".\n\n\"Recursive\" means relabeling of all files on all Pod volumes by the container runtime. This may be slow for large volumes, but allows mixing privileged and unprivileged Pods sharing the same volume on the same node.\n\n\"MountOption\" mounts all eligible Pod volumes with `-o context` mount option. This requires all Pods that share the same volume to use the same SELinux label. It is not possible to share the same volume among privileged and unprivileged Pods. Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their CSIDriver instance. Other volumes are always re-labelled recursively. \"MountOption\" value is allowed only when SELinuxMount feature gate is enabled.\n\nIf not specified and SELinuxMount feature gate is enabled, \"MountOption\" is used. If not specified and SELinuxMount feature gate is disabled, \"MountOption\" is used for ReadWriteOncePod volumes and \"Recursive\" for all other volumes.\n\nThis field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.\n\nAll Pods that use the same volume should use the same seLinuxChangePolicy, otherwise some pods can get stuck in ContainerCreating state. Note that this field cannot be set when spec.os.name is windows.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
@@ -9387,7 +9348,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"setHostnameAsFQDN": {
 						SchemaProps: spec.SchemaProps{
-							Description: "If true the pod's hostname will be configured as the pod's FQDN, rather than the leaf name (the default). In Linux containers, this means setting the FQDN in the hostname field of the kernel (the nodename field of struct utsname). In Windows containers, this means setting the registry value of hostname for the registry key HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters to FQDN. If a pod does not have FQDN, this has no effect. Default to false.",
+							Description: "If true the pod's hostname will be configured as the pod's FQDN, rather than the leaf name (the default). In Linux containers, this means setting the FQDN in the hostname field of the kernel (the nodename field of struct utsname). In Windows containers, this means setting the registry value of hostname for the registry key HKEY_LOCAL_MACHINE\\\\SYSTEM\\\\CurrentControlSet\\\\Services\\\\Tcpip\\\\Parameters to FQDN. If a pod does not have FQDN, this has no effect. Default to false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -9453,12 +9414,18 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 							},
 						},
 					},
+					"resources": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resources is the total amount of CPU and Memory resources required by all containers in the pod. It supports specifying Requests and Limits for \"cpu\" and \"memory\" resource names only. ResourceClaims are not supported.\n\nThis field enables fine-grained control over resource allocation for the entire pod, allowing resource sharing among containers in a pod.\n\nThis is an alpha field and requires enabling the PodLevelResources feature gate.",
+							Ref:         ref("k8s.io/api/core/v1.ResourceRequirements"),
+						},
+					},
 				},
 				Required: []string{"containers"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.EphemeralContainer", "k8s.io/api/core/v1.HostAlias", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodDNSConfig", "k8s.io/api/core/v1.PodOS", "k8s.io/api/core/v1.PodReadinessGate", "k8s.io/api/core/v1.PodResourceClaim", "k8s.io/api/core/v1.PodSchedulingGate", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.Toleration", "k8s.io/api/core/v1.TopologySpreadConstraint", "k8s.io/api/core/v1.Volume", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
+			"k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.EphemeralContainer", "k8s.io/api/core/v1.HostAlias", "k8s.io/api/core/v1.LocalObjectReference", "k8s.io/api/core/v1.PodDNSConfig", "k8s.io/api/core/v1.PodOS", "k8s.io/api/core/v1.PodReadinessGate", "k8s.io/api/core/v1.PodResourceClaim", "k8s.io/api/core/v1.PodSchedulingGate", "k8s.io/api/core/v1.PodSecurityContext", "k8s.io/api/core/v1.ResourceRequirements", "k8s.io/api/core/v1.Toleration", "k8s.io/api/core/v1.TopologySpreadConstraint", "k8s.io/api/core/v1.Volume", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
@@ -9594,7 +9561,7 @@ func schema_k8sio_api_core_v1_PodStatus(ref common.ReferenceCallback) common.Ope
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "The list has one entry per init container in the manifest. The most recent successful init container will have ready = true, the most recently started container will have startTime set. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status",
+							Description: "Statuses of init containers in this pod. The most recent successful non-restartable init container will have ready = true, the most recently started container will have startTime set. Each init container in the pod should have at most one status in this list, and all statuses should be for containers in the pod. However this is not enforced. If a status for a non-existent container is present in the list, or the list has duplicate names, the behavior of various Kubernetes components is not defined and those statuses might be ignored. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-and-container-status",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -9613,7 +9580,7 @@ func schema_k8sio_api_core_v1_PodStatus(ref common.ReferenceCallback) common.Ope
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "The list has one entry per container in the manifest. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status",
+							Description: "Statuses of containers in this pod. Each container in the pod should have at most one status in this list, and all statuses should be for containers in the pod. However this is not enforced. If a status for a non-existent container is present in the list, or the list has duplicate names, the behavior of various Kubernetes components is not defined and those statuses might be ignored. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -9640,7 +9607,7 @@ func schema_k8sio_api_core_v1_PodStatus(ref common.ReferenceCallback) common.Ope
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Status for any ephemeral containers that have run in this pod.",
+							Description: "Statuses for any ephemeral containers that have run in this pod. Each ephemeral container in the pod should have at most one status in this list, and all statuses should be for containers in the pod. However this is not enforced. If a status for a non-existent container is present in the list, or the list has duplicate names, the behavior of various Kubernetes components is not defined and those statuses might be ignored. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -9861,7 +9828,8 @@ func schema_k8sio_api_core_v1_PortStatus(ref common.ReferenceCallback) common.Op
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "PortStatus represents the error condition of a service port",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"port": {
 						SchemaProps: spec.SchemaProps{
@@ -10013,25 +9981,25 @@ func schema_k8sio_api_core_v1_Probe(ref common.ReferenceCallback) common.OpenAPI
 				Properties: map[string]spec.Schema{
 					"exec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Exec specifies the action to take.",
+							Description: "Exec specifies a command to execute in the container.",
 							Ref:         ref("k8s.io/api/core/v1.ExecAction"),
 						},
 					},
 					"httpGet": {
 						SchemaProps: spec.SchemaProps{
-							Description: "HTTPGet specifies the http request to perform.",
+							Description: "HTTPGet specifies an HTTP GET request to perform.",
 							Ref:         ref("k8s.io/api/core/v1.HTTPGetAction"),
 						},
 					},
 					"tcpSocket": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TCPSocket specifies an action involving a TCP port.",
+							Description: "TCPSocket specifies a connection to a TCP port.",
 							Ref:         ref("k8s.io/api/core/v1.TCPSocketAction"),
 						},
 					},
 					"grpc": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GRPC specifies an action involving a GRPC port.",
+							Description: "GRPC specifies a GRPC HealthCheckRequest.",
 							Ref:         ref("k8s.io/api/core/v1.GRPCAction"),
 						},
 					},
@@ -10094,25 +10062,25 @@ func schema_k8sio_api_core_v1_ProbeHandler(ref common.ReferenceCallback) common.
 				Properties: map[string]spec.Schema{
 					"exec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Exec specifies the action to take.",
+							Description: "Exec specifies a command to execute in the container.",
 							Ref:         ref("k8s.io/api/core/v1.ExecAction"),
 						},
 					},
 					"httpGet": {
 						SchemaProps: spec.SchemaProps{
-							Description: "HTTPGet specifies the http request to perform.",
+							Description: "HTTPGet specifies an HTTP GET request to perform.",
 							Ref:         ref("k8s.io/api/core/v1.HTTPGetAction"),
 						},
 					},
 					"tcpSocket": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TCPSocket specifies an action involving a TCP port.",
+							Description: "TCPSocket specifies a connection to a TCP port.",
 							Ref:         ref("k8s.io/api/core/v1.TCPSocketAction"),
 						},
 					},
 					"grpc": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GRPC specifies an action involving a GRPC port.",
+							Description: "GRPC specifies a GRPC HealthCheckRequest.",
 							Ref:         ref("k8s.io/api/core/v1.GRPCAction"),
 						},
 					},
@@ -10811,7 +10779,7 @@ func schema_k8sio_api_core_v1_ResourceHealth(ref common.ReferenceCallback) commo
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ResourceHealth represents the health of a resource. It has the latest device health information. This is a part of KEP https://kep.k8s.io/4680 and historical health changes are planned to be added in future iterations of a KEP.",
+				Description: "ResourceHealth represents the health of a resource. It has the latest device health information. This is a part of KEP https://kep.k8s.io/4680.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"resourceID": {
@@ -11105,11 +11073,12 @@ func schema_k8sio_api_core_v1_ResourceStatus(ref common.ReferenceCallback) commo
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "ResourceStatus represents the status of a single resource allocated to a Pod.",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the resource. Must be unique within the pod and match one of the resources from the pod spec.",
+							Description: "Name of the resource. Must be unique within the pod and in case of non-DRA resource, match one of the resources from the pod spec. For DRA resources, the value must be \"claim:<claim_name>/<request>\". When this status is reported about a container, the \"claim_name\" and \"request\" must match one of the claims of this container.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -11125,7 +11094,7 @@ func schema_k8sio_api_core_v1_ResourceStatus(ref common.ReferenceCallback) commo
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "List of unique Resources health. Each element in the list contains an unique resource ID and resource health. At a minimum, ResourceID must uniquely identify the Resource allocated to the Pod on the Node for the lifetime of a Pod. See ResourceID type for it's definition.",
+							Description: "List of unique resources health. Each element in the list contains an unique resource ID and its health. At a minimum, for the lifetime of a Pod, resource ID must uniquely identify the resource allocated to the Pod on the Node. If other Pod on the same Node reports the status with the same resource ID, it must be the same resource they share. See ResourceID type definition for a specific format it has in various use cases.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -12057,7 +12026,7 @@ func schema_k8sio_api_core_v1_ServiceAccount(ref common.ReferenceCallback) commo
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Secrets is a list of the secrets in the same namespace that pods running using this ServiceAccount are allowed to use. Pods are only limited to this list if this service account has a \"kubernetes.io/enforce-mountable-secrets\" annotation set to \"true\". This field should not be used to find auto-generated service account token secrets for use outside of pods. Instead, tokens can be requested directly using the TokenRequest API, or service account token secrets can be manually created. More info: https://kubernetes.io/docs/concepts/configuration/secret",
+							Description: "Secrets is a list of the secrets in the same namespace that pods running using this ServiceAccount are allowed to use. Pods are only limited to this list if this service account has a \"kubernetes.io/enforce-mountable-secrets\" annotation set to \"true\". The \"kubernetes.io/enforce-mountable-secrets\" annotation is deprecated since v1.32. Prefer separate namespaces to isolate access to mounted secrets. This field should not be used to find auto-generated service account token secrets for use outside of pods. Instead, tokens can be requested directly using the TokenRequest API, or service account token secrets can be manually created. More info: https://kubernetes.io/docs/concepts/configuration/secret",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -12566,7 +12535,7 @@ func schema_k8sio_api_core_v1_ServiceSpec(ref common.ReferenceCallback) common.O
 					},
 					"trafficDistribution": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TrafficDistribution offers a way to express preferences for how traffic is distributed to Service endpoints. Implementations can use this field as a hint, but are not required to guarantee strict adherence. If the field is not set, the implementation will apply its default routing strategy. If set to \"PreferClose\", implementations should prioritize endpoints that are topologically close (e.g., same zone). This is an alpha field and requires enabling ServiceTrafficDistribution feature.",
+							Description: "TrafficDistribution offers a way to express preferences for how traffic is distributed to Service endpoints. Implementations can use this field as a hint, but are not required to guarantee strict adherence. If the field is not set, the implementation will apply its default routing strategy. If set to \"PreferClose\", implementations should prioritize endpoints that are topologically close (e.g., same zone). This is a beta field and requires enabling ServiceTrafficDistribution feature.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -13138,7 +13107,8 @@ func schema_k8sio_api_core_v1_TypedObjectReference(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "TypedObjectReference contains enough information to let you locate the typed referenced object",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"apiGroup": {
 						SchemaProps: spec.SchemaProps{
@@ -13206,19 +13176,19 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"gcePersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
+							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: GCEPersistentDisk is deprecated. All operations for the in-tree gcePersistentDisk type are redirected to the pd.csi.storage.gke.io CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 							Ref:         ref("k8s.io/api/core/v1.GCEPersistentDiskVolumeSource"),
 						},
 					},
 					"awsElasticBlockStore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
+							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree awsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
 							Ref:         ref("k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource"),
 						},
 					},
 					"gitRepo": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gitRepo represents a git repository at a particular revision. DEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container.",
+							Description: "gitRepo represents a git repository at a particular revision. Deprecated: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container.",
 							Ref:         ref("k8s.io/api/core/v1.GitRepoVolumeSource"),
 						},
 					},
@@ -13242,7 +13212,7 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"glusterfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
+							Description: "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime. Deprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
 							Ref:         ref("k8s.io/api/core/v1.GlusterfsVolumeSource"),
 						},
 					},
@@ -13254,31 +13224,31 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"rbd": {
 						SchemaProps: spec.SchemaProps{
-							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md",
+							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. Deprecated: RBD is deprecated and the in-tree rbd type is no longer supported. More info: https://examples.k8s.io/volumes/rbd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.RBDVolumeSource"),
 						},
 					},
 					"flexVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin.",
+							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin. Deprecated: FlexVolume is deprecated. Consider using a CSIDriver instead.",
 							Ref:         ref("k8s.io/api/core/v1.FlexVolumeSource"),
 						},
 					},
 					"cinder": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
+							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. Deprecated: Cinder is deprecated. All operations for the in-tree cinder type are redirected to the cinder.csi.openstack.org CSI driver. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.CinderVolumeSource"),
 						},
 					},
 					"cephfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime",
+							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.CephFSVolumeSource"),
 						},
 					},
 					"flocker": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running",
+							Description: "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running. Deprecated: Flocker is deprecated and the in-tree flocker type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.FlockerVolumeSource"),
 						},
 					},
@@ -13296,7 +13266,7 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"azureFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod.",
+							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod. Deprecated: AzureFile is deprecated. All operations for the in-tree azureFile type are redirected to the file.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureFileVolumeSource"),
 						},
 					},
@@ -13308,25 +13278,25 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"vsphereVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine",
+							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine. Deprecated: VsphereVolume is deprecated. All operations for the in-tree vsphereVolume type are redirected to the csi.vsphere.vmware.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource"),
 						},
 					},
 					"quobyte": {
 						SchemaProps: spec.SchemaProps{
-							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime",
+							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime. Deprecated: Quobyte is deprecated and the in-tree quobyte type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.QuobyteVolumeSource"),
 						},
 					},
 					"azureDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.",
+							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod. Deprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type are redirected to the disk.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureDiskVolumeSource"),
 						},
 					},
 					"photonPersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine",
+							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine. Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource"),
 						},
 					},
@@ -13338,25 +13308,25 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"portworxVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine",
+							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine. Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate is on.",
 							Ref:         ref("k8s.io/api/core/v1.PortworxVolumeSource"),
 						},
 					},
 					"scaleIO": {
 						SchemaProps: spec.SchemaProps{
-							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.",
+							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes. Deprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.ScaleIOVolumeSource"),
 						},
 					},
 					"storageos": {
 						SchemaProps: spec.SchemaProps{
-							Description: "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes.",
+							Description: "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes. Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.StorageOSVolumeSource"),
 						},
 					},
 					"csi": {
 						SchemaProps: spec.SchemaProps{
-							Description: "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers (Beta feature).",
+							Description: "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers.",
 							Ref:         ref("k8s.io/api/core/v1.CSIVolumeSource"),
 						},
 					},
@@ -13651,19 +13621,19 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"gcePersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
+							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: GCEPersistentDisk is deprecated. All operations for the in-tree gcePersistentDisk type are redirected to the pd.csi.storage.gke.io CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 							Ref:         ref("k8s.io/api/core/v1.GCEPersistentDiskVolumeSource"),
 						},
 					},
 					"awsElasticBlockStore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
+							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree awsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
 							Ref:         ref("k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource"),
 						},
 					},
 					"gitRepo": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gitRepo represents a git repository at a particular revision. DEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container.",
+							Description: "gitRepo represents a git repository at a particular revision. Deprecated: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container.",
 							Ref:         ref("k8s.io/api/core/v1.GitRepoVolumeSource"),
 						},
 					},
@@ -13687,7 +13657,7 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"glusterfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
+							Description: "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime. Deprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
 							Ref:         ref("k8s.io/api/core/v1.GlusterfsVolumeSource"),
 						},
 					},
@@ -13699,31 +13669,31 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"rbd": {
 						SchemaProps: spec.SchemaProps{
-							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md",
+							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. Deprecated: RBD is deprecated and the in-tree rbd type is no longer supported. More info: https://examples.k8s.io/volumes/rbd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.RBDVolumeSource"),
 						},
 					},
 					"flexVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin.",
+							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin. Deprecated: FlexVolume is deprecated. Consider using a CSIDriver instead.",
 							Ref:         ref("k8s.io/api/core/v1.FlexVolumeSource"),
 						},
 					},
 					"cinder": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
+							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. Deprecated: Cinder is deprecated. All operations for the in-tree cinder type are redirected to the cinder.csi.openstack.org CSI driver. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.CinderVolumeSource"),
 						},
 					},
 					"cephfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime",
+							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.CephFSVolumeSource"),
 						},
 					},
 					"flocker": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running",
+							Description: "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running. Deprecated: Flocker is deprecated and the in-tree flocker type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.FlockerVolumeSource"),
 						},
 					},
@@ -13741,7 +13711,7 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"azureFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod.",
+							Description: "azureFile represents an Azure File Service mount on the host and bind mount to the pod. Deprecated: AzureFile is deprecated. All operations for the in-tree azureFile type are redirected to the file.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureFileVolumeSource"),
 						},
 					},
@@ -13753,25 +13723,25 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"vsphereVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine",
+							Description: "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine. Deprecated: VsphereVolume is deprecated. All operations for the in-tree vsphereVolume type are redirected to the csi.vsphere.vmware.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource"),
 						},
 					},
 					"quobyte": {
 						SchemaProps: spec.SchemaProps{
-							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime",
+							Description: "quobyte represents a Quobyte mount on the host that shares a pod's lifetime. Deprecated: Quobyte is deprecated and the in-tree quobyte type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.QuobyteVolumeSource"),
 						},
 					},
 					"azureDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.",
+							Description: "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod. Deprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type are redirected to the disk.csi.azure.com CSI driver.",
 							Ref:         ref("k8s.io/api/core/v1.AzureDiskVolumeSource"),
 						},
 					},
 					"photonPersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine",
+							Description: "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine. Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource"),
 						},
 					},
@@ -13783,25 +13753,25 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"portworxVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine",
+							Description: "portworxVolume represents a portworx volume attached and mounted on kubelets host machine. Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate is on.",
 							Ref:         ref("k8s.io/api/core/v1.PortworxVolumeSource"),
 						},
 					},
 					"scaleIO": {
 						SchemaProps: spec.SchemaProps{
-							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.",
+							Description: "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes. Deprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.ScaleIOVolumeSource"),
 						},
 					},
 					"storageos": {
 						SchemaProps: spec.SchemaProps{
-							Description: "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes.",
+							Description: "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes. Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported.",
 							Ref:         ref("k8s.io/api/core/v1.StorageOSVolumeSource"),
 						},
 					},
 					"csi": {
 						SchemaProps: spec.SchemaProps{
-							Description: "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers (Beta feature).",
+							Description: "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers.",
 							Ref:         ref("k8s.io/api/core/v1.CSIVolumeSource"),
 						},
 					},
@@ -14572,6 +14542,13 @@ func schema_pkg_apis_meta_v1_DeleteOptions(ref common.ReferenceCallback) common.
 									},
 								},
 							},
+						},
+					},
+					"ignoreStoreReadErrorWithClusterBreakingPotential": {
+						SchemaProps: spec.SchemaProps{
+							Description: "if set to true, it will trigger an unsafe deletion of the resource in case the normal deletion flow fails with a corrupt object error. A resource is considered corrupt if it can not be retrieved from the underlying storage successfully because of a) its data can not be transformed e.g. decryption failure, or b) it fails to decode into an object. NOTE: unsafe deletion ignores finalizer constraints, skips precondition checks, and removes the object from the storage. WARNING: This may potentially break the cluster if the workload associated with the resource being unsafe-deleted relies on normal deletion flow. Use only if you REALLY know what you are doing. The default value is false, and the user must opt in to enable it",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 				},
@@ -17225,4730 +17202,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResource
 	}
 }
 
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_APIServerLoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"enabled": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Enabled defines whether a load balancer should be created.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"additionalPorts": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalPorts adds additional tcp ports to the load balancer.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: 0,
-										Type:    []string{"integer"},
-										Format:  "int32",
-									},
-								},
-							},
-						},
-					},
-					"allowedCidrs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"provider": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Octavia Provider Used to create load balancer",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_AddressPair(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ipAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"macAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Bastion(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Bastion represents basic information about the bastion node.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"enabled": {
-						SchemaProps: spec.SchemaProps{
-							Default: false,
-							Type:    []string{"boolean"},
-							Format:  "",
-						},
-					},
-					"instance": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Instance for the bastion itself",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineSpec"),
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_ExternalRouterIPParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"fixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The FixedIP in the corresponding subnet",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The subnet in which the FixedIP is used for the Gateway of this router",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetParam"),
-						},
-					},
-				},
-				Required: []string{"subnet"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetParam"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_FixedIP(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Subnet is an openstack subnet query that will return the id of a subnet to create the fixed IP of a port in. This query must not return more than one subnet.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter"),
-						},
-					},
-					"ipAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-				Required: []string{"subnet"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Instance(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"failureDomain": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"securigyGroups": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"networks": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Network"),
-									},
-								},
-							},
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"image": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"imageUUID": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"flavor": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"sshKeyName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"userData": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"configDrive": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"rootVolume": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.RootVolume"),
-						},
-					},
-					"serverGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"state": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ip": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"floatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Network", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.RootVolume"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_LoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "LoadBalancer represents basic information about the associated OpenStack LoadBalancer.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"ip": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"internalIP": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"allowedCIDRs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id", "ip", "internalIP"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Network(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Network represents basic information about an OpenStack Neutron Network associated with an instance's port.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Subnet"),
-						},
-					},
-					"port": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.PortOpts"),
-						},
-					},
-					"router": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Router"),
-						},
-					},
-					"apiServerLoadBalancer": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Be careful when using APIServerLoadBalancer, because this field is optional and therefore not set in all cases",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.LoadBalancer"),
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.LoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Router", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Subnet"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_NetworkFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_NetworkParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"uuid": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Optional UUID of the network. If specified this will not be validated prior to server creation. Required if `Subnets` specifies a subnet by UUID.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"fixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "A fixed IPv4 address for the NIC.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"filter": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Filters for optional network query",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter"),
-						},
-					},
-					"subnets": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Subnet within a network to use",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetParam"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetParam"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackCluster(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackCluster is the Schema for the openstackclusters API.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterSpec"),
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterStatus"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterStatus"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterList contains a list of OpenStackCluster.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackCluster"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackCluster"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterSpec defines the desired state of OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"cloudName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the cloud to use from the clouds secret",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"nodeCidr": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a network, a subnet with NodeCIDR, and a router connected to this subnet. If you leave this empty, no network will be created.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR cannot be set this can be used to detect an existing network.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter"),
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR cannot be set this can be used to detect an existing subnet.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter"),
-						},
-					},
-					"dnsNameservers": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "DNSNameservers is the list of nameservers for OpenStack Subnet being created. Set this value when you need create a new network/subnet while the access through DNS is required.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"externalRouterIPs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ExternalRouterIPs is an array of externalIPs on the respective subnets. This is necessary if the router needs a fixed ip in a specific subnet.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.ExternalRouterIPParam"),
-									},
-								},
-							},
-						},
-					},
-					"externalNetworkId": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ExternalNetworkID is the ID of an external OpenStack Network. This is necessary to get public internet to the VMs.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerLoadBalancer": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerLoadBalancer configures the optional LoadBalancer for the APIServer. It must be activated by setting `enabled: true`.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.APIServerLoadBalancer"),
-						},
-					},
-					"disableAPIServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating IP to the API server. This allows for the creation of clusters when attaching a floating IP to the API server (and hence, in many cases, exposing the API server to the internet) is not possible or desirable, e.g. if using a shared VLAN for communication between management and workload clusters or when the management cluster is inside the project network. This option requires that the API server use a VIP on the cluster network so that the underlying machines can change without changing ControlPlaneEndpoint.Host. When using a managed load balancer, this VIP will be managed automatically. If not using a managed load balancer, cluster configuration will fail without additional configuration to manage the VIP on the control plane machines, which falls outside of the scope of this controller.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"apiServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFloatingIP is the floatingIP which will be associated with the API server. The floatingIP will be created if it does not already exist. If not specified, a new floatingIP is allocated. This field is not used if DisableAPIServerFloatingIP is set to true.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerFixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFixedIP is the fixed IP which will be associated with the API server. In the case where the API server has a floating IP but not a managed load balancer, this field is not used. If a managed load balancer is used and this field is not specified, a fixed IP will be dynamically allocated for the load balancer. If a managed load balancer is not used AND the API server floating IP is disabled, this field MUST be specified and should correspond to a pre-allocated port that holds the fixed IP to be used as a VIP.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerPort": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerPort is the port on which the listener on the APIServer will be created",
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-					"managedSecurityGroups": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ManagedSecurityGroups determines whether OpenStack security groups for the cluster will be managed by the OpenStack provider or whether pre-existing security groups will be specified as part of the configuration. By default, the managed security groups have rules that allow the Kubelet, etcd, the Kubernetes API server and the Calico CNI plugin to function correctly.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"allowAllInClusterTraffic": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AllowAllInClusterTraffic is only used when managed security groups are in use. If set to true, the rules for the managed security groups are configured so that all ingress and egress between cluster nodes is permitted, allowing CNIs other than Calico to be used.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"disablePortSecurity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Tags for all resources in cluster",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneEndpoint": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint"),
-						},
-					},
-					"controlPlaneAvailabilityZones": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneAvailabilityZones is the az to deploy control plane to",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneOmitAvailabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler to make a decision on which az to use based on other scheduling constraints",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"bastion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Bastion is the OpenStack instance to login the nodes\n\nAs a rolling update is not ideal during a bastion host session, we prevent changes to a running bastion configuration. Set `enabled: false` to make changes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Bastion"),
-						},
-					},
-					"identityRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a identity to be used when reconciling this cluster",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackIdentityReference"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter", "sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterStatus defines the observed state of OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ready": {
-						SchemaProps: spec.SchemaProps{
-							Default: false,
-							Type:    []string{"boolean"},
-							Format:  "",
-						},
-					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network contains all information about the created OpenStack Network. It includes Subnets and Router.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Network"),
-						},
-					},
-					"externalNetwork": {
-						SchemaProps: spec.SchemaProps{
-							Description: "External Network contains information about the created OpenStack external network.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Network"),
-						},
-					},
-					"failureDomains": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomains represent OpenStack availability zones",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"),
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneSecurityGroups contains all the information about the OpenStack Security Group that needs to be applied to control plane nodes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroup"),
-						},
-					},
-					"workerSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Description: "WorkerSecurityGroup contains all the information about the OpenStack Security Group that needs to be applied to worker nodes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroup"),
-						},
-					},
-					"bastionSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroup"),
-						},
-					},
-					"bastion": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Instance"),
-						},
-					},
-					"failureReason": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureReason will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a succinct value suitable for machine interpretation.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"failureMessage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"ready"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Instance", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.Network", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroup", "sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplate(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplate is the Schema for the openstackclustertemplates API.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplateSpec"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplateSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplateList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateList contains a list of OpenStackClusterTemplate.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplate"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplate"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplateResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterSpec"),
-						},
-					},
-				},
-				Required: []string{"spec"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackClusterTemplateSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"template": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplateResource"),
-						},
-					},
-				},
-				Required: []string{"template"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackClusterTemplateResource"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackIdentityReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackIdentityReference is a reference to an infrastructure provider identity to be used to provision cluster resources.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind of the identity. Must be supported by the infrastructure provider and may be either cluster or namespace-scoped.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the infrastructure identity to be used. Must be either a cluster-scoped resource, or namespaced-scoped resource the same namespace as the resource(s) being provisioned.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"kind", "name"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachine(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachine is the Schema for the openstackmachines API.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineSpec"),
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineStatus"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineStatus"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineList contains a list of OpenStackMachine.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachine"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachine"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineSpec defines the desired state of OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"providerID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ProviderID is the unique identifier as specified by the cloud provider.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"instanceID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InstanceID is the OpenStack instance ID for this machine.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"cloudName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the cloud to use from the clouds secret",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"flavor": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The flavor reference for the flavor for your server instance.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"flavorID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"image": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the image to use for your server instance. If the RootVolume is specified, this will be ignored and use rootVolume directly.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"imageUUID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The uuid of the image to use for your server instance. if it's empty, Image name will be used",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"sshKeyName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The ssh key to inject in the instance",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"networks": {
-						SchemaProps: spec.SchemaProps{
-							Description: "A networks object. Required parameter when there are multiple networks defined for the tenant. When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkParam"),
-									},
-								},
-							},
-						},
-					},
-					"ports": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Ports to be attached to the server instance. They are created if a port with the given name does not already exist. When you do not specify both networks and ports parameters, the server attaches to the only network created for the current tenant.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.PortOpts"),
-									},
-								},
-							},
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "UUID, IP address of a port from this subnet will be marked as AccessIPv4 on the created compute instance",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"floatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The floatingIP which will be associated to the machine, only used for master. The floatingIP should have been created and haven't been associated.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"securityGroups": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The names of the security groups to assign to the instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupParam"),
-									},
-								},
-							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether the server instance is created on a trunk port or not.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Machine tags Requires Nova api 2.52 minimum!",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"serverMetadata": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"configDrive": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Config Drive support",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"rootVolume": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The volume metadata to boot from",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.RootVolume"),
-						},
-					},
-					"serverGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The server group to assign the machine to",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"identityRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a identity to be used when reconciling this cluster",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackIdentityReference"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupParam"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineStatus defines the observed state of OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ready": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Ready is true when the provider resource is ready.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"addresses": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Addresses contains the OpenStack instance associated addresses.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/api/core/v1.NodeAddress"),
-									},
-								},
-							},
-						},
-					},
-					"instanceState": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InstanceState is the state of the OpenStack instance for this machine.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"failureReason": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"failureMessage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"conditions": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.Condition"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplate(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplateSpec"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplateSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplateList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateList contains a list of OpenStackMachineTemplate.\n\nDeprecated: This type will be removed in one of the next releases.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplate"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplate"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplateResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Spec is the specification of the desired behavior of the machine.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineSpec"),
-						},
-					},
-				},
-				Required: []string{"spec"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_OpenStackMachineTemplateSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"template": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplateResource"),
-						},
-					},
-				},
-				Required: []string{"template"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.OpenStackMachineTemplateResource"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_PortOpts(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter"),
-						},
-					},
-					"nameSuffix": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Used to make the name of the port unique. If unspecified, instead the 0-based index of the port in the list is used.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"adminStateUp": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"macAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"fixedIPs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.FixedIP"),
-									},
-								},
-							},
-						},
-					},
-					"tenantId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"securityGroups": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "The uuids of the security groups to assign to the instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"securityGroupFilters": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The names, uuids, filters or any combination these of the security groups to assign to the instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupParam"),
-									},
-								},
-							},
-						},
-					},
-					"allowedAddressPairs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.AddressPair"),
-									},
-								},
-							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"hostId": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The ID of the host where the port is allocated",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"vnicType": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The virtual network interface card (vNIC) type that is bound to the neutron port.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"profile": {
-						SchemaProps: spec.SchemaProps{
-							Description: "A dictionary that enables the application running on the specified host to pass and receive virtual network interface (VIF) port-specific information to the plug-in.",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"disablePortSecurity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.) These tags are applied in addition to the instance's tags, which will also be applied to the port.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"valueSpecs": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-map-keys": []interface{}{
-									"name",
-								},
-								"x-kubernetes-list-type": "map",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.ValueSpec"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.NetworkFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.ValueSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_RootVolume(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"diskSize": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"volumeType": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Router(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Router represents basic information about the associated OpenStack Neutron Router.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"ips": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroup(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SecurityGroup represents the basic information of the associated OpenStack Neutron Security Group.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"rules": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupRule"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupRule"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroupFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tenantId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"limit": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"marker": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"sortKey": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"sortDir": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroupParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"uuid": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Security Group UID",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Security Group name",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"filter": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Filters used to query security groups in openstack",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupFilter"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SecurityGroupFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SecurityGroupRule(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"direction": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"etherType": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"securityGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"portRangeMin": {
-						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
-						},
-					},
-					"portRangeMax": {
-						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
-						},
-					},
-					"protocol": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"remoteGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"remoteIPPrefix": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-				},
-				Required: []string{"description", "name", "direction", "etherType", "securityGroupID", "portRangeMin", "portRangeMax", "protocol", "remoteGroupID", "remoteIPPrefix"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_Subnet(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Subnet represents basic information about the associated OpenStack Neutron Subnet.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"cidr": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id", "cidr"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SubnetFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipVersion": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"gateway_ip": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"cidr": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipv6AddressMode": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipv6RaMode": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_SubnetParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"uuid": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Optional UUID of the subnet. If specified this will not be validated prior to server creation. If specified, the enclosing `NetworkParam` must also be specified by UUID.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"filter": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Filters for optional subnet query",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha6.SubnetFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha6_ValueSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "ValueSpec represents a single value_spec key-value pair.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the key-value pair. This is just for identifying the pair and will not be sent to the OpenStack API.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"key": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Key is the key in the key-value pair.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"value": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Value is the value in the key-value pair.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"name", "key", "value"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_APIServerLoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"enabled": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Enabled defines whether a load balancer should be created.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"additionalPorts": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalPorts adds additional tcp ports to the load balancer.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: 0,
-										Type:    []string{"integer"},
-										Format:  "int32",
-									},
-								},
-							},
-						},
-					},
-					"allowedCidrs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"provider": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Octavia Provider Used to create load balancer",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AdditionalBlockDevice(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "AdditionalBlockDevice is a block device to attach to the server.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the block device in the context of a machine. If the block device is a volume, the Cinder volume will be named as a combination of the machine name and this name. Also, this name will be used for tagging the block device. Information about the block device tag can be obtained from the OpenStack metadata API or the config drive.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"sizeGiB": {
-						SchemaProps: spec.SchemaProps{
-							Description: "SizeGiB is the size of the block device in gibibytes (GiB).",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-					"storage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Storage specifies the storage type of the block device and additional storage options.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceStorage"),
-						},
-					},
-				},
-				Required: []string{"name", "sizeGiB", "storage"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceStorage"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_AddressPair(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ipAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"macAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Bastion(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Bastion represents basic information about the bastion node.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"enabled": {
-						SchemaProps: spec.SchemaProps{
-							Default: false,
-							Type:    []string{"boolean"},
-							Format:  "",
-						},
-					},
-					"instance": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Instance for the bastion itself",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"),
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BastionStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"sshKeyName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"state": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ip": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"floatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BindingProfile(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ovsHWOffload": {
-						SchemaProps: spec.SchemaProps{
-							Description: "OVSHWOffload enables or disables the OVS hardware offload feature.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"trustedVF": {
-						SchemaProps: spec.SchemaProps{
-							Description: "TrustedVF enables or disables the “trusted mode” for the VF.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceStorage(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "BlockDeviceStorage is the storage type of a block device to create and contains additional storage options.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"type": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Type is the type of block device to create. This can be either \"Volume\" or \"Local\".",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"volume": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Volume contains additional storage options for a volume block device.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceVolume"),
-						},
-					},
-				},
-				Required: []string{"type"},
-			},
-			VendorExtensible: spec.VendorExtensible{
-				Extensions: spec.Extensions{
-					"x-kubernetes-unions": []interface{}{
-						map[string]interface{}{
-							"discriminator": "type",
-							"fields-to-discriminateBy": map[string]interface{}{
-								"volume": "Volume",
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BlockDeviceVolume"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_BlockDeviceVolume(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "BlockDeviceVolume contains additional storage options for a volume block device.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"type": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Type is the Cinder volume type of the volume. If omitted, the default Cinder volume type that is configured in the OpenStack cloud will be used.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AvailabilityZone is the volume availability zone to create the volume in. If omitted, the availability zone of the server will be used. The availability zone must NOT contain spaces otherwise it will lead to volume that belongs to this availability zone register failure, see kubernetes/cloud-provider-openstack#1379 for further information.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ExternalRouterIPParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"fixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The FixedIP in the corresponding subnet",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The subnet in which the FixedIP is used for the Gateway of this router",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"),
-						},
-					},
-				},
-				Required: []string{"subnet"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_FixedIP(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Subnet is an openstack subnet query that will return the id of a subnet to create the fixed IP of a port in. This query must not return more than one subnet.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"),
-						},
-					},
-					"ipAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-				Required: []string{"subnet"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_LoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "LoadBalancer represents basic information about the associated OpenStack LoadBalancer.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"ip": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"internalIP": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"allowedCIDRs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id", "ip", "internalIP"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "NetworkStatus contains basic information about an existing neutron network.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_NetworkStatusWithSubnets(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "NetworkStatusWithSubnets represents basic information about an existing neutron network and an associated set of subnets.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"subnets": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Subnet"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Subnet"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackCluster(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackCluster is the Schema for the openstackclusters API.\n\nDeprecated: v1alpha7.OpenStackCluster has been replaced by v1beta1.OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec"),
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterStatus"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterStatus"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterList contains a list of OpenStackCluster.\n\nDeprecated: v1alpha7.OpenStackClusterList has been replaced by v1beta1.OpenStackClusterList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackCluster"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackCluster"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterSpec defines the desired state of OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"cloudName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the cloud to use from the clouds secret",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"nodeCidr": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NodeCIDR is the OpenStack Subnet to be created. Cluster actuator will create a network, a subnet with NodeCIDR, and a router connected to this subnet. If you leave this empty, no network will be created.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"router": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR is set this option can be used to detect an existing router. If specified, no new router will be created.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RouterFilter"),
-						},
-					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR cannot be set this can be used to detect an existing network.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter"),
-						},
-					},
-					"subnet": {
-						SchemaProps: spec.SchemaProps{
-							Description: "If NodeCIDR cannot be set this can be used to detect an existing subnet.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter"),
-						},
-					},
-					"networkMtu": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID. This value will be used only if the Cluster actuator creates the network. If leaved empty, the network will have the default MTU defined in Openstack network service. To use this field, the Openstack installation requires the net-mtu neutron API extension.",
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-					"dnsNameservers": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "DNSNameservers is the list of nameservers for OpenStack Subnet being created. Set this value when you need create a new network/subnet while the access through DNS is required.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"externalRouterIPs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ExternalRouterIPs is an array of externalIPs on the respective subnets. This is necessary if the router needs a fixed ip in a specific subnet.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ExternalRouterIPParam"),
-									},
-								},
-							},
-						},
-					},
-					"externalNetworkId": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ExternalNetworkID is the ID of an external OpenStack Network. This is necessary to get public internet to the VMs.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerLoadBalancer": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerLoadBalancer configures the optional LoadBalancer for the APIServer. It must be activated by setting `enabled: true`.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer"),
-						},
-					},
-					"disableAPIServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating IP to the API server. This allows for the creation of clusters when attaching a floating IP to the API server (and hence, in many cases, exposing the API server to the internet) is not possible or desirable, e.g. if using a shared VLAN for communication between management and workload clusters or when the management cluster is inside the project network. This option requires that the API server use a VIP on the cluster network so that the underlying machines can change without changing ControlPlaneEndpoint.Host. When using a managed load balancer, this VIP will be managed automatically. If not using a managed load balancer, cluster configuration will fail without additional configuration to manage the VIP on the control plane machines, which falls outside of the scope of this controller.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"apiServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFloatingIP is the floatingIP which will be associated with the API server. The floatingIP will be created if it does not already exist. If not specified, a new floatingIP is allocated. This field is not used if DisableAPIServerFloatingIP is set to true.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerFixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFixedIP is the fixed IP which will be associated with the API server. In the case where the API server has a floating IP but not a managed load balancer, this field is not used. If a managed load balancer is used and this field is not specified, a fixed IP will be dynamically allocated for the load balancer. If a managed load balancer is not used AND the API server floating IP is disabled, this field MUST be specified and should correspond to a pre-allocated port that holds the fixed IP to be used as a VIP.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerPort": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerPort is the port on which the listener on the APIServer will be created",
-							Type:        []string{"integer"},
-							Format:      "int32",
-						},
-					},
-					"managedSecurityGroups": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ManagedSecurityGroups determines whether OpenStack security groups for the cluster will be managed by the OpenStack provider or whether pre-existing security groups will be specified as part of the configuration. By default, the managed security groups have rules that allow the Kubelet, etcd, the Kubernetes API server and the Calico CNI plugin to function correctly.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"allowAllInClusterTraffic": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AllowAllInClusterTraffic is only used when managed security groups are in use. If set to true, the rules for the managed security groups are configured so that all ingress and egress between cluster nodes is permitted, allowing CNIs other than Calico to be used.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"disablePortSecurity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Tags for all resources in cluster",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneEndpoint": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint"),
-						},
-					},
-					"controlPlaneAvailabilityZones": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneAvailabilityZones is the az to deploy control plane to",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneOmitAvailabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Indicates whether to omit the az for control plane nodes, allowing the Nova scheduler to make a decision on which az to use based on other scheduling constraints",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"bastion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Bastion is the OpenStack instance to login the nodes\n\nAs a rolling update is not ideal during a bastion host session, we prevent changes to a running bastion configuration. Set `enabled: false` to make changes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Bastion"),
-						},
-					},
-					"identityRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a identity to be used when reconciling this cluster",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RouterFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SubnetFilter", "sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterStatus defines the observed state of OpenStackCluster.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ready": {
-						SchemaProps: spec.SchemaProps{
-							Default: false,
-							Type:    []string{"boolean"},
-							Format:  "",
-						},
-					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network contains information about the created OpenStack Network.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatusWithSubnets"),
-						},
-					},
-					"externalNetwork": {
-						SchemaProps: spec.SchemaProps{
-							Description: "externalNetwork contains information about the external network used for default ingress and egress traffic.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatus"),
-						},
-					},
-					"router": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Router describes the default cluster router",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Router"),
-						},
-					},
-					"apiServerLoadBalancer": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIServerLoadBalancer describes the api server load balancer if one exists",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.LoadBalancer"),
-						},
-					},
-					"failureDomains": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomains represent OpenStack availability zones",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"),
-									},
-								},
-							},
-						},
-					},
-					"controlPlaneSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneSecurityGroups contains all the information about the OpenStack Security Group that needs to be applied to control plane nodes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup"),
-						},
-					},
-					"workerSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Description: "WorkerSecurityGroup contains all the information about the OpenStack Security Group that needs to be applied to worker nodes.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup"),
-						},
-					},
-					"bastionSecurityGroup": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup"),
-						},
-					},
-					"bastion": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BastionStatus"),
-						},
-					},
-					"failureReason": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureReason will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a succinct value suitable for machine interpretation.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"failureMessage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"ready"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BastionStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.LoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkStatusWithSubnets", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.Router", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroup", "sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplate(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplate is the Schema for the openstackclustertemplates API.\n\nDeprecated: v1alpha7.OpenStackClusterTemplate has been replaced by v1beta1.OpenStackClusterTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateSpec"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateList contains a list of OpenStackClusterTemplate.\n\nDeprecated: v1alpha7.OpenStackClusterTemplateList has been replaced by v1beta1.OpenStackClusterTemplateList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplate"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplate"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec"),
-						},
-					},
-				},
-				Required: []string{"spec"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackClusterTemplateSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"template": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateResource"),
-						},
-					},
-				},
-				Required: []string{"template"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackClusterTemplateResource"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackIdentityReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackIdentityReference is a reference to an infrastructure provider identity to be used to provision cluster resources.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind of the identity. Must be supported by the infrastructure provider and may be either cluster or namespace-scoped.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name of the infrastructure identity to be used. Must be either a cluster-scoped resource, or namespaced-scoped resource the same namespace as the resource(s) being provisioned.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"kind", "name"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachine(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachine is the Schema for the openstackmachines API.\n\nDeprecated: v1alpha7.OpenStackMachine has been replaced by v1beta1.OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"),
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineStatus"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineStatus"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineList contains a list of OpenStackMachine.\n\nDeprecated: v1alpha7.OpenStackMachineList has been replaced by v1beta1.OpenStackMachineList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachine"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachine"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineSpec defines the desired state of OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"providerID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ProviderID is the unique identifier as specified by the cloud provider.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"instanceID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InstanceID is the OpenStack instance ID for this machine.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"cloudName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the cloud to use from the clouds secret",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"flavor": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The flavor reference for the flavor for your server instance.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"flavorID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"image": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the image to use for your server instance. If the RootVolume is specified, this will be ignored and use rootVolume directly.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"imageUUID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The uuid of the image to use for your server instance. if it's empty, Image name will be used",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"sshKeyName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The ssh key to inject in the instance",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"ports": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Ports to be attached to the server instance. They are created if a port with the given name does not already exist. If not specified a default port will be added for the default cluster network.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.PortOpts"),
-									},
-								},
-							},
-						},
-					},
-					"floatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The floatingIP which will be associated to the machine, only used for master. The floatingIP should have been created and haven't been associated.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"securityGroups": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The names of the security groups to assign to the instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter"),
-									},
-								},
-							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether the server instance is created on a trunk port or not.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Machine tags Requires Nova api 2.52 minimum!",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"serverMetadata": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"configDrive": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Config Drive support",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"rootVolume": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The volume metadata to boot from",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RootVolume"),
-						},
-					},
-					"additionalBlockDevices": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-map-keys": []interface{}{
-									"name",
-								},
-								"x-kubernetes-list-type": "map",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AdditionalBlockDevice"),
-									},
-								},
-							},
-						},
-					},
-					"serverGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The server group to assign the machine to",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"identityRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a identity to be used when reconciling this cluster. If not specified, the identity ref of the cluster will be used instead.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineStatus defines the observed state of OpenStackMachine.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ready": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Ready is true when the provider resource is ready.",
-							Default:     false,
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"addresses": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Addresses contains the OpenStack instance associated addresses.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/api/core/v1.NodeAddress"),
-									},
-								},
-							},
-						},
-					},
-					"instanceState": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InstanceState is the state of the OpenStack instance for this machine.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"failureReason": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"failureMessage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"conditions": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.Condition"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplate(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.\n\nDeprecated: v1alpha7.OpenStackMachineTemplate has been replaced by v1beta1.OpenStackMachineTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateSpec"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateList contains a list of OpenStackMachineTemplate.\n\nDeprecated: v1alpha7.OpenStackMachineTemplateList has been replaced by v1beta1.OpenStackMachineTemplateList.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplate"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplate"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Spec is the specification of the desired behavior of the machine.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"),
-						},
-					},
-				},
-				Required: []string{"spec"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_OpenStackMachineTemplateSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"template": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateResource"),
-						},
-					},
-				},
-				Required: []string{"template"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.OpenStackMachineTemplateResource"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_PortOpts(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter"),
-						},
-					},
-					"nameSuffix": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Used to make the name of the port unique. If unspecified, instead the 0-based index of the port in the list is used.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"adminStateUp": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"macAddress": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"fixedIPs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Specify pairs of subnet and/or IP address. These should be subnets of the network with the given NetworkID.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.FixedIP"),
-									},
-								},
-							},
-						},
-					},
-					"securityGroupFilters": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The names, uuids, filters or any combination these of the security groups to assign to the instance",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter"),
-									},
-								},
-							},
-						},
-					},
-					"allowedAddressPairs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AddressPair"),
-									},
-								},
-							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Enables and disables trunk at port level. If not provided, openStackMachine.Spec.Trunk is inherited.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"hostId": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The ID of the host where the port is allocated",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"vnicType": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The virtual network interface card (vNIC) type that is bound to the neutron port.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"profile": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API. See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port",
-							Default:     map[string]interface{}{},
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile"),
-						},
-					},
-					"disablePortSecurity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"propagateUplinkStatus": {
-						SchemaProps: spec.SchemaProps{
-							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"tags": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.) These tags are applied in addition to the instance's tags, which will also be applied to the port.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"valueSpecs": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-map-keys": []interface{}{
-									"name",
-								},
-								"x-kubernetes-list-type": "map",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ValueSpec"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.NetworkFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupFilter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.ValueSpec"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RootVolume(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"diskSize": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"volumeType": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"availabilityZone": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Router(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Router represents basic information about the associated OpenStack Neutron Router.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"ips": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_RouterFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroup(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SecurityGroup represents the basic information of the associated OpenStack Neutron Security Group.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"rules": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupRule"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id"},
-			},
-		},
-		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7.SecurityGroupRule"},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SecurityGroupRule(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SecurityGroupRule represent the basic information of the associated OpenStack Security Group Role.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"direction": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"etherType": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"securityGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"portRangeMin": {
-						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
-						},
-					},
-					"portRangeMax": {
-						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
-						},
-					},
-					"protocol": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"remoteGroupID": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"remoteIPPrefix": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-				},
-				Required: []string{"description", "name", "direction", "etherType", "securityGroupID", "portRangeMin", "portRangeMax", "protocol", "remoteGroupID", "remoteIPPrefix"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_Subnet(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "Subnet represents basic information about the associated OpenStack Neutron Subnet.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"cidr": {
-						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"name", "id", "cidr"},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_SubnetFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"projectId": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipVersion": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"gateway_ip": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"cidr": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipv6AddressMode": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"ipv6RaMode": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"tagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTags": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"notTagsAny": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha7_ValueSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "ValueSpec represents a single value_spec key-value pair.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the key-value pair. This is just for identifying the pair and will not be sent to the OpenStack API.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"key": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Key is the key in the key-value pair.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"value": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Value is the value in the key-value pair.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"name", "key", "value"},
-			},
-		},
-	}
-}
-
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -22701,6 +17954,54 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ManagedSecurity
 						},
 						SchemaProps: spec.SchemaProps{
 							Description: "allNodesSecurityGroupRules defines the rules that should be applied to all nodes.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec"),
+									},
+								},
+							},
+						},
+					},
+					"controlPlaneNodesSecurityGroupRules": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type":       "map",
+								"x-kubernetes-patch-merge-key": "name",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupRuleSpec"),
+									},
+								},
+							},
+						},
+					},
+					"workerNodesSecurityGroupRules": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type":       "map",
+								"x-kubernetes-patch-merge-key": "name",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23891,7 +19192,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 					},
 					"instanceState": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InstanceState is the state of the OpenStack instance for this machine.",
+							Description: "InstanceState is the state of the OpenStack instance for this machine. This field is not set anymore by the OpenStackMachine controller. Instead, it's set by the OpenStackServer controller.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25657,7 +20958,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_APIEndpoint(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"host": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The hostname on which the API server is serving.",
+							Description: "host is the hostname on which the API server is serving.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -25665,7 +20966,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_APIEndpoint(ref common.ReferenceCa
 					},
 					"port": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The port on which the API server is serving.",
+							Description: "port is the port on which the API server is serving.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -25687,13 +20988,13 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Bootstrap(ref common.ReferenceCall
 				Properties: map[string]spec.Schema{
 					"configRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ConfigRef is a reference to a bootstrap provider-specific resource that holds configuration details. The reference is optional to allow users/operators to specify Bootstrap.DataSecretName without the need of a controller.",
+							Description: "configRef is a reference to a bootstrap provider-specific resource that holds configuration details. The reference is optional to allow users/operators to specify Bootstrap.DataSecretName without the need of a controller.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
 					"dataSecretName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DataSecretName is the name of the secret that stores the bootstrap data script. If nil, the Machine should remain in the Pending state.",
+							Description: "dataSecretName is the name of the secret that stores the bootstrap data script. If nil, the Machine should remain in the Pending state.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25729,20 +21030,23 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Cluster(ref common.ReferenceCallba
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterSpec"),
+							Description: "spec is the desired state of Cluster.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterStatus"),
+							Description: "status is the observed state of Cluster.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterStatus"),
 						},
 					},
 				},
@@ -25750,6 +21054,35 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Cluster(ref common.ReferenceCallba
 		},
 		Dependencies: []string{
 			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterSpec", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterStatus"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterAvailabilityGate(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterAvailabilityGate contains the type of a Cluster condition to be used as availability gate.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditionType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "conditionType refers to a condition with matching type in the Cluster's condition list. If the conditions doesn't exist, it will be treated as unknown. Note: Both Cluster API conditions or conditions added by 3rd party controllers can be used as availability gates.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"polarity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "polarity of the conditionType specified in this availabilityGate. Valid values are Positive, Negative and omitted. When omitted, the default behaviour will be Positive. A positive polarity means that the condition should report a true status under normal conditions. A negative polarity means that the condition should report a false status under normal conditions.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"conditionType"},
+			},
+		},
 	}
 }
 
@@ -25776,20 +21109,23 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClass(ref common.ReferenceC
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassSpec"),
+							Description: "spec is the desired state of ClusterClass.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatus"),
+							Description: "status is the observed state of ClusterClass.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatus"),
 						},
 					},
 				},
@@ -25823,13 +21159,15 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassList(ref common.Refere
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+							Description: "metadata is the standard list's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#lists-and-simple-kinds",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "items is the list of ClusterClasses.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -25858,7 +21196,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassPatch(ref common.Refer
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the patch.",
+							Description: "name of the patch.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -25866,21 +21204,21 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassPatch(ref common.Refer
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Description is a human-readable description of this patch.",
+							Description: "description is a human-readable description of this patch.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"enabledIf": {
 						SchemaProps: spec.SchemaProps{
-							Description: "EnabledIf is a Go template to be used to calculate if a patch should be enabled. It can reference variables defined in .spec.variables and builtin variables. The patch will be enabled if the template evaluates to `true`, otherwise it will be disabled. If EnabledIf is not set, the patch will be enabled per default.",
+							Description: "enabledIf is a Go template to be used to calculate if a patch should be enabled. It can reference variables defined in .spec.variables and builtin variables. The patch will be enabled if the template evaluates to `true`, otherwise it will be disabled. If EnabledIf is not set, the patch will be enabled per default.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"definitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Definitions define inline patches. Note: Patches will be applied in the order of the array. Note: Exactly one of Definitions or External must be set.",
+							Description: "definitions define inline patches. Note: Patches will be applied in the order of the array. Note: Exactly one of Definitions or External must be set.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25894,7 +21232,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassPatch(ref common.Refer
 					},
 					"external": {
 						SchemaProps: spec.SchemaProps{
-							Description: "External defines an external patch. Note: Exactly one of Definitions or External must be set.",
+							Description: "external defines an external patch. Note: Exactly one of Definitions or External must be set.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ExternalPatchDefinition"),
 						},
 					},
@@ -25914,30 +21252,58 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassSpec(ref common.Refere
 				Description: "ClusterClassSpec describes the desired state of the ClusterClass.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"availabilityGates": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"conditionType",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "availabilityGates specifies additional conditions to include when evaluating Cluster Available condition.\n\nNOTE: this field is considered only for computing v1beta2 conditions. NOTE: If a Cluster is using this ClusterClass, and this Cluster defines a custom list of availabilityGates, such list overrides availabilityGates defined in this field.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterAvailabilityGate"),
+									},
+								},
+							},
+						},
+					},
 					"infrastructure": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Infrastructure is a reference to a provider-specific template that holds the details for provisioning infrastructure specific cluster for the underlying provider. The underlying provider is responsible for the implementation of the template to an infrastructure cluster.",
+							Description: "infrastructure is a reference to a provider-specific template that holds the details for provisioning infrastructure specific cluster for the underlying provider. The underlying provider is responsible for the implementation of the template to an infrastructure cluster.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate"),
 						},
 					},
+					"infrastructureNamingStrategy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "infrastructureNamingStrategy allows changing the naming pattern used when creating the infrastructure object.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.InfrastructureNamingStrategy"),
+						},
+					},
 					"controlPlane": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlane is a reference to a local struct that holds the details for provisioning the Control Plane for the Cluster.",
+							Description: "controlPlane is a reference to a local struct that holds the details for provisioning the Control Plane for the Cluster.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClass"),
 						},
 					},
 					"workers": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Workers describes the worker nodes for the cluster. It is a collection of node types which can be used to create the worker nodes of the cluster.",
+							Description: "workers describes the worker nodes for the cluster. It is a collection of node types which can be used to create the worker nodes of the cluster.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.WorkersClass"),
 						},
 					},
 					"variables": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Variables defines the variables which can be configured in the Cluster topology and are then used in patches.",
+							Description: "variables defines the variables which can be configured in the Cluster topology and are then used in patches.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25951,7 +21317,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassSpec(ref common.Refere
 					},
 					"patches": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Patches defines the patches which are applied to customize referenced templates of a ClusterClass. Note: Patches will be applied in the order of the array.",
+							Description: "patches defines the patches which are applied to customize referenced templates of a ClusterClass. Note: Patches will be applied in the order of the array.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25967,7 +21333,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassSpec(ref common.Refere
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassPatch", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariable", "sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClass", "sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate", "sigs.k8s.io/cluster-api/api/v1beta1.WorkersClass"},
+			"sigs.k8s.io/cluster-api/api/v1beta1.ClusterAvailabilityGate", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassPatch", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariable", "sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClass", "sigs.k8s.io/cluster-api/api/v1beta1.InfrastructureNamingStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate", "sigs.k8s.io/cluster-api/api/v1beta1.WorkersClass"},
 	}
 }
 
@@ -25980,7 +21346,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatus(ref common.Refe
 				Properties: map[string]spec.Schema{
 					"variables": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Variables is a list of ClusterClassStatusVariable that are defined for the ClusterClass.",
+							Description: "variables is a list of ClusterClassStatusVariable that are defined for the ClusterClass.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25994,7 +21360,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatus(ref common.Refe
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current observed state of the ClusterClass.",
+							Description: "conditions defines current observed state of the ClusterClass.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26008,16 +21374,22 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatus(ref common.Refe
 					},
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ObservedGeneration is the latest generation observed by the controller.",
+							Description: "observedGeneration is the latest generation observed by the controller.",
 							Type:        []string{"integer"},
 							Format:      "int64",
+						},
+					},
+					"v1beta2": {
+						SchemaProps: spec.SchemaProps{
+							Description: "v1beta2 groups all the fields that will be added or modified in ClusterClass's status with the V1Beta2 version.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassV1Beta2Status"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariable", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
+			"sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassStatusVariable", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassV1Beta2Status", "sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
 	}
 }
 
@@ -26030,7 +21402,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariable(ref com
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the variable.",
+							Description: "name is the name of the variable.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26038,7 +21410,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariable(ref com
 					},
 					"definitionsConflict": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DefinitionsConflict specifies whether or not there are conflicting definitions for a single variable name.",
+							Description: "definitionsConflict specifies whether or not there are conflicting definitions for a single variable name.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -26046,7 +21418,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariable(ref com
 					},
 					"definitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Definitions is a list of definitions for a variable.",
+							Description: "definitions is a list of definitions for a variable.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26076,7 +21448,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefiniti
 				Properties: map[string]spec.Schema{
 					"from": {
 						SchemaProps: spec.SchemaProps{
-							Description: "From specifies the origin of the variable definition. This will be `inline` for variables defined in the ClusterClass or the name of a patch defined in the ClusterClass for variables discovered from a DiscoverVariables runtime extensions.",
+							Description: "from specifies the origin of the variable definition. This will be `inline` for variables defined in the ClusterClass or the name of a patch defined in the ClusterClass for variables discovered from a DiscoverVariables runtime extensions.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26084,7 +21456,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefiniti
 					},
 					"required": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Required specifies if the variable is required. Note: this applies to the variable as a whole and thus the top-level object defined in the schema. If nested fields are required, this will be specified inside the schema.",
+							Description: "required specifies if the variable is required. Note: this applies to the variable as a whole and thus the top-level object defined in the schema. If nested fields are required, this will be specified inside the schema.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -26092,14 +21464,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefiniti
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata of a variable. It can be used to add additional data for higher level tools to a ClusterClassVariable.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion.",
+							Description: "metadata is the metadata of a variable. It can be used to add additional data for higher level tools to a ClusterClassVariable.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariableMetadata"),
 						},
 					},
 					"schema": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Schema defines the schema of the variable.",
+							Description: "schema defines the schema of the variable.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.VariableSchema"),
 						},
@@ -26113,6 +21485,43 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassStatusVariableDefiniti
 	}
 }
 
+func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassV1Beta2Status(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterClassV1Beta2Status groups all the fields that will be added or modified in ClusterClass with the V1Beta2 version. See https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more context.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions represents the observations of a ClusterClass's current state. Known condition types are VariablesReady, RefVersionsUpToDate, Paused.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -26122,7 +21531,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref common.Re
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the variable.",
+							Description: "name of the variable.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26130,7 +21539,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref common.Re
 					},
 					"required": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Required specifies if the variable is required. Note: this applies to the variable as a whole and thus the top-level object defined in the schema. If nested fields are required, this will be specified inside the schema.",
+							Description: "required specifies if the variable is required. Note: this applies to the variable as a whole and thus the top-level object defined in the schema. If nested fields are required, this will be specified inside the schema.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -26138,14 +21547,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariable(ref common.Re
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata of a variable. It can be used to add additional data for higher level tools to a ClusterClassVariable.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please use XMetadata in JSONSchemaProps instead.",
+							Description: "metadata is the metadata of a variable. It can be used to add additional data for higher level tools to a ClusterClassVariable.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please use XMetadata in JSONSchemaProps instead.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterClassVariableMetadata"),
 						},
 					},
 					"schema": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Schema defines the schema of the variable.",
+							Description: "schema defines the schema of the variable.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.VariableSchema"),
 						},
@@ -26168,7 +21577,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariableMetadata(ref c
 				Properties: map[string]spec.Schema{
 					"labels": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Map of string keys and values that can be used to organize and categorize (scope and select) variables.",
+							Description: "labels is a map of string keys and values that can be used to organize and categorize (scope and select) variables.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -26184,7 +21593,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariableMetadata(ref c
 					},
 					"annotations": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Annotations is an unstructured key value map that can be used to store and retrieve arbitrary metadata. They are not queryable.",
+							Description: "annotations is an unstructured key value map that can be used to store and retrieve arbitrary metadata. They are not queryable.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -26196,6 +21605,54 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterClassVariableMetadata(ref c
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterControlPlaneStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterControlPlaneStatus groups all the observations about control plane current state.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"desiredReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "desiredReplicas is the total number of desired control plane machines in this cluster.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"replicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "replicas is the total number of control plane machines in this cluster. NOTE: replicas also includes machines still being provisioned or being deleted.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"upToDateReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "upToDateReplicas is the number of up-to-date control plane machines in this cluster. A machine is considered up-to-date when Machine's UpToDate condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"readyReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "readyReplicas is the total number of ready control plane machines in this cluster. A machine is considered ready when Machine's Ready condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"availableReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "availableReplicas is the total number of available control plane machines in this cluster. A machine is considered available when Machine's Available condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
 						},
 					},
 				},
@@ -26227,13 +21684,15 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterList(ref common.ReferenceCa
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+							Description: "metadata is the standard list's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#lists-and-simple-kinds",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "items is the list of Clusters.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -26262,26 +21721,26 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterNetwork(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"apiServerPort": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIServerPort specifies the port the API Server should bind to. Defaults to 6443.",
+							Description: "apiServerPort specifies the port the API Server should bind to. Defaults to 6443.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"services": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The network ranges from which service VIPs are allocated.",
+							Description: "services is the network ranges from which service VIPs are allocated.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.NetworkRanges"),
 						},
 					},
 					"pods": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The network ranges from which Pod networks are allocated.",
+							Description: "pods is the network ranges from which Pod networks are allocated.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.NetworkRanges"),
 						},
 					},
 					"serviceDomain": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Domain name for services.",
+							Description: "serviceDomain is the domain name for services.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26303,47 +21762,69 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterSpec(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"paused": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Paused can be used to prevent controllers from processing the Cluster and all its associated objects.",
+							Description: "paused can be used to prevent controllers from processing the Cluster and all its associated objects.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"clusterNetwork": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Cluster network configuration.",
+							Description: "clusterNetwork represents the cluster network configuration.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterNetwork"),
 						},
 					},
 					"controlPlaneEndpoint": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.",
+							Description: "controlPlaneEndpoint represents the endpoint used to communicate with the control plane.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint"),
 						},
 					},
 					"controlPlaneRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneRef is an optional reference to a provider-specific resource that holds the details for provisioning the Control Plane for a Cluster.",
+							Description: "controlPlaneRef is an optional reference to a provider-specific resource that holds the details for provisioning the Control Plane for a Cluster.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
 					"infrastructureRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InfrastructureRef is a reference to a provider-specific resource that holds the details for provisioning infrastructure for a cluster in said provider.",
+							Description: "infrastructureRef is a reference to a provider-specific resource that holds the details for provisioning infrastructure for a cluster in said provider.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
 					"topology": {
 						SchemaProps: spec.SchemaProps{
-							Description: "This encapsulates the topology for the cluster. NOTE: It is required to enable the ClusterTopology feature gate flag to activate managed topologies support; this feature is highly experimental, and parts of it might still be not implemented.",
+							Description: "topology encapsulates the topology for the cluster. NOTE: It is required to enable the ClusterTopology feature gate flag to activate managed topologies support; this feature is highly experimental, and parts of it might still be not implemented.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.Topology"),
+						},
+					},
+					"availabilityGates": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"conditionType",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "availabilityGates specifies additional conditions to include when evaluating Cluster Available condition.\n\nIf this field is not defined and the Cluster implements a managed topology, availabilityGates from the corresponding ClusterClass will be used, if any.\n\nNOTE: this field is considered only for computing v1beta2 conditions.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterAvailabilityGate"),
+									},
+								},
+							},
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.ObjectReference", "sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterNetwork", "sigs.k8s.io/cluster-api/api/v1beta1.Topology"},
+			"k8s.io/api/core/v1.ObjectReference", "sigs.k8s.io/cluster-api/api/v1beta1.APIEndpoint", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterAvailabilityGate", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterNetwork", "sigs.k8s.io/cluster-api/api/v1beta1.Topology"},
 	}
 }
 
@@ -26356,7 +21837,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"failureDomains": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomains is a slice of failure domain objects synced from the infrastructure provider.",
+							Description: "failureDomains is a slice of failure domain objects synced from the infrastructure provider.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -26371,28 +21852,28 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref common.Reference
 					},
 					"failureReason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureReason indicates that there is a fatal problem reconciling the state, and will be set to a token value suitable for programmatic interpretation.",
+							Description: "failureReason indicates that there is a fatal problem reconciling the state, and will be set to a token value suitable for programmatic interpretation.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"failureMessage": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage indicates that there is a fatal problem reconciling the state, and will be set to a descriptive error message.",
+							Description: "failureMessage indicates that there is a fatal problem reconciling the state, and will be set to a descriptive error message.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"phase": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Phase represents the current phase of cluster actuation. E.g. Pending, Running, Terminating, Failed etc.",
+							Description: "phase represents the current phase of cluster actuation.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"infrastructureReady": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InfrastructureReady is the state of the infrastructure provider.",
+							Description: "infrastructureReady is the state of the infrastructure provider.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -26400,7 +21881,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref common.Reference
 					},
 					"controlPlaneReady": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneReady denotes if the control plane became ready during initial provisioning to receive requests. NOTE: this field is part of the Cluster API contract and it is used to orchestrate provisioning. The value of this field is never updated after provisioning is completed. Please use conditions to check the operational state of the control plane.",
+							Description: "controlPlaneReady denotes if the control plane became ready during initial provisioning to receive requests. NOTE: this field is part of the Cluster API contract and it is used to orchestrate provisioning. The value of this field is never updated after provisioning is completed. Please use conditions to check the operational state of the control plane.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -26408,7 +21889,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref common.Reference
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the cluster.",
+							Description: "conditions defines current service state of the cluster.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26422,16 +21903,71 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterStatus(ref common.Reference
 					},
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ObservedGeneration is the latest generation observed by the controller.",
+							Description: "observedGeneration is the latest generation observed by the controller.",
 							Type:        []string{"integer"},
 							Format:      "int64",
+						},
+					},
+					"v1beta2": {
+						SchemaProps: spec.SchemaProps{
+							Description: "v1beta2 groups all the fields that will be added or modified in Cluster's status with the V1Beta2 version.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterV1Beta2Status"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api/api/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"},
+			"sigs.k8s.io/cluster-api/api/v1beta1.ClusterV1Beta2Status", "sigs.k8s.io/cluster-api/api/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.FailureDomainSpec"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterV1Beta2Status(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterV1Beta2Status groups all the fields that will be added or modified in Cluster with the V1Beta2 version. See https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more context.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions represents the observations of a Cluster's current state. Known condition types are Available, InfrastructureReady, ControlPlaneInitialized, ControlPlaneAvailable, WorkersAvailable, MachinesReady MachinesUpToDate, RemoteConnectionProbe, ScalingUp, ScalingDown, Remediating, Deleting, Paused. Additionally, a TopologyReconciled condition will be added in case the Cluster is referencing a ClusterClass / defining a managed Topology.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+					"controlPlane": {
+						SchemaProps: spec.SchemaProps{
+							Description: "controlPlane groups all the observations about Cluster's ControlPlane current state.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ClusterControlPlaneStatus"),
+						},
+					},
+					"workers": {
+						SchemaProps: spec.SchemaProps{
+							Description: "workers groups all the observations about Cluster's Workers current state.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.WorkersStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.ClusterControlPlaneStatus", "sigs.k8s.io/cluster-api/api/v1beta1.WorkersStatus"},
 	}
 }
 
@@ -26444,7 +21980,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterVariable(ref common.Referen
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the variable.",
+							Description: "name of the variable.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26452,14 +21988,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ClusterVariable(ref common.Referen
 					},
 					"definitionFrom": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DefinitionFrom specifies where the definition of this Variable is from.\n\nDeprecated: This field is deprecated, must not be set anymore and is going to be removed in the next apiVersion.",
+							Description: "definitionFrom specifies where the definition of this Variable is from.\n\nDeprecated: This field is deprecated, must not be set anymore and is going to be removed in the next apiVersion.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"value": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Value of the variable. Note: the value will be validated against the schema of the corresponding ClusterClassVariable from the ClusterClass. Note: We have to use apiextensionsv1.JSON instead of a custom JSON type, because controller-tools has a hard-coded schema for apiextensionsv1.JSON which cannot be produced by another type via controller-tools, i.e. it is not possible to have no type field. Ref: https://github.com/kubernetes-sigs/controller-tools/blob/d0e03a142d0ecdd5491593e941ee1d6b5d91dba6/pkg/crd/known_types.go#L106-L111",
+							Description: "value of the variable. Note: the value will be validated against the schema of the corresponding ClusterClassVariable from the ClusterClass. Note: We have to use apiextensionsv1.JSON instead of a custom JSON type, because controller-tools has a hard-coded schema for apiextensionsv1.JSON which cannot be produced by another type via controller-tools, i.e. it is not possible to have no type field. Ref: https://github.com/kubernetes-sigs/controller-tools/blob/d0e03a142d0ecdd5491593e941ee1d6b5d91dba6/pkg/crd/known_types.go#L106-L111",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON"),
 						},
 					},
@@ -26481,7 +22017,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Condition(ref common.ReferenceCall
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type of condition in CamelCase or in foo.example.com/CamelCase. Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important.",
+							Description: "type of condition in CamelCase or in foo.example.com/CamelCase. Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26489,7 +22025,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Condition(ref common.ReferenceCall
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Status of the condition, one of True, False, Unknown.",
+							Description: "status of the condition, one of True, False, Unknown.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26497,27 +22033,27 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Condition(ref common.ReferenceCall
 					},
 					"severity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Severity provides an explicit classification of Reason code, so the users or machines can immediately understand the current situation and act accordingly. The Severity field MUST be set only when Status=False.",
+							Description: "severity provides an explicit classification of Reason code, so the users or machines can immediately understand the current situation and act accordingly. The Severity field MUST be set only when Status=False.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"lastTransitionTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.",
+							Description: "lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed. If that is not known, then using the time when the API field changed is acceptable.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"reason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The reason for the condition's last transition in CamelCase. The specific API may choose whether or not this field is considered a guaranteed API. This field may not be empty.",
+							Description: "reason is the reason for the condition's last transition in CamelCase. The specific API may choose whether or not this field is considered a guaranteed API. This field may be empty.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"message": {
 						SchemaProps: spec.SchemaProps{
-							Description: "A human readable message indicating details about the transition. This field may be empty.",
+							Description: "message is a human readable message indicating details about the transition. This field may be empty.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26540,51 +22076,73 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClass(ref common.Refer
 				Properties: map[string]spec.Schema{
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata applied to the ControlPlane and the Machines of the ControlPlane if the ControlPlaneTemplate referenced is machine based. If not, it is applied only to the ControlPlane. At runtime this metadata is merged with the corresponding metadata from the topology.\n\nThis field is supported if and only if the control plane provider template referenced is Machine based.",
+							Description: "metadata is the metadata applied to the ControlPlane and the Machines of the ControlPlane if the ControlPlaneTemplate referenced is machine based. If not, it is applied only to the ControlPlane. At runtime this metadata is merged with the corresponding metadata from the topology.\n\nThis field is supported if and only if the control plane provider template referenced is Machine based.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"),
 						},
 					},
 					"ref": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ref is a required reference to a custom resource offered by a provider.",
+							Description: "ref is a required reference to a custom resource offered by a provider.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
 					"machineInfrastructure": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineInfrastructure defines the metadata and infrastructure information for control plane machines.\n\nThis field is supported if and only if the control plane provider template referenced above is Machine based and supports setting replicas.",
+							Description: "machineInfrastructure defines the metadata and infrastructure information for control plane machines.\n\nThis field is supported if and only if the control plane provider template referenced above is Machine based and supports setting replicas.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate"),
 						},
 					},
 					"machineHealthCheck": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineHealthCheck defines a MachineHealthCheck for this ControlPlaneClass. This field is supported if and only if the ControlPlane provider template referenced above is Machine based and supports setting replicas.",
+							Description: "machineHealthCheck defines a MachineHealthCheck for this ControlPlaneClass. This field is supported if and only if the ControlPlane provider template referenced above is Machine based and supports setting replicas.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass"),
 						},
 					},
 					"namingStrategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NamingStrategy allows changing the naming pattern used when creating the control plane provider object.",
+							Description: "namingStrategy allows changing the naming pattern used when creating the control plane provider object.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClassNamingStrategy"),
 						},
 					},
 					"nodeDrainTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout` NOTE: This value can be overridden while defining a Cluster.Topology.",
+							Description: "nodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout` NOTE: This value can be overridden while defining a Cluster.Topology.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeVolumeDetachTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations. NOTE: This value can be overridden while defining a Cluster.Topology.",
+							Description: "nodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations. NOTE: This value can be overridden while defining a Cluster.Topology.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeDeletionTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds. NOTE: This value can be overridden while defining a Cluster.Topology.",
+							Description: "nodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds. NOTE: This value can be overridden while defining a Cluster.Topology.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+					"readinessGates": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"conditionType",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "readinessGates specifies additional conditions to include when evaluating Machine Ready condition.\n\nThis field can be used e.g. to instruct the machine controller to include in the computation for Machine's ready computation a condition, managed by an external controllers, reporting the status of special software/hardware installed on the Machine.\n\nNOTE: This field is considered only for computing v1beta2 conditions. NOTE: If a Cluster defines a custom list of readinessGates for the control plane, such list overrides readinessGates defined in this field. NOTE: Specific control plane provider implementations might automatically extend the list of readinessGates; e.g. the kubeadm control provider adds ReadinessGates for the APIServerPodHealthy, SchedulerPodHealthy conditions, etc.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -26592,7 +22150,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClass(ref common.Refer
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.ObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClassNamingStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass", "sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"},
+			"k8s.io/api/core/v1.ObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneClassNamingStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass", "sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate", "sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"},
 	}
 }
 
@@ -26605,7 +22163,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneClassNamingStrategy(re
 				Properties: map[string]spec.Schema{
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template defines the template to use for generating the name of the ControlPlane object. If not defined, it will fallback to `{{ .cluster.name }}-{{ .random }}`. If the templated string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. The templating mechanism provides the following arguments: * `.cluster.name`: The name of the cluster object. * `.random`: A random alphanumeric string, without vowels, of length 5.",
+							Description: "template defines the template to use for generating the name of the ControlPlane object. If not defined, it will fallback to `{{ .cluster.name }}-{{ .random }}`. If the templated string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. The templating mechanism provides the following arguments: * `.cluster.name`: The name of the cluster object. * `.random`: A random alphanumeric string, without vowels, of length 5.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26625,45 +22183,67 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneTopology(ref common.Re
 				Properties: map[string]spec.Schema{
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata applied to the ControlPlane and the Machines of the ControlPlane if the ControlPlaneTemplate referenced by the ClusterClass is machine based. If not, it is applied only to the ControlPlane. At runtime this metadata is merged with the corresponding metadata from the ClusterClass.",
+							Description: "metadata is the metadata applied to the ControlPlane and the Machines of the ControlPlane if the ControlPlaneTemplate referenced by the ClusterClass is machine based. If not, it is applied only to the ControlPlane. At runtime this metadata is merged with the corresponding metadata from the ClusterClass.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"),
 						},
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Replicas is the number of control plane nodes. If the value is nil, the ControlPlane object is created without the number of Replicas and it's assumed that the control plane controller does not implement support for this field. When specified against a control plane provider that lacks support for this field, this value will be ignored.",
+							Description: "replicas is the number of control plane nodes. If the value is nil, the ControlPlane object is created without the number of Replicas and it's assumed that the control plane controller does not implement support for this field. When specified against a control plane provider that lacks support for this field, this value will be ignored.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"machineHealthCheck": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineHealthCheck allows to enable, disable and override the MachineHealthCheck configuration in the ClusterClass for this control plane.",
+							Description: "machineHealthCheck allows to enable, disable and override the MachineHealthCheck configuration in the ClusterClass for this control plane.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology"),
 						},
 					},
 					"nodeDrainTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
+							Description: "nodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeVolumeDetachTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
+							Description: "nodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeDeletionTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
+							Description: "nodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+						},
+					},
+					"readinessGates": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"conditionType",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "readinessGates specifies additional conditions to include when evaluating Machine Ready condition.\n\nThis field can be used e.g. to instruct the machine controller to include in the computation for Machine's ready computation a condition, managed by an external controllers, reporting the status of special software/hardware installed on the Machine.\n\nIf this field is not defined, readinessGates from the corresponding ControlPlaneClass will be used, if any.\n\nNOTE: This field is considered only for computing v1beta2 conditions. NOTE: Specific control plane provider implementations might automatically extend the list of readinessGates; e.g. the kubeadm control provider adds ReadinessGates for the APIServerPodHealthy, SchedulerPodHealthy conditions, etc.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate"),
+									},
+								},
+							},
 						},
 					},
 					"variables": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Variables can be used to customize the ControlPlane through patches.",
+							Description: "variables can be used to customize the ControlPlane through patches.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneVariables"),
 						},
 					},
@@ -26671,7 +22251,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneTopology(ref common.Re
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneVariables", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology", "sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneVariables", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology", "sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate", "sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"},
 	}
 }
 
@@ -26692,7 +22272,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ControlPlaneVariables(ref common.R
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Overrides can be used to override Cluster level variables.",
+							Description: "overrides can be used to override Cluster level variables.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26721,28 +22301,28 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ExternalPatchDefinition(ref common
 				Properties: map[string]spec.Schema{
 					"generateExtension": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GenerateExtension references an extension which is called to generate patches.",
+							Description: "generateExtension references an extension which is called to generate patches.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"validateExtension": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ValidateExtension references an extension which is called to validate the topology.",
+							Description: "validateExtension references an extension which is called to validate the topology.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"discoverVariablesExtension": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DiscoverVariablesExtension references an extension which is called to discover variables.",
+							Description: "discoverVariablesExtension references an extension which is called to discover variables.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"settings": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Settings defines key value pairs to be passed to the extensions. Values defined here take precedence over the values defined in the corresponding ExtensionConfig.",
+							Description: "settings defines key value pairs to be passed to the extensions. Values defined here take precedence over the values defined in the corresponding ExtensionConfig.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -26771,14 +22351,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_FailureDomainSpec(ref common.Refer
 				Properties: map[string]spec.Schema{
 					"controlPlane": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlane determines if this failure domain is suitable for use by control plane machines.",
+							Description: "controlPlane determines if this failure domain is suitable for use by control plane machines.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"attributes": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Attributes is a free form map of attributes an infrastructure provider might use or require.",
+							Description: "attributes is a free form map of attributes an infrastructure provider might use or require.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -26798,6 +22378,26 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_FailureDomainSpec(ref common.Refer
 	}
 }
 
+func schema_sigsk8sio_cluster_api_api_v1beta1_InfrastructureNamingStrategy(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "InfrastructureNamingStrategy defines the naming strategy for infrastructure objects.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"template": {
+						SchemaProps: spec.SchemaProps{
+							Description: "template defines the template to use for generating the name of the Infrastructure object. If not defined, it will fallback to `{{ .cluster.name }}-{{ .random }}`. If the templated string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. The templating mechanism provides the following arguments: * `.cluster.name`: The name of the cluster object. * `.random`: A random alphanumeric string, without vowels, of length 5.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -26807,7 +22407,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref common.ReferenceCall
 				Properties: map[string]spec.Schema{
 					"op": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Op defines the operation of the patch. Note: Only `add`, `replace` and `remove` are supported.",
+							Description: "op defines the operation of the patch. Note: Only `add`, `replace` and `remove` are supported.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26815,7 +22415,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref common.ReferenceCall
 					},
 					"path": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Path defines the path of the patch. Note: Only the spec of a template can be patched, thus the path has to start with /spec/. Note: For now the only allowed array modifications are `append` and `prepend`, i.e.: * for op: `add`: only index 0 (prepend) and - (append) are allowed * for op: `replace` or `remove`: no indexes are allowed",
+							Description: "path defines the path of the patch. Note: Only the spec of a template can be patched, thus the path has to start with /spec/. Note: For now the only allowed array modifications are `append` and `prepend`, i.e.: * for op: `add`: only index 0 (prepend) and - (append) are allowed * for op: `replace` or `remove`: no indexes are allowed",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26823,13 +22423,13 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatch(ref common.ReferenceCall
 					},
 					"value": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Value defines the value of the patch. Note: Either Value or ValueFrom is required for add and replace operations. Only one of them is allowed to be set at the same time. Note: We have to use apiextensionsv1.JSON instead of our JSON type, because controller-tools has a hard-coded schema for apiextensionsv1.JSON which cannot be produced by another type (unset type field). Ref: https://github.com/kubernetes-sigs/controller-tools/blob/d0e03a142d0ecdd5491593e941ee1d6b5d91dba6/pkg/crd/known_types.go#L106-L111",
+							Description: "value defines the value of the patch. Note: Either Value or ValueFrom is required for add and replace operations. Only one of them is allowed to be set at the same time. Note: We have to use apiextensionsv1.JSON instead of our JSON type, because controller-tools has a hard-coded schema for apiextensionsv1.JSON which cannot be produced by another type (unset type field). Ref: https://github.com/kubernetes-sigs/controller-tools/blob/d0e03a142d0ecdd5491593e941ee1d6b5d91dba6/pkg/crd/known_types.go#L106-L111",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON"),
 						},
 					},
 					"valueFrom": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ValueFrom defines the value of the patch. Note: Either Value or ValueFrom is required for add and replace operations. Only one of them is allowed to be set at the same time.",
+							Description: "valueFrom defines the value of the patch. Note: Either Value or ValueFrom is required for add and replace operations. Only one of them is allowed to be set at the same time.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONPatchValue"),
 						},
 					},
@@ -26851,14 +22451,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONPatchValue(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"variable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Variable is the variable to be used as value. Variable can be one of the variables defined in .spec.variables or a builtin variable.",
+							Description: "variable is the variable to be used as value. Variable can be one of the variables defined in .spec.variables or a builtin variable.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template is the Go template to be used to calculate the value. A template can reference variables defined in .spec.variables and builtin variables. Note: The template must evaluate to a valid YAML or JSON value.",
+							Description: "template is the Go template to be used to calculate the value. A template can reference variables defined in .spec.variables and builtin variables. Note: The template must evaluate to a valid YAML or JSON value.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26878,28 +22478,27 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref common.Referen
 				Properties: map[string]spec.Schema{
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Description is a human-readable description of this variable.",
+							Description: "description is a human-readable description of this variable.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"example": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Example is an example for this variable.",
+							Description: "example is an example for this variable.",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON"),
 						},
 					},
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type is the type of the variable. Valid values are: object, array, string, integer, number or boolean.",
-							Default:     "",
+							Description: "type is the type of the variable. Valid values are: object, array, string, integer, number or boolean.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"properties": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Properties specifies fields of an object. NOTE: Can only be set if type is object. NOTE: Properties is mutually exclusive with AdditionalProperties. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
+							Description: "properties specifies fields of an object. NOTE: Can only be set if type is object. NOTE: Properties is mutually exclusive with AdditionalProperties. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -26914,27 +22513,27 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref common.Referen
 					},
 					"additionalProperties": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalProperties specifies the schema of values in a map (keys are always strings). NOTE: Can only be set if type is object. NOTE: AdditionalProperties is mutually exclusive with Properties. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
+							Description: "additionalProperties specifies the schema of values in a map (keys are always strings). NOTE: Can only be set if type is object. NOTE: AdditionalProperties is mutually exclusive with Properties. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps"),
 						},
 					},
 					"maxProperties": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxProperties is the maximum amount of entries in a map or properties in an object. NOTE: Can only be set if type is object.",
+							Description: "maxProperties is the maximum amount of entries in a map or properties in an object. NOTE: Can only be set if type is object.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"minProperties": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MinProperties is the minimum amount of entries in a map or properties in an object. NOTE: Can only be set if type is object.",
+							Description: "minProperties is the minimum amount of entries in a map or properties in an object. NOTE: Can only be set if type is object.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"required": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Required specifies which fields of an object are required. NOTE: Can only be set if type is object.",
+							Description: "required specifies which fields of an object are required. NOTE: Can only be set if type is object.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26949,97 +22548,97 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref common.Referen
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Items specifies fields of an array. NOTE: Can only be set if type is array. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
+							Description: "items specifies fields of an array. NOTE: Can only be set if type is array. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps"),
 						},
 					},
 					"maxItems": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxItems is the max length of an array variable. NOTE: Can only be set if type is array.",
+							Description: "maxItems is the max length of an array variable. NOTE: Can only be set if type is array.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"minItems": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MinItems is the min length of an array variable. NOTE: Can only be set if type is array.",
+							Description: "minItems is the min length of an array variable. NOTE: Can only be set if type is array.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"uniqueItems": {
 						SchemaProps: spec.SchemaProps{
-							Description: "UniqueItems specifies if items in an array must be unique. NOTE: Can only be set if type is array.",
+							Description: "uniqueItems specifies if items in an array must be unique. NOTE: Can only be set if type is array.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"format": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Format is an OpenAPI v3 format string. Unknown formats are ignored. For a list of supported formats please see: (of the k8s.io/apiextensions-apiserver version we're currently using) https://github.com/kubernetes/apiextensions-apiserver/blob/master/pkg/apiserver/validation/formats.go NOTE: Can only be set if type is string.",
+							Description: "format is an OpenAPI v3 format string. Unknown formats are ignored. For a list of supported formats please see: (of the k8s.io/apiextensions-apiserver version we're currently using) https://github.com/kubernetes/apiextensions-apiserver/blob/master/pkg/apiserver/validation/formats.go NOTE: Can only be set if type is string.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"maxLength": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxLength is the max length of a string variable. NOTE: Can only be set if type is string.",
+							Description: "maxLength is the max length of a string variable. NOTE: Can only be set if type is string.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"minLength": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MinLength is the min length of a string variable. NOTE: Can only be set if type is string.",
+							Description: "minLength is the min length of a string variable. NOTE: Can only be set if type is string.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"pattern": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Pattern is the regex which a string variable must match. NOTE: Can only be set if type is string.",
+							Description: "pattern is the regex which a string variable must match. NOTE: Can only be set if type is string.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"maximum": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Maximum is the maximum of an integer or number variable. If ExclusiveMaximum is false, the variable is valid if it is lower than, or equal to, the value of Maximum. If ExclusiveMaximum is true, the variable is valid if it is strictly lower than the value of Maximum. NOTE: Can only be set if type is integer or number.",
+							Description: "maximum is the maximum of an integer or number variable. If ExclusiveMaximum is false, the variable is valid if it is lower than, or equal to, the value of Maximum. If ExclusiveMaximum is true, the variable is valid if it is strictly lower than the value of Maximum. NOTE: Can only be set if type is integer or number.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"exclusiveMaximum": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ExclusiveMaximum specifies if the Maximum is exclusive. NOTE: Can only be set if type is integer or number.",
+							Description: "exclusiveMaximum specifies if the Maximum is exclusive. NOTE: Can only be set if type is integer or number.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"minimum": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum is the minimum of an integer or number variable. If ExclusiveMinimum is false, the variable is valid if it is greater than, or equal to, the value of Minimum. If ExclusiveMinimum is true, the variable is valid if it is strictly greater than the value of Minimum. NOTE: Can only be set if type is integer or number.",
+							Description: "minimum is the minimum of an integer or number variable. If ExclusiveMinimum is false, the variable is valid if it is greater than, or equal to, the value of Minimum. If ExclusiveMinimum is true, the variable is valid if it is strictly greater than the value of Minimum. NOTE: Can only be set if type is integer or number.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"exclusiveMinimum": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ExclusiveMinimum specifies if the Minimum is exclusive. NOTE: Can only be set if type is integer or number.",
+							Description: "exclusiveMinimum specifies if the Minimum is exclusive. NOTE: Can only be set if type is integer or number.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"x-kubernetes-preserve-unknown-fields": {
 						SchemaProps: spec.SchemaProps{
-							Description: "XPreserveUnknownFields allows setting fields in a variable object which are not defined in the variable schema. This affects fields recursively, except if nested properties or additionalProperties are specified in the schema.",
+							Description: "x-kubernetes-preserve-unknown-fields allows setting fields in a variable object which are not defined in the variable schema. This affects fields recursively, except if nested properties or additionalProperties are specified in the schema.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"enum": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Enum is the list of valid values of the variable. NOTE: Can be set for all types.",
+							Description: "enum is the list of valid values of the variable. NOTE: Can be set for all types.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -27052,7 +22651,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref common.Referen
 					},
 					"default": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Default is the default value of the variable. NOTE: Can be set for all types.",
+							Description: "default is the default value of the variable. NOTE: Can be set for all types.",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON"),
 						},
 					},
@@ -27066,7 +22665,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref common.Referen
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "XValidations describes a list of validation rules written in the CEL expression language.",
+							Description: "x-kubernetes-validations describes a list of validation rules written in the CEL expression language.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -27080,12 +22679,66 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_JSONSchemaProps(ref common.Referen
 					},
 					"x-metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "XMetadata is the metadata of a variable or a nested field within a variable. It can be used to add additional data for higher level tools.",
+							Description: "x-metadata is the metadata of a variable or a nested field within a variable. It can be used to add additional data for higher level tools.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.VariableSchemaMetadata"),
 						},
 					},
+					"x-kubernetes-int-or-string": {
+						SchemaProps: spec.SchemaProps{
+							Description: "x-kubernetes-int-or-string specifies that this value is either an integer or a string. If this is true, an empty type is allowed and type as child of anyOf is permitted if following one of the following patterns:\n\n1) anyOf:\n   - type: integer\n   - type: string\n2) allOf:\n   - anyOf:\n     - type: integer\n     - type: string\n   - ... zero or more",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"allOf": {
+						SchemaProps: spec.SchemaProps{
+							Description: "allOf specifies that the variable must validate against all of the subschemas in the array. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps"),
+									},
+								},
+							},
+						},
+					},
+					"oneOf": {
+						SchemaProps: spec.SchemaProps{
+							Description: "oneOf specifies that the variable must validate against exactly one of the subschemas in the array. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps"),
+									},
+								},
+							},
+						},
+					},
+					"anyOf": {
+						SchemaProps: spec.SchemaProps{
+							Description: "anyOf specifies that the variable must validate against one or more of the subschemas in the array. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps"),
+									},
+								},
+							},
+						},
+					},
+					"not": {
+						SchemaProps: spec.SchemaProps{
+							Description: "not specifies that the variable must not validate against the subschema. NOTE: This field uses PreserveUnknownFields and Schemaless, because recursive validation is not possible.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps"),
+						},
+					},
 				},
-				Required: []string{"type"},
 			},
 		},
 		Dependencies: []string{
@@ -27102,7 +22755,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_LocalObjectTemplate(ref common.Ref
 				Properties: map[string]spec.Schema{
 					"ref": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ref is a required reference to a custom resource offered by a provider.",
+							Description: "ref is a required reference to a custom resource offered by a provider.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
@@ -27138,20 +22791,23 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Machine(ref common.ReferenceCallba
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSpec"),
+							Description: "spec is the desired state of Machine.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineStatus"),
+							Description: "status is the observed state of Machine.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineStatus"),
 						},
 					},
 				},
@@ -27171,7 +22827,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineAddress(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Machine address type, one of Hostname, ExternalIP, InternalIP, ExternalDNS or InternalDNS.",
+							Description: "type is the machine address type, one of Hostname, ExternalIP, InternalIP, ExternalDNS or InternalDNS.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27179,7 +22835,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineAddress(ref common.Referenc
 					},
 					"address": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The machine address.",
+							Description: "address is the machine address.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27189,6 +22845,33 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineAddress(ref common.Referenc
 				Required: []string{"type", "address"},
 			},
 		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeletionStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDeletionStatus is the deletion state of the Machine.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"nodeDrainStartTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "nodeDrainStartTime is the time when the drain of the node started and is used to determine if the NodeDrainTimeout is exceeded. Only present when the Machine has a deletionTimestamp and draining the node had been started.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"waitForNodeVolumeDetachStartTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "waitForNodeVolumeDetachStartTime is the time when waiting for volume detachment started and is used to determine if the NodeVolumeDetachTimeout is exceeded. Detaching volumes from nodes is usually done by CSI implementations and the current state is observed from the node's `.Status.VolumesAttached` field. Only present when the Machine has a deletionTimestamp and waiting for volume detachments had been started.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -27215,20 +22898,23 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeployment(ref common.Refer
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentSpec"),
+							Description: "spec is the desired state of MachineDeployment.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStatus"),
+							Description: "status is the observed state of MachineDeployment.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStatus"),
 						},
 					},
 				},
@@ -27248,7 +22934,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClass(ref common.
 				Properties: map[string]spec.Schema{
 					"class": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Class denotes a type of worker node present in the cluster, this name MUST be unique within a ClusterClass and can be referenced in the Cluster to create a managed MachineDeployment.",
+							Description: "class denotes a type of worker node present in the cluster, this name MUST be unique within a ClusterClass and can be referenced in the Cluster to create a managed MachineDeployment.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27256,58 +22942,80 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClass(ref common.
 					},
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template is a local struct containing a collection of templates for creation of MachineDeployment objects representing a set of worker nodes.",
+							Description: "template is a local struct containing a collection of templates for creation of MachineDeployment objects representing a set of worker nodes.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassTemplate"),
 						},
 					},
 					"machineHealthCheck": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineHealthCheck defines a MachineHealthCheck for this MachineDeploymentClass.",
+							Description: "machineHealthCheck defines a MachineHealthCheck for this MachineDeploymentClass.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass"),
 						},
 					},
 					"failureDomain": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomain is the failure domain the machines will be created in. Must match a key in the FailureDomains map stored on the cluster object. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
+							Description: "failureDomain is the failure domain the machines will be created in. Must match a key in the FailureDomains map stored on the cluster object. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"namingStrategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NamingStrategy allows changing the naming pattern used when creating the MachineDeployment.",
+							Description: "namingStrategy allows changing the naming pattern used when creating the MachineDeployment.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassNamingStrategy"),
 						},
 					},
 					"nodeDrainTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout` NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
+							Description: "nodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout` NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeVolumeDetachTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
+							Description: "nodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeDeletionTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
+							Description: "nodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"minReadySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum number of seconds for which a newly created machine should be ready. Defaults to 0 (machine will be considered available as soon as it is ready) NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
+							Description: "minReadySeconds is the minimum number of seconds for which a newly created machine should be ready. Defaults to 0 (machine will be considered available as soon as it is ready) NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
+					"readinessGates": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"conditionType",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "readinessGates specifies additional conditions to include when evaluating Machine Ready condition.\n\nThis field can be used e.g. to instruct the machine controller to include in the computation for Machine's ready computation a condition, managed by an external controllers, reporting the status of special software/hardware installed on the Machine.\n\nNOTE: This field is considered only for computing v1beta2 conditions. NOTE: If a Cluster defines a custom list of readinessGates for a MachineDeployment using this MachineDeploymentClass, such list overrides readinessGates defined in this field.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate"),
+									},
+								},
+							},
+						},
+					},
 					"strategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The deployment strategy to use to replace existing machines with new ones. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
+							Description: "strategy is the deployment strategy to use to replace existing machines with new ones. NOTE: This value can be overridden while defining a Cluster.Topology using this MachineDeploymentClass.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy"),
 						},
 					},
@@ -27316,7 +23024,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClass(ref common.
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassNamingStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassTemplate", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassNamingStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClassTemplate", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckClass", "sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate"},
 	}
 }
 
@@ -27329,7 +23037,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassNamingStrate
 				Properties: map[string]spec.Schema{
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template defines the template to use for generating the name of the MachineDeployment object. If not defined, it will fallback to `{{ .cluster.name }}-{{ .machineDeployment.topologyName }}-{{ .random }}`. If the templated string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. The templating mechanism provides the following arguments: * `.cluster.name`: The name of the cluster object. * `.random`: A random alphanumeric string, without vowels, of length 5. * `.machineDeployment.topologyName`: The name of the MachineDeployment topology (Cluster.spec.topology.workers.machineDeployments[].name).",
+							Description: "template defines the template to use for generating the name of the MachineDeployment object. If not defined, it will fallback to `{{ .cluster.name }}-{{ .machineDeployment.topologyName }}-{{ .random }}`. If the templated string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. The templating mechanism provides the following arguments: * `.cluster.name`: The name of the cluster object. * `.random`: A random alphanumeric string, without vowels, of length 5. * `.machineDeployment.topologyName`: The name of the MachineDeployment topology (Cluster.spec.topology.workers.machineDeployments[].name).",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27349,21 +23057,21 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentClassTemplate(ref
 				Properties: map[string]spec.Schema{
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata applied to the MachineDeployment and the machines of the MachineDeployment. At runtime this metadata is merged with the corresponding metadata from the topology.",
+							Description: "metadata is the metadata applied to the MachineDeployment and the machines of the MachineDeployment. At runtime this metadata is merged with the corresponding metadata from the topology.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"),
 						},
 					},
 					"bootstrap": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bootstrap contains the bootstrap template reference to be used for the creation of worker Machines.",
+							Description: "bootstrap contains the bootstrap template reference to be used for the creation of worker Machines.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate"),
 						},
 					},
 					"infrastructure": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Infrastructure contains the infrastructure template reference to be used for the creation of worker Machines.",
+							Description: "infrastructure contains the infrastructure template reference to be used for the creation of worker Machines.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate"),
 						},
@@ -27400,13 +23108,15 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentList(ref common.R
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+							Description: "metadata is the standard list's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#lists-and-simple-kinds",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "items is the list of MachineDeployments.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -27435,7 +23145,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentSpec(ref common.R
 				Properties: map[string]spec.Schema{
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ClusterName is the name of the Cluster this object belongs to.",
+							Description: "clusterName is the name of the Cluster this object belongs to.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27443,61 +23153,67 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentSpec(ref common.R
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Number of desired machines. This is a pointer to distinguish between explicit zero and not specified.\n\nDefaults to: * if the Kubernetes autoscaler min size and max size annotations are set:\n  - if it's a new MachineDeployment, use min size\n  - if the replicas field of the old MachineDeployment is < min size, use min size\n  - if the replicas field of the old MachineDeployment is > max size, use max size\n  - if the replicas field of the old MachineDeployment is in the (min size, max size) range, keep the value from the oldMD\n* otherwise use 1 Note: Defaulting will be run whenever the replicas field is not set: * A new MachineDeployment is created with replicas not set. * On an existing MachineDeployment the replicas field was first set and is now unset. Those cases are especially relevant for the following Kubernetes autoscaler use cases: * A new MachineDeployment is created and replicas should be managed by the autoscaler * An existing MachineDeployment which initially wasn't controlled by the autoscaler\n  should be later controlled by the autoscaler",
+							Description: "replicas is the number of desired machines. This is a pointer to distinguish between explicit zero and not specified.\n\nDefaults to: * if the Kubernetes autoscaler min size and max size annotations are set:\n  - if it's a new MachineDeployment, use min size\n  - if the replicas field of the old MachineDeployment is < min size, use min size\n  - if the replicas field of the old MachineDeployment is > max size, use max size\n  - if the replicas field of the old MachineDeployment is in the (min size, max size) range, keep the value from the oldMD\n* otherwise use 1 Note: Defaulting will be run whenever the replicas field is not set: * A new MachineDeployment is created with replicas not set. * On an existing MachineDeployment the replicas field was first set and is now unset. Those cases are especially relevant for the following Kubernetes autoscaler use cases: * A new MachineDeployment is created and replicas should be managed by the autoscaler * An existing MachineDeployment which initially wasn't controlled by the autoscaler\n  should be later controlled by the autoscaler",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"rolloutAfter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RolloutAfter is a field to indicate a rollout should be performed after the specified time even if no changes have been made to the MachineDeployment. Example: In the YAML the time can be specified in the RFC3339 format. To specify the rolloutAfter target as March 9, 2023, at 9 am UTC use \"2023-03-09T09:00:00Z\".",
+							Description: "rolloutAfter is a field to indicate a rollout should be performed after the specified time even if no changes have been made to the MachineDeployment. Example: In the YAML the time can be specified in the RFC3339 format. To specify the rolloutAfter target as March 9, 2023, at 9 am UTC use \"2023-03-09T09:00:00Z\".",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"selector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Label selector for machines. Existing MachineSets whose machines are selected by this will be the ones affected by this deployment. It must match the machine template's labels.",
+							Description: "selector is the label selector for machines. Existing MachineSets whose machines are selected by this will be the ones affected by this deployment. It must match the machine template's labels.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template describes the machines that will be created.",
+							Description: "template describes the machines that will be created.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec"),
 						},
 					},
 					"strategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The deployment strategy to use to replace existing machines with new ones.",
+							Description: "strategy is the deployment strategy to use to replace existing machines with new ones.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy"),
+						},
+					},
+					"machineNamingStrategy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "machineNamingStrategy allows changing the naming pattern used when creating Machines. Note: InfraMachines & BootstrapConfigs will use the same name as the corresponding Machines.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineNamingStrategy"),
 						},
 					},
 					"minReadySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MinReadySeconds is the minimum number of seconds for which a Node for a newly created machine should be ready before considering the replica available. Defaults to 0 (machine will be considered available as soon as the Node is ready)",
+							Description: "minReadySeconds is the minimum number of seconds for which a Node for a newly created machine should be ready before considering the replica available. Defaults to 0 (machine will be considered available as soon as the Node is ready)",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"revisionHistoryLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The number of old MachineSets to retain to allow rollback. This is a pointer to distinguish between explicit zero and not specified. Defaults to 1.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/issues/10479 for more details.",
+							Description: "revisionHistoryLimit is the number of old MachineSets to retain to allow rollback. This is a pointer to distinguish between explicit zero and not specified. Defaults to 1.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/issues/10479 for more details.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"paused": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Indicates that the deployment is paused.",
+							Description: "paused indicates that the deployment is paused.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"progressDeadlineSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The maximum time in seconds for a deployment to make progress before it is considered to be failed. The deployment controller will continue to process failed deployments and a condition with a ProgressDeadlineExceeded reason will be surfaced in the deployment status. Note that progress will not be estimated during the time a deployment is paused. Defaults to 600s.",
+							Description: "progressDeadlineSeconds is the maximum time in seconds for a deployment to make progress before it is considered to be failed. The deployment controller will continue to process failed deployments and a condition with a ProgressDeadlineExceeded reason will be surfaced in the deployment status. Note that progress will not be estimated during the time a deployment is paused. Defaults to 600s.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/issues/11470 for more details.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -27507,7 +23223,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentSpec(ref common.R
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.Time", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.Time", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineNamingStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec"},
 	}
 }
 
@@ -27520,21 +23236,21 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref common
 				Properties: map[string]spec.Schema{
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The generation observed by the deployment controller.",
+							Description: "observedGeneration is the generation observed by the deployment controller.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"selector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Selector is the same as the label selector but in the string format to avoid introspection by clients. The string will be in the same format as the query-param syntax. More info about label selectors: http://kubernetes.io/docs/user-guide/labels#label-selectors",
+							Description: "selector is the same as the label selector but in the string format to avoid introspection by clients. The string will be in the same format as the query-param syntax. More info about label selectors: http://kubernetes.io/docs/user-guide/labels#label-selectors",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Total number of non-terminated machines targeted by this deployment (their labels match the selector).",
+							Description: "replicas is the total number of non-terminated machines targeted by this deployment (their labels match the selector).",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -27542,7 +23258,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref common
 					},
 					"updatedReplicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Total number of non-terminated machines targeted by this deployment that have the desired template spec.",
+							Description: "updatedReplicas is the total number of non-terminated machines targeted by this deployment that have the desired template spec.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -27550,7 +23266,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref common
 					},
 					"readyReplicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Total number of ready machines targeted by this deployment.",
+							Description: "readyReplicas is the total number of ready machines targeted by this deployment.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -27558,7 +23274,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref common
 					},
 					"availableReplicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Total number of available machines (ready for at least minReadySeconds) targeted by this deployment.",
+							Description: "availableReplicas is the total number of available machines (ready for at least minReadySeconds) targeted by this deployment.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -27566,7 +23282,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref common
 					},
 					"unavailableReplicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Total number of unavailable machines targeted by this deployment. This is the total number of machines that are still required for the deployment to have 100% available capacity. They may either be machines that are running but not yet available or machines that still have not been created.",
+							Description: "unavailableReplicas is the total number of unavailable machines targeted by this deployment. This is the total number of machines that are still required for the deployment to have 100% available capacity. They may either be machines that are running but not yet available or machines that still have not been created.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -27574,14 +23290,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref common
 					},
 					"phase": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Phase represents the current phase of a MachineDeployment (ScalingUp, ScalingDown, Running, Failed, or Unknown).",
+							Description: "phase represents the current phase of a MachineDeployment (ScalingUp, ScalingDown, Running, Failed, or Unknown).",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the MachineDeployment.",
+							Description: "conditions defines current service state of the MachineDeployment.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -27593,11 +23309,17 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStatus(ref common
 							},
 						},
 					},
+					"v1beta2": {
+						SchemaProps: spec.SchemaProps{
+							Description: "v1beta2 groups all the fields that will be added or modified in MachineDeployment's status with the V1Beta2 version.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentV1Beta2Status"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
+			"sigs.k8s.io/cluster-api/api/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentV1Beta2Status"},
 	}
 }
 
@@ -27610,20 +23332,20 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentStrategy(ref comm
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type of deployment. Allowed values are RollingUpdate and OnDelete. The default is RollingUpdate.",
+							Description: "type of deployment. Allowed values are RollingUpdate and OnDelete. The default is RollingUpdate.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"rollingUpdate": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Rolling update config params. Present only if MachineDeploymentStrategyType = RollingUpdate.",
+							Description: "rollingUpdate is the rolling update config params. Present only if MachineDeploymentStrategyType = RollingUpdate.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineRollingUpdateDeployment"),
 						},
 					},
 					"remediation": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Remediation controls the strategy of remediating unhealthy machines and how remediating operations should occur during the lifecycle of the dependant MachineSets.",
+							Description: "remediation controls the strategy of remediating unhealthy machines and how remediating operations should occur during the lifecycle of the dependant MachineSets.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.RemediationStrategy"),
 						},
 					},
@@ -27644,14 +23366,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref comm
 				Properties: map[string]spec.Schema{
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata applied to the MachineDeployment and the machines of the MachineDeployment. At runtime this metadata is merged with the corresponding metadata from the ClusterClass.",
+							Description: "metadata is the metadata applied to the MachineDeployment and the machines of the MachineDeployment. At runtime this metadata is merged with the corresponding metadata from the ClusterClass.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"),
 						},
 					},
 					"class": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Class is the name of the MachineDeploymentClass used to create the set of worker nodes. This should match one of the deployment classes defined in the ClusterClass object mentioned in the `Cluster.Spec.Class` field.",
+							Description: "class is the name of the MachineDeploymentClass used to create the set of worker nodes. This should match one of the deployment classes defined in the ClusterClass object mentioned in the `Cluster.Spec.Class` field.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27659,7 +23381,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref comm
 					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the unique identifier for this MachineDeploymentTopology. The value is used with other unique identifiers to create a MachineDeployment's Name (e.g. cluster's name, etc). In case the name is greater than the allowed maximum length, the values are hashed together.",
+							Description: "name is the unique identifier for this MachineDeploymentTopology. The value is used with other unique identifiers to create a MachineDeployment's Name (e.g. cluster's name, etc). In case the name is greater than the allowed maximum length, the values are hashed together.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27667,58 +23389,80 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref comm
 					},
 					"failureDomain": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomain is the failure domain the machines will be created in. Must match a key in the FailureDomains map stored on the cluster object.",
+							Description: "failureDomain is the failure domain the machines will be created in. Must match a key in the FailureDomains map stored on the cluster object.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Replicas is the number of worker nodes belonging to this set. If the value is nil, the MachineDeployment is created without the number of Replicas (defaulting to 1) and it's assumed that an external entity (like cluster autoscaler) is responsible for the management of this value.",
+							Description: "replicas is the number of worker nodes belonging to this set. If the value is nil, the MachineDeployment is created without the number of Replicas (defaulting to 1) and it's assumed that an external entity (like cluster autoscaler) is responsible for the management of this value.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"machineHealthCheck": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineHealthCheck allows to enable, disable and override the MachineHealthCheck configuration in the ClusterClass for this MachineDeployment.",
+							Description: "machineHealthCheck allows to enable, disable and override the MachineHealthCheck configuration in the ClusterClass for this MachineDeployment.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology"),
 						},
 					},
 					"nodeDrainTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
+							Description: "nodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeVolumeDetachTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
+							Description: "nodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeDeletionTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
+							Description: "nodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"minReadySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum number of seconds for which a newly created machine should be ready. Defaults to 0 (machine will be considered available as soon as it is ready)",
+							Description: "minReadySeconds is the minimum number of seconds for which a newly created machine should be ready. Defaults to 0 (machine will be considered available as soon as it is ready)",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
+					"readinessGates": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"conditionType",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "readinessGates specifies additional conditions to include when evaluating Machine Ready condition.\n\nThis field can be used e.g. to instruct the machine controller to include in the computation for Machine's ready computation a condition, managed by an external controllers, reporting the status of special software/hardware installed on the Machine.\n\nIf this field is not defined, readinessGates from the corresponding MachineDeploymentClass will be used, if any.\n\nNOTE: This field is considered only for computing v1beta2 conditions.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate"),
+									},
+								},
+							},
+						},
+					},
 					"strategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The deployment strategy to use to replace existing machines with new ones.",
+							Description: "strategy is the deployment strategy to use to replace existing machines with new ones.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy"),
 						},
 					},
 					"variables": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Variables can be used to customize the MachineDeployment through patches.",
+							Description: "variables can be used to customize the MachineDeployment through patches.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentVariables"),
 						},
 					},
@@ -27727,7 +23471,65 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentTopology(ref comm
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentVariables", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology", "sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentVariables", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckTopology", "sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate", "sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentV1Beta2Status(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDeploymentV1Beta2Status groups all the fields that will be added or modified in MachineDeployment with the V1Beta2 version. See https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more context.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions represents the observations of a MachineDeployment's current state. Known condition types are Available, MachinesReady, MachinesUpToDate, ScalingUp, ScalingDown, Remediating, Deleting, Paused.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+					"readyReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "readyReplicas is the number of ready replicas for this MachineDeployment. A machine is considered ready when Machine's Ready condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"availableReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "availableReplicas is the number of available replicas for this MachineDeployment. A machine is considered available when Machine's Available condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"upToDateReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "upToDateReplicas is the number of up-to-date replicas targeted by this deployment. A machine is considered up-to-date when Machine's UpToDate condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
 	}
 }
 
@@ -27748,7 +23550,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentVariables(ref com
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Overrides can be used to override Cluster level variables.",
+							Description: "overrides can be used to override Cluster level variables.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -27765,6 +23567,245 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDeploymentVariables(ref com
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api/api/v1beta1.ClusterVariable"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRule(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDrainRule is the Schema for the MachineDrainRule API.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Description: "spec defines the spec of a MachineDrainRule.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleSpec"),
+						},
+					},
+				},
+				Required: []string{"metadata", "spec"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleSpec"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleDrainConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDrainRuleDrainConfig configures if and how Pods are drained.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"behavior": {
+						SchemaProps: spec.SchemaProps{
+							Description: "behavior defines the drain behavior. Can be either \"Drain\", \"Skip\", or \"WaitCompleted\". \"Drain\" means that the Pods to which this MachineDrainRule applies will be drained. If behavior is set to \"Drain\" the order in which Pods are drained can be configured with the order field. When draining Pods of a Node the Pods will be grouped by order and one group after another will be drained (by increasing order). Cluster API will wait until all Pods of a group are terminated / removed from the Node before starting with the next group. \"Skip\" means that the Pods to which this MachineDrainRule applies will be skipped during drain. \"WaitCompleted\" means that the pods to which this MachineDrainRule applies will never be evicted and we wait for them to be completed, it is enforced that pods marked with this behavior always have Order=0.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"order": {
+						SchemaProps: spec.SchemaProps{
+							Description: "order defines the order in which Pods are drained. Pods with higher order are drained after Pods with lower order. order can only be set if behavior is set to \"Drain\". If order is not set, 0 will be used. Valid values for order are from -2147483648 to 2147483647 (inclusive).",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+				Required: []string{"behavior"},
+			},
+		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDrainRuleList contains a list of MachineDrainRules.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Description: "metadata is the standard list's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#lists-and-simple-kinds",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "items contains the items of the MachineDrainRuleList.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRule"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"metadata", "items"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRule"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleMachineSelector(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDrainRuleMachineSelector defines to which Machines this MachineDrainRule should be applied.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"selector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "selector is a label selector which selects Machines by their labels. This field follows standard label selector semantics; if not present or empty, it selects all Machines.\n\nIf clusterSelector is also set, then the selector as a whole selects Machines matching selector belonging to Clusters selected by clusterSelector. If clusterSelector is not set, it selects all Machines matching selector in all Clusters.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"clusterSelector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "clusterSelector is a label selector which selects Machines by the labels of their Clusters. This field follows standard label selector semantics; if not present or empty, it selects Machines of all Clusters.\n\nIf selector is also set, then the selector as a whole selects Machines matching selector belonging to Clusters selected by clusterSelector. If selector is not set, it selects all Machines belonging to Clusters selected by clusterSelector.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRulePodSelector(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDrainRulePodSelector defines to which Pods this MachineDrainRule should be applied.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"selector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "selector is a label selector which selects Pods by their labels. This field follows standard label selector semantics; if not present or empty, it selects all Pods.\n\nIf namespaceSelector is also set, then the selector as a whole selects Pods matching selector in Namespaces selected by namespaceSelector. If namespaceSelector is not set, it selects all Pods matching selector in all Namespaces.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+					"namespaceSelector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "namespaceSelector is a label selector which selects Pods by the labels of their Namespaces. This field follows standard label selector semantics; if not present or empty, it selects Pods of all Namespaces.\n\nIf selector is also set, then the selector as a whole selects Pods matching selector in Namespaces selected by namespaceSelector. If selector is not set, it selects all Pods in Namespaces selected by namespaceSelector.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineDrainRuleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineDrainRuleSpec defines the spec of a MachineDrainRule.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"drain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "drain configures if and how Pods are drained.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleDrainConfig"),
+						},
+					},
+					"machines": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "machines defines to which Machines this MachineDrainRule should be applied.\n\nIf machines is not set, the MachineDrainRule applies to all Machines in the Namespace. If machines contains multiple selectors, the results are ORed. Within a single Machine selector the results of selector and clusterSelector are ANDed. Machines will be selected from all Clusters in the Namespace unless otherwise restricted with the clusterSelector.\n\nExample: Selects control plane Machines in all Clusters or\n         Machines with label \"os\" == \"linux\" in Clusters with label\n         \"stage\" == \"production\".\n\n - selector:\n     matchExpressions:\n     - key: cluster.x-k8s.io/control-plane\n       operator: Exists\n - selector:\n     matchLabels:\n       os: linux\n   clusterSelector:\n     matchExpressions:\n     - key: stage\n       operator: In\n       values:\n       - production",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleMachineSelector"),
+									},
+								},
+							},
+						},
+					},
+					"pods": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "pods defines to which Pods this MachineDrainRule should be applied.\n\nIf pods is not set, the MachineDrainRule applies to all Pods in all Namespaces. If pods contains multiple selectors, the results are ORed. Within a single Pod selector the results of selector and namespaceSelector are ANDed. Pods will be selected from all Namespaces unless otherwise restricted with the namespaceSelector.\n\nExample: Selects Pods with label \"app\" == \"logging\" in all Namespaces or\n         Pods with label \"app\" == \"prometheus\" in the \"monitoring\"\n         Namespace.\n\n - selector:\n     matchExpressions:\n     - key: app\n       operator: In\n       values:\n       - logging\n - selector:\n     matchLabels:\n       app: prometheus\n   namespaceSelector:\n     matchLabels:\n       kubernetes.io/metadata.name: monitoring",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRulePodSelector"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"drain"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleDrainConfig", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRuleMachineSelector", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDrainRulePodSelector"},
 	}
 }
 
@@ -27791,20 +23832,21 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheck(ref common.Refe
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specification of machine health check policy",
+							Description: "spec is the specification of machine health check policy",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Most recently observed status of MachineHealthCheck resource",
+							Description: "status is the most recently observed status of MachineHealthCheck resource",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckStatus"),
 						},
@@ -27826,7 +23868,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckClass(ref common
 				Properties: map[string]spec.Schema{
 					"unhealthyConditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "UnhealthyConditions contains a list of the conditions that determine whether a node is considered unhealthy. The conditions are combined in a logical OR, i.e. if any of the conditions is met, the node is unhealthy.",
+							Description: "unhealthyConditions contains a list of the conditions that determine whether a node is considered unhealthy. The conditions are combined in a logical OR, i.e. if any of the conditions is met, the node is unhealthy.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -27840,26 +23882,26 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckClass(ref common
 					},
 					"maxUnhealthy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Any further remediation is only allowed if at most \"MaxUnhealthy\" machines selected by \"selector\" are not healthy.",
+							Description: "maxUnhealthy specifies the maximum number of unhealthy machines allowed. Any further remediation is only allowed if at most \"maxUnhealthy\" machines selected by \"selector\" are not healthy.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
 					"unhealthyRange": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Any further remediation is only allowed if the number of machines selected by \"selector\" as not healthy is within the range of \"UnhealthyRange\". Takes precedence over MaxUnhealthy. Eg. \"[3-5]\" - This means that remediation will be allowed only when: (a) there are at least 3 unhealthy machines (and) (b) there are at most 5 unhealthy machines",
+							Description: "unhealthyRange specifies the range of unhealthy machines allowed. Any further remediation is only allowed if the number of machines selected by \"selector\" as not healthy is within the range of \"unhealthyRange\". Takes precedence over maxUnhealthy. Eg. \"[3-5]\" - This means that remediation will be allowed only when: (a) there are at least 3 unhealthy machines (and) (b) there are at most 5 unhealthy machines",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"nodeStartupTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeStartupTimeout allows to set the maximum time for MachineHealthCheck to consider a Machine unhealthy if a corresponding Node isn't associated through a `Spec.ProviderID` field.\n\nThe duration set in this field is compared to the greatest of: - Cluster's infrastructure ready condition timestamp (if and when available) - Control Plane's initialized condition timestamp (if and when available) - Machine's infrastructure ready condition timestamp (if and when available) - Machine's metadata creation timestamp\n\nDefaults to 10 minutes. If you wish to disable this feature, set the value explicitly to 0.",
+							Description: "nodeStartupTimeout allows to set the maximum time for MachineHealthCheck to consider a Machine unhealthy if a corresponding Node isn't associated through a `Spec.ProviderID` field.\n\nThe duration set in this field is compared to the greatest of: - Cluster's infrastructure ready condition timestamp (if and when available) - Control Plane's initialized condition timestamp (if and when available) - Machine's infrastructure ready condition timestamp (if and when available) - Machine's metadata creation timestamp\n\nDefaults to 10 minutes. If you wish to disable this feature, set the value explicitly to 0.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"remediationTemplate": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RemediationTemplate is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Description: "remediationTemplate is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
@@ -27894,13 +23936,15 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckList(ref common.
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+							Description: "metadata is the standard list's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#lists-and-simple-kinds",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "items is the list of MachineHealthChecks.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -27929,7 +23973,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckSpec(ref common.
 				Properties: map[string]spec.Schema{
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ClusterName is the name of the Cluster this object belongs to.",
+							Description: "clusterName is the name of the Cluster this object belongs to.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27937,14 +23981,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckSpec(ref common.
 					},
 					"selector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Label selector to match machines whose health will be exercised",
+							Description: "selector is a label selector to match machines whose health will be exercised",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
 					"unhealthyConditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "UnhealthyConditions contains a list of the conditions that determine whether a node is considered unhealthy.  The conditions are combined in a logical OR, i.e. if any of the conditions is met, the node is unhealthy.",
+							Description: "unhealthyConditions contains a list of the conditions that determine whether a node is considered unhealthy.  The conditions are combined in a logical OR, i.e. if any of the conditions is met, the node is unhealthy.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -27958,26 +24002,26 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckSpec(ref common.
 					},
 					"maxUnhealthy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Any further remediation is only allowed if at most \"MaxUnhealthy\" machines selected by \"selector\" are not healthy.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/issues/10722 for more details.",
+							Description: "maxUnhealthy specifies the maximum number of unhealthy machines allowed. Any further remediation is only allowed if at most \"maxUnhealthy\" machines selected by \"selector\" are not healthy.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/issues/10722 for more details.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
 					"unhealthyRange": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Any further remediation is only allowed if the number of machines selected by \"selector\" as not healthy is within the range of \"UnhealthyRange\". Takes precedence over MaxUnhealthy. Eg. \"[3-5]\" - This means that remediation will be allowed only when: (a) there are at least 3 unhealthy machines (and) (b) there are at most 5 unhealthy machines\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/issues/10722 for more details.",
+							Description: "unhealthyRange specifies the range of unhealthy machines allowed. Any further remediation is only allowed if the number of machines selected by \"selector\" as not healthy is within the range of \"unhealthyRange\". Takes precedence over maxUnhealthy. Eg. \"[3-5]\" - This means that remediation will be allowed only when: (a) there are at least 3 unhealthy machines (and) (b) there are at most 5 unhealthy machines\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/issues/10722 for more details.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"nodeStartupTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeStartupTimeout allows to set the maximum time for MachineHealthCheck to consider a Machine unhealthy if a corresponding Node isn't associated through a `Spec.ProviderID` field.\n\nThe duration set in this field is compared to the greatest of: - Cluster's infrastructure ready condition timestamp (if and when available) - Control Plane's initialized condition timestamp (if and when available) - Machine's infrastructure ready condition timestamp (if and when available) - Machine's metadata creation timestamp\n\nDefaults to 10 minutes. If you wish to disable this feature, set the value explicitly to 0.",
+							Description: "nodeStartupTimeout allows to set the maximum time for MachineHealthCheck to consider a Machine unhealthy if a corresponding Node isn't associated through a `Spec.ProviderID` field.\n\nThe duration set in this field is compared to the greatest of: - Cluster's infrastructure ready condition timestamp (if and when available) - Control Plane's initialized condition timestamp (if and when available) - Machine's infrastructure ready condition timestamp (if and when available) - Machine's metadata creation timestamp\n\nDefaults to 10 minutes. If you wish to disable this feature, set the value explicitly to 0.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"remediationTemplate": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RemediationTemplate is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Description: "remediationTemplate is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
@@ -27999,7 +24043,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref commo
 				Properties: map[string]spec.Schema{
 					"expectedMachines": {
 						SchemaProps: spec.SchemaProps{
-							Description: "total number of machines counted by this machine health check",
+							Description: "expectedMachines is the total number of machines counted by this machine health check",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -28007,7 +24051,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref commo
 					},
 					"currentHealthy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "total number of healthy machines counted by this machine health check",
+							Description: "currentHealthy is the total number of healthy machines counted by this machine health check",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -28015,7 +24059,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref commo
 					},
 					"remediationsAllowed": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RemediationsAllowed is the number of further remediations allowed by this machine health check before maxUnhealthy short circuiting will be applied",
+							Description: "remediationsAllowed is the number of further remediations allowed by this machine health check before maxUnhealthy short circuiting will be applied",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -28023,14 +24067,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref commo
 					},
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ObservedGeneration is the latest generation observed by the controller.",
+							Description: "observedGeneration is the latest generation observed by the controller.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"targets": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Targets shows the current list of machines the machine health check is watching",
+							Description: "targets shows the current list of machines the machine health check is watching",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28045,7 +24089,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref commo
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the MachineHealthCheck.",
+							Description: "conditions defines current service state of the MachineHealthCheck.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28057,11 +24101,17 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckStatus(ref commo
 							},
 						},
 					},
+					"v1beta2": {
+						SchemaProps: spec.SchemaProps{
+							Description: "v1beta2 groups all the fields that will be added or modified in MachineHealthCheck's status with the V1Beta2 version.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckV1Beta2Status"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
+			"sigs.k8s.io/cluster-api/api/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.MachineHealthCheckV1Beta2Status"},
 	}
 }
 
@@ -28074,14 +24124,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckTopology(ref com
 				Properties: map[string]spec.Schema{
 					"enable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Enable controls if a MachineHealthCheck should be created for the target machines.\n\nIf false: No MachineHealthCheck will be created.\n\nIf not set(default): A MachineHealthCheck will be created if it is defined here or\n in the associated ClusterClass. If no MachineHealthCheck is defined then none will be created.\n\nIf true: A MachineHealthCheck is guaranteed to be created. Cluster validation will block if `enable` is true and no MachineHealthCheck definition is available.",
+							Description: "enable controls if a MachineHealthCheck should be created for the target machines.\n\nIf false: No MachineHealthCheck will be created.\n\nIf not set(default): A MachineHealthCheck will be created if it is defined here or\n in the associated ClusterClass. If no MachineHealthCheck is defined then none will be created.\n\nIf true: A MachineHealthCheck is guaranteed to be created. Cluster validation will block if `enable` is true and no MachineHealthCheck definition is available.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"unhealthyConditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "UnhealthyConditions contains a list of the conditions that determine whether a node is considered unhealthy. The conditions are combined in a logical OR, i.e. if any of the conditions is met, the node is unhealthy.",
+							Description: "unhealthyConditions contains a list of the conditions that determine whether a node is considered unhealthy. The conditions are combined in a logical OR, i.e. if any of the conditions is met, the node is unhealthy.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28095,26 +24145,26 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckTopology(ref com
 					},
 					"maxUnhealthy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Any further remediation is only allowed if at most \"MaxUnhealthy\" machines selected by \"selector\" are not healthy.",
+							Description: "maxUnhealthy specifies the maximum number of unhealthy machines allowed. Any further remediation is only allowed if at most \"maxUnhealthy\" machines selected by \"selector\" are not healthy.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
 					"unhealthyRange": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Any further remediation is only allowed if the number of machines selected by \"selector\" as not healthy is within the range of \"UnhealthyRange\". Takes precedence over MaxUnhealthy. Eg. \"[3-5]\" - This means that remediation will be allowed only when: (a) there are at least 3 unhealthy machines (and) (b) there are at most 5 unhealthy machines",
+							Description: "unhealthyRange specifies the range of unhealthy machines allowed. Any further remediation is only allowed if the number of machines selected by \"selector\" as not healthy is within the range of \"unhealthyRange\". Takes precedence over maxUnhealthy. Eg. \"[3-5]\" - This means that remediation will be allowed only when: (a) there are at least 3 unhealthy machines (and) (b) there are at most 5 unhealthy machines",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"nodeStartupTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeStartupTimeout allows to set the maximum time for MachineHealthCheck to consider a Machine unhealthy if a corresponding Node isn't associated through a `Spec.ProviderID` field.\n\nThe duration set in this field is compared to the greatest of: - Cluster's infrastructure ready condition timestamp (if and when available) - Control Plane's initialized condition timestamp (if and when available) - Machine's infrastructure ready condition timestamp (if and when available) - Machine's metadata creation timestamp\n\nDefaults to 10 minutes. If you wish to disable this feature, set the value explicitly to 0.",
+							Description: "nodeStartupTimeout allows to set the maximum time for MachineHealthCheck to consider a Machine unhealthy if a corresponding Node isn't associated through a `Spec.ProviderID` field.\n\nThe duration set in this field is compared to the greatest of: - Cluster's infrastructure ready condition timestamp (if and when available) - Control Plane's initialized condition timestamp (if and when available) - Machine's infrastructure ready condition timestamp (if and when available) - Machine's metadata creation timestamp\n\nDefaults to 10 minutes. If you wish to disable this feature, set the value explicitly to 0.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"remediationTemplate": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RemediationTemplate is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Description: "remediationTemplate is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
@@ -28123,6 +24173,43 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckTopology(ref com
 		},
 		Dependencies: []string{
 			"k8s.io/api/core/v1.ObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/apimachinery/pkg/util/intstr.IntOrString", "sigs.k8s.io/cluster-api/api/v1beta1.UnhealthyCondition"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineHealthCheckV1Beta2Status(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineHealthCheckV1Beta2Status groups all the fields that will be added or modified in MachineHealthCheck with the V1Beta2 version. See https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more context.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions represents the observations of a MachineHealthCheck's current state. Known condition types are RemediationAllowed, Paused.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
 	}
 }
 
@@ -28149,13 +24236,15 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineList(ref common.ReferenceCa
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+							Description: "metadata is the standard list's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#lists-and-simple-kinds",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "items is the list of Machines.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -28175,6 +24264,26 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineList(ref common.ReferenceCa
 	}
 }
 
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineNamingStrategy(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineNamingStrategy allows changing the naming pattern used when creating Machines. Note: InfraMachines & BootstrapConfigs will use the same name as the corresponding Machines.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"template": {
+						SchemaProps: spec.SchemaProps{
+							Description: "template defines the template to use for generating the names of the Machine objects. If not defined, it will fallback to `{{ .machineSet.name }}-{{ .random }}`. If the generated name string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. Length of the template string must not exceed 256 characters. The template allows the following variables `.cluster.name`, `.machineSet.name` and `.random`. The variable `.cluster.name` retrieves the name of the cluster object that owns the Machines being created. The variable `.machineSet.name` retrieves the name of the MachineSet object that owns the Machines being created. The variable `.random` is substituted with random alphanumeric string, without vowels, of length 5. This variable is required part of the template. If not provided, validation will fail.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -28184,7 +24293,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref common.Refere
 				Properties: map[string]spec.Schema{
 					"class": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Class denotes a type of machine pool present in the cluster, this name MUST be unique within a ClusterClass and can be referenced in the Cluster to create a managed MachinePool.",
+							Description: "class denotes a type of machine pool present in the cluster, this name MUST be unique within a ClusterClass and can be referenced in the Cluster to create a managed MachinePool.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -28192,14 +24301,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref common.Refere
 					},
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template is a local struct containing a collection of templates for creation of MachinePools objects representing a pool of worker nodes.",
+							Description: "template is a local struct containing a collection of templates for creation of MachinePools objects representing a pool of worker nodes.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassTemplate"),
 						},
 					},
 					"failureDomains": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomains is the list of failure domains the MachinePool should be attached to. Must match a key in the FailureDomains map stored on the cluster object. NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
+							Description: "failureDomains is the list of failure domains the MachinePool should be attached to. Must match a key in the FailureDomains map stored on the cluster object. NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28214,31 +24323,31 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClass(ref common.Refere
 					},
 					"namingStrategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NamingStrategy allows changing the naming pattern used when creating the MachinePool.",
+							Description: "namingStrategy allows changing the naming pattern used when creating the MachinePool.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClassNamingStrategy"),
 						},
 					},
 					"nodeDrainTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout` NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
+							Description: "nodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout` NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeVolumeDetachTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations. NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
+							Description: "nodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations. NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeDeletionTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine Pool is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds. NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
+							Description: "nodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine Pool is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds. NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"minReadySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum number of seconds for which a newly created machine pool should be ready. Defaults to 0 (machine will be considered available as soon as it is ready) NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
+							Description: "minReadySeconds is the minimum number of seconds for which a newly created machine pool should be ready. Defaults to 0 (machine will be considered available as soon as it is ready) NOTE: This value can be overridden while defining a Cluster.Topology using this MachinePoolClass.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -28261,7 +24370,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassNamingStrategy(ref
 				Properties: map[string]spec.Schema{
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template defines the template to use for generating the name of the MachinePool object. If not defined, it will fallback to `{{ .cluster.name }}-{{ .machinePool.topologyName }}-{{ .random }}`. If the templated string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. The templating mechanism provides the following arguments: * `.cluster.name`: The name of the cluster object. * `.random`: A random alphanumeric string, without vowels, of length 5. * `.machinePool.topologyName`: The name of the MachinePool topology (Cluster.spec.topology.workers.machinePools[].name).",
+							Description: "template defines the template to use for generating the name of the MachinePool object. If not defined, it will fallback to `{{ .cluster.name }}-{{ .machinePool.topologyName }}-{{ .random }}`. If the templated string exceeds 63 characters, it will be trimmed to 58 characters and will get concatenated with a random suffix of length 5. The templating mechanism provides the following arguments: * `.cluster.name`: The name of the cluster object. * `.random`: A random alphanumeric string, without vowels, of length 5. * `.machinePool.topologyName`: The name of the MachinePool topology (Cluster.spec.topology.workers.machinePools[].name).",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28281,21 +24390,21 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolClassTemplate(ref commo
 				Properties: map[string]spec.Schema{
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata applied to the MachinePool. At runtime this metadata is merged with the corresponding metadata from the topology.",
+							Description: "metadata is the metadata applied to the MachinePool. At runtime this metadata is merged with the corresponding metadata from the topology.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"),
 						},
 					},
 					"bootstrap": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bootstrap contains the bootstrap template reference to be used for the creation of the Machines in the MachinePool.",
+							Description: "bootstrap contains the bootstrap template reference to be used for the creation of the Machines in the MachinePool.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate"),
 						},
 					},
 					"infrastructure": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Infrastructure contains the infrastructure template reference to be used for the creation of the MachinePool.",
+							Description: "infrastructure contains the infrastructure template reference to be used for the creation of the MachinePool.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.LocalObjectTemplate"),
 						},
@@ -28318,14 +24427,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref common.Ref
 				Properties: map[string]spec.Schema{
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata is the metadata applied to the MachinePool. At runtime this metadata is merged with the corresponding metadata from the ClusterClass.",
+							Description: "metadata is the metadata applied to the MachinePool. At runtime this metadata is merged with the corresponding metadata from the ClusterClass.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"),
 						},
 					},
 					"class": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Class is the name of the MachinePoolClass used to create the pool of worker nodes. This should match one of the deployment classes defined in the ClusterClass object mentioned in the `Cluster.Spec.Class` field.",
+							Description: "class is the name of the MachinePoolClass used to create the pool of worker nodes. This should match one of the deployment classes defined in the ClusterClass object mentioned in the `Cluster.Spec.Class` field.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -28333,7 +24442,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref common.Ref
 					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the unique identifier for this MachinePoolTopology. The value is used with other unique identifiers to create a MachinePool's Name (e.g. cluster's name, etc). In case the name is greater than the allowed maximum length, the values are hashed together.",
+							Description: "name is the unique identifier for this MachinePoolTopology. The value is used with other unique identifiers to create a MachinePool's Name (e.g. cluster's name, etc). In case the name is greater than the allowed maximum length, the values are hashed together.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -28341,7 +24450,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref common.Ref
 					},
 					"failureDomains": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomains is the list of failure domains the machine pool will be created in. Must match a key in the FailureDomains map stored on the cluster object.",
+							Description: "failureDomains is the list of failure domains the machine pool will be created in. Must match a key in the FailureDomains map stored on the cluster object.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28356,39 +24465,39 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolTopology(ref common.Ref
 					},
 					"nodeDrainTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
+							Description: "nodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeVolumeDetachTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
+							Description: "nodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeDeletionTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDeletionTimeout defines how long the controller will attempt to delete the Node that the MachinePool hosts after the MachinePool is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
+							Description: "nodeDeletionTimeout defines how long the controller will attempt to delete the Node that the MachinePool hosts after the MachinePool is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"minReadySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum number of seconds for which a newly created machine pool should be ready. Defaults to 0 (machine will be considered available as soon as it is ready)",
+							Description: "minReadySeconds is the minimum number of seconds for which a newly created machine pool should be ready. Defaults to 0 (machine will be considered available as soon as it is ready)",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Replicas is the number of nodes belonging to this pool. If the value is nil, the MachinePool is created without the number of Replicas (defaulting to 1) and it's assumed that an external entity (like cluster autoscaler) is responsible for the management of this value.",
+							Description: "replicas is the number of nodes belonging to this pool. If the value is nil, the MachinePool is created without the number of Replicas (defaulting to 1) and it's assumed that an external entity (like cluster autoscaler) is responsible for the management of this value.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"variables": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Variables can be used to customize the MachinePool through patches.",
+							Description: "variables can be used to customize the MachinePool through patches.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolVariables"),
 						},
 					},
@@ -28418,7 +24527,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolVariables(ref common.Re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Overrides can be used to override Cluster level variables.",
+							Description: "overrides can be used to override Cluster level variables.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28438,6 +24547,35 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachinePoolVariables(ref common.Re
 	}
 }
 
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineReadinessGate(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineReadinessGate contains the type of a Machine condition to be used as a readiness gate.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditionType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "conditionType refers to a condition with matching type in the Machine's condition list. If the conditions doesn't exist, it will be treated as unknown. Note: Both Cluster API conditions or conditions added by 3rd party controllers can be used as readiness gates.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"polarity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "polarity of the conditionType specified in this readinessGate. Valid values are Positive, Negative and omitted. When omitted, the default behaviour will be Positive. A positive polarity means that the condition should report a true status under normal conditions. A negative polarity means that the condition should report a false status under normal conditions.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"conditionType"},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_api_v1beta1_MachineRollingUpdateDeployment(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -28447,19 +24585,19 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineRollingUpdateDeployment(ref
 				Properties: map[string]spec.Schema{
 					"maxUnavailable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The maximum number of machines that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired machines (ex: 10%). Absolute number is calculated from percentage by rounding down. This can not be 0 if MaxSurge is 0. Defaults to 0. Example: when this is set to 30%, the old MachineSet can be scaled down to 70% of desired machines immediately when the rolling update starts. Once new machines are ready, old MachineSet can be scaled down further, followed by scaling up the new MachineSet, ensuring that the total number of machines available at all times during the update is at least 70% of desired machines.",
+							Description: "maxUnavailable is the maximum number of machines that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired machines (ex: 10%). Absolute number is calculated from percentage by rounding down. This can not be 0 if MaxSurge is 0. Defaults to 0. Example: when this is set to 30%, the old MachineSet can be scaled down to 70% of desired machines immediately when the rolling update starts. Once new machines are ready, old MachineSet can be scaled down further, followed by scaling up the new MachineSet, ensuring that the total number of machines available at all times during the update is at least 70% of desired machines.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
 					"maxSurge": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The maximum number of machines that can be scheduled above the desired number of machines. Value can be an absolute number (ex: 5) or a percentage of desired machines (ex: 10%). This can not be 0 if MaxUnavailable is 0. Absolute number is calculated from percentage by rounding up. Defaults to 1. Example: when this is set to 30%, the new MachineSet can be scaled up immediately when the rolling update starts, such that the total number of old and new machines do not exceed 130% of desired machines. Once old machines have been killed, new MachineSet can be scaled up further, ensuring that total number of machines running at any time during the update is at most 130% of desired machines.",
+							Description: "maxSurge is the maximum number of machines that can be scheduled above the desired number of machines. Value can be an absolute number (ex: 5) or a percentage of desired machines (ex: 10%). This can not be 0 if MaxUnavailable is 0. Absolute number is calculated from percentage by rounding up. Defaults to 1. Example: when this is set to 30%, the new MachineSet can be scaled up immediately when the rolling update starts, such that the total number of old and new machines do not exceed 130% of desired machines. Once old machines have been killed, new MachineSet can be scaled up further, ensuring that total number of machines running at any time during the update is at most 130% of desired machines.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
 					"deletePolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DeletePolicy defines the policy used by the MachineDeployment to identify nodes to delete when downscaling. Valid values are \"Random, \"Newest\", \"Oldest\" When no value is supplied, the default DeletePolicy of MachineSet is used",
+							Description: "deletePolicy defines the policy used by the MachineDeployment to identify nodes to delete when downscaling. Valid values are \"Random, \"Newest\", \"Oldest\" When no value is supplied, the default DeletePolicy of MachineSet is used",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28495,20 +24633,23 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSet(ref common.ReferenceCal
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSetSpec"),
+							Description: "spec is the desired state of MachineSet.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSetSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSetStatus"),
+							Description: "status is the observed state of MachineSet.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSetStatus"),
 						},
 					},
 				},
@@ -28542,13 +24683,15 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetList(ref common.Referenc
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+							Description: "metadata is the standard list's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#lists-and-simple-kinds",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
 						},
 					},
 					"items": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "items is the list of MachineSets.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -28577,7 +24720,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetSpec(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ClusterName is the name of the Cluster this object belongs to.",
+							Description: "clusterName is the name of the Cluster this object belongs to.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -28585,37 +24728,43 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetSpec(ref common.Referenc
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Replicas is the number of desired replicas. This is a pointer to distinguish between explicit zero and unspecified.\n\nDefaults to: * if the Kubernetes autoscaler min size and max size annotations are set:\n  - if it's a new MachineSet, use min size\n  - if the replicas field of the old MachineSet is < min size, use min size\n  - if the replicas field of the old MachineSet is > max size, use max size\n  - if the replicas field of the old MachineSet is in the (min size, max size) range, keep the value from the oldMS\n* otherwise use 1 Note: Defaulting will be run whenever the replicas field is not set: * A new MachineSet is created with replicas not set. * On an existing MachineSet the replicas field was first set and is now unset. Those cases are especially relevant for the following Kubernetes autoscaler use cases: * A new MachineSet is created and replicas should be managed by the autoscaler * An existing MachineSet which initially wasn't controlled by the autoscaler\n  should be later controlled by the autoscaler",
+							Description: "replicas is the number of desired replicas. This is a pointer to distinguish between explicit zero and unspecified.\n\nDefaults to: * if the Kubernetes autoscaler min size and max size annotations are set:\n  - if it's a new MachineSet, use min size\n  - if the replicas field of the old MachineSet is < min size, use min size\n  - if the replicas field of the old MachineSet is > max size, use max size\n  - if the replicas field of the old MachineSet is in the (min size, max size) range, keep the value from the oldMS\n* otherwise use 1 Note: Defaulting will be run whenever the replicas field is not set: * A new MachineSet is created with replicas not set. * On an existing MachineSet the replicas field was first set and is now unset. Those cases are especially relevant for the following Kubernetes autoscaler use cases: * A new MachineSet is created and replicas should be managed by the autoscaler * An existing MachineSet which initially wasn't controlled by the autoscaler\n  should be later controlled by the autoscaler",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"minReadySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MinReadySeconds is the minimum number of seconds for which a Node for a newly created machine should be ready before considering the replica available. Defaults to 0 (machine will be considered available as soon as the Node is ready)",
+							Description: "minReadySeconds is the minimum number of seconds for which a Node for a newly created machine should be ready before considering the replica available. Defaults to 0 (machine will be considered available as soon as the Node is ready)",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"deletePolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DeletePolicy defines the policy used to identify nodes to delete when downscaling. Defaults to \"Random\".  Valid values are \"Random, \"Newest\", \"Oldest\"",
+							Description: "deletePolicy defines the policy used to identify nodes to delete when downscaling. Defaults to \"Random\".  Valid values are \"Random, \"Newest\", \"Oldest\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"selector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Selector is a label query over machines that should match the replica count. Label keys and values that must match in order to be controlled by this MachineSet. It must match the machine template's labels. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors",
+							Description: "selector is a label query over machines that should match the replica count. Label keys and values that must match in order to be controlled by this MachineSet. It must match the machine template's labels. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template is the object that describes the machine that will be created if insufficient replicas are detected. Object references to custom resources are treated as templates.",
+							Description: "template is the object that describes the machine that will be created if insufficient replicas are detected. Object references to custom resources are treated as templates.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec"),
+						},
+					},
+					"machineNamingStrategy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "machineNamingStrategy allows changing the naming pattern used when creating Machines. Note: InfraMachines & BootstrapConfigs will use the same name as the corresponding Machines.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineNamingStrategy"),
 						},
 					},
 				},
@@ -28623,7 +24772,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetSpec(ref common.Referenc
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "sigs.k8s.io/cluster-api/api/v1beta1.MachineNamingStrategy", "sigs.k8s.io/cluster-api/api/v1beta1.MachineTemplateSpec"},
 	}
 }
 
@@ -28636,14 +24785,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref common.Refere
 				Properties: map[string]spec.Schema{
 					"selector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Selector is the same as the label selector but in the string format to avoid introspection by clients. The string will be in the same format as the query-param syntax. More info about label selectors: http://kubernetes.io/docs/user-guide/labels#label-selectors",
+							Description: "selector is the same as the label selector but in the string format to avoid introspection by clients. The string will be in the same format as the query-param syntax. More info about label selectors: http://kubernetes.io/docs/user-guide/labels#label-selectors",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Replicas is the most recently observed number of replicas.",
+							Description: "replicas is the most recently observed number of replicas.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -28651,7 +24800,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref common.Refere
 					},
 					"fullyLabeledReplicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The number of replicas that have labels matching the labels of the machine template of the MachineSet.",
+							Description: "fullyLabeledReplicas is the number of replicas that have labels matching the labels of the machine template of the MachineSet.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -28659,7 +24808,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref common.Refere
 					},
 					"readyReplicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The number of ready replicas for this MachineSet. A machine is considered ready when the node has been created and is \"Ready\".",
+							Description: "readyReplicas is the number of ready replicas for this MachineSet. A machine is considered ready when the node has been created and is \"Ready\".",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -28667,7 +24816,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref common.Refere
 					},
 					"availableReplicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The number of available replicas (ready for at least minReadySeconds) for this MachineSet.",
+							Description: "availableReplicas is the number of available replicas (ready for at least minReadySeconds) for this MachineSet.",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -28675,27 +24824,28 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref common.Refere
 					},
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ObservedGeneration reflects the generation of the most recently observed MachineSet.",
+							Description: "observedGeneration reflects the generation of the most recently observed MachineSet.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"failureReason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "In the event that there is a terminal problem reconciling the replicas, both FailureReason and FailureMessage will be set. FailureReason will be populated with a succinct value suitable for machine interpretation, while FailureMessage will contain a more verbose string suitable for logging and human consumption.\n\nThese fields should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the MachineTemplate's spec or the configuration of the machine controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the machine controller, or the responsible machine controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the MachineSet object and/or logged in the controller's output.",
+							Description: "failureReason will be set in the event that there is a terminal problem reconciling the Machine and will contain a succinct value suitable for machine interpretation.\n\nIn the event that there is a terminal problem reconciling the replicas, both FailureReason and FailureMessage will be set. FailureReason will be populated with a succinct value suitable for machine interpretation, while FailureMessage will contain a more verbose string suitable for logging and human consumption.\n\nThese fields should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the MachineTemplate's spec or the configuration of the machine controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the machine controller, or the responsible machine controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the MachineSet object and/or logged in the controller's output.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"failureMessage": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "failureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the MachineSet.",
+							Description: "conditions defines current service state of the MachineSet.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28707,11 +24857,75 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetStatus(ref common.Refere
 							},
 						},
 					},
+					"v1beta2": {
+						SchemaProps: spec.SchemaProps{
+							Description: "v1beta2 groups all the fields that will be added or modified in MachineSet's status with the V1Beta2 version.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSetV1Beta2Status"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api/api/v1beta1.Condition"},
+			"sigs.k8s.io/cluster-api/api/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.MachineSetV1Beta2Status"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSetV1Beta2Status(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineSetV1Beta2Status groups all the fields that will be added or modified in MachineSetStatus with the V1Beta2 version. See https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more context.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions represents the observations of a MachineSet's current state. Known condition types are MachinesReady, MachinesUpToDate, ScalingUp, ScalingDown, Remediating, Deleting, Paused.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+					"readyReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "readyReplicas is the number of ready replicas for this MachineSet. A machine is considered ready when Machine's Ready condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"availableReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "availableReplicas is the number of available replicas for this MachineSet. A machine is considered available when Machine's Available condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"upToDateReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "upToDateReplicas is the number of up-to-date replicas for this MachineSet. A machine is considered up-to-date when Machine's UpToDate condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
 	}
 }
 
@@ -28724,7 +24938,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSpec(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ClusterName is the name of the Cluster this object belongs to.",
+							Description: "clusterName is the name of the Cluster this object belongs to.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -28732,54 +24946,76 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSpec(ref common.ReferenceCa
 					},
 					"bootstrap": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bootstrap is a reference to a local struct which encapsulates fields to configure the Machine’s bootstrapping mechanism.",
+							Description: "bootstrap is a reference to a local struct which encapsulates fields to configure the Machine’s bootstrapping mechanism.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.Bootstrap"),
 						},
 					},
 					"infrastructureRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InfrastructureRef is a required reference to a custom resource offered by an infrastructure provider.",
+							Description: "infrastructureRef is a required reference to a custom resource offered by an infrastructure provider.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
 					"version": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Version defines the desired Kubernetes version. This field is meant to be optionally used by bootstrap providers.",
+							Description: "version defines the desired Kubernetes version. This field is meant to be optionally used by bootstrap providers.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"providerID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ProviderID is the identification ID of the machine provided by the provider. This field must match the provider ID as seen on the node object corresponding to this machine. This field is required by higher level consumers of cluster-api. Example use case is cluster autoscaler with cluster-api as provider. Clean-up logic in the autoscaler compares machines to nodes to find out machines at provider which could not get registered as Kubernetes nodes. With cluster-api as a generic out-of-tree provider for autoscaler, this field is required by autoscaler to be able to have a provider view of the list of machines. Another list of nodes is queried from the k8s apiserver and then a comparison is done to find out unregistered machines and are marked for delete. This field will be set by the actuators and consumed by higher level entities like autoscaler that will be interfacing with cluster-api as generic provider.",
+							Description: "providerID is the identification ID of the machine provided by the provider. This field must match the provider ID as seen on the node object corresponding to this machine. This field is required by higher level consumers of cluster-api. Example use case is cluster autoscaler with cluster-api as provider. Clean-up logic in the autoscaler compares machines to nodes to find out machines at provider which could not get registered as Kubernetes nodes. With cluster-api as a generic out-of-tree provider for autoscaler, this field is required by autoscaler to be able to have a provider view of the list of machines. Another list of nodes is queried from the k8s apiserver and then a comparison is done to find out unregistered machines and are marked for delete. This field will be set by the actuators and consumed by higher level entities like autoscaler that will be interfacing with cluster-api as generic provider.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"failureDomain": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomain is the failure domain the machine will be created in. Must match a key in the FailureDomains map stored on the cluster object.",
+							Description: "failureDomain is the failure domain the machine will be created in. Must match a key in the FailureDomains map stored on the cluster object.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
+					"readinessGates": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"conditionType",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "readinessGates specifies additional conditions to include when evaluating Machine Ready condition.\n\nThis field can be used e.g. by Cluster API control plane providers to extend the semantic of the Ready condition for the Machine they control, like the kubeadm control provider adding ReadinessGates for the APIServerPodHealthy, SchedulerPodHealthy conditions, etc.\n\nAnother example are external controllers, e.g. responsible to install special software/hardware on the Machines; they can include the status of those components with a new condition and add this condition to ReadinessGates.\n\nNOTE: This field is considered only for computing v1beta2 conditions. NOTE: In case readinessGates conditions start with the APIServer, ControllerManager, Scheduler prefix, and all those readiness gates condition are reporting the same message, when computing the Machine's Ready condition those readinessGates will be replaced by a single entry reporting \"Control plane components: \" + message. This helps to improve readability of conditions bubbling up to the Machine's owner resource / to the Cluster).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate"),
+									},
+								},
+							},
+						},
+					},
 					"nodeDrainTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
+							Description: "nodeDrainTimeout is the total amount of time that the controller will spend on draining a node. The default value is 0, meaning that the node can be drained without any time limitations. NOTE: NodeDrainTimeout is different from `kubectl drain --timeout`",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeVolumeDetachTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
+							Description: "nodeVolumeDetachTimeout is the total amount of time that the controller will spend on waiting for all volumes to be detached. The default value is 0, meaning that the volumes can be detached without any time limitations.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeDeletionTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
+							Description: "nodeDeletionTimeout defines how long the controller will attempt to delete the Node that the Machine hosts after the Machine is marked for deletion. A duration of 0 will retry deletion indefinitely. Defaults to 10 seconds.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -28788,7 +25024,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineSpec(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.ObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.Bootstrap"},
+			"k8s.io/api/core/v1.ObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "sigs.k8s.io/cluster-api/api/v1beta1.Bootstrap", "sigs.k8s.io/cluster-api/api/v1beta1.MachineReadinessGate"},
 	}
 }
 
@@ -28801,39 +25037,39 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"nodeRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeRef will point to the corresponding Node if it exists.",
+							Description: "nodeRef will point to the corresponding Node if it exists.",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
 					"nodeInfo": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeInfo is a set of ids/uuids to uniquely identify the node. More info: https://kubernetes.io/docs/concepts/nodes/node/#info",
+							Description: "nodeInfo is a set of ids/uuids to uniquely identify the node. More info: https://kubernetes.io/docs/concepts/nodes/node/#info",
 							Ref:         ref("k8s.io/api/core/v1.NodeSystemInfo"),
 						},
 					},
 					"lastUpdated": {
 						SchemaProps: spec.SchemaProps{
-							Description: "LastUpdated identifies when the phase of the Machine last transitioned.",
+							Description: "lastUpdated identifies when the phase of the Machine last transitioned.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"failureReason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureReason will be set in the event that there is a terminal problem reconciling the Machine and will contain a succinct value suitable for machine interpretation.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.",
+							Description: "failureReason will be set in the event that there is a terminal problem reconciling the Machine and will contain a succinct value suitable for machine interpretation.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"failureMessage": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.",
+							Description: "failureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.\n\nDeprecated: This field is deprecated and is going to be removed in the next apiVersion. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"addresses": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Addresses is a list of addresses assigned to the machine. This field is copied from the infrastructure provider reference.",
+							Description: "addresses is a list of addresses assigned to the machine. This field is copied from the infrastructure provider reference.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28847,20 +25083,20 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref common.Reference
 					},
 					"phase": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Phase represents the current phase of machine actuation. E.g. Pending, Running, Terminating, Failed etc.",
+							Description: "phase represents the current phase of machine actuation.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"certificatesExpiryDate": {
 						SchemaProps: spec.SchemaProps{
-							Description: "CertificatesExpiryDate is the expiry date of the machine certificates. This value is only set for control plane machines.",
+							Description: "certificatesExpiryDate is the expiry date of the machine certificates. This value is only set for control plane machines.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"bootstrapReady": {
 						SchemaProps: spec.SchemaProps{
-							Description: "BootstrapReady is the state of the bootstrap provider.",
+							Description: "bootstrapReady is the state of the bootstrap provider.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -28868,7 +25104,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref common.Reference
 					},
 					"infrastructureReady": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InfrastructureReady is the state of the infrastructure provider.",
+							Description: "infrastructureReady is the state of the infrastructure provider.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -28876,14 +25112,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref common.Reference
 					},
 					"observedGeneration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ObservedGeneration is the latest generation observed by the controller.",
+							Description: "observedGeneration is the latest generation observed by the controller.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the Machine.",
+							Description: "conditions defines current service state of the Machine.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -28895,11 +25131,23 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineStatus(ref common.Reference
 							},
 						},
 					},
+					"deletion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "deletion contains information relating to removal of the Machine. Only present when the Machine has a deletionTimestamp and drain or wait for volume detach started.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineDeletionStatus"),
+						},
+					},
+					"v1beta2": {
+						SchemaProps: spec.SchemaProps{
+							Description: "v1beta2 groups all the fields that will be added or modified in Machine's status with the V1Beta2 version.",
+							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineV1Beta2Status"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.NodeSystemInfo", "k8s.io/api/core/v1.ObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Time", "sigs.k8s.io/cluster-api/api/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress"},
+			"k8s.io/api/core/v1.NodeSystemInfo", "k8s.io/api/core/v1.ObjectReference", "k8s.io/apimachinery/pkg/apis/meta/v1.Time", "sigs.k8s.io/cluster-api/api/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/v1beta1.MachineAddress", "sigs.k8s.io/cluster-api/api/v1beta1.MachineDeletionStatus", "sigs.k8s.io/cluster-api/api/v1beta1.MachineV1Beta2Status"},
 	}
 }
 
@@ -28912,14 +25160,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineTemplateSpec(ref common.Ref
 				Properties: map[string]spec.Schema{
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Description: "metadata is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ObjectMeta"),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specification of the desired behavior of the machine. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
+							Description: "spec is the specification of the desired behavior of the machine. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.MachineSpec"),
 						},
@@ -28932,6 +25180,43 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_MachineTemplateSpec(ref common.Ref
 	}
 }
 
+func schema_sigsk8sio_cluster_api_api_v1beta1_MachineV1Beta2Status(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineV1Beta2Status groups all the fields that will be added or modified in MachineStatus with the V1Beta2 version. See https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more context.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions represents the observations of a Machine's current state. Known condition types are Available, Ready, UpToDate, BootstrapConfigReady, InfrastructureReady, NodeReady, NodeHealthy, Deleting, Paused. If a MachineHealthCheck is targeting this machine, also HealthCheckSucceeded, OwnerRemediated conditions are added. Additionally control plane Machines controlled by KubeadmControlPlane will have following additional conditions: APIServerPodHealthy, ControllerManagerPodHealthy, SchedulerPodHealthy, EtcdPodHealthy, EtcdMemberHealthy.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_api_v1beta1_NetworkRanges(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -28941,7 +25226,8 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_NetworkRanges(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"cidrBlocks": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "cidrBlocks is a list of CIDR blocks.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -28969,7 +25255,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ObjectMeta(ref common.ReferenceCal
 				Properties: map[string]spec.Schema{
 					"labels": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels",
+							Description: "labels is a map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -28985,7 +25271,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ObjectMeta(ref common.ReferenceCal
 					},
 					"annotations": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations",
+							Description: "annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -29014,14 +25300,14 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_PatchDefinition(ref common.Referen
 				Properties: map[string]spec.Schema{
 					"selector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Selector defines on which templates the patch should be applied.",
+							Description: "selector defines on which templates the patch should be applied.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.PatchSelector"),
 						},
 					},
 					"jsonPatches": {
 						SchemaProps: spec.SchemaProps{
-							Description: "JSONPatches defines the patches which should be applied on the templates matching the selector. Note: Patches will be applied in the order of the array.",
+							Description: "jsonPatches defines the patches which should be applied on the templates matching the selector. Note: Patches will be applied in the order of the array.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -29051,7 +25337,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelector(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion filters templates by apiVersion.",
+							Description: "apiVersion filters templates by apiVersion.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -29059,7 +25345,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelector(ref common.Reference
 					},
 					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind filters templates by kind.",
+							Description: "kind filters templates by kind.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -29067,7 +25353,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelector(ref common.Reference
 					},
 					"matchResources": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MatchResources selects templates based on where they are referenced.",
+							Description: "matchResources selects templates based on where they are referenced.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatch"),
 						},
@@ -29090,27 +25376,27 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatch(ref common.Refe
 				Properties: map[string]spec.Schema{
 					"controlPlane": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlane selects templates referenced in .spec.ControlPlane. Note: this will match the controlPlane and also the controlPlane machineInfrastructure (depending on the kind and apiVersion).",
+							Description: "controlPlane selects templates referenced in .spec.ControlPlane. Note: this will match the controlPlane and also the controlPlane machineInfrastructure (depending on the kind and apiVersion).",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"infrastructureCluster": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InfrastructureCluster selects templates referenced in .spec.infrastructure.",
+							Description: "infrastructureCluster selects templates referenced in .spec.infrastructure.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"machineDeploymentClass": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineDeploymentClass selects templates referenced in specific MachineDeploymentClasses in .spec.workers.machineDeployments.",
+							Description: "machineDeploymentClass selects templates referenced in specific MachineDeploymentClasses in .spec.workers.machineDeployments.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachineDeploymentClass"),
 						},
 					},
 					"machinePoolClass": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MachinePoolClass selects templates referenced in specific MachinePoolClasses in .spec.workers.machinePools.",
+							Description: "machinePoolClass selects templates referenced in specific MachinePoolClasses in .spec.workers.machinePools.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.PatchSelectorMatchMachinePoolClass"),
 						},
 					},
@@ -29131,7 +25417,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachineDeploymen
 				Properties: map[string]spec.Schema{
 					"names": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Names selects templates by class names.",
+							Description: "names selects templates by class names.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -29159,7 +25445,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_PatchSelectorMatchMachinePoolClass
 				Properties: map[string]spec.Schema{
 					"names": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Names selects templates by class names.",
+							Description: "names selects templates by class names.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -29187,7 +25473,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_RemediationStrategy(ref common.Ref
 				Properties: map[string]spec.Schema{
 					"maxInFlight": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxInFlight determines how many in flight remediations should happen at the same time.\n\nRemediation only happens on the MachineSet with the most current revision, while older MachineSets (usually present during rollout operations) aren't allowed to remediate.\n\nNote: In general (independent of remediations), unhealthy machines are always prioritized during scale down operations over healthy ones.\n\nMaxInFlight can be set to a fixed number or a percentage. Example: when this is set to 20%, the MachineSet controller deletes at most 20% of the desired replicas.\n\nIf not set, remediation is limited to all machines (bounded by replicas) under the active MachineSet's management.",
+							Description: "maxInFlight determines how many in flight remediations should happen at the same time.\n\nRemediation only happens on the MachineSet with the most current revision, while older MachineSets (usually present during rollout operations) aren't allowed to remediate.\n\nNote: In general (independent of remediations), unhealthy machines are always prioritized during scale down operations over healthy ones.\n\nMaxInFlight can be set to a fixed number or a percentage. Example: when this is set to 20%, the MachineSet controller deletes at most 20% of the desired replicas.\n\nIf not set, remediation is limited to all machines (bounded by replicas) under the active MachineSet's management.",
 							Ref:         ref("k8s.io/apimachinery/pkg/util/intstr.IntOrString"),
 						},
 					},
@@ -29208,15 +25494,22 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Topology(ref common.ReferenceCallb
 				Properties: map[string]spec.Schema{
 					"class": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The name of the ClusterClass object to create the topology.",
+							Description: "class is the name of the ClusterClass object to create the topology.",
 							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"classNamespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "classNamespace is the namespace of the ClusterClass object to create the topology. If the namespace is empty or not set, it is defaulted to the namespace of the cluster object. Value must follow the DNS1123Subdomain syntax.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"version": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The Kubernetes version of the cluster.",
+							Description: "version is the Kubernetes version of the cluster.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -29224,20 +25517,20 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Topology(ref common.ReferenceCallb
 					},
 					"rolloutAfter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RolloutAfter performs a rollout of the entire cluster one component at a time, control plane first and then machine deployments.\n\nDeprecated: This field has no function and is going to be removed in the next apiVersion.",
+							Description: "rolloutAfter performs a rollout of the entire cluster one component at a time, control plane first and then machine deployments.\n\nDeprecated: This field has no function and is going to be removed in the next apiVersion.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"controlPlane": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlane describes the cluster control plane.",
+							Description: "controlPlane describes the cluster control plane.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.ControlPlaneTopology"),
 						},
 					},
 					"workers": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Workers encapsulates the different constructs that form the worker nodes for the cluster.",
+							Description: "workers encapsulates the different constructs that form the worker nodes for the cluster.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.WorkersTopology"),
 						},
 					},
@@ -29251,7 +25544,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_Topology(ref common.ReferenceCallb
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Variables can be used to customize the Cluster through patches. They must comply to the corresponding VariableClasses defined in the ClusterClass.",
+							Description: "variables can be used to customize the Cluster through patches. They must comply to the corresponding VariableClasses defined in the ClusterClass.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -29281,21 +25574,24 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_UnhealthyCondition(ref common.Refe
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "type of Node condition",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "status of the condition, one of True, False, Unknown.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"timeout": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+							Description: "timeout is the duration that a node must be in a given status for, after which the node is considered unhealthy. For example, with a value of \"1h\", the node must match the status for at least 1 hour before being considered unhealthy.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 				},
@@ -29316,7 +25612,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ValidationRule(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"rule": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Rule represents the expression which will be evaluated by CEL. ref: https://github.com/google/cel-spec The Rule is scoped to the location of the x-kubernetes-validations extension in the schema. The `self` variable in the CEL expression is bound to the scoped value. If the Rule is scoped to an object with properties, the accessible properties of the object are field selectable via `self.field` and field presence can be checked via `has(self.field)`. If the Rule is scoped to an object with additionalProperties (i.e. a map) the value of the map are accessible via `self[mapKey]`, map containment can be checked via `mapKey in self` and all entries of the map are accessible via CEL macros and functions such as `self.all(...)`. If the Rule is scoped to an array, the elements of the array are accessible via `self[i]` and also by macros and functions. If the Rule is scoped to a scalar, `self` is bound to the scalar value. Examples: - Rule scoped to a map of objects: {\"rule\": \"self.components['Widget'].priority < 10\"} - Rule scoped to a list of integers: {\"rule\": \"self.values.all(value, value >= 0 && value < 100)\"} - Rule scoped to a string value: {\"rule\": \"self.startsWith('kube')\"}\n\nUnknown data preserved in custom resources via x-kubernetes-preserve-unknown-fields is not accessible in CEL expressions. This includes: - Unknown field values that are preserved by object schemas with x-kubernetes-preserve-unknown-fields. - Object properties where the property schema is of an \"unknown type\". An \"unknown type\" is recursively defined as:\n  - A schema with no type and x-kubernetes-preserve-unknown-fields set to true\n  - An array where the items schema is of an \"unknown type\"\n  - An object where the additionalProperties schema is of an \"unknown type\"\n\nOnly property names of the form `[a-zA-Z_.-/][a-zA-Z0-9_.-/]*` are accessible. Accessible property names are escaped according to the following rules when accessed in the expression: - '__' escapes to '__underscores__' - '.' escapes to '__dot__' - '-' escapes to '__dash__' - '/' escapes to '__slash__' - Property names that exactly match a CEL RESERVED keyword escape to '__{keyword}__'. The keywords are:\n\t  \"true\", \"false\", \"null\", \"in\", \"as\", \"break\", \"const\", \"continue\", \"else\", \"for\", \"function\", \"if\",\n\t  \"import\", \"let\", \"loop\", \"package\", \"namespace\", \"return\".\nExamples:\n  - Rule accessing a property named \"namespace\": {\"rule\": \"self.__namespace__ > 0\"}\n  - Rule accessing a property named \"x-prop\": {\"rule\": \"self.x__dash__prop > 0\"}\n  - Rule accessing a property named \"redact__d\": {\"rule\": \"self.redact__underscores__d > 0\"}\n\nIf `rule` makes use of the `oldSelf` variable it is implicitly a `transition rule`.\n\nBy default, the `oldSelf` variable is the same type as `self`.\n\nTransition rules by default are applied only on UPDATE requests and are skipped if an old value could not be found.",
+							Description: "rule represents the expression which will be evaluated by CEL. ref: https://github.com/google/cel-spec The Rule is scoped to the location of the x-kubernetes-validations extension in the schema. The `self` variable in the CEL expression is bound to the scoped value. If the Rule is scoped to an object with properties, the accessible properties of the object are field selectable via `self.field` and field presence can be checked via `has(self.field)`. If the Rule is scoped to an object with additionalProperties (i.e. a map) the value of the map are accessible via `self[mapKey]`, map containment can be checked via `mapKey in self` and all entries of the map are accessible via CEL macros and functions such as `self.all(...)`. If the Rule is scoped to an array, the elements of the array are accessible via `self[i]` and also by macros and functions. If the Rule is scoped to a scalar, `self` is bound to the scalar value. Examples: - Rule scoped to a map of objects: {\"rule\": \"self.components['Widget'].priority < 10\"} - Rule scoped to a list of integers: {\"rule\": \"self.values.all(value, value >= 0 && value < 100)\"} - Rule scoped to a string value: {\"rule\": \"self.startsWith('kube')\"}\n\nUnknown data preserved in custom resources via x-kubernetes-preserve-unknown-fields is not accessible in CEL expressions. This includes: - Unknown field values that are preserved by object schemas with x-kubernetes-preserve-unknown-fields. - Object properties where the property schema is of an \"unknown type\". An \"unknown type\" is recursively defined as:\n  - A schema with no type and x-kubernetes-preserve-unknown-fields set to true\n  - An array where the items schema is of an \"unknown type\"\n  - An object where the additionalProperties schema is of an \"unknown type\"\n\nOnly property names of the form `[a-zA-Z_.-/][a-zA-Z0-9_.-/]*` are accessible. Accessible property names are escaped according to the following rules when accessed in the expression: - '__' escapes to '__underscores__' - '.' escapes to '__dot__' - '-' escapes to '__dash__' - '/' escapes to '__slash__' - Property names that exactly match a CEL RESERVED keyword escape to '__{keyword}__'. The keywords are:\n\t  \"true\", \"false\", \"null\", \"in\", \"as\", \"break\", \"const\", \"continue\", \"else\", \"for\", \"function\", \"if\",\n\t  \"import\", \"let\", \"loop\", \"package\", \"namespace\", \"return\".\nExamples:\n  - Rule accessing a property named \"namespace\": {\"rule\": \"self.__namespace__ > 0\"}\n  - Rule accessing a property named \"x-prop\": {\"rule\": \"self.x__dash__prop > 0\"}\n  - Rule accessing a property named \"redact__d\": {\"rule\": \"self.redact__underscores__d > 0\"}\n\nIf `rule` makes use of the `oldSelf` variable it is implicitly a `transition rule`.\n\nBy default, the `oldSelf` variable is the same type as `self`.\n\nTransition rules by default are applied only on UPDATE requests and are skipped if an old value could not be found.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -29324,21 +25620,21 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ValidationRule(ref common.Referenc
 					},
 					"message": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Message represents the message displayed when validation fails. The message is required if the Rule contains line breaks. The message must not contain line breaks. If unset, the message is \"failed rule: {Rule}\". e.g. \"must be a URL with the host matching spec.host\"",
+							Description: "message represents the message displayed when validation fails. The message is required if the Rule contains line breaks. The message must not contain line breaks. If unset, the message is \"failed rule: {Rule}\". e.g. \"must be a URL with the host matching spec.host\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"messageExpression": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MessageExpression declares a CEL expression that evaluates to the validation failure message that is returned when this rule fails. Since messageExpression is used as a failure message, it must evaluate to a string. If both message and messageExpression are present on a rule, then messageExpression will be used if validation fails. If messageExpression results in a runtime error, the validation failure message is produced as if the messageExpression field were unset. If messageExpression evaluates to an empty string, a string with only spaces, or a string that contains line breaks, then the validation failure message will also be produced as if the messageExpression field were unset. messageExpression has access to all the same variables as the rule; the only difference is the return type. Example: \"x must be less than max (\"+string(self.max)+\")\"",
+							Description: "messageExpression declares a CEL expression that evaluates to the validation failure message that is returned when this rule fails. Since messageExpression is used as a failure message, it must evaluate to a string. If both message and messageExpression are present on a rule, then messageExpression will be used if validation fails. If messageExpression results in a runtime error, the validation failure message is produced as if the messageExpression field were unset. If messageExpression evaluates to an empty string, a string with only spaces, or a string that contains line breaks, then the validation failure message will also be produced as if the messageExpression field were unset. messageExpression has access to all the same variables as the rule; the only difference is the return type. Example: \"x must be less than max (\"+string(self.max)+\")\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"reason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Reason provides a machine-readable validation failure reason that is returned to the caller when a request fails this validation rule. The currently supported reasons are: \"FieldValueInvalid\", \"FieldValueForbidden\", \"FieldValueRequired\", \"FieldValueDuplicate\". If not set, default to use \"FieldValueInvalid\". All future added reasons must be accepted by clients when reading this value and unknown reasons should be treated as FieldValueInvalid.",
+							Description: "reason provides a machine-readable validation failure reason that is returned to the caller when a request fails this validation rule. The currently supported reasons are: \"FieldValueInvalid\", \"FieldValueForbidden\", \"FieldValueRequired\", \"FieldValueDuplicate\". If not set, default to use \"FieldValueInvalid\". All future added reasons must be accepted by clients when reading this value and unknown reasons should be treated as FieldValueInvalid.",
 							Default:     v1beta1.FieldValueInvalid,
 							Type:        []string{"string"},
 							Format:      "",
@@ -29346,7 +25642,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_ValidationRule(ref common.Referenc
 					},
 					"fieldPath": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FieldPath represents the field path returned when the validation fails. It must be a relative JSON path (i.e. with array notation) scoped to the location of this x-kubernetes-validations extension in the schema and refer to an existing field. e.g. when validation checks if a specific attribute `foo` under a map `testMap`, the fieldPath could be set to `.testMap.foo` If the validation checks two lists must have unique attributes, the fieldPath could be set to either of the list: e.g. `.testList` It does not support list numeric index. It supports child operation to refer to an existing field currently. Refer to [JSONPath support in Kubernetes](https://kubernetes.io/docs/reference/kubectl/jsonpath/) for more info. Numeric index of array is not supported. For field name which contains special characters, use `['specialName']` to refer the field name. e.g. for attribute `foo.34$` appears in a list `testList`, the fieldPath could be set to `.testList['foo.34$']`",
+							Description: "fieldPath represents the field path returned when the validation fails. It must be a relative JSON path (i.e. with array notation) scoped to the location of this x-kubernetes-validations extension in the schema and refer to an existing field. e.g. when validation checks if a specific attribute `foo` under a map `testMap`, the fieldPath could be set to `.testMap.foo` If the validation checks two lists must have unique attributes, the fieldPath could be set to either of the list: e.g. `.testList` It does not support list numeric index. It supports child operation to refer to an existing field currently. Refer to [JSONPath support in Kubernetes](https://kubernetes.io/docs/reference/kubectl/jsonpath/) for more info. Numeric index of array is not supported. For field name which contains special characters, use `['specialName']` to refer the field name. e.g. for attribute `foo.34$` appears in a list `testList`, the fieldPath could be set to `.testList['foo.34$']`",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29367,7 +25663,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchema(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"openAPIV3Schema": {
 						SchemaProps: spec.SchemaProps{
-							Description: "OpenAPIV3Schema defines the schema of a variable via OpenAPI v3 schema. The schema is a subset of the schema used in Kubernetes CRDs.",
+							Description: "openAPIV3Schema defines the schema of a variable via OpenAPI v3 schema. The schema is a subset of the schema used in Kubernetes CRDs.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/v1beta1.JSONSchemaProps"),
 						},
@@ -29390,7 +25686,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchemaMetadata(ref common.
 				Properties: map[string]spec.Schema{
 					"labels": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Map of string keys and values that can be used to organize and categorize (scope and select) variables.",
+							Description: "labels is a map of string keys and values that can be used to organize and categorize (scope and select) variables.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -29406,7 +25702,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_VariableSchemaMetadata(ref common.
 					},
 					"annotations": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Annotations is an unstructured key value map that can be used to store and retrieve arbitrary metadata. They are not queryable.",
+							Description: "annotations is an unstructured key value map that can be used to store and retrieve arbitrary metadata. They are not queryable.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -29443,7 +25739,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_WorkersClass(ref common.ReferenceC
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineDeployments is a list of machine deployment classes that can be used to create a set of worker nodes.",
+							Description: "machineDeployments is a list of machine deployment classes that can be used to create a set of worker nodes.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -29465,7 +25761,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_WorkersClass(ref common.ReferenceC
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "MachinePools is a list of machine pool classes that can be used to create a set of worker nodes.",
+							Description: "machinePools is a list of machine pool classes that can be used to create a set of worker nodes.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -29482,6 +25778,54 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_WorkersClass(ref common.ReferenceC
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api/api/v1beta1.MachineDeploymentClass", "sigs.k8s.io/cluster-api/api/v1beta1.MachinePoolClass"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_api_v1beta1_WorkersStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "WorkersStatus groups all the observations about workers current state.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"desiredReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "desiredReplicas is the total number of desired worker machines in this cluster.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"replicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "replicas is the total number of worker machines in this cluster. NOTE: replicas also includes machines still being provisioned or being deleted.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"upToDateReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "upToDateReplicas is the number of up-to-date worker machines in this cluster. A machine is considered up-to-date when Machine's UpToDate condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"readyReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "readyReplicas is the total number of ready worker machines in this cluster. A machine is considered ready when Machine's Ready condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"availableReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "availableReplicas is the total number of available worker machines in this cluster. A machine is considered available when Machine's Available condition is true.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -29502,7 +25846,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_WorkersTopology(ref common.Referen
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "MachineDeployments is a list of machine deployments in the cluster.",
+							Description: "machineDeployments is a list of machine deployments in the cluster.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -29524,7 +25868,7 @@ func schema_sigsk8sio_cluster_api_api_v1beta1_WorkersTopology(ref common.Referen
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "MachinePools is a list of machine pools in the cluster.",
+							Description: "machinePools is a list of machine pools in the cluster.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{

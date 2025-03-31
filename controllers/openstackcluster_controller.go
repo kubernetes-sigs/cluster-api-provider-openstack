@@ -33,7 +33,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/collections"
@@ -249,7 +248,18 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 		return err
 	}
 
+	var statusFloatingIP *string
+	var specFloatingIP *string
 	if openStackCluster.Status.Bastion != nil && openStackCluster.Status.Bastion.FloatingIP != "" {
+		statusFloatingIP = &openStackCluster.Status.Bastion.FloatingIP
+	}
+	if openStackCluster.Spec.Bastion != nil && openStackCluster.Spec.Bastion.FloatingIP != nil {
+		specFloatingIP = openStackCluster.Spec.Bastion.FloatingIP
+	}
+
+	// We only remove the bastion's floating IP if it exists and if it's not the same value defined both in the spec and in status.
+	// This decision was made so if a user specifies a pre-created floating IP that is intended to only be used for the bastion, the floating IP won't get removed once the bastion is destroyed.
+	if statusFloatingIP != nil && (specFloatingIP == nil || *statusFloatingIP != *specFloatingIP) {
 		if err = networkingService.DeleteFloatingIP(openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err), false)
 			return fmt.Errorf("failed to delete floating IP: %w", err)
@@ -275,6 +285,11 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 
 		for _, address := range addresses {
 			if address.Type == corev1.NodeExternalIP {
+				// If a floating IP retrieved is the same as what is set in the bastion spec, skip deleting it.
+				// This decision was made so if a user specifies a pre-created floating IP that is intended to only be used for the bastion, the floating IP won't get removed once the bastion is destroyed.
+				if specFloatingIP != nil && address.Address == *specFloatingIP {
+					continue
+				}
 				// Floating IP may not have properly saved in bastion status (thus not deleted above), delete any remaining floating IP
 				if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
 					handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err), false)
@@ -627,11 +642,15 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 			for _, s := range lbSpec.Subnets {
 				matchFound := false
 				for _, subnetID := range lbNet.Subnets {
-					if s.ID != nil && subnetID == *s.ID {
+					subnet, err := networkingService.GetSubnetByParam(&s)
+					if s.ID != nil && subnetID == *s.ID && err == nil {
 						matchFound = true
 						lbNetStatus.Subnets = append(
 							lbNetStatus.Subnets, infrav1.Subnet{
-								ID: *s.ID,
+								ID:   subnet.ID,
+								Name: subnet.Name,
+								CIDR: subnet.CIDR,
+								Tags: subnet.Tags,
 							})
 					}
 				}
@@ -640,6 +659,8 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 					return fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets)
 				}
 			}
+
+			openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
 		}
 	}
 
@@ -690,10 +711,10 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 }
 
 // reconcilePreExistingNetworkComponents reconciles the cluster network status when the cluster is
-// using pre-existing networks and subnets which are not provisioned by the
+// using pre-existing networks, subnets and router which are not provisioned by the
 // cluster controller.
 func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) error {
-	scope.Logger().V(4).Info("No need to reconcile network, searching network and subnet instead")
+	scope.Logger().V(4).Info("No need to reconcile network, searching network, subnet and router instead")
 
 	if openStackCluster.Status.Network == nil {
 		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
@@ -740,9 +761,33 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 		setClusterNetwork(openStackCluster, network)
 	}
 
+	if openStackCluster.Spec.Router != nil {
+		router, err := networkingService.GetRouterByParam(openStackCluster.Spec.Router)
+		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find router: %w", err), false)
+			return fmt.Errorf("error fetching cluster router: %w", err)
+		}
+
+		scope.Logger().V(4).Info("Found pre-existing router", "id", router.ID, "name", router.Name)
+
+		routerIPs := []string{}
+		for _, ip := range router.GatewayInfo.ExternalFixedIPs {
+			routerIPs = append(routerIPs, ip.IPAddress)
+		}
+
+		openStackCluster.Status.Router = &infrav1.Router{
+			Name: router.Name,
+			ID:   router.ID,
+			Tags: router.Tags,
+			IPs:  routerIPs,
+		}
+	}
+
 	return nil
 }
 
+// reconcileProvisionedNetworkComponents reconciles the cluster network status when the cluster is
+// using networks, subnets and router provisioned by the cluster controller.
 func reconcileProvisionedNetworkComponents(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	err := networkingService.ReconcileNetwork(openStackCluster, clusterResourceName)
 	if err != nil {
@@ -872,21 +917,21 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 				}
 				return requests
 			}),
-			builder.WithPredicates(predicates.ClusterUnpaused(ctrl.LoggerFrom(ctx))),
+			builder.WithPredicates(predicates.ClusterUnpaused(mgr.GetScheme(), ctrl.LoggerFrom(ctx))),
 		).
 		Watches(
 			&infrav1alpha1.OpenStackServer{},
 			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &infrav1.OpenStackCluster{}),
 			builder.WithPredicates(OpenStackServerReconcileComplete(log)),
 		).
-		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
-		WithEventFilter(predicates.ResourceIsNotExternallyManaged(ctrl.LoggerFrom(ctx))).
+		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(mgr.GetScheme(), ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceIsNotExternallyManaged(mgr.GetScheme(), ctrl.LoggerFrom(ctx))).
 		Complete(r)
 }
 
 func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message error, isFatal bool) {
 	if isFatal {
-		err := capierrors.UpdateClusterError
+		err := capoerrors.DeprecatedCAPOUpdateClusterError
 		openstackCluster.Status.FailureReason = &err
 		openstackCluster.Status.FailureMessage = ptr.To(message.Error())
 	}

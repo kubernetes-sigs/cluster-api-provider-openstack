@@ -19,22 +19,22 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 // SecurityGroupRuleSpecApplyConfiguration represents a declarative configuration of the SecurityGroupRuleSpec type for use
 // with apply.
 type SecurityGroupRuleSpecApplyConfiguration struct {
-	Name                *string                            `json:"name,omitempty"`
-	Description         *string                            `json:"description,omitempty"`
-	Direction           *string                            `json:"direction,omitempty"`
-	EtherType           *string                            `json:"etherType,omitempty"`
-	PortRangeMin        *int                               `json:"portRangeMin,omitempty"`
-	PortRangeMax        *int                               `json:"portRangeMax,omitempty"`
-	Protocol            *string                            `json:"protocol,omitempty"`
-	RemoteGroupID       *string                            `json:"remoteGroupID,omitempty"`
-	RemoteIPPrefix      *string                            `json:"remoteIPPrefix,omitempty"`
-	RemoteManagedGroups []v1beta1.ManagedSecurityGroupName `json:"remoteManagedGroups,omitempty"`
+	Name                *string                               `json:"name,omitempty"`
+	Description         *string                               `json:"description,omitempty"`
+	Direction           *string                               `json:"direction,omitempty"`
+	EtherType           *string                               `json:"etherType,omitempty"`
+	PortRangeMin        *int                                  `json:"portRangeMin,omitempty"`
+	PortRangeMax        *int                                  `json:"portRangeMax,omitempty"`
+	Protocol            *string                               `json:"protocol,omitempty"`
+	RemoteGroupID       *string                               `json:"remoteGroupID,omitempty"`
+	RemoteIPPrefix      *string                               `json:"remoteIPPrefix,omitempty"`
+	RemoteManagedGroups []apiv1beta1.ManagedSecurityGroupName `json:"remoteManagedGroups,omitempty"`
 }
 
 // SecurityGroupRuleSpecApplyConfiguration constructs a declarative configuration of the SecurityGroupRuleSpec type for use with
@@ -118,7 +118,7 @@ func (b *SecurityGroupRuleSpecApplyConfiguration) WithRemoteIPPrefix(value strin
 // WithRemoteManagedGroups adds the given value to the RemoteManagedGroups field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RemoteManagedGroups field.
-func (b *SecurityGroupRuleSpecApplyConfiguration) WithRemoteManagedGroups(values ...v1beta1.ManagedSecurityGroupName) *SecurityGroupRuleSpecApplyConfiguration {
+func (b *SecurityGroupRuleSpecApplyConfiguration) WithRemoteManagedGroups(values ...apiv1beta1.ManagedSecurityGroupName) *SecurityGroupRuleSpecApplyConfiguration {
 	for i := range values {
 		b.RemoteManagedGroups = append(b.RemoteManagedGroups, values[i])
 	}

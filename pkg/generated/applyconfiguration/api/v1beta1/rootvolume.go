@@ -43,7 +43,7 @@ func (b *RootVolumeApplyConfiguration) WithSizeGiB(value int) *RootVolumeApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
 func (b *RootVolumeApplyConfiguration) WithType(value string) *RootVolumeApplyConfiguration {
-	b.Type = &value
+	b.BlockDeviceVolumeApplyConfiguration.Type = &value
 	return b
 }
 
@@ -51,6 +51,6 @@ func (b *RootVolumeApplyConfiguration) WithType(value string) *RootVolumeApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AvailabilityZone field is set to the value of the last call.
 func (b *RootVolumeApplyConfiguration) WithAvailabilityZone(value *VolumeAvailabilityZoneApplyConfiguration) *RootVolumeApplyConfiguration {
-	b.AvailabilityZone = value
+	b.BlockDeviceVolumeApplyConfiguration.AvailabilityZone = value
 	return b
 }
