@@ -33,8 +33,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/api/v1alpha1"
-	orcapplyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/pkg/clients/applyconfiguration/api/v1alpha1"
+	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/v2/api/v1alpha1"
+	orcapplyconfigv1alpha1 "github.com/k-orc/openstack-resource-controller/v2/pkg/clients/applyconfiguration/api/v1alpha1"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/internal/util/ssa"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
