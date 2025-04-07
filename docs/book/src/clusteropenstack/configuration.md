@@ -138,7 +138,7 @@ manage some OpenStack resources. ORC is a separate project and is not part of CA
 To install ORC, run the following command:
 
 ```bash
-ORC_VERSION=v1.0.0
+ORC_VERSION=v2.0.3
 kubectl apply -f "https://github.com/k-orc/openstack-resource-controller/releases/download/${ORC_VERSION}/install.yaml"
 ```
 
