@@ -132,8 +132,8 @@ github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2/go.mod h1:Tv1PlzqC
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gophercloud/gophercloud/v2 v2.6.0 h1:XJKQ0in3iHOZHVAFMXq/OhjCuvvG+BKR0unOqRfG1EI=
-github.com/gophercloud/gophercloud/v2 v2.6.0/go.mod h1:Ki/ILhYZr/5EPebrPL9Ej+tUg4lqx71/YH2JWVeU+Qk=
+github.com/gophercloud/gophercloud/v2 v2.7.0 h1:o0m4kgVcPgHlcXiWAjoVxGd8QCmvM5VU+YM71pFbn0E=
+github.com/gophercloud/gophercloud/v2 v2.7.0/go.mod h1:Ki/ILhYZr/5EPebrPL9Ej+tUg4lqx71/YH2JWVeU+Qk=
 github.com/gophercloud/utils/v2 v2.0.0-20240812072210-8ce1fc0f2894 h1:KgYK/Mf71IdN7+sq2cVmY8Jtumi26GxahN7nlV0ETBQ=
 github.com/gophercloud/utils/v2 v2.0.0-20240812072210-8ce1fc0f2894/go.mod h1:IXS9MKM8YBsr9G2xhnMAuiCOaNxmghQFQGi1p68+No0=
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
