@@ -3629,6 +3629,19 @@ sigs.k8s.io/cluster-api/api/v1beta1.Conditions
 <td>
 </td>
 </tr>
+<tr>
+<td>
+<code>openStackServerRef</code><br/>
+<em>
+Kubernetes core/v1.TypedLocalObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OpenStackServerRef is a reference to the OpenStackServer object that
+is associated with this OpenStackMachine.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplateResource">OpenStackMachineTemplateResource
