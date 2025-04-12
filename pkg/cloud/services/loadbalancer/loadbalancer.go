@@ -406,8 +406,7 @@ func (s *Service) reconcileAPILoadBalancerListener(lb *loadbalancers.LoadBalance
 	if err != nil {
 		return err
 	}
-
-	if err := s.getOrCreateMonitor(openStackCluster, lbPortObjectsName, pool.ID, lb.ID); err != nil {
+	if err := s.getOrUpdateMonitor(openStackCluster, lbPortObjectsName, pool.ID, lb.ID); err != nil {
 		return err
 	}
 
@@ -532,13 +531,83 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 	return pool, nil
 }
 
-func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster, monitorName, poolID, lbID string) error {
+func (s *Service) getOrUpdateMonitor(openStackCluster *infrav1.OpenStackCluster, monitorName, poolID, lbID string) error {
 	monitor, err := s.checkIfMonitorExists(monitorName)
 	if err != nil {
 		return err
 	}
 
+	monitorConfig := openStackCluster.Spec.APIServerLoadBalancer.Monitor
+
+	// Default values for monitor
+	const (
+		defaultDelay          = 10
+		defaultTimeout        = 5
+		defaultMaxRetries     = 5
+		defaultMaxRetriesDown = 3
+	)
+
 	if monitor != nil {
+		needsUpdate := false
+		monitorUpdateOpts := monitors.UpdateOpts{}
+
+		if (monitorConfig == nil || monitorConfig.Delay == nil) && monitor.Delay != defaultDelay {
+			s.scope.Logger().Info("Monitor delay needs update to default", "current", monitor.Delay, "default", defaultDelay)
+			monitorUpdateOpts.Delay = defaultDelay
+			needsUpdate = true
+		} else if monitorConfig != nil && monitorConfig.Delay != nil && monitor.Delay != *monitorConfig.Delay {
+			s.scope.Logger().Info("Monitor delay needs update", "current", monitor.Delay, "desired", *monitorConfig.Delay)
+			monitorUpdateOpts.Delay = *monitorConfig.Delay
+			needsUpdate = true
+		}
+
+		if (monitorConfig == nil || monitorConfig.Timeout == nil) && monitor.Timeout != defaultTimeout {
+			s.scope.Logger().Info("Monitor timeout needs update to default", "current", monitor.Timeout, "default", defaultTimeout)
+			monitorUpdateOpts.Timeout = defaultTimeout
+			needsUpdate = true
+		} else if monitorConfig != nil && monitorConfig.Timeout != nil && monitor.Timeout != *monitorConfig.Timeout {
+			s.scope.Logger().Info("Monitor timeout needs update", "current", monitor.Timeout, "desired", *monitorConfig.Timeout)
+			monitorUpdateOpts.Timeout = *monitorConfig.Timeout
+			needsUpdate = true
+		}
+
+		if (monitorConfig == nil || monitorConfig.MaxRetries == nil) && monitor.MaxRetries != defaultMaxRetries {
+			s.scope.Logger().Info("Monitor maxRetries needs update to default", "current", monitor.MaxRetries, "default", defaultMaxRetries)
+			monitorUpdateOpts.MaxRetries = defaultMaxRetries
+			needsUpdate = true
+		} else if monitorConfig != nil && monitorConfig.MaxRetries != nil && monitor.MaxRetries != *monitorConfig.MaxRetries {
+			s.scope.Logger().Info("Monitor maxRetries needs update", "current", monitor.MaxRetries, "desired", *monitorConfig.MaxRetries)
+			monitorUpdateOpts.MaxRetries = *monitorConfig.MaxRetries
+			needsUpdate = true
+		}
+
+		if (monitorConfig == nil || monitorConfig.MaxRetriesDown == nil) && monitor.MaxRetriesDown != defaultMaxRetriesDown {
+			s.scope.Logger().Info("Monitor maxRetriesDown needs update to default", "current", monitor.MaxRetriesDown, "default", defaultMaxRetriesDown)
+			monitorUpdateOpts.MaxRetriesDown = defaultMaxRetriesDown
+			needsUpdate = true
+		} else if monitorConfig != nil && monitorConfig.MaxRetriesDown != nil && monitor.MaxRetriesDown != *monitorConfig.MaxRetriesDown {
+			s.scope.Logger().Info("Monitor maxRetriesDown needs update", "current", monitor.MaxRetriesDown, "desired", *monitorConfig.MaxRetriesDown)
+			monitorUpdateOpts.MaxRetriesDown = *monitorConfig.MaxRetriesDown
+			needsUpdate = true
+		}
+
+		if needsUpdate {
+			s.scope.Logger().Info("Updating load balancer monitor", "loadBalancerID", lbID, "name", monitorName, "monitorID", monitor.ID)
+
+			updatedMonitor, err := s.loadbalancerClient.UpdateMonitor(monitor.ID, monitorUpdateOpts)
+			if err != nil {
+				record.Warnf(openStackCluster, "FailedUpdateMonitor", "Failed to update monitor %s with id %s: %v", monitorName, monitor.ID, err)
+				return err
+			}
+
+			if _, err = s.waitForLoadBalancerActive(lbID); err != nil {
+				record.Warnf(openStackCluster, "FailedUpdateMonitor", "Failed to update monitor %s with id %s: wait for load balancer active %s: %v", monitorName, monitor.ID, lbID, err)
+				return err
+			}
+
+			record.Eventf(openStackCluster, "SuccessfulUpdateMonitor", "Updated monitor %s with id %s", monitorName, updatedMonitor.ID)
+		}
+
 		return nil
 	}
 
@@ -548,13 +617,29 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 		Name:           monitorName,
 		PoolID:         poolID,
 		Type:           "TCP",
-		Delay:          10,
-		MaxRetries:     5,
-		MaxRetriesDown: 3,
-		Timeout:        5,
+		Delay:          defaultDelay,
+		Timeout:        defaultTimeout,
+		MaxRetries:     defaultMaxRetries,
+		MaxRetriesDown: defaultMaxRetriesDown,
 	}
-	monitor, err = s.loadbalancerClient.CreateMonitor(monitorCreateOpts)
-	// Skip creating monitor if it is not supported by Octavia provider
+
+	if monitorConfig != nil {
+		if monitorConfig.Delay != nil {
+			monitorCreateOpts.Delay = *monitorConfig.Delay
+		}
+		if monitorConfig.MaxRetries != nil {
+			monitorCreateOpts.MaxRetries = *monitorConfig.MaxRetries
+		}
+		if monitorConfig.MaxRetriesDown != nil {
+			monitorCreateOpts.MaxRetriesDown = *monitorConfig.MaxRetriesDown
+		}
+		if monitorConfig.Timeout != nil {
+			monitorCreateOpts.Timeout = *monitorConfig.Timeout
+		}
+	}
+
+	newMonitor, err := s.loadbalancerClient.CreateMonitor(monitorCreateOpts)
+
 	if capoerrors.IsNotImplementedError(err) {
 		record.Warnf(openStackCluster, "SkippedCreateMonitor", "Health Monitor is not created as it's not implemented with the current Octavia provider.")
 		return nil
@@ -566,11 +651,11 @@ func (s *Service) getOrCreateMonitor(openStackCluster *infrav1.OpenStackCluster,
 	}
 
 	if _, err = s.waitForLoadBalancerActive(lbID); err != nil {
-		record.Warnf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s with id %s: wait for load balancer active %s: %v", monitorName, monitor.ID, lbID, err)
+		record.Warnf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s with id %s: wait for load balancer active %s: %v", monitorName, newMonitor.ID, lbID, err)
 		return err
 	}
 
-	record.Eventf(openStackCluster, "SuccessfulCreateMonitor", "Created monitor %s with id %s", monitorName, monitor.ID)
+	record.Eventf(openStackCluster, "SuccessfulCreateMonitor", "Created monitor %s with id %s", monitorName, newMonitor.ID)
 	return nil
 }
 
