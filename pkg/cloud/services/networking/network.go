@@ -201,6 +201,10 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	} else if len(subnetList) == 1 {
 		subnet = &subnetList[0]
 		s.scope.Logger().V(6).Info("Reusing existing subnet", "name", subnet.Name, "id", subnet.ID)
+
+		if err := s.updateSubnetDNSNameservers(openStackCluster, subnet); err != nil {
+			return err
+		}
 	}
 
 	openStackCluster.Status.Network.Subnets = []infrav1.Subnet{
@@ -246,6 +250,44 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 	}
 
 	return subnet, nil
+}
+
+// updateSubnetDNSNameservers updates the DNS nameservers for an existing subnet if they differ from the desired configuration.
+func (s *Service) updateSubnetDNSNameservers(openStackCluster *infrav1.OpenStackCluster, subnet *subnets.Subnet) error {
+	// Picking the first managed subnet since we only support one for now
+	desiredNameservers := openStackCluster.Spec.ManagedSubnets[0].DNSNameservers
+	currentNameservers := subnet.DNSNameservers
+
+	needsUpdate := false
+	if len(desiredNameservers) != len(currentNameservers) {
+		needsUpdate = true
+	} else {
+		for i, ns := range desiredNameservers {
+			if i >= len(currentNameservers) || ns != currentNameservers[i] {
+				needsUpdate = true
+				break
+			}
+		}
+	}
+
+	if needsUpdate {
+		s.scope.Logger().Info("Updating subnet DNS nameservers", "id", subnet.ID, "from", currentNameservers, "to", desiredNameservers)
+
+		updateOpts := subnets.UpdateOpts{
+			DNSNameservers: &desiredNameservers,
+		}
+
+		updatedSubnet, err := s.client.UpdateSubnet(subnet.ID, updateOpts)
+		if err != nil {
+			record.Warnf(openStackCluster, "FailedUpdateSubnet", "Failed to update DNS nameservers for subnet %s: %v", subnet.ID, err)
+			return err
+		}
+
+		*subnet = *updatedSubnet
+		record.Eventf(openStackCluster, "SuccessfulUpdateSubnet", "Updated DNS nameservers for subnet %s", subnet.ID)
+	}
+
+	return nil
 }
 
 func (s *Service) getNetworkByName(networkName string) (networks.Network, error) {
