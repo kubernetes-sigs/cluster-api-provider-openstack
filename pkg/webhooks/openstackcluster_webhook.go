@@ -159,6 +159,13 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 		newObj.Spec.APIServerFloatingIP = nil
 		oldObj.Spec.APIServerFloatingIP = nil
 	}
+	// Allow change from spec.network.filter to spec.network.id only if it matches the current network.
+	if newObj.Spec.network != nil && oldObj.Spec.network != nil {
+		if ptr.Deref(newObj.Spec.network.id, "") == oldObj.Status.network.id {
+			newObj.Spec.network.id = nil
+			oldObj.Spec.network.id = nil
+		}
+	}
 
 	if !reflect.DeepEqual(oldObj.Spec, newObj.Spec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
