@@ -614,7 +614,9 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					Network: &infrav1.NetworkStatusWithSubnets{
-						ID: "testnetworkid",
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "testnetworkid",
+						},
 					},
 				},
 			},
@@ -630,7 +632,9 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					Network: &infrav1.NetworkStatusWithSubnets{
-						ID: "testnetworkid",
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "testnetworkid",
+						},
 					},
 				},
 			},
@@ -652,7 +656,9 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					Network: &infrav1.NetworkStatusWithSubnets{
-						ID: "testetworkid1",
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "testetworkid1",
+						},
 					},
 				},
 			},
@@ -668,7 +674,9 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					Network: &infrav1.NetworkStatusWithSubnets{
-						ID: "testetworkid1",
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "testetworkid1",
+						},
 					},
 				},
 			},
