@@ -608,8 +608,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Network: &infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{
-							Name: "testnetworkname"
-						}
+							Name: "testnetworkname",
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
@@ -646,8 +646,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Network: &infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{
-							Name: "testetworkname"
-						}
+							Name: "testetworkname",
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
