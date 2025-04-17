@@ -162,8 +162,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	// Allow change from spec.network.filter to spec.network.id only if it matches the current network.
 	if newObj.Spec.Network != nil && oldObj.Spec.Network != nil && oldObj.Status.Network != nil {
 		if ptr.Deref(newObj.Spec.Network.ID, "") == oldObj.Status.Network.ID {
-			newObj.Spec.Network.ID = nil
-			oldObj.Spec.Network.ID = nil
+			newObj.Spec.Network = nil
+			oldObj.Spec.Network = nil
 		}
 	}
 
