@@ -16,21 +16,21 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/spf13/pflag v1.0.6
-	go.uber.org/mock v0.5.1
+	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.37.0
 	golang.org/x/text v0.24.0
 	gopkg.in/ini.v1 v1.67.0
-	k8s.io/api v0.31.7
-	k8s.io/apiextensions-apiserver v0.31.7
-	k8s.io/apimachinery v0.31.7
-	k8s.io/client-go v0.31.7
-	k8s.io/code-generator v0.31.7
-	k8s.io/component-base v0.31.7
+	k8s.io/api v0.31.8
+	k8s.io/apiextensions-apiserver v0.31.8
+	k8s.io/apimachinery v0.31.8
+	k8s.io/client-go v0.31.8
+	k8s.io/code-generator v0.31.8
+	k8s.io/component-base v0.31.8
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
-	sigs.k8s.io/cluster-api v1.9.6
-	sigs.k8s.io/cluster-api/test v1.9.6
+	sigs.k8s.io/cluster-api v1.9.7
+	sigs.k8s.io/cluster-api/test v1.9.7
 	sigs.k8s.io/controller-runtime v0.19.7
 	sigs.k8s.io/structured-merge-diff/v4 v4.5.0
 	sigs.k8s.io/yaml v1.4.0
@@ -150,7 +150,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiserver v0.31.7 // indirect
+	k8s.io/apiserver v0.31.8 // indirect
 	k8s.io/cluster-bootstrap v0.31.3 // indirect
 	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.30.3 // indirect
