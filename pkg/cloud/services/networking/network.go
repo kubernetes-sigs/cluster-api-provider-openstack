@@ -25,6 +25,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -258,16 +259,11 @@ func (s *Service) updateSubnetDNSNameservers(openStackCluster *infrav1.OpenStack
 	desiredNameservers := openStackCluster.Spec.ManagedSubnets[0].DNSNameservers
 	currentNameservers := subnet.DNSNameservers
 
-	needsUpdate := false
+	var needsUpdate bool
 	if len(desiredNameservers) != len(currentNameservers) {
 		needsUpdate = true
 	} else {
-		for i, ns := range desiredNameservers {
-			if i >= len(currentNameservers) || ns != currentNameservers[i] {
-				needsUpdate = true
-				break
-			}
-		}
+		needsUpdate = !equality.Semantic.DeepEqual(currentNameservers, desiredNameservers)
 	}
 
 	if needsUpdate {

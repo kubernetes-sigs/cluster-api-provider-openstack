@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
@@ -127,7 +128,7 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) { //nolint:gocyclo,cyclop
 	var allErrs field.ErrorList
 	oldObj, err := castToOpenStackCluster(oldObjRaw)
 	if err != nil {
@@ -219,7 +220,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 				}
 
 				// Check if AllocationPools have changed
-				if !reflect.DeepEqual(oldSubnet.AllocationPools, newSubnet.AllocationPools) {
+				if !equality.Semantic.DeepEqual(oldSubnet.AllocationPools, newSubnet.AllocationPools) {
 					allErrs = append(allErrs, field.Forbidden(
 						field.NewPath("spec", "managedSubnets").Child("allocationPools"),
 						"cannot modify allocation pools in existing subnet",

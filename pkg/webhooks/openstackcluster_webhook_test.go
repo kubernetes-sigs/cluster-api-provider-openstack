@@ -902,6 +902,441 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: true,
 		},
+
+		{
+			name: "Changing OpenStackCluster.Spec.ManagedSubnets.DNSNameservers is allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+								"8.8.4.4",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"1.1.1.1",
+								"1.0.0.1",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Adding new DNSNameserver to OpenStackCluster.Spec.ManagedSubnets.DNSNameservers is allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+								"8.8.4.4",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Removing DNSNameservers from OpenStackCluster.Spec.ManagedSubnets is allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+								"8.8.4.4",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR:           "192.168.1.0/24",
+							DNSNameservers: []string{},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Multiple subnets with DNSNameservers changes are allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+						{
+							CIDR: "192.168.2.0/24",
+							DNSNameservers: []string{
+								"8.8.4.4",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.2.10",
+									End:   "192.168.2.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"1.1.1.1",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+						{
+							CIDR: "192.168.2.0/24",
+							DNSNameservers: []string{
+								"1.0.0.1",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.2.10",
+									End:   "192.168.2.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing CIDR in OpenStackCluster.Spec.ManagedSubnets is not allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "10.0.0.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "10.0.0.10",
+									End:   "10.0.0.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Modifying AllocationPools in OpenStackCluster.Spec.ManagedSubnets is not allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.20",
+									End:   "192.168.1.200",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Adding a new subnet to OpenStackCluster.Spec.ManagedSubnets is not allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+						{
+							CIDR: "192.168.2.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.2.10",
+									End:   "192.168.2.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Removing a subnet from OpenStackCluster.Spec.ManagedSubnets is not allowed",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+						{
+							CIDR: "192.168.2.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.2.10",
+									End:   "192.168.2.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "192.168.1.0/24",
+							DNSNameservers: []string{
+								"8.8.8.8",
+							},
+							AllocationPools: []infrav1.AllocationPool{
+								{
+									Start: "192.168.1.10",
+									End:   "192.168.1.100",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
