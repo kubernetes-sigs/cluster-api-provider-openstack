@@ -11,7 +11,7 @@ require (
 	github.com/gophercloud/gophercloud/v2 v2.7.0
 	github.com/gophercloud/utils/v2 v2.0.0-20241220104409-2e0af06694a1
 	github.com/hashicorp/go-version v1.7.0
-	github.com/k-orc/openstack-resource-controller/v2 v2.0.3
+	github.com/k-orc/openstack-resource-controller/v2 v2.1.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/prometheus/client_golang v1.22.0
@@ -32,7 +32,7 @@ require (
 	sigs.k8s.io/cluster-api v1.10.1
 	sigs.k8s.io/cluster-api/test v1.10.1
 	sigs.k8s.io/controller-runtime v0.20.4
-	sigs.k8s.io/structured-merge-diff/v4 v4.6.0
+	sigs.k8s.io/structured-merge-diff/v4 v4.7.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
