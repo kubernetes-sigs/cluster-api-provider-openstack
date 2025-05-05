@@ -11,14 +11,14 @@ require (
 	github.com/gophercloud/gophercloud/v2 v2.7.0
 	github.com/gophercloud/utils/v2 v2.0.0-20241209100706-e3a3b7c07d26
 	github.com/hashicorp/go-version v1.7.0
-	github.com/k-orc/openstack-resource-controller v1.0.1
+	github.com/k-orc/openstack-resource-controller v1.0.2
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/spf13/pflag v1.0.6
 	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.37.0
-	golang.org/x/text v0.24.0
+	golang.org/x/text v0.25.0
 	gopkg.in/ini.v1 v1.67.0
 	k8s.io/api v0.31.8
 	k8s.io/apiextensions-apiserver v0.31.8
@@ -32,7 +32,7 @@ require (
 	sigs.k8s.io/cluster-api v1.9.7
 	sigs.k8s.io/cluster-api/test v1.9.7
 	sigs.k8s.io/controller-runtime v0.19.7
-	sigs.k8s.io/structured-merge-diff/v4 v4.5.0
+	sigs.k8s.io/structured-merge-diff/v4 v4.7.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -136,7 +136,7 @@ require (
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/term v0.31.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
