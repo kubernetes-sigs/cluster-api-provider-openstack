@@ -24,7 +24,7 @@ export GO111MODULE=on
 unexport GOPATH
 
 # Go
-GO_VERSION ?= 1.23.4
+GO_VERSION ?= 1.23.8
 
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
