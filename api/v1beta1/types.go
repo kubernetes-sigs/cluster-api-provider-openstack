@@ -879,6 +879,39 @@ type APIServerLoadBalancer struct {
 	// Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
 	//+optional
 	Flavor optional.String `json:"flavor,omitempty"`
+
+	// Monitor contains configuration for the load balancer health monitor.
+	//+optional
+	Monitor *APIServerLoadBalancerMonitor `json:"monitor,omitempty"`
+}
+
+// APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
+type APIServerLoadBalancerMonitor struct {
+	// Delay is the time in seconds between sending probes to members.
+	//+optional
+	//+kubebuilder:validation:Minimum=0
+	//+kubebuilder:default:10
+	Delay int `json:"delay,omitempty"`
+
+	// Timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
+	//+optional
+	//+kubebuilder:validation:Minimum=0
+	//+kubebuilder:default:5
+	Timeout int `json:"timeout,omitempty"`
+
+	// MaxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
+	//+optional
+	//+kubebuilder:validation:Minimum=0
+	//+kubebuilder:validation:Maximum=10
+	//+kubebuilder:default:5
+	MaxRetries int `json:"maxRetries,omitempty"`
+
+	// MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
+	//+optional
+	//+kubebuilder:validation:Minimum=1
+	//+kubebuilder:validation:Maximum=10
+	//+kubebuilder:default:3
+	MaxRetriesDown int `json:"maxRetriesDown,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {
