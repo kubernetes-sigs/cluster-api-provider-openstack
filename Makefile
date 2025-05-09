@@ -23,16 +23,19 @@ include $(ROOT_DIR_RELATIVE)/common.mk
 export GO111MODULE=on
 unexport GOPATH
 
+# Enables shell script tracing. Enable by running: TRACE=1 make <target>
+TRACE ?= 0
+
 # Go
 GO_VERSION ?= 1.23.8
 
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
 TOOLS_DIR := hack/tools
-TOOLS_DIR_DEPS := $(TOOLS_DIR)/go.sum $(TOOLS_DIR)/go.mod $(TOOLS_DIR)/Makefile
-TOOLS_BIN_DIR := $(TOOLS_DIR)/bin
-
 BIN_DIR := bin
+TOOLS_DIR_DEPS := $(TOOLS_DIR)/go.sum $(TOOLS_DIR)/go.mod $(TOOLS_DIR)/Makefile
+TOOLS_BIN_DIR := $(TOOLS_DIR)/$(BIN_DIR)
+
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 GH_REPO ?= kubernetes-sigs/cluster-api-provider-openstack
 TEST_E2E_DIR := test/e2e
@@ -49,6 +52,13 @@ GO_APIDIFF_VER := v0.8.2
 GO_APIDIFF_BIN := go-apidiff
 GO_APIDIFF_PKG := github.com/joelanford/go-apidiff
 
+# govulncheck
+GOVULNCHECK_VER := v1.1.4
+GOVULNCHECK_BIN := govulncheck
+GOVULNCHECK_PKG := golang.org/x/vuln/cmd/govulncheck
+
+TRIVY_VER := 0.49.1
+
 # Binaries.
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
 ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
@@ -62,6 +72,7 @@ RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 SETUP_ENVTEST := $(TOOLS_BIN_DIR)/setup-envtest
 GEN_CRD_API_REFERENCE_DOCS := $(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GO_APIDIFF := $(TOOLS_BIN_DIR)/$(GO_APIDIFF_BIN)-$(GO_APIDIFF_VER)
+GOVULNCHECK := $(TOOLS_BIN_DIR)/$(GOVULNCHECK_BIN)-$(GOVULNCHECK_VER)
 
 # Kubebuilder
 export KUBEBUILDER_ENVTEST_KUBERNETES_VERSION ?= 1.28.0
@@ -252,6 +263,12 @@ $(GO_APIDIFF_BIN): $(GO_APIDIFF)
 
 $(GO_APIDIFF): # Build go-apidiff.
 	GOBIN=$(abspath $(TOOLS_BIN_DIR)) $(GO_INSTALL) $(GO_APIDIFF_PKG) $(GO_APIDIFF_BIN) $(GO_APIDIFF_VER)
+
+.PHONY: $(GOVULNCHECK_BIN)
+$(GOVULNCHECK_BIN): $(GOVULNCHECK) ## Build a local copy of govulncheck.
+
+$(GOVULNCHECK): # Build govulncheck.
+	GOBIN=$(abspath $(TOOLS_BIN_DIR)) $(GO_INSTALL) $(GOVULNCHECK_PKG) $(GOVULNCHECK_BIN) $(GOVULNCHECK_VER)
 
 ## --------------------------------------
 ##@ Linting
@@ -549,8 +566,12 @@ clean-temporary: ## Remove all temporary files and folders
 clean-release: ## Remove the release folder
 	rm -rf $(RELEASE_DIR)
 
+.PHONY: clean-release-git
+clean-release-git: ## Restores the git files usually modified during a release
+	git restore ./*manager_image_patch.yaml ./*manager_pull_policy.yaml
+
 .PHONY: verify
-verify: verify-boilerplate verify-modules verify-gen
+verify: verify-boilerplate verify-modules verify-gen verify-govulncheck
 
 .PHONY: verify-boilerplate
 verify-boilerplate:
@@ -568,6 +589,27 @@ verify-gen: generate
 	@if !(git diff --quiet HEAD); then \
 		git diff; \
 		echo "generated files are out of date, run make generate"; exit 1; \
+	fi
+
+.PHONY: verify-container-images
+verify-container-images: ## Verify container images
+	TRACE=$(TRACE) ./hack/verify-container-images.sh $(TRIVY_VER)
+
+.PHONY: verify-govulncheck
+verify-govulncheck: $(GOVULNCHECK) ## Verify code for vulnerabilities
+	$(GOVULNCHECK) ./... && R1=$$? || R1=$$?; \
+	$(GOVULNCHECK) -C "$(TOOLS_DIR)" ./... && R2=$$? || R2=$$?; \
+	if [ "$$R1" -ne "0" ] || [ "$$R2" -ne "0" ]; then \
+		exit 1; \
+	fi
+
+.PHONY: verify-security
+verify-security: ## Verify code and images for vulnerabilities
+	$(MAKE) verify-container-images && R1=$$? || R1=$$?; \
+	$(MAKE) verify-govulncheck && R2=$$? || R2=$$?; \
+	if [ "$$R1" -ne "0" ] || [ "$$R2" -ne "0" ]; then \
+	  echo "Check for vulnerabilities failed! There are vulnerabilities to be fixed"; \
+		exit 1; \
 	fi
 
 .PHONY: compile-e2e
