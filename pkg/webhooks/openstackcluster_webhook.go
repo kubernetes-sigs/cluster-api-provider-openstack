@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
@@ -127,7 +128,7 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) { //nolint:gocyclo,cyclop
 	var allErrs field.ErrorList
 	oldObj, err := castToOpenStackCluster(oldObjRaw)
 	if err != nil {
@@ -191,6 +192,62 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 		// Allow change to the allowAllInClusterTraffic.
 		oldObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
 		newObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
+	}
+
+	// Allow changes only to DNSNameservers in ManagedSubnets spec
+	if newObj.Spec.ManagedSubnets != nil && oldObj.Spec.ManagedSubnets != nil {
+		// Check if any fields other than DNSNameservers have changed
+		if len(oldObj.Spec.ManagedSubnets) != len(newObj.Spec.ManagedSubnets) {
+			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "managedSubnets"), "cannot add or remove subnets"))
+		} else {
+			// Build maps of subnets by CIDR
+			oldSubnetMap := make(map[string]infrav1.SubnetSpec)
+			newSubnetMap := make(map[string]infrav1.SubnetSpec)
+
+			for _, subnet := range oldObj.Spec.ManagedSubnets {
+				oldSubnetMap[subnet.CIDR] = subnet
+			}
+
+			// Check if all new subnets have matching old subnets with the same CIDR
+			for _, newSubnet := range newObj.Spec.ManagedSubnets {
+				oldSubnet, exists := oldSubnetMap[newSubnet.CIDR]
+				if !exists {
+					allErrs = append(allErrs, field.Forbidden(
+						field.NewPath("spec", "managedSubnets"),
+						fmt.Sprintf("cannot change subnet CIDR from existing value to %s", newSubnet.CIDR),
+					))
+					continue
+				}
+
+				// Check if AllocationPools have changed
+				if !equality.Semantic.DeepEqual(oldSubnet.AllocationPools, newSubnet.AllocationPools) {
+					allErrs = append(allErrs, field.Forbidden(
+						field.NewPath("spec", "managedSubnets").Child("allocationPools"),
+						"cannot modify allocation pools in existing subnet",
+					))
+				}
+
+				newSubnetMap[newSubnet.CIDR] = newSubnet
+			}
+
+			// Create modified copies of the subnets with DNSNameservers cleared
+			oldSubnets := make([]infrav1.SubnetSpec, 0, len(oldObj.Spec.ManagedSubnets))
+			newSubnets := make([]infrav1.SubnetSpec, 0, len(newObj.Spec.ManagedSubnets))
+			for _, subnet := range oldObj.Spec.ManagedSubnets {
+				subnetCopy := subnet
+				subnetCopy.DNSNameservers = nil
+				oldSubnets = append(oldSubnets, subnetCopy)
+
+				if newSubnet, exists := newSubnetMap[subnet.CIDR]; exists {
+					newSubnetCopy := newSubnet
+					newSubnetCopy.DNSNameservers = nil
+					newSubnets = append(newSubnets, newSubnetCopy)
+				}
+			}
+
+			oldObj.Spec.ManagedSubnets = oldSubnets
+			newObj.Spec.ManagedSubnets = newSubnets
+		}
 	}
 
 	// Allow changes on AllowedCIDRs
