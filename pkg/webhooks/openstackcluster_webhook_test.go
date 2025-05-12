@@ -510,6 +510,310 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Switching OpenStackCluster.Spec.Network from filter.name to id is allowed when they refer to the same network",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						Filter: &infrav1.NetworkFilter{
+							Name: "testnetworkname",
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "testnetworkid",
+							Name: "testnetworkname",
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("testnetworkid"),
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "testnetworkid",
+							Name: "testnetworkname",
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Switching OpenStackCluster.Spec.Network from filter.name to id is not allowed when they refer to different networks",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						Filter: &infrav1.NetworkFilter{
+							Name: "testetworkname",
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "testetworkid1",
+							Name: "testnetworkname",
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("testetworkid2"),
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "testetworkid1",
+							Name: "testnetworkname",
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Switching OpenStackCluster.Spec.Subnets from filter.name to id is allowed when they refer to the same subnet",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					Subnets: []infrav1.SubnetParam{
+						{
+							Filter: &infrav1.SubnetFilter{
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "subnet-123",
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					Subnets: []infrav1.SubnetParam{
+						{
+							ID: ptr.To("subnet-123"),
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "subnet-123",
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Switching OpenStackCluster.Spec.Subnets from filter.name to id is not allowed when they refer to different subnets",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					Subnets: []infrav1.SubnetParam{
+						{
+							Filter: &infrav1.SubnetFilter{
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "subnet-123",
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					Subnets: []infrav1.SubnetParam{
+						{
+							ID: ptr.To("wrong-subnet"),
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "subnet-123",
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Switching one OpenStackCluster.Spec.Subnets entry from filter to a mismatched ID (from another subnet) should be rejected, even if other subnets remain unchanged",
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					Subnets: []infrav1.SubnetParam{
+						{
+							Filter: &infrav1.SubnetFilter{
+								Name: "test-subnet-1",
+							},
+						},
+						{
+							Filter: &infrav1.SubnetFilter{
+								Name: "test-subnet-2",
+							},
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "test-subnet-id-1",
+								Name: "test-subnet-1",
+							},
+							{
+								ID:   "test-subnet-id-2",
+								Name: "test-subnet-2",
+							},
+						},
+					},
+				},
+			},
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					Subnets: []infrav1.SubnetParam{
+						{
+							ID: ptr.To("test-subnet-id-2"),
+						},
+						{
+							Filter: &infrav1.SubnetFilter{
+								Name: "test-subnet-2",
+							},
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "test-subnet-id-1",
+								Name: "test-subnet-1",
+							},
+							{
+								ID:   "test-subnet-id-2",
+								Name: "test-subnet-2",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
