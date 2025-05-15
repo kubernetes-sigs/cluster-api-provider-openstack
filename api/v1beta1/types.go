@@ -723,12 +723,12 @@ type SecurityGroupRuleSpec struct {
 	// security group rule is applied to incoming (ingress) traffic for that
 	// instance. An egress rule is applied to traffic leaving the instance.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:enum=ingress;egress
+	// +kubebuilder:validation:Enum=ingress;egress
 	Direction string `json:"direction"`
 
 	// etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
 	// ingress or egress rules.
-	// +kubebuilder:validation:enum=IPv4;IPv6
+	// +kubebuilder:validation:Enum=IPv4;IPv6
 	// +optional
 	EtherType *string `json:"etherType,omitempty"`
 

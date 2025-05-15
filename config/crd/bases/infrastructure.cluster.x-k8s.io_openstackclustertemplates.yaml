@@ -1546,11 +1546,17 @@ spec:
                                     allowed are "ingress" or "egress". For a compute instance, an ingress
                                     security group rule is applied to incoming (ingress) traffic for that
                                     instance. An egress rule is applied to traffic leaving the instance.
+                                  enum:
+                                  - ingress
+                                  - egress
                                   type: string
                                 etherType:
                                   description: |-
                                     etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
                                     ingress or egress rules.
+                                  enum:
+                                  - IPv4
+                                  - IPv6
                                   type: string
                                 name:
                                   description: |-
@@ -1627,11 +1633,17 @@ spec:
                                     allowed are "ingress" or "egress". For a compute instance, an ingress
                                     security group rule is applied to incoming (ingress) traffic for that
                                     instance. An egress rule is applied to traffic leaving the instance.
+                                  enum:
+                                  - ingress
+                                  - egress
                                   type: string
                                 etherType:
                                   description: |-
                                     etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
                                     ingress or egress rules.
+                                  enum:
+                                  - IPv4
+                                  - IPv6
                                   type: string
                                 name:
                                   description: |-
@@ -1702,11 +1714,17 @@ spec:
                                     allowed are "ingress" or "egress". For a compute instance, an ingress
                                     security group rule is applied to incoming (ingress) traffic for that
                                     instance. An egress rule is applied to traffic leaving the instance.
+                                  enum:
+                                  - ingress
+                                  - egress
                                   type: string
                                 etherType:
                                   description: |-
                                     etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
                                     ingress or egress rules.
+                                  enum:
+                                  - IPv4
+                                  - IPv6
                                   type: string
                                 name:
                                   description: |-
