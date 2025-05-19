@@ -8,7 +8,7 @@ require (
 	github.com/itchyny/gojq v0.12.17
 	github.com/onsi/ginkgo/v2 v2.23.4
 	go.uber.org/mock v0.5.2
-	k8s.io/code-generator v0.32.4
+	k8s.io/code-generator v0.32.5
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20221129083400-679ae3e9e6b6
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20230926180527-c93e2abcb28e
@@ -117,13 +117,13 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.32.4 // indirect
-	k8s.io/apiextensions-apiserver v0.32.4 // indirect
-	k8s.io/apimachinery v0.32.4 // indirect
-	k8s.io/apiserver v0.32.4 // indirect
-	k8s.io/client-go v0.32.4 // indirect
+	k8s.io/api v0.32.5 // indirect
+	k8s.io/apiextensions-apiserver v0.32.5 // indirect
+	k8s.io/apimachinery v0.32.5 // indirect
+	k8s.io/apiserver v0.32.5 // indirect
+	k8s.io/client-go v0.32.5 // indirect
 	k8s.io/cluster-bootstrap v0.32.3 // indirect
-	k8s.io/component-base v0.32.4 // indirect
+	k8s.io/component-base v0.32.5 // indirect
 	k8s.io/gengo v0.0.0-20201203183100-97869a43a9d9 // indirect
 	k8s.io/gengo/v2 v2.0.0-20240911193312-2b36238f13e9 // indirect
 	k8s.io/klog v0.2.0 // indirect
