@@ -27,7 +27,7 @@ unexport GOPATH
 TRACE ?= 0
 
 # Go
-GO_VERSION ?= 1.22.7
+GO_VERSION ?= 1.22.12
 
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
@@ -359,7 +359,7 @@ generate-api-docs-%: $(GEN_CRD_API_REFERENCE_DOCS) FORCE
 
 .PHONY: docker-build
 docker-build: ## Build the docker image for controller-manager
-	docker build -f Dockerfile --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg ldflags="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
+	docker build -f Dockerfile --build-arg GO_VERSION=$(GO_VERSION) --build-arg goproxy=$(GOPROXY) --build-arg ARCH=$(ARCH) --build-arg ldflags="$(LDFLAGS)" . -t $(CONTROLLER_IMG_TAG)
 
 .PHONY: docker-push
 docker-push: ## Push the docker image
