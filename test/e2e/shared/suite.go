@@ -155,10 +155,7 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 	e2eCtx.Environment.BootstrapClusterProvider, e2eCtx.Environment.BootstrapClusterProxy = setupBootstrapCluster(e2eCtx.E2EConfig, e2eCtx.Environment.Scheme, e2eCtx.Settings.UseExistingCluster)
 
 	Logf("Initializing the bootstrap cluster")
-	initBootstrapCluster(e2eCtx)
-
-	// Create credentials used by all glance images
-	CreateGlanceCredentials(ctx, e2eCtx)
+	initBootstrapCluster(ctx, e2eCtx)
 
 	conf := synchronizedBeforeTestSuiteConfig{
 		ArtifactFolder:          e2eCtx.Settings.ArtifactFolder,

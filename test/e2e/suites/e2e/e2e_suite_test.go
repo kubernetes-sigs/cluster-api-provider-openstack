@@ -39,9 +39,8 @@ import (
 )
 
 var (
-	e2eCtx       *shared.E2EContext
-	err          error
-	upgradeImage shared.DownloadImage
+	e2eCtx *shared.E2EContext
+	err    error
 )
 
 func init() {
@@ -97,11 +96,6 @@ var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
 	return data
 }, func(data []byte) {
 	shared.AllNodesBeforeSuite(e2eCtx, data)
-
-	upgradeImage = shared.DownloadImage{
-		Name:         "capo-upgrade-from",
-		ArtifactPath: "ubuntu/2024-05-28/" + e2eCtx.E2EConfig.MustGetVariable("OPENSTACK_IMAGE_NAME_UPGRADE_FROM") + ".img",
-	}
 })
 
 // CheckResourceCleanup checks if all resources created during the test are cleaned up by comparing the resources

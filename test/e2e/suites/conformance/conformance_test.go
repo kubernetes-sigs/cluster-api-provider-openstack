@@ -49,8 +49,6 @@ var _ = Describe("conformance tests", func() {
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
 		// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
 		namespace = shared.SetupSpecNamespace(ctx, specName, e2eCtx)
-
-		shared.ApplyCoreImagesPlus(ctx, e2eCtx)
 	})
 
 	It(specName, func(ctx context.Context) {
