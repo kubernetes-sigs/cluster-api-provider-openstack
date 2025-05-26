@@ -1,0 +1,25 @@
+apiVersion: openstack.k-orc.cloud/v1alpha1
+kind: Image
+metadata:
+  name: node-image
+spec:
+  import:
+    filter:
+      name: ${OPENSTACK_IMAGE_NAME}
+  managementPolicy: unmanaged
+  cloudCredentialsRef:
+    secretName: ${CLUSTER_NAME}-cloud-config
+    cloudName: ${OPENSTACK_CLOUD}
+---
+apiVersion: openstack.k-orc.cloud/v1alpha1
+kind: Image
+metadata:
+  name: bastion-image
+spec:
+  import:
+    filter:
+      name: ${OPENSTACK_BASTION_IMAGE_NAME}
+  managementPolicy: unmanaged
+  cloudCredentialsRef:
+    secretName: ${CLUSTER_NAME}-cloud-config
+    cloudName: ${OPENSTACK_CLOUD}
