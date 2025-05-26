@@ -55,6 +55,7 @@ const (
 	FlavorWithoutLB            = "without-lb"
 	FlavorMultiNetwork         = "multi-network"
 	FlavorMultiAZ              = "multi-az"
+	FlavorWithoutORC           = "without-orc"
 	FlavorV1alpha7             = "v1alpha7"
 	FlavorMDRemediation        = "md-remediation"
 	FlavorKCPRemediation       = "kcp-remediation"

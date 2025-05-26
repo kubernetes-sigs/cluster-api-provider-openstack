@@ -177,6 +177,7 @@ E2E_NO_ARTIFACT_TEMPLATES_DIR=test/e2e/data/infrastructure-openstack-no-artifact
 e2e-templates: ## Generate cluster templates for e2e tests
 e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-v1alpha7.yaml \
+		 cluster-template-without-orc.yaml \
 		 cluster-template-md-remediation.yaml \
 		 cluster-template-kcp-remediation.yaml \
 		 cluster-template-multi-az.yaml \
@@ -184,7 +185,7 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-without-lb.yaml \
 		 cluster-template.yaml \
 		 cluster-template-flatcar.yaml \
-                 cluster-template-k8s-upgrade.yaml \
+     cluster-template-k8s-upgrade.yaml \
 		 cluster-template-flatcar-sysext.yaml \
 		 cluster-template-no-bastion.yaml)
 # Currently no templates that require CI artifacts

@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../../../../kustomize/v1beta1/default
+
+components:
+- ../common-patches/cluster
+- ../common-patches/cni
+- ../upgrade-patches
+- ../common-patches/ccm
+- ../common-patches/externalNetworkByName
+- ../common-patches/images-without-ref

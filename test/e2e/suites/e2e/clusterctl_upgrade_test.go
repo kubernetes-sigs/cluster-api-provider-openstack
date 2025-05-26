@@ -30,7 +30,7 @@ import (
 
 const OldCAPIVersion = "v1.6.0"
 
-var _ = Describe("When testing clusterctl upgrades (v0.9=>current) [clusterctl-upgrade]", func() {
+var _ = Describe("When testing clusterctl upgrades (v0.10=>current) [clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
 		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
 
@@ -53,12 +53,12 @@ var _ = Describe("When testing clusterctl upgrades (v0.9=>current) [clusterctl-u
 			SkipCleanup:                     false,
 			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + OldCAPIVersion + "/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract:       "v1beta1",
-			InitWithInfrastructureProviders: []string{"openstack:v0.9.0"},
+			InitWithInfrastructureProviders: []string{"openstack:v0.10.8"},
 			InitWithCoreProvider:            "cluster-api:" + OldCAPIVersion,
 			InitWithBootstrapProviders:      []string{"kubeadm:" + OldCAPIVersion},
 			InitWithControlPlaneProviders:   []string{"kubeadm:" + OldCAPIVersion},
 			MgmtFlavor:                      shared.FlavorDefault,
-			WorkloadFlavor:                  shared.FlavorV1alpha7,
+			WorkloadFlavor:                  shared.FlavorWithoutORC,
 			InitWithKubernetesVersion:       e2eCtx.E2EConfig.GetVariable(shared.KubernetesVersion),
 		}
 	})

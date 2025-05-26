@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+- images.yaml
+
+patches:
+- target:
+    group: infrastructure.cluster.x-k8s.io
+    version: v1beta1
+    kind: OpenStackMachineTemplate
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/image
+      value:
+        filter:
+          name: ${OPENSTACK_IMAGE_NAME}
+- target:
+    group: infrastructure.cluster.x-k8s.io
+    version: v1beta1
+    kind: OpenStackCluster
+  patch: |-
+    - op: replace
+      path: /spec/bastion/spec/image
+      value:
+        filter:
+          name: ${OPENSTACK_BASTION_IMAGE_NAME}
