@@ -173,6 +173,9 @@ variables:
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.6.1-x86_64-disk"
+  OPENSTACK_BASTION_IMAGE_URL: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
+  OPENSTACK_BASTION_IMAGE_HASH: 0c839612eb3f2469420f2ccae990827f
+  OPENSTACK_BASTION_IMAGE_HASH_ALGORITHM: "md5"
   OPENSTACK_BASTION_MACHINE_FLAVOR: "m1.tiny"
   OPENSTACK_BASTION_MACHINE_FLAVOR_ALT: "m1.tiny.alt"
   OPENSTACK_CLOUD: "capo-e2e"
@@ -184,7 +187,9 @@ variables:
   OPENSTACK_FAILURE_DOMAIN: "testaz1"
   OPENSTACK_FAILURE_DOMAIN_ALT: "testaz2"
   OPENSTACK_IMAGE_NAME: "ubuntu-2404-kube-v1.31.2"
+  OPENSTACK_IMAGE_URL: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2024-11-21/ubuntu-2404-kube-v1.31.2.img
   OPENSTACK_IMAGE_NAME_UPGRADE_FROM: "ubuntu-2204-kube-v1.30.1"
+  OPENSTACK_IMAGE_URL_UPGRADE_FROM: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/ubuntu/2024-05-28/ubuntu-2204-kube-v1.30.1.img
   OPENSTACK_NODE_MACHINE_FLAVOR: "m1.small"
   OPENSTACK_SSH_KEY_NAME: "cluster-api-provider-openstack-sigs-k8s-io"
   # The default external network created by devstack
@@ -198,8 +203,10 @@ variables:
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
   # The Flatcar image produced by the image-builder
   OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-4152.2.0-kube-v1.31.2"
+  OPENSTACK_FLATCAR_IMAGE_URL: "https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-4152.2.0-kube-v1.31.2.img"
   # A plain Flatcar from the Flatcar releases server
   FLATCAR_IMAGE_NAME: "flatcar_production_openstack_image"
+  FLATCAR_IMAGE_URL: https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]

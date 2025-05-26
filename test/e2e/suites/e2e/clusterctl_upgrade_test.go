@@ -38,7 +38,6 @@ var (
 
 var _ = Describe("When testing clusterctl upgrades (v0.11=>current) [clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
-		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
 		setDownloadE2EImageEnvVar()
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
 		capoRelease011, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.11")
@@ -72,7 +71,6 @@ var _ = Describe("When testing clusterctl upgrades (v0.11=>current) [clusterctl-
 
 var _ = Describe("When testing clusterctl upgrades (v0.12=>current) [clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
-		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
 		setDownloadE2EImageEnvVar()
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
 		capoRelease012, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.12")

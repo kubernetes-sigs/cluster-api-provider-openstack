@@ -1,0 +1,20 @@
+apiVersion: openstack.k-orc.cloud/v1alpha1
+kind: Image
+metadata:
+  name: node-image-upgrade-from
+  labels:
+    clusterctl.cluster.x-k8s.io/move: ""
+spec:
+  resource:
+    name: ${OPENSTACK_IMAGE_NAME_UPGRADE_FROM}
+    content:
+      containerFormat: bare
+      diskFormat: qcow2
+      download:
+        url: ${OPENSTACK_IMAGE_URL_UPGRADE_FROM}
+  managementPolicy: managed
+  managedOptions:
+    onDelete: detach
+  cloudCredentialsRef:
+    secretName: ${CLUSTER_NAME}-cloud-config
+    cloudName: ${OPENSTACK_CLOUD}

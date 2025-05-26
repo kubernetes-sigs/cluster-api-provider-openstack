@@ -19,5 +19,8 @@ patches:
     name: node-image
   patch: |-
     - op: replace
-      path: /spec/import/filter/name
+      path: /spec/resource/name
       value: ${OPENSTACK_FLATCAR_IMAGE_NAME}
+    - op: replace
+      path: /spec/resource/content/download/url
+      value: ${OPENSTACK_FLATCAR_IMAGE_URL}
