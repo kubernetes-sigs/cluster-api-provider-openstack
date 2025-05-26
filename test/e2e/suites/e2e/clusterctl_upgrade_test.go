@@ -23,25 +23,31 @@ import (
 	"context"
 
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	capi_e2e "sigs.k8s.io/cluster-api/test/e2e"
+	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
-const OldCAPIVersion = "v1.6.0"
+var (
+	capoRelease011 string
+	capoRelease012 string
+	capiRelease19  string
+)
 
-var _ = Describe("When testing clusterctl upgrades (v0.10=>current) [clusterctl-upgrade]", func() {
+var _ = Describe("When testing clusterctl upgrades (v0.11=>current) [clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
 		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
-
-		// The upgrade job can't use image references in its machine templates,
-		// so we must wait for the images to be available before running the
-		// test.
-		coreImages := shared.CoreImages(e2eCtx)
-		allImages := append(coreImages, upgradeImage)
-		shared.WaitForGlanceImagesAvailable(ctx, e2eCtx, allImages)
-
 		setDownloadE2EImageEnvVar()
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		capoRelease011, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.11")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
+		capoRelease011 = "v" + capoRelease011
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		capiRelease19, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.9")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
+		capiRelease19 = "v" + capiRelease19
 	})
 
 	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
@@ -51,14 +57,48 @@ var _ = Describe("When testing clusterctl upgrades (v0.10=>current) [clusterctl-
 			BootstrapClusterProxy:           e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:                  e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:                     false,
-			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + OldCAPIVersion + "/clusterctl-{OS}-{ARCH}",
+			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease19 + "/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract:       "v1beta1",
-			InitWithInfrastructureProviders: []string{"openstack:v0.10.0"},
-			InitWithCoreProvider:            "cluster-api:" + OldCAPIVersion,
-			InitWithBootstrapProviders:      []string{"kubeadm:" + OldCAPIVersion},
-			InitWithControlPlaneProviders:   []string{"kubeadm:" + OldCAPIVersion},
+			InitWithInfrastructureProviders: []string{"openstack:" + capoRelease011},
+			InitWithCoreProvider:            "cluster-api:" + capiRelease19,
+			InitWithBootstrapProviders:      []string{"kubeadm:" + capiRelease19},
+			InitWithControlPlaneProviders:   []string{"kubeadm:" + capiRelease19},
 			MgmtFlavor:                      shared.FlavorDefault,
-			WorkloadFlavor:                  shared.FlavorWithoutORC,
+			WorkloadFlavor:                  shared.FlavorDefault,
+			InitWithKubernetesVersion:       e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
+		}
+	})
+})
+
+var _ = Describe("When testing clusterctl upgrades (v0.12=>current) [clusterctl-upgrade]", func() {
+	BeforeEach(func(ctx context.Context) {
+		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
+		setDownloadE2EImageEnvVar()
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		capoRelease012, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.12")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
+		capoRelease012 = "v" + capoRelease012
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		capiRelease19, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.9")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
+		capiRelease19 = "v" + capiRelease19
+	})
+
+	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
+		return capi_e2e.ClusterctlUpgradeSpecInput{
+			E2EConfig:                       e2eCtx.E2EConfig,
+			ClusterctlConfigPath:            e2eCtx.Environment.ClusterctlConfigPath,
+			BootstrapClusterProxy:           e2eCtx.Environment.BootstrapClusterProxy,
+			ArtifactFolder:                  e2eCtx.Settings.ArtifactFolder,
+			SkipCleanup:                     false,
+			InitWithBinary:                  "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease19 + "/clusterctl-{OS}-{ARCH}",
+			InitWithProvidersContract:       "v1beta1",
+			InitWithInfrastructureProviders: []string{"openstack:" + capoRelease012},
+			InitWithCoreProvider:            "cluster-api:" + capiRelease19,
+			InitWithBootstrapProviders:      []string{"kubeadm:" + capiRelease19},
+			InitWithControlPlaneProviders:   []string{"kubeadm:" + capiRelease19},
+			MgmtFlavor:                      shared.FlavorDefault,
+			WorkloadFlavor:                  shared.FlavorDefault,
 			InitWithKubernetesVersion:       e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
 		}
 	})
