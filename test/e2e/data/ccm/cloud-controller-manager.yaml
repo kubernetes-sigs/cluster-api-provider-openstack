@@ -40,17 +40,22 @@ spec:
       serviceAccountName: cloud-controller-manager
       containers:
         - name: openstack-cloud-controller-manager
-          image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:v1.23.1
+          image: >-
+            registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.32.0
           args:
             - /bin/openstack-cloud-controller-manager
             - --v=1
+            - --cluster-name=$(CLUSTER_NAME)
             - --cloud-config=$(CLOUD_CONFIG)
             - --cloud-provider=openstack
-            - --use-service-account-credentials=true
+            - --use-service-account-credentials=false
             - --bind-address=127.0.0.1
           volumeMounts:
             - mountPath: /etc/kubernetes
               name: k8s
+              readOnly: true
+            - mountPath: /etc/kubernetes/pki
+              name: k8s-certs
               readOnly: true
             - mountPath: /etc/ssl/certs
               name: ca-certs
@@ -61,6 +66,8 @@ spec:
           env:
             - name: CLOUD_CONFIG
               value: /etc/kubernetes/cloud.conf
+            - name: CLUSTER_NAME
+              value: kubernetes
       hostNetwork: true
       volumes:
         - hostPath:
@@ -68,11 +75,15 @@ spec:
             type: DirectoryOrCreate
           name: k8s
         - hostPath:
+            path: /etc/kubernetes/pki
+            type: DirectoryOrCreate
+          name: k8s-certs
+        - hostPath:
             path: /etc/ssl/certs
             type: DirectoryOrCreate
           name: ca-certs
 ---
-# From: https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-role-bindings.yaml
+# https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/heads/master/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -99,7 +110,7 @@ subjects:
   name: cloud-controller-manager
   namespace: kube-system
 ---
-# From: https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-roles.yaml
+# https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/heads/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
