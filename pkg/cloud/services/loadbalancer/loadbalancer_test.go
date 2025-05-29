@@ -88,12 +88,14 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	}
 	lbtests := []struct {
 		name               string
+		clusterSpec        *infrav1.OpenStackCluster
 		expectNetwork      func(m *mock.MockNetworkClientMockRecorder)
 		expectLoadBalancer func(m *mock.MockLbClientMockRecorder)
 		wantError          error
 	}{
 		{
-			name: "reconcile loadbalancer in non active state should wait for active state",
+			name:        "reconcile loadbalancer in non active state should wait for active state",
+			clusterSpec: openStackCluster,
 			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
 				// add network api call results here
 			},
@@ -137,10 +139,15 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				}
 				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
 
+				// create a monitor with values that match defaults to prevent update
 				monitorList := []monitors.Monitor{
 					{
-						ID:   "aaaaaaaa-bbbb-cccc-dddd-666666666666",
-						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+						ID:             "aaaaaaaa-bbbb-cccc-dddd-666666666666",
+						Name:           "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+						Delay:          10,
+						Timeout:        5,
+						MaxRetries:     5,
+						MaxRetriesDown: 3,
 					},
 				}
 				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
@@ -148,7 +155,8 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name: "reconcile loadbalancer in non active state should timeout",
+			name:        "reconcile loadbalancer in non active state should timeout",
+			clusterSpec: openStackCluster,
 			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
 				// add network api call results here
 			},
@@ -168,6 +176,299 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			},
 			wantError: fmt.Errorf("load balancer \"k8s-clusterapi-cluster-AAAAA-kubeapi\" with id aaaaaaaa-bbbb-cccc-dddd-333333333333 is not active after timeout: timed out waiting for the condition"),
 		},
+		{
+			name: "should update monitor when values are different than defaults",
+			clusterSpec: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+						Enabled: ptr.To(true),
+						Monitor: &infrav1.APIServerLoadBalancerMonitor{
+							Delay:          15,
+							Timeout:        8,
+							MaxRetries:     6,
+							MaxRetriesDown: 4,
+						},
+					},
+					DisableAPIServerFloatingIP: ptr.To(true),
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+						Host: apiHostname,
+						Port: 6443,
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: &infrav1.NetworkStatus{
+						ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
+					},
+					Network: &infrav1.NetworkStatusWithSubnets{
+						Subnets: []infrav1.Subnet{
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
+						},
+					},
+				},
+			},
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
+				// add network api call results here
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 "aaaaaaaa-bbbb-cccc-dddd-333333333333",
+					Name:               "k8s-clusterapi-cluster-AAAAA-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+
+				// return existing loadbalancer in active state
+				lbList := []loadbalancers.LoadBalancer{activeLB}
+				m.ListLoadBalancers(loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
+
+				// return octavia versions
+				versions := []apiversions.APIVersion{
+					{ID: "2.24"},
+					{ID: "2.23"},
+					{ID: "2.22"},
+				}
+				m.ListOctaviaVersions().Return(versions, nil)
+
+				listenerList := []listeners.Listener{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-444444444444",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+
+				poolList := []pools.Pool{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-555555555555",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+
+				// existing monitor has default values that need updating
+				existingMonitor := monitors.Monitor{
+					ID:             "aaaaaaaa-bbbb-cccc-dddd-666666666666",
+					Name:           "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					Delay:          10,
+					Timeout:        5,
+					MaxRetries:     5,
+					MaxRetriesDown: 3,
+				}
+				monitorList := []monitors.Monitor{existingMonitor}
+				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
+
+				// Expect update call with the new values
+				updateOpts := monitors.UpdateOpts{
+					Delay:          15,
+					Timeout:        8,
+					MaxRetries:     6,
+					MaxRetriesDown: 4,
+				}
+
+				updatedMonitor := existingMonitor
+				updatedMonitor.Delay = 15
+				updatedMonitor.Timeout = 8
+				updatedMonitor.MaxRetries = 6
+				updatedMonitor.MaxRetriesDown = 4
+
+				m.UpdateMonitor(existingMonitor.ID, updateOpts).Return(&updatedMonitor, nil)
+
+				// Expect wait for loadbalancer to be active after monitor update
+				m.GetLoadBalancer(activeLB.ID).Return(&activeLB, nil)
+			},
+			wantError: nil,
+		},
+		{
+			name: "should report error when monitor update fails",
+			clusterSpec: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+						Enabled: ptr.To(true),
+						Monitor: &infrav1.APIServerLoadBalancerMonitor{
+							Delay:          15,
+							Timeout:        8,
+							MaxRetries:     6,
+							MaxRetriesDown: 4,
+						},
+					},
+					DisableAPIServerFloatingIP: ptr.To(true),
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+						Host: apiHostname,
+						Port: 6443,
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: &infrav1.NetworkStatus{
+						ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
+					},
+					Network: &infrav1.NetworkStatusWithSubnets{
+						Subnets: []infrav1.Subnet{
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
+						},
+					},
+				},
+			},
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
+				// add network api call results here
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 "aaaaaaaa-bbbb-cccc-dddd-333333333333",
+					Name:               "k8s-clusterapi-cluster-AAAAA-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+
+				// return existing loadbalancer in active state
+				lbList := []loadbalancers.LoadBalancer{activeLB}
+				m.ListLoadBalancers(loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
+
+				// return octavia versions
+				versions := []apiversions.APIVersion{
+					{ID: "2.24"},
+					{ID: "2.23"},
+					{ID: "2.22"},
+				}
+				m.ListOctaviaVersions().Return(versions, nil)
+
+				listenerList := []listeners.Listener{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-444444444444",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+
+				poolList := []pools.Pool{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-555555555555",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+
+				// existing monitor has default values that need updating
+				existingMonitor := monitors.Monitor{
+					ID:             "aaaaaaaa-bbbb-cccc-dddd-666666666666",
+					Name:           "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					Delay:          10,
+					Timeout:        5,
+					MaxRetries:     5,
+					MaxRetriesDown: 3,
+				}
+				monitorList := []monitors.Monitor{existingMonitor}
+				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
+
+				// Expect update call with the new values but return an error
+				updateOpts := monitors.UpdateOpts{
+					Delay:          15,
+					Timeout:        8,
+					MaxRetries:     6,
+					MaxRetriesDown: 4,
+				}
+
+				updateError := fmt.Errorf("failed to update monitor")
+				m.UpdateMonitor(existingMonitor.ID, updateOpts).Return(nil, updateError)
+			},
+			wantError: fmt.Errorf("failed to update monitor"),
+		},
+		{
+			name: "should create monitor when it doesn't exist",
+			clusterSpec: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+						Enabled: ptr.To(true),
+						Monitor: &infrav1.APIServerLoadBalancerMonitor{
+							Delay:          15,
+							Timeout:        8,
+							MaxRetries:     6,
+							MaxRetriesDown: 4,
+						},
+					},
+					DisableAPIServerFloatingIP: ptr.To(true),
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+						Host: apiHostname,
+						Port: 6443,
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: &infrav1.NetworkStatus{
+						ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
+					},
+					Network: &infrav1.NetworkStatusWithSubnets{
+						Subnets: []infrav1.Subnet{
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
+						},
+					},
+				},
+			},
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
+				// add network api call results here
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 "aaaaaaaa-bbbb-cccc-dddd-333333333333",
+					Name:               "k8s-clusterapi-cluster-AAAAA-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+
+				// return existing loadbalancer in active state
+				lbList := []loadbalancers.LoadBalancer{activeLB}
+				m.ListLoadBalancers(loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
+
+				// return octavia versions
+				versions := []apiversions.APIVersion{
+					{ID: "2.24"},
+					{ID: "2.23"},
+					{ID: "2.22"},
+				}
+				m.ListOctaviaVersions().Return(versions, nil)
+
+				listenerList := []listeners.Listener{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-444444444444",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+
+				poolList := []pools.Pool{
+					{
+						ID:   "aaaaaaaa-bbbb-cccc-dddd-555555555555",
+						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					},
+				}
+				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+
+				// No monitor exists yet
+				var emptyMonitorList []monitors.Monitor
+				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0"}).Return(emptyMonitorList, nil)
+
+				// Expect create call with custom values
+				createOpts := monitors.CreateOpts{
+					Name:           "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					PoolID:         "aaaaaaaa-bbbb-cccc-dddd-555555555555",
+					Type:           "TCP",
+					Delay:          15,
+					Timeout:        8,
+					MaxRetries:     6,
+					MaxRetriesDown: 4,
+				}
+
+				createdMonitor := monitors.Monitor{
+					ID:             "aaaaaaaa-bbbb-cccc-dddd-666666666666",
+					Name:           "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
+					Delay:          15,
+					Timeout:        8,
+					MaxRetries:     6,
+					MaxRetriesDown: 4,
+				}
+
+				m.CreateMonitor(createOpts).Return(&createdMonitor, nil)
+
+				// Expect wait for loadbalancer to be active after monitor creation
+				m.GetLoadBalancer(activeLB.ID).Return(&activeLB, nil)
+			},
+			wantError: nil,
+		},
 	}
 	for _, tt := range lbtests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -180,7 +481,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
-			_, err = lbs.ReconcileLoadBalancer(openStackCluster, "AAAAA", 0)
+			_, err = lbs.ReconcileLoadBalancer(tt.clusterSpec, "AAAAA", 0)
 			if tt.wantError != nil {
 				g.Expect(err).To(MatchError(tt.wantError))
 			} else {
