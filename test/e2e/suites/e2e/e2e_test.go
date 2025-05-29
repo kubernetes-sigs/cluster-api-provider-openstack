@@ -63,20 +63,6 @@ import (
 
 const specName = "e2e"
 
-// Additional images required for flatcar tests.
-func flatcarImages(e2eCtx *shared.E2EContext) []shared.DownloadImage {
-	return []shared.DownloadImage{
-		{
-			Name:         "capo-flatcar",
-			ArtifactPath: "flatcar/" + e2eCtx.E2EConfig.MustGetVariable("OPENSTACK_FLATCAR_IMAGE_NAME") + ".img",
-		},
-		{
-			Name: "flatcar-openstack",
-			URL:  "https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img",
-		},
-	}
-}
-
 var _ = Describe("e2e tests [PR-Blocking]", func() {
 	var (
 		namespace        *corev1.Namespace
@@ -84,9 +70,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 		// Cleanup functions which cannot run until after the cluster has been deleted
 		postClusterCleanup []func(context.Context)
-
-		// Images required for the current test in addition to the core images
-		additionalImages []shared.DownloadImage
 	)
 
 	createCluster := func(ctx context.Context, configCluster clusterctl.ConfigClusterInput, result *clusterctl.ApplyClusterTemplateAndWaitResult) {
@@ -119,12 +102,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		Expect(e2eCtx.E2EConfig).ToNot(BeNil(), "Invalid argument. e2eConfig can't be nil when calling %s spec", specName)
 		Expect(e2eCtx.E2EConfig.Variables).To(HaveKey(shared.KubernetesVersion))
 		postClusterCleanup = nil
-
-		additionalImages = nil
-	})
-
-	JustBeforeEach(func(ctx context.Context) {
-		shared.ApplyCoreImagesPlus(ctx, e2eCtx, additionalImages...)
 	})
 
 	Describe("Workload cluster (default)", func() {
@@ -388,10 +365,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (flatcar)", func() {
-		BeforeEach(func() {
-			additionalImages = append(additionalImages, flatcarImages(e2eCtx)...)
-		})
-
 		It("should be creatable and deletable", func(ctx context.Context) {
 			// Flatcar default user is "core"
 			shared.SetEnvVar(shared.SSHUserMachine, "core", false)
@@ -437,10 +410,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 	})
 
 	Describe("Workload cluster (flatcar-sysext)", func() {
-		BeforeEach(func() {
-			additionalImages = append(additionalImages, flatcarImages(e2eCtx)...)
-		})
-
 		It("should be creatable and deletable", func(ctx context.Context) {
 			// Flatcar default user is "core"
 			shared.SetEnvVar(shared.SSHUserMachine, "core", false)

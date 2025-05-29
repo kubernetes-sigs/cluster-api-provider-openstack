@@ -1,4 +1,3 @@
----
 resources:
 - ../../../../../kustomize/v1beta1/flatcar-sysext
 
@@ -17,5 +16,8 @@ patches:
     name: node-image
   patch: |-
     - op: replace
-      path: /spec/import/filter/name
+      path: /spec/resource/name
       value: ${FLATCAR_IMAGE_NAME}
+    - op: replace
+      path: /spec/resource/content/download/url
+      value: ${FLATCAR_IMAGE_URL}
