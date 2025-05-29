@@ -114,7 +114,7 @@ However, this also means that it may *not* be well suited for general usage.
 
 ### Developing with Tilt
 
-We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://cluster-api.sigs.k8s.io/developer/tilt.html) for information on how to set up your development environment.
+We have support for using [Tilt](https://tilt.dev/) for rapid iterative development. Please visit the [Cluster API documentation on Tilt](https://cluster-api.sigs.k8s.io/developer/core/tilt) for information on how to set up your development environment.
 
 The `Tiltfile` in the Cluster API repository can be used as is with CAPO, but we need to add some configuration.
 For using Tilt with ClusterClass, update your `tilt-settings.yaml` file (located in the root of the CAPI repository) as described:
