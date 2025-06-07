@@ -117,7 +117,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "Test a OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
+			name: "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
 			spec: &infrav1.OpenStackMachineSpec{
 				Flavor:     ptr.To(flavorName),
 				Image:      image,
@@ -134,6 +134,42 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				Image:       image,
 				SSHKeyName:  sshKeyName,
 				Ports:       portOptsWithAdditionalSecurityGroup,
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavor and flavorID specified",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor:     ptr.To(flavorName),
+				FlavorID:   ptr.To(flavorUUID),
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				FlavorID:    ptr.To(flavorUUID),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports:       portOpts,
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavorID specified but not flavor",
+			spec: &infrav1.OpenStackMachineSpec{
+				FlavorID:   ptr.To(flavorUUID),
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				FlavorID:    ptr.To(flavorUUID),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports:       portOpts,
 				Tags:        tags,
 				UserDataRef: userData,
 			},

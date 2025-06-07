@@ -484,6 +484,7 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		AdditionalBlockDevices:            openStackMachineSpec.AdditionalBlockDevices,
 		ConfigDrive:                       openStackMachineSpec.ConfigDrive,
 		Flavor:                            openStackMachineSpec.Flavor,
+		FlavorID:                          openStackMachineSpec.FlavorID,
 		IdentityRef:                       identityRef,
 		Image:                             openStackMachineSpec.Image,
 		RootVolume:                        openStackMachineSpec.RootVolume,
