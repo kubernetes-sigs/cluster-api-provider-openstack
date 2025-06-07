@@ -233,6 +233,12 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 		newObj.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
 	}
 
+	// Allow changes on APIServerLB monitors
+	if newObj.Spec.APIServerLoadBalancer != nil && oldObj.Spec.APIServerLoadBalancer != nil {
+		oldObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
+		newObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
+	}
+
 	// Allow changes to the availability zones.
 	oldObj.Spec.ControlPlaneAvailabilityZones = []string{}
 	newObj.Spec.ControlPlaneAvailabilityZones = []string{}
