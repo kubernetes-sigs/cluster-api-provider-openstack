@@ -29,9 +29,7 @@ import (
 )
 
 var _ = Describe("When testing Cluster API provider Openstack working on [self-hosted] clusters", func() {
-	BeforeEach(func(ctx context.Context) {
-		shared.ApplyCoreImagesPlus(ctx, e2eCtx, upgradeImage)
-
+	BeforeEach(func() {
 		setDownloadE2EImageEnvVar()
 	})
 
