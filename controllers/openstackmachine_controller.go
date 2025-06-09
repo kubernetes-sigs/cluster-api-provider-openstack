@@ -365,6 +365,11 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
+	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
+	if result != nil {
+		return *result, nil
+	}
+
 	computeService, err := compute.NewService(scope)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -375,6 +380,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	var instanceStatus *compute.InstanceStatus
 	if instanceStatus, err = computeService.GetInstanceStatus(*machineServer.Status.InstanceID); err != nil {
 		return ctrl.Result{}, err
+	}
+
+	if instanceStatus == nil {
+		msg := "server has been unexpectedly deleted"
+		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, msg)
+		openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, errors.New(msg))
 	}
 
 	instanceNS, err := instanceStatus.NetworkStatus()
@@ -393,22 +404,15 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	})
 	openStackMachine.Status.Addresses = addresses
 
-	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
-	if result != nil {
-		return *result, nil
+	if util.IsControlPlaneMachine(machine) {
+		err = r.reconcileAPIServerLoadBalancer(scope, openStackCluster, openStackMachine, instanceStatus, instanceNS, clusterResourceName)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
 	}
 
-	if !util.IsControlPlaneMachine(machine) {
-		scope.Logger().Info("Not a Control plane machine, no floating ip reconcile needed, Reconciled Machine create successfully")
-		return ctrl.Result{}, nil
-	}
-
-	err = r.reconcileAPIServerLoadBalancer(scope, openStackCluster, openStackMachine, instanceStatus, instanceNS, clusterResourceName)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
 	scope.Logger().Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
 }
