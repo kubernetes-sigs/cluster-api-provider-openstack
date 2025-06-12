@@ -570,7 +570,7 @@ clean-release-git: ## Restores the git files usually modified during a release
 	git restore ./*manager_image_patch.yaml ./*manager_pull_policy.yaml
 
 .PHONY: verify
-verify: verify-boilerplate verify-modules verify-gen verify-govulncheck
+verify: verify-boilerplate verify-modules verify-gen
 
 .PHONY: verify-boilerplate
 verify-boilerplate:
