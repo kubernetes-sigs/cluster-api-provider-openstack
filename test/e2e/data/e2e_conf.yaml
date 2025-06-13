@@ -10,7 +10,7 @@ images:
 # Use local dev images built source tree;
 - name: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
   loadBehavior: mustLoad
-- name: quay.io/orc/openstack-resource-controller:v2.0.3
+- name: quay.io/orc/openstack-resource-controller:v2.2.0
   loadBehavior: tryLoad
 
 providers:
@@ -146,7 +146,7 @@ providers:
 - name: openstack-resource-controller
   type: RuntimeExtensionProvider # ORC isn't a provider but we fake it so it can be handled by the clusterctl machinery.
   versions:
-  - name: v2.0.99
+  - name: v2.2.0
     value: ../../../../cluster-api-provider-openstack/test/infrastructure/openstack-resource-controller/config/default
     contract: v1beta1
     files:

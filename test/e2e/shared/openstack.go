@@ -139,6 +139,26 @@ func dumpOpenStack(_ context.Context, e2eCtx *E2EContext, bootstrapClusterProxyN
 	if err := dumpOpenStackVolumes(e2eCtx, logPath); err != nil {
 		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack volumes: %s\n", err)
 	}
+
+	if err := dumpOpenStackServers(e2eCtx, logPath); err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error dumping OpenStack servers: %s\n", err)
+	}
+}
+
+// dumpOpenStackServers writes all OpenStack servers to servers.json under the logPath.
+func dumpOpenStackServers(e2eCtx *E2EContext, logPath string) error {
+	serversList, err := DumpOpenStackServers(e2eCtx, servers.ListOpts{})
+	if err != nil {
+		return err
+	}
+	serversJSON, err := json.MarshalIndent(serversList, "", "    ")
+	if err != nil {
+		return fmt.Errorf("error marshalling servers %v: %s", serversList, err)
+	}
+	if err := os.WriteFile(path.Join(logPath, "servers.json"), serversJSON, 0o600); err != nil {
+		return fmt.Errorf("error writing servers.json %s: %s", serversJSON, err)
+	}
+	return nil
 }
 
 // dumpOpenStackVolumes returns all OpenStack volumes to a file in the artifact folder.
