@@ -387,6 +387,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: flavor
       type:
         scalar: string
+    - name: monitor
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.APIServerLoadBalancerMonitor
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.NetworkParam
@@ -399,6 +402,21 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetParam
           elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.APIServerLoadBalancerMonitor
+  map:
+    fields:
+    - name: delay
+      type:
+        scalar: numeric
+    - name: maxRetries
+      type:
+        scalar: numeric
+    - name: maxRetriesDown
+      type:
+        scalar: numeric
+    - name: timeout
+      type:
+        scalar: numeric
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AdditionalBlockDevice
   map:
     fields:
