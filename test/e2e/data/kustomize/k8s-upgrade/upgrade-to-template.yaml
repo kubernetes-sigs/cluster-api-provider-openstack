@@ -3,7 +3,6 @@
 # The normal templates has the cluster name as part of the OSMT name.
 # See CONTROL_PLANE_MACHINE_TEMPLATE_UPGRADE_TO and WORKERS_MACHINE_TEMPLATE_UPGRADE_TO
 # in the e2e config.
----
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackMachineTemplate
 metadata:
@@ -15,8 +14,8 @@ spec:
     spec:
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image:
-        filter:
-          name: ${OPENSTACK_IMAGE_NAME}
+        imageRef:
+          name: node-image
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
       tags:
       - control-plane
@@ -32,8 +31,8 @@ spec:
     spec:
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image:
-        filter:
-          name: ${OPENSTACK_IMAGE_NAME}
+        imageRef:
+          name: node-image
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
       tags:
       - machine

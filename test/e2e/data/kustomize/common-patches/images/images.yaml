@@ -1,13 +1,20 @@
----
 apiVersion: openstack.k-orc.cloud/v1alpha1
 kind: Image
 metadata:
   name: node-image
+  labels:
+    clusterctl.cluster.x-k8s.io/move: ""
 spec:
-  import:
-    filter:
-      name: ${OPENSTACK_IMAGE_NAME}
-  managementPolicy: unmanaged
+  resource:
+    name: ${OPENSTACK_IMAGE_NAME}
+    content:
+      containerFormat: bare
+      diskFormat: qcow2
+      download:
+        url: ${OPENSTACK_IMAGE_URL}
+  managementPolicy: managed
+  managedOptions:
+    onDelete: detach
   cloudCredentialsRef:
     secretName: ${CLUSTER_NAME}-cloud-config
     cloudName: ${OPENSTACK_CLOUD}
@@ -16,11 +23,22 @@ apiVersion: openstack.k-orc.cloud/v1alpha1
 kind: Image
 metadata:
   name: bastion-image
+  labels:
+    clusterctl.cluster.x-k8s.io/move: ""
 spec:
-  import:
-    filter:
-      name: ${OPENSTACK_BASTION_IMAGE_NAME}
-  managementPolicy: unmanaged
+  resource:
+    name: ${OPENSTACK_BASTION_IMAGE_NAME}
+    content:
+      containerFormat: bare
+      diskFormat: qcow2
+      download:
+        url: ${OPENSTACK_BASTION_IMAGE_URL}
+        hash:
+          algorithm: ${OPENSTACK_BASTION_IMAGE_HASH_ALGORITHM}
+          value: ${OPENSTACK_BASTION_IMAGE_HASH}
+  managementPolicy: managed
+  managedOptions:
+    onDelete: detach
   cloudCredentialsRef:
     secretName: ${CLUSTER_NAME}-cloud-config
     cloudName: ${OPENSTACK_CLOUD}

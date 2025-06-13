@@ -105,8 +105,8 @@ func setupBootstrapCluster(config *clusterctl.E2EConfig, scheme *runtime.Scheme,
 }
 
 // initBootstrapCluster uses kind to create a cluster.
-func initBootstrapCluster(e2eCtx *E2EContext) {
-	clusterctl.InitManagementClusterAndWatchControllerLogs(context.TODO(), clusterctl.InitManagementClusterAndWatchControllerLogsInput{
+func initBootstrapCluster(ctx context.Context, e2eCtx *E2EContext) {
+	clusterctl.InitManagementClusterAndWatchControllerLogs(ctx, clusterctl.InitManagementClusterAndWatchControllerLogsInput{
 		ClusterProxy:              e2eCtx.Environment.BootstrapClusterProxy,
 		ClusterctlConfigPath:      e2eCtx.Environment.ClusterctlConfigPath,
 		InfrastructureProviders:   e2eCtx.E2EConfig.InfrastructureProviders(),
