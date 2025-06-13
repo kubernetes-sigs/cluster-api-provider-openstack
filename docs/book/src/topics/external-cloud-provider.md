@@ -9,7 +9,8 @@
 
 # External Cloud Provider
 
-To deploy a cluster using [external cloud provider](https://github.com/kubernetes/cloud-provider-openstack), create a cluster configuration with the [external cloud provider template](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates/cluster-template-external-cloud-provider.yaml) or refer to [helm chart](https://github.com/kubernetes/cloud-provider-openstack/tree/master/charts/openstack-cloud-controller-manager).
+All [cluster templates](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/templates) are meant to be used with the external cloud provider for OpenStack.
+Refer to the [external cloud provider repository](https://github.com/kubernetes/cloud-provider-openstack) or the [helm chart](https://github.com/kubernetes/cloud-provider-openstack/tree/master/charts/openstack-cloud-controller-manager) for more details.
 
 ## Steps of using external cloud provider template
 
