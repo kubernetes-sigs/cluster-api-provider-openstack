@@ -119,9 +119,7 @@ var listDefaultPorts = func(r *recorders) {
 
 var listDefaultPortsWithID = func(r *recorders) {
 	r.network.ListPort(ports.ListOpts{
-		Name:      openStackServerName + "-0",
-		ID:        portUUID,
-		NetworkID: networkUUID,
+		ID: portUUID,
 	}).Return([]ports.Port{
 		{
 			ID: portUUID,
