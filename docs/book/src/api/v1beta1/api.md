@@ -955,7 +955,7 @@ NetworkParam
 <em>(Optional)</em>
 <p>Subnets define which subnets should the load balancer be allocated on.
 It is expected that subnets are located on the network specified in this resource.
-Only the first element is taken into account.
+The length of the list must match the length of the AvailabilityZone list.
 kubebuilder:validation:MaxLength:=2</p>
 </td>
 </tr>
@@ -969,6 +969,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>availabilityZones</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AvailabilityZone sis the failure domain that will be used to create the APIServerLoadBalancer Spec.</p>
 </td>
 </tr>
 <tr>

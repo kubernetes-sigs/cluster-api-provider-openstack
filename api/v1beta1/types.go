@@ -866,7 +866,7 @@ type APIServerLoadBalancer struct {
 
 	// Subnets define which subnets should the load balancer be allocated on.
 	// It is expected that subnets are located on the network specified in this resource.
-	// Only the first element is taken into account.
+	// The length of the list must match the length of the AvailabilityZone list.
 	// +optional
 	// +listType=atomic
 	// kubebuilder:validation:MaxLength:=2
@@ -875,6 +875,11 @@ type APIServerLoadBalancer struct {
 	// AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
 	//+optional
 	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
+
+	// AvailabilityZone sis the failure domain that will be used to create the APIServerLoadBalancer Spec.
+	// +optional
+	// +listType=set
+	AvailabilityZones []string `json:"availabilityZones,omitempty"`
 
 	// Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
 	//+optional

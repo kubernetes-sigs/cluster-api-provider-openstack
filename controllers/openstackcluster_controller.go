@@ -830,7 +830,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 			return err
 		}
 
-		terminalFailure, err := loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterResourceName, int(apiServerPort))
+		terminalFailure, err := loadBalancerService.ReconcileLoadBalancers(openStackCluster, clusterResourceName, int(apiServerPort))
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile load balancer: %w", err), terminalFailure)
 			return fmt.Errorf("failed to reconcile load balancer: %w", err)

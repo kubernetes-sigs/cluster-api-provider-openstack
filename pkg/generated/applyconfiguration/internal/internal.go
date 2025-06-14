@@ -381,6 +381,12 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: availabilityZone
       type:
         scalar: string
+    - name: availabilityZones
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
     - name: enabled
       type:
         scalar: boolean

@@ -62,6 +62,12 @@ const (
 	defaultMonitorMaxRetriesDown = 3
 )
 
+// Per-AZ reconciliation helper.
+type azSubnet struct {
+	az     *string
+	subnet infrav1.Subnet
+}
+
 // We wrap the LookupHost function in a variable to allow overriding it in unit tests.
 //
 //nolint:gocritic
@@ -78,8 +84,76 @@ var lookupHost = func(host string) (*string, error) {
 	return &ips[0], nil
 }
 
+// ReconcileLoadBalancers reconciles one load balancer for each APIServer LoadBalancer AvailabilityZone.
+func (s *Service) ReconcileLoadBalancers(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, apiServerPort int) (bool, error) {
+	if openStackCluster.Spec.APIServerLoadBalancer == nil {
+		return false, nil
+	}
+
+	// Use the availability zone from the load balancer spec if it is set
+	if openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZone != nil &&
+		openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones == nil {
+		openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones = []string{
+			*openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZone,
+		}
+	}
+
+	// Ensure API server load balancer network information is available
+	if openStackCluster.Status.APIServerLoadBalancer == nil ||
+		openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork == nil ||
+		len(openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets) == 0 {
+		return false, fmt.Errorf("load balancer network information not available")
+	}
+
+	// Convert the availability zones to azSubnet structs
+	// For single AZ case (no AZ specified), create a default AZ
+	var azInfo []azSubnet
+	if len(openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones) == 0 {
+		// Create a default AZ with "default" as name
+		defaultAZ := "default"
+		azInfo = append(azInfo, azSubnet{
+			az:     &defaultAZ,
+			subnet: openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets[0],
+		})
+		s.scope.Logger().Info("No availability zones specified, using default")
+	} else {
+		// For multi-AZ case, create an entry for each specified AZ
+		for i, az := range openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones {
+			if i >= len(openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets) {
+				return false, fmt.Errorf("mismatch between availability zones and subnets: more AZs than subnets")
+			}
+			azInfo = append(azInfo, azSubnet{
+				az:     &az,
+				subnet: openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets[i],
+			})
+		}
+	}
+
+	// Always migrate the original load balancer to the AZ-named format
+	if err := s.migrateAPIServerLoadBalancer(openStackCluster, clusterResourceName, azInfo[0], apiServerPort); err != nil {
+		return false, fmt.Errorf("failed to migrate load balancer: %w", err)
+	}
+
+	// Reconcile the load balancer for each availability zone
+	requeue := false
+	for _, az := range azInfo {
+		azClusterResourceName := fmt.Sprintf("%s-%s", clusterResourceName, *az.az)
+		s.scope.Logger().Info("Reconciling load balancer for availability zone",
+			"az", *az.az,
+			"resourceName", azClusterResourceName)
+
+		zoneRequeue, err := s.ReconcileLoadBalancer(openStackCluster, azClusterResourceName, az, apiServerPort)
+		if err != nil {
+			return zoneRequeue, err
+		}
+		requeue = requeue || zoneRequeue
+	}
+
+	return requeue, nil
+}
+
 // ReconcileLoadBalancer reconciles the load balancer for the given cluster.
-func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, apiServerPort int) (bool, error) {
+func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, azInfo azSubnet, apiServerPort int) (bool, error) {
 	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
 	if !lbSpec.IsEnabled() {
 		return false, nil
@@ -94,7 +168,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		openStackCluster.Status.APIServerLoadBalancer = lbStatus
 	}
 
-	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName)
+	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName, azInfo.az)
 	if err != nil {
 		if errors.Is(err, capoerrors.ErrFilterMatch) {
 			return true, err
@@ -275,7 +349,7 @@ func (s *Service) isAllowsCIDRSSupported(lb *loadbalancers.LoadBalancer) (bool, 
 }
 
 // getOrCreateAPILoadBalancer returns an existing API loadbalancer if it already exists, or creates a new one if it does not.
-func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*loadbalancers.LoadBalancer, error) {
+func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, availabilityZone *string) (*loadbalancers.LoadBalancer, error) {
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
@@ -327,7 +401,6 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	// Choose the selected provider and flavor if set in cluster spec, if not, omit these fields and Octavia will use the default values.
 	lbProvider := ""
 	lbFlavorID := ""
-	var availabilityZone *string
 	if openStackCluster.Spec.APIServerLoadBalancer != nil {
 		if openStackCluster.Spec.APIServerLoadBalancer.Provider != nil {
 			for _, v := range providers {
@@ -360,8 +433,6 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 				record.Warnf(openStackCluster, "OctaviaFlavorNotFound", "Flavor %s specified for Octavia not found, using the default flavor.", *openStackCluster.Spec.APIServerLoadBalancer.Flavor)
 			}
 		}
-
-		availabilityZone = openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZone
 	}
 
 	vipAddress, err := getAPIServerVIPAddress(openStackCluster)
@@ -938,4 +1009,163 @@ func (s *Service) waitForListener(id, target string) error {
 		// The listener resource has no Status attribute, so a successful Get is the best we can do
 		return true, nil
 	})
+}
+
+// migrateAPIServerLoadBalancer takes the old name format for a loadbalancer and converts it to the new format.
+// The new format is based on the availability zone and the cluster resource name.
+func (s *Service) migrateAPIServerLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, azInfo azSubnet, apiServerPort int) error {
+	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
+	if !lbSpec.IsEnabled() {
+		return nil
+	}
+
+	// Determine the AZ-specific resource name
+	azClusterResourceName := fmt.Sprintf("%s-default", clusterResourceName)
+	if azInfo.az != nil {
+		azClusterResourceName = fmt.Sprintf("%s-%s", clusterResourceName, *azInfo.az)
+	}
+
+	s.scope.Logger().Info("Migrating API server load balancer resources to AZ-specific naming",
+		"clusterName", clusterResourceName,
+		"azName", azInfo.az,
+		"newResourceName", azClusterResourceName)
+
+	// Rename the load balancer
+	if err := s.renameAPIServerLoadBalancer(clusterResourceName, azClusterResourceName); err != nil {
+		return fmt.Errorf("failed to rename load balancer: %w", err)
+	}
+
+	// Rename listeners, pools, and monitors for each port
+	portList := append([]int{apiServerPort}, lbSpec.AdditionalPorts...)
+	for _, port := range portList {
+		if err := s.renameAPIServerListener(clusterResourceName, azClusterResourceName, port); err != nil {
+			return fmt.Errorf("failed to rename listener for port %d: %w", port, err)
+		}
+		if err := s.renameAPIServerPool(clusterResourceName, azClusterResourceName, port); err != nil {
+			return fmt.Errorf("failed to rename pool for port %d: %w", port, err)
+		}
+		if err := s.renameAPIServerMonitor(clusterResourceName, azClusterResourceName, port); err != nil {
+			return fmt.Errorf("failed to rename monitor for port %d: %w", port, err)
+		}
+	}
+
+	s.scope.Logger().Info("Successfully migrated API server load balancer resources",
+		"clusterName", clusterResourceName,
+		"azName", azInfo.az)
+	return nil
+}
+
+func (s *Service) renameAPIServerLoadBalancer(clusterResourceName, azClusterResourceName string) error {
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
+	lb, err := s.checkIfLbExists(loadBalancerName)
+	if err != nil {
+		return fmt.Errorf("error checking if load balancer exists: %w", err)
+	}
+	if lb == nil {
+		s.scope.Logger().Info("Load balancer does not exist, skipping rename", "name", loadBalancerName)
+		return nil
+	}
+
+	azLoadBalancerName := getLoadBalancerName(azClusterResourceName)
+	if lb.Name == azLoadBalancerName {
+		s.scope.Logger().Info("Load balancer already has the correct name",
+			"name", lb.Name)
+		return nil
+	}
+
+	s.scope.Logger().Info("Renaming load balancer", "oldName", lb.Name, "newName", azLoadBalancerName)
+	updateOpts := loadbalancers.UpdateOpts{
+		Name: &azLoadBalancerName,
+	}
+	if _, err := s.loadbalancerClient.UpdateLoadBalancer(lb.ID, updateOpts); err != nil {
+		return fmt.Errorf("failed to update load balancer name: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) renameAPIServerListener(clusterResourceName, azClusterResourceName string, port int) error {
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
+	lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
+
+	listener, err := s.checkIfListenerExists(lbPortObjectsName)
+	if err != nil {
+		return fmt.Errorf("error checking if listener exists: %w", err)
+	}
+	if listener == nil {
+		s.scope.Logger().Info("Listener does not exist, skipping rename", "name", lbPortObjectsName)
+		return nil
+	}
+
+	azLbPortObjectsName := fmt.Sprintf("%s-%d", azClusterResourceName, port)
+	if listener.Name == azLbPortObjectsName {
+		s.scope.Logger().Info("Listener already has the correct name", "name", listener.Name)
+		return nil
+	}
+
+	s.scope.Logger().Info("Renaming listener", "oldName", listener.Name, "newName", azLbPortObjectsName)
+	updateOpts := listeners.UpdateOpts{
+		Name: &azLbPortObjectsName,
+	}
+	if _, err := s.loadbalancerClient.UpdateListener(listener.ID, updateOpts); err != nil {
+		return fmt.Errorf("failed to update listener name: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) renameAPIServerPool(clusterResourceName, azClusterResourceName string, port int) error {
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
+	lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
+
+	pool, err := s.checkIfPoolExists(lbPortObjectsName)
+	if err != nil {
+		return fmt.Errorf("error checking if pool exists: %w", err)
+	}
+	if pool == nil {
+		s.scope.Logger().Info("Pool does not exist, skipping rename", "name", lbPortObjectsName)
+		return nil
+	}
+
+	azLbPortObjectsName := fmt.Sprintf("%s-%d", azClusterResourceName, port)
+	if pool.Name == azLbPortObjectsName {
+		s.scope.Logger().Info("Pool already has the correct name", "name", pool.Name)
+		return nil
+	}
+
+	s.scope.Logger().Info("Renaming pool", "oldName", pool.Name, "newName", azLbPortObjectsName)
+	updateOpts := pools.UpdateOpts{
+		Name: &azLbPortObjectsName,
+	}
+	if _, err := s.loadbalancerClient.UpdatePool(pool.ID, updateOpts); err != nil {
+		return fmt.Errorf("failed to update pool name: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) renameAPIServerMonitor(clusterResourceName, azClusterResourceName string, port int) error {
+	loadBalancerName := getLoadBalancerName(clusterResourceName)
+	lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
+
+	monitor, err := s.checkIfMonitorExists(lbPortObjectsName)
+	if err != nil {
+		return fmt.Errorf("error checking if monitor exists: %w", err)
+	}
+	if monitor == nil {
+		s.scope.Logger().Info("Monitor does not exist, skipping rename", "name", lbPortObjectsName)
+		return nil
+	}
+
+	azLbPortObjectsName := fmt.Sprintf("%s-%d", azClusterResourceName, port)
+	if monitor.Name == azLbPortObjectsName {
+		s.scope.Logger().Info("Monitor already has the correct name", "name", monitor.Name)
+		return nil
+	}
+
+	s.scope.Logger().Info("Renaming monitor", "oldName", monitor.Name, "newName", azLbPortObjectsName)
+	updateOpts := monitors.UpdateOpts{
+		Name: &azLbPortObjectsName,
+	}
+	if _, err := s.loadbalancerClient.UpdateMonitor(monitor.ID, updateOpts); err != nil {
+		return fmt.Errorf("failed to update monitor name: %w", err)
+	}
+	return nil
 }

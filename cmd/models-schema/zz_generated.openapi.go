@@ -17523,7 +17523,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBa
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Subnets define which subnets should the load balancer be allocated on. It is expected that subnets are located on the network specified in this resource. Only the first element is taken into account. kubebuilder:validation:MaxLength:=2",
+							Description: "Subnets define which subnets should the load balancer be allocated on. It is expected that subnets are located on the network specified in this resource. The length of the list must match the length of the AvailabilityZone list. kubebuilder:validation:MaxLength:=2",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -17540,6 +17540,26 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBa
 							Description: "AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"availabilityZones": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AvailabilityZone sis the failure domain that will be used to create the APIServerLoadBalancer Spec.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 					"flavor": {

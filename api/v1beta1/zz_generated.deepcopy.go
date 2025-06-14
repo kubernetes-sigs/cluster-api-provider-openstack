@@ -67,6 +67,11 @@ func (in *APIServerLoadBalancer) DeepCopyInto(out *APIServerLoadBalancer) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.AvailabilityZones != nil {
+		in, out := &in.AvailabilityZones, &out.AvailabilityZones
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Flavor != nil {
 		in, out := &in.Flavor, &out.Flavor
 		*out = new(string)

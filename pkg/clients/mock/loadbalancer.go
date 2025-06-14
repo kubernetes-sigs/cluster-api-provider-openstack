@@ -386,8 +386,23 @@ func (mr *MockLbClientMockRecorder) UpdateListener(id, opts any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateListener", reflect.TypeOf((*MockLbClient)(nil).UpdateListener), id, opts)
 }
 
+// UpdateLoadBalancer mocks base method.
+func (m *MockLbClient) UpdateLoadBalancer(id string, opts loadbalancers.UpdateOpts) (*loadbalancers.LoadBalancer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLoadBalancer", id, opts)
+	ret0, _ := ret[0].(*loadbalancers.LoadBalancer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateLoadBalancer indicates an expected call of UpdateLoadBalancer.
+func (mr *MockLbClientMockRecorder) UpdateLoadBalancer(id, opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLoadBalancer", reflect.TypeOf((*MockLbClient)(nil).UpdateLoadBalancer), id, opts)
+}
+
 // UpdateMonitor mocks base method.
-func (m *MockLbClient) UpdateMonitor(id string, opts monitors.UpdateOptsBuilder) (*monitors.Monitor, error) {
+func (m *MockLbClient) UpdateMonitor(id string, opts monitors.UpdateOpts) (*monitors.Monitor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateMonitor", id, opts)
 	ret0, _ := ret[0].(*monitors.Monitor)
@@ -399,4 +414,19 @@ func (m *MockLbClient) UpdateMonitor(id string, opts monitors.UpdateOptsBuilder)
 func (mr *MockLbClientMockRecorder) UpdateMonitor(id, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMonitor", reflect.TypeOf((*MockLbClient)(nil).UpdateMonitor), id, opts)
+}
+
+// UpdatePool mocks base method.
+func (m *MockLbClient) UpdatePool(id string, opts pools.UpdateOptsBuilder) (*pools.Pool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePool", id, opts)
+	ret0, _ := ret[0].(*pools.Pool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdatePool indicates an expected call of UpdatePool.
+func (mr *MockLbClientMockRecorder) UpdatePool(id, opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePool", reflect.TypeOf((*MockLbClient)(nil).UpdatePool), id, opts)
 }

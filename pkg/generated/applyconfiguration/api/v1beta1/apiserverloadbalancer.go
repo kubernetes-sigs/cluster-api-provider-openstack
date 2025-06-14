@@ -21,15 +21,16 @@ package v1beta1
 // APIServerLoadBalancerApplyConfiguration represents a declarative configuration of the APIServerLoadBalancer type for use
 // with apply.
 type APIServerLoadBalancerApplyConfiguration struct {
-	Enabled          *bool                                           `json:"enabled,omitempty"`
-	AdditionalPorts  []int                                           `json:"additionalPorts,omitempty"`
-	AllowedCIDRs     []string                                        `json:"allowedCIDRs,omitempty"`
-	Provider         *string                                         `json:"provider,omitempty"`
-	Network          *NetworkParamApplyConfiguration                 `json:"network,omitempty"`
-	Subnets          []SubnetParamApplyConfiguration                 `json:"subnets,omitempty"`
-	AvailabilityZone *string                                         `json:"availabilityZone,omitempty"`
-	Flavor           *string                                         `json:"flavor,omitempty"`
-	Monitor          *APIServerLoadBalancerMonitorApplyConfiguration `json:"monitor,omitempty"`
+	Enabled           *bool                                           `json:"enabled,omitempty"`
+	AdditionalPorts   []int                                           `json:"additionalPorts,omitempty"`
+	AllowedCIDRs      []string                                        `json:"allowedCIDRs,omitempty"`
+	Provider          *string                                         `json:"provider,omitempty"`
+	Network           *NetworkParamApplyConfiguration                 `json:"network,omitempty"`
+	Subnets           []SubnetParamApplyConfiguration                 `json:"subnets,omitempty"`
+	AvailabilityZone  *string                                         `json:"availabilityZone,omitempty"`
+	AvailabilityZones []string                                        `json:"availabilityZones,omitempty"`
+	Flavor            *string                                         `json:"flavor,omitempty"`
+	Monitor           *APIServerLoadBalancerMonitorApplyConfiguration `json:"monitor,omitempty"`
 }
 
 // APIServerLoadBalancerApplyConfiguration constructs a declarative configuration of the APIServerLoadBalancer type for use with
@@ -100,6 +101,16 @@ func (b *APIServerLoadBalancerApplyConfiguration) WithSubnets(values ...*SubnetP
 // If called multiple times, the AvailabilityZone field is set to the value of the last call.
 func (b *APIServerLoadBalancerApplyConfiguration) WithAvailabilityZone(value string) *APIServerLoadBalancerApplyConfiguration {
 	b.AvailabilityZone = &value
+	return b
+}
+
+// WithAvailabilityZones adds the given value to the AvailabilityZones field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AvailabilityZones field.
+func (b *APIServerLoadBalancerApplyConfiguration) WithAvailabilityZones(values ...string) *APIServerLoadBalancerApplyConfiguration {
+	for i := range values {
+		b.AvailabilityZones = append(b.AvailabilityZones, values[i])
+	}
 	return b
 }
 

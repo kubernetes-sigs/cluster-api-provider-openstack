@@ -38,6 +38,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 const apiHostname = "api.test-cluster.test"
@@ -481,7 +482,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
-			_, err = lbs.ReconcileLoadBalancer(tt.clusterSpec, "AAAAA", 0)
+			_, err = lbs.ReconcileLoadBalancer(tt.clusterSpec, "AAAAA", azSubnet{az: ptr.To[string](""), subnet: infrav1.Subnet{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"}}, 0)
 			if tt.wantError != nil {
 				g.Expect(err).To(MatchError(tt.wantError))
 			} else {
@@ -905,6 +906,64 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 				VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
 			},
 		},
+		{
+			name: "loadbalancer multi AZ created",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+						AvailabilityZones: []string{"az1", "az2", "az3"},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						Subnets: []infrav1.Subnet{
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-333333333333"},
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-444444444444"},
+						},
+					},
+					APIServerLoadBalancer: &infrav1.LoadBalancer{
+						LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+							NetworkStatus: infrav1.NetworkStatus{
+								Name: "VIPNET",
+								ID:   "VIPNET",
+							},
+							Subnets: []infrav1.Subnet{
+								{
+									Name: "vip-subnet",
+									ID:   "aaaaaaaaa-bbbb-cccc-dddd-222222222222",
+								},
+								{
+									Name: "vip-subnet",
+									ID:   "aaaaaaaaa-bbbb-cccc-dddd-333333333333",
+								},
+								{
+									Name: "vip-subnet",
+									ID:   "aaaaaaaaa-bbbb-cccc-dddd-444444444444",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
+				m.CreateLoadBalancer(loadbalancers.CreateOpts{
+					Name:         "k8s-clusterapi-cluster-AAAAA-az1-kubeapi",
+					Description:  names.GetDescription("AAAAA"),
+					VipSubnetID:  "aaaaaaaaa-bbbb-cccc-dddd-222222222222",
+					VipNetworkID: "VIPNET",
+				}).Return(&loadbalancers.LoadBalancer{
+					ID:   "AAAAA",
+					Name: "k8s-clusterapi-cluster-AAAAA-az1-kubeapi",
+				}, nil)
+			},
+			want: &loadbalancers.LoadBalancer{
+				ID:   "AAAAA",
+				Name: "k8s-clusterapi-cluster-AAAAA-az1-kubeapi",
+			},
+		},
 	}
 	for _, tt := range lbtests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -916,12 +975,25 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			g.Expect(err).NotTo(HaveOccurred())
 
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
-			lb, err := lbs.getOrCreateAPILoadBalancer(tt.openStackCluster, "AAAAA")
-			if tt.wantError != nil {
-				g.Expect(err).To(MatchError(tt.wantError))
+			if tt.openStackCluster.Spec.APIServerLoadBalancer != nil && tt.openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones != nil {
+				for _, az := range tt.openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones {
+					clusterResourceName := fmt.Sprintf("AAAAA-%s", az)
+					lb, err := lbs.getOrCreateAPILoadBalancer(tt.openStackCluster, clusterResourceName, &az)
+					if tt.wantError != nil {
+						g.Expect(err).To(MatchError(tt.wantError))
+					} else {
+						g.Expect(err).NotTo(HaveOccurred())
+						g.Expect(lb).To(Equal(tt.want))
+					}
+				}
 			} else {
-				g.Expect(err).NotTo(HaveOccurred())
-				g.Expect(lb).To(Equal(tt.want))
+				lb, err := lbs.getOrCreateAPILoadBalancer(tt.openStackCluster, "AAAAA", nil)
+				if tt.wantError != nil {
+					g.Expect(err).To(MatchError(tt.wantError))
+				} else {
+					g.Expect(err).NotTo(HaveOccurred())
+					g.Expect(lb).To(Equal(tt.want))
+				}
 			}
 		})
 	}
