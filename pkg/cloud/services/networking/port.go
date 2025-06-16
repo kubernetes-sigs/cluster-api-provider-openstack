@@ -156,12 +156,12 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 // and that the port has suitable tags and trunk. If the PortStatus is already known,
 // use the ID when filtering for existing ports.
 func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec, portStatus infrav1.PortStatus) (*ports.Port, error) {
-	opts := ports.ListOpts{
-		Name:      portSpec.Name,
-		NetworkID: portSpec.NetworkID,
-	}
+	opts := ports.ListOpts{}
 	if portStatus.ID != "" {
 		opts.ID = portStatus.ID
+	} else {
+		opts.Name = portSpec.Name
+		opts.NetworkID = portSpec.NetworkID
 	}
 
 	existingPorts, err := s.client.ListPort(opts)
