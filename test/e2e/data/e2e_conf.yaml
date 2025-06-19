@@ -154,6 +154,15 @@ providers:
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
+  # This is only for clusterctl upgrade tests, latest stable release of major version v1.0
+  - name: v1.0.2
+    value: ../../../../cluster-api-provider-openstack/test/infrastructure/openstack-resource-controller/config/upgrade-from
+    contract: v1beta1
+    files:
+    - sourcePath: "../data/shared/openstack-resource-controller/metadata.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
 
 
 # default variables for the e2e test; those values could be overridden via env variables, thus
