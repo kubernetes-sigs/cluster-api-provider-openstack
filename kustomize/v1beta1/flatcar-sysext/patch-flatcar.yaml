@@ -38,16 +38,16 @@ spec:
                 mode: 0644
                 contents:
                   remote:
-                    url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-${KUBERNETES_VERSION%.*}.conf
+                    url: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-${KUBERNETES_VERSION%.*}.conf
               - path: /etc/sysupdate.d/noop.conf
                 mode: 0644
                 contents:
                   remote:
-                    url: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+                    url: https://extensions.flatcar.org/extensions/noop.conf
               - path: /opt/extensions/kubernetes/kubernetes-${KUBERNETES_VERSION}-x86-64.raw
                 contents:
                   remote:
-                    url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-${KUBERNETES_VERSION}-x86-64.raw
+                    url: https://extensions.flatcar.org/extensions/kubernetes-${KUBERNETES_VERSION}-x86-64.raw
           systemd:
             units:
               - name: systemd-sysupdate.service
@@ -82,10 +82,10 @@ spec:
                       [Service]
                       EnvironmentFile=/run/metadata/flatcar
     preKubeadmCommands:
-      - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
-      - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
-      - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
-      - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
+    - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+    - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
+    - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
+    - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
@@ -100,10 +100,10 @@ spec:
           kubeletExtraArgs:
             provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
       preKubeadmCommands:
-        - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
-        - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
-        - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
-        - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
+      - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
+      - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}
+      - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
+      - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
       format: ignition
       ignition:
         containerLinuxConfig:
@@ -118,16 +118,16 @@ spec:
                   mode: 0644
                   contents:
                     remote:
-                      url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-${KUBERNETES_VERSION%.*}.conf
+                      url: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-${KUBERNETES_VERSION%.*}.conf
                 - path: /etc/sysupdate.d/noop.conf
                   mode: 0644
                   contents:
                     remote:
-                      url: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+                      url: https://extensions.flatcar.org/extensions/noop.conf
                 - path: /opt/extensions/kubernetes/kubernetes-${KUBERNETES_VERSION}-x86-64.raw
                   contents:
                     remote:
-                      url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-${KUBERNETES_VERSION}-x86-64.raw
+                      url: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-${KUBERNETES_VERSION}-x86-64.raw
             systemd:
               units:
                 - name: systemd-sysupdate.service
