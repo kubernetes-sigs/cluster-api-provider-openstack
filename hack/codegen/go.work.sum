@@ -224,6 +224,7 @@ k8s.io/kms v0.30.10/go.mod h1:GrMurD0qk3G4yNgGcsCEmepqf9KyyIrTXYR2lyUOJC4=
 k8s.io/kms v0.30.11/go.mod h1:GrMurD0qk3G4yNgGcsCEmepqf9KyyIrTXYR2lyUOJC4=
 k8s.io/kms v0.30.12/go.mod h1:GrMurD0qk3G4yNgGcsCEmepqf9KyyIrTXYR2lyUOJC4=
 k8s.io/kms v0.30.13/go.mod h1:GrMurD0qk3G4yNgGcsCEmepqf9KyyIrTXYR2lyUOJC4=
+k8s.io/kms v0.30.14/go.mod h1:GrMurD0qk3G4yNgGcsCEmepqf9KyyIrTXYR2lyUOJC4=
 k8s.io/kubectl v0.29.3 h1:RuwyyIU42MAISRIePaa8Q7A3U74Q9P4MoJbDFz9o3us=
 k8s.io/kubectl v0.29.3/go.mod h1:yCxfY1dbwgVdEt2zkJ6d5NNLOhhWgTyrqACIoFhpdd4=
 k8s.io/kubectl v0.30.3/go.mod h1:IcR0I9RN2+zzTRUa1BzZCm4oM0NLOawE6RzlDvd1Fpo=
