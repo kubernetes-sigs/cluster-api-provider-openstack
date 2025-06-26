@@ -19,7 +19,7 @@ include $(ROOT_DIR_RELATIVE)/common.mk
 # If you update this file, please follow
 # https://www.thapaliya.com/en/writings/well-documented-makefiles/
 
-export GOTOOLCHAIN=go1.22.8
+# export GOTOOLCHAIN=go1.22.8
 
 # Active module mode, as we use go modules to manage dependencies
 export GO111MODULE=on
@@ -267,7 +267,7 @@ generate-go: $(MOCKGEN)
 .PHONY: generate-manifests
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	$(CONTROLLER_GEN) \
-		paths=./api/... \
+		paths=./pkg/webhooks/... \
 		crd:crdVersions=v1 \
 		output:crd:dir=$(CRD_ROOT) \
 		output:webhook:dir=$(WEBHOOK_ROOT) \
