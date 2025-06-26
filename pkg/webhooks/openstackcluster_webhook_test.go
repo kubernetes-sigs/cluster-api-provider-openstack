@@ -14,12 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha7
+package webhooks
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/onsi/gomega"
+
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
@@ -27,25 +30,25 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		oldTemplate *OpenStackCluster
-		newTemplate *OpenStackCluster
+		oldTemplate *infrav1.OpenStackCluster
+		newTemplate *infrav1.OpenStackCluster
 		wantErr     bool
 	}{
 		{
 			name: "OpenStackCluster.Spec.IdentityRef.Kind must always be Secret",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "Secret",
 						Name: "foobar",
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "foobar",
 						Name: "foobar",
 					},
@@ -55,19 +58,19 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.IdentityRef.Name is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "Secret",
 						Name: "foobar",
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "Secret",
 						Name: "foobarbaz",
 					},
@@ -77,15 +80,15 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "OpenStackCluster.Spec.IdentityRef can be changed if it was unset",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "Secret",
 						Name: "foobar",
 					},
@@ -95,17 +98,17 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "OpenStackCluster.Spec.IdentityRef must not be removed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "Secret",
 						Name: "foobar",
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 				},
 			},
@@ -113,11 +116,11 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.Bastion is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
+					Bastion: &infrav1.Bastion{
+						Instance: infrav1.OpenStackMachineSpec{
 							CloudName: "foobar",
 							Image:     "foobar",
 							Flavor:    "minimal",
@@ -125,17 +128,17 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Enabled: true,
 					},
 				},
-				Status: OpenStackClusterStatus{
-					Bastion: &BastionStatus{
+				Status: infrav1.OpenStackClusterStatus{
+					Bastion: &infrav1.BastionStatus{
 						Name: "foobar",
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					Bastion: &Bastion{
-						Instance: OpenStackMachineSpec{
+					Bastion: &infrav1.Bastion{
+						Instance: infrav1.OpenStackMachineSpec{
 							CloudName: "foobarbaz",
 							Image:     "foobarbaz",
 							Flavor:    "medium",
@@ -148,10 +151,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing CIDRs on the OpenStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					APIServerLoadBalancer: APIServerLoadBalancer{
+					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
@@ -160,10 +163,10 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					APIServerLoadBalancer: APIServerLoadBalancer{
+					APIServerLoadBalancer: infrav1.APIServerLoadBalancer{
 						Enabled: true,
 						AllowedCIDRs: []string{
 							"0.0.0.0/0",
@@ -177,13 +180,13 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Adding OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
@@ -195,8 +198,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Modifying OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
@@ -204,8 +207,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
@@ -218,8 +221,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Removing OpenStackCluster.Spec.ControlPlaneAvailabilityZones is allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 					ControlPlaneAvailabilityZones: []string{
 						"alice",
@@ -227,8 +230,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
 				},
 			},
@@ -236,13 +239,13 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is allowed when API Server Floating IP is disabled",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: true,
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: true,
 					APIServerFixedIP:           "20.1.56.1",
 				},
@@ -251,13 +254,13 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is not allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: false,
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: false,
 					APIServerFixedIP:           "20.1.56.1",
 				},
@@ -267,13 +270,13 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 
 		{
 			name: "Changing OpenStackCluster.Spec.APIServerPort is allowed when API Server Floating IP is disabled",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: true,
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: true,
 					APIServerPort:              8443,
 				},
@@ -282,13 +285,13 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.APIServerPort is not allowed",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: false,
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: false,
 					APIServerPort:              8443,
 				},
@@ -297,22 +300,22 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.APIServerFloatingIP is allowed when it matches the current api server loadbalancer IP",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					APIServerFloatingIP: "",
 				},
-				Status: OpenStackClusterStatus{
-					APIServerLoadBalancer: &LoadBalancer{
+				Status: infrav1.OpenStackClusterStatus{
+					APIServerLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					APIServerFloatingIP: "1.2.3.4",
 				},
-				Status: OpenStackClusterStatus{
-					APIServerLoadBalancer: &LoadBalancer{
+				Status: infrav1.OpenStackClusterStatus{
+					APIServerLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -321,22 +324,22 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "Changing OpenStackCluster.Spec.APIServerFloatingIP is not allowed when it doesn't matches the current api server loadbalancer IP",
-			oldTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			oldTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					APIServerFloatingIP: "",
 				},
-				Status: OpenStackClusterStatus{
-					APIServerLoadBalancer: &LoadBalancer{
+				Status: infrav1.OpenStackClusterStatus{
+					APIServerLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
 			},
-			newTemplate: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			newTemplate: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					APIServerFloatingIP: "5.6.7.8",
 				},
-				Status: OpenStackClusterStatus{
-					APIServerLoadBalancer: &LoadBalancer{
+				Status: infrav1.OpenStackClusterStatus{
+					APIServerLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -346,7 +349,9 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			warn, err := tt.newTemplate.ValidateUpdate(tt.oldTemplate)
+			ctx := context.TODO()
+			webhook := &openStackClusterWebhook{}
+			warn, err := webhook.ValidateUpdate(ctx, tt.oldTemplate, tt.newTemplate)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {
@@ -363,15 +368,15 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		template *OpenStackCluster
+		template *infrav1.OpenStackCluster
 		wantErr  bool
 	}{
 		{
 			name: "OpenStackCluster.Spec.IdentityRef with correct spec on create",
-			template: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			template: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "Secret",
 						Name: "foobar",
 					},
@@ -381,10 +386,10 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 		},
 		{
 			name: "OpenStackCluster.Spec.IdentityRef with faulty spec on create",
-			template: &OpenStackCluster{
-				Spec: OpenStackClusterSpec{
+			template: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
 					CloudName: "foobar",
-					IdentityRef: &OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Kind: "foobar",
 						Name: "foobar",
 					},
@@ -395,7 +400,9 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			warn, err := tt.template.ValidateCreate()
+			ctx := context.TODO()
+			webhook := &openStackClusterWebhook{}
+			warn, err := webhook.ValidateCreate(ctx, tt.template)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {
