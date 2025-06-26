@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha7
+package webhooks
 
 import (
 	"context"
@@ -26,6 +26,8 @@ import (
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7"
 )
 
 func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
@@ -33,27 +35,27 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		oldTemplate *OpenStackMachineTemplate
-		newTemplate *OpenStackMachineTemplate
+		oldTemplate *infrav1.OpenStackMachineTemplate
+		newTemplate *infrav1.OpenStackMachineTemplate
 		req         *admission.Request
 		wantErr     bool
 	}{
 		{
 			name: "OpenStackMachineTemplate with immutable spec",
-			oldTemplate: &OpenStackMachineTemplate{
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "bar",
 						},
 					},
 				},
 			},
-			newTemplate: &OpenStackMachineTemplate{
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "NewImage",
 						},
@@ -65,10 +67,10 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "OpenStackMachineTemplate with mutable metadata",
-			oldTemplate: &OpenStackMachineTemplate{
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "bar",
 						},
@@ -78,10 +80,10 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Name: "foo",
 				},
 			},
-			newTemplate: &OpenStackMachineTemplate{
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "bar",
 						},
@@ -95,20 +97,20 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "don't allow modification, dry run, no skip immutability annotation set",
-			oldTemplate: &OpenStackMachineTemplate{
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "bar",
 						},
 					},
 				},
 			},
-			newTemplate: &OpenStackMachineTemplate{
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "NewImage",
 						},
@@ -120,25 +122,25 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "allow modification, dry run, skip immutability annotation set",
-			oldTemplate: &OpenStackMachineTemplate{
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "bar",
 						},
 					},
 				},
 			},
-			newTemplate: &OpenStackMachineTemplate{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						clusterv1.TopologyDryRunAnnotation: "",
 					},
 				},
-				Spec: OpenStackMachineTemplateSpec{
-					Template: OpenStackMachineTemplateResource{
-						Spec: OpenStackMachineSpec{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: "foo",
 							Image:  "NewImage",
 						},
@@ -154,7 +156,7 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			webhook := &OpenStackMachineTemplateWebhook{}
+			webhook := &openStackMachineTemplateWebhook{}
 			ctx := admission.NewContextWithRequest(context.Background(), *tt.req)
 
 			warn, err := webhook.ValidateUpdate(ctx, tt.oldTemplate, tt.newTemplate)
