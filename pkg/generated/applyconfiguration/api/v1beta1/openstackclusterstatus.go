@@ -20,7 +20,7 @@ package v1beta1
 
 import (
 	errors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
-	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackClusterStatusApplyConfiguration represents a declarative configuration of the OpenStackClusterStatus type for use

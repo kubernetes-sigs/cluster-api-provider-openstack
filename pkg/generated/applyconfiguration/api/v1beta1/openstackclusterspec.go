@@ -19,7 +19,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackClusterSpecApplyConfiguration represents a declarative configuration of the OpenStackClusterSpec type for use
