@@ -318,7 +318,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api.api.v1beta1.Condition
+            namedType: io.k8s.sigs.cluster-api.api.core.v1beta1.Condition
           elementRelationship: atomic
     - name: instanceID
       type:
@@ -759,7 +759,7 @@ var schemaYAML = typed.YAMLObject(`types:
           elementRelationship: associative
     - name: controlPlaneEndpoint
       type:
-        namedType: io.k8s.sigs.cluster-api.api.v1beta1.APIEndpoint
+        namedType: io.k8s.sigs.cluster-api.api.core.v1beta1.APIEndpoint
     - name: controlPlaneOmitAvailabilityZone
       type:
         scalar: boolean
@@ -837,7 +837,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         map:
           elementType:
-            namedType: io.k8s.sigs.cluster-api.api.v1beta1.FailureDomainSpec
+            namedType: io.k8s.sigs.cluster-api.api.core.v1beta1.FailureDomainSpec
     - name: failureMessage
       type:
         scalar: string
@@ -1015,7 +1015,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api.api.v1beta1.Condition
+            namedType: io.k8s.sigs.cluster-api.api.core.v1beta1.Condition
           elementRelationship: atomic
     - name: failureMessage
       type:
@@ -1602,7 +1602,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
-- name: io.k8s.sigs.cluster-api.api.v1beta1.APIEndpoint
+- name: io.k8s.sigs.cluster-api.api.core.v1beta1.APIEndpoint
   map:
     fields:
     - name: host
@@ -1613,7 +1613,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: numeric
       default: 0
-- name: io.k8s.sigs.cluster-api.api.v1beta1.Condition
+- name: io.k8s.sigs.cluster-api.api.core.v1beta1.Condition
   map:
     fields:
     - name: lastTransitionTime
@@ -1636,7 +1636,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
-- name: io.k8s.sigs.cluster-api.api.v1beta1.FailureDomainSpec
+- name: io.k8s.sigs.cluster-api.api.core.v1beta1.FailureDomainSpec
   map:
     fields:
     - name: attributes
