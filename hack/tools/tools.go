@@ -29,7 +29,7 @@ import (
 	_ "k8s.io/code-generator"
 	_ "sigs.k8s.io/cluster-api/hack/tools/mdbook/embed"
 	_ "sigs.k8s.io/cluster-api/hack/tools/mdbook/releaselink"
-	_ "sigs.k8s.io/cluster-api/hack/tools/release"
+	_ "sigs.k8s.io/cluster-api/hack/tools/release/notes"
 	_ "sigs.k8s.io/controller-runtime/tools/setup-envtest"
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 	_ "sigs.k8s.io/kustomize/kustomize/v5"
