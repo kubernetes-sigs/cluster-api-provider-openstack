@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	v1 "k8s.io/api/core/v1"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	apiv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackServerStatusApplyConfiguration represents a declarative configuration of the OpenStackServerStatus type for use

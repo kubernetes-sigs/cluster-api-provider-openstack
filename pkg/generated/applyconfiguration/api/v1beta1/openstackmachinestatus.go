@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	errors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
-	clusterapiapiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterapiapiv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackMachineStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineStatus type for use
