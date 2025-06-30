@@ -15,7 +15,7 @@ require (
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20221129083400-679ae3e9e6b6
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20230926180527-c93e2abcb28e
 	sigs.k8s.io/controller-tools v0.16.5
-	sigs.k8s.io/kustomize/kustomize/v5 v5.6.0
+	sigs.k8s.io/kustomize/kustomize/v5 v5.7.0
 )
 
 require (
@@ -25,6 +25,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/carapace-sh/carapace-shlex v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -52,7 +53,6 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gophercloud/gophercloud/v2 v2.7.0 // indirect
 	github.com/gophercloud/utils/v2 v2.0.0-20240812072210-8ce1fc0f2894 // indirect
@@ -100,6 +100,8 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
+	go.yaml.in/yaml/v3 v3.0.3 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
@@ -138,11 +140,11 @@ require (
 	sigs.k8s.io/controller-runtime v0.18.7 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20211028165026-57688c578b5d // indirect
-	sigs.k8s.io/kustomize/api v0.19.0 // indirect
-	sigs.k8s.io/kustomize/cmd/config v0.19.0 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.19.0 // indirect
+	sigs.k8s.io/kustomize/api v0.20.0 // indirect
+	sigs.k8s.io/kustomize/cmd/config v0.20.0 // indirect
+	sigs.k8s.io/kustomize/kyaml v0.20.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
-	sigs.k8s.io/yaml v1.4.0 // indirect
+	sigs.k8s.io/yaml v1.5.0 // indirect
 )
 
 replace (
