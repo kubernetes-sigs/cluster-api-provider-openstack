@@ -1,0 +1,54 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../default
+- kamaji-controlplane.yaml
+
+patches:
+# Replace KubeadmControlPlane with KamajiControlPlane for HCP
+- target:
+    kind: KubeadmControlPlane
+    name: ${CLUSTER_NAME}-control-plane
+  patch: |-
+    $patch: delete
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    metadata:
+      name: ${CLUSTER_NAME}-control-plane
+- target:
+    kind: Cluster
+    name: ${CLUSTER_NAME}
+  patch: |-
+    - op: replace
+      path: /spec/controlPlaneRef
+      value:
+        kind: KamajiControlPlane
+        apiVersion: controlplane.cluster.x-k8s.io/v1alpha1
+        name: ${CLUSTER_NAME}-control-plane
+
+# Add Konnectivity port to security groups for Kamaji
+- target:
+    kind: OpenStackCluster
+    name: ${CLUSTER_NAME}
+  patch: |-
+    - op: add
+      path: /spec/managedSecurityGroups/allNodesSecurityGroupRules/-
+      value:
+        direction: ingress
+        etherType: IPv4
+        portRangeMin: 8132
+        portRangeMax: 8132
+        protocol: tcp
+        description: "Konnectivity server port for HCP"
+
+# Ensure proper network configuration for HCP workload nodes
+- target:
+    kind: OpenStackMachineTemplate
+    name: ${CLUSTER_NAME}-md-0
+  patch: |-
+    - op: add
+      path: /spec/template/spec/securityGroups/-
+      value:
+        filter:
+          name: ${CLUSTER_NAME}-secgroup-worker 

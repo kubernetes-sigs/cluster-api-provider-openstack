@@ -92,6 +92,20 @@ providers:
       new: "imagePullPolicy: IfNotPresent"
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
+- name: kamaji
+  type: ControlPlaneProvider
+  versions:
+  - name: v0.15.3
+    value: "https://github.com/clastix/cluster-api-control-plane-provider-kamaji/releases/download/v0.15.3/control-plane-components.yaml"
+    type: url
+    contract: v1beta1
+    files:
+    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: --metrics-addr=127.0.0.1:8080
+      new: --metrics-addr=:8080
 - name: openstack
   type: InfrastructureProvider
   versions:
@@ -134,6 +148,7 @@ providers:
     - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
+    - sourcePath: "../../../../templates/cluster-template-hcp.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
       new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
@@ -233,3 +248,6 @@ intervals:
   default/wait-machine-remediation: ["10m", "10s"]
   default/wait-image-create: ["15m", "10s"]
   default/wait-image-delete: ["2m", "10s"]
+  hcp/wait-cluster: ["30m", "10s"]
+  hcp/wait-control-plane: ["45m", "10s"]
+  hcp/wait-worker-nodes: ["45m", "10s"]

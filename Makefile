@@ -236,6 +236,16 @@ test-conformance: $(GINKGO) e2e-prerequisites ## Run clusterctl based conformanc
 test-conformance-fast: ## Run clusterctl based conformance test on workload cluster (requires Docker) using a subset of the conformance suite in parallel.
 	$(MAKE) test-conformance CONFORMANCE_E2E_ARGS="-kubetest.config-file=$(KUBETEST_FAST_CONF_PATH) -kubetest.ginkgo-nodes=5 $(E2E_ARGS)"
 
+# Run HCP tests - Kamaji v1.0.0 is installed via Helm during test setup
+HCP_E2E_ARGS ?= $(E2E_ARGS)
+.PHONY: test-hcp
+test-hcp: $(GINKGO) e2e-prerequisites ## Run hosted control plane (HCP) tests using Kamaji
+	time $(GINKGO) -fail-fast -trace -timeout=4h -show-node-events -v -tags=e2e \
+		--output-dir="$(ARTIFACTS)" --junit-report="junit.hcp_suite.1.xml" \
+		-focus="Hosted Control Plane tests" $(E2E_GINKGO_ARGS) ./test/e2e/suites/hcp/... -- \
+			-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
+			-data-folder="$(E2E_DATA_DIR)" $(HCP_E2E_ARGS)
+
 APIDIFF_OLD_COMMIT ?= $(shell git rev-parse origin/main)
 
 .PHONY: apidiff
