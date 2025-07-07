@@ -21,17 +21,23 @@ package hcp
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/test/framework"
 )
 
 // NetworkValidationInput contains the input for network validation tests
@@ -39,6 +45,7 @@ type NetworkValidationInput struct {
 	WorkloadClusterProxy *shared.ClusterProxy
 	Namespace            string
 	ClusterName          string
+	E2EContext           *shared.E2EContext
 }
 
 // ValidateNetworkConfiguration tests the specific network edge cases fixed in hcp-2380
@@ -53,6 +60,9 @@ func ValidateNetworkConfiguration(ctx context.Context, input NetworkValidationIn
 
 	By("Testing security group precedence")
 	validateSecurityGroupPrecedence(ctx, input)
+
+	By("Testing security group precedence with a live client")
+	validateSecurityGroupPrecedenceWithClient(ctx, input)
 
 	By("Testing port configuration edge cases")
 	validatePortConfigurationEdgeCases(ctx, input)
@@ -177,6 +187,116 @@ func validateSecurityGroupPrecedence(ctx context.Context, input NetworkValidatio
 	} else {
 		shared.Logf("Cluster does not use managed security groups")
 	}
+}
+
+// validateSecurityGroupPrecedenceWithClient creates a machine with a specific security group
+// and verifies with the OpenStack client that it's the only one applied.
+func validateSecurityGroupPrecedenceWithClient(ctx context.Context, input NetworkValidationInput) {
+	shared.Logf("Validating security group precedence with a live client")
+
+	// Get a compute client
+	computeClient, err := shared.NewComputeClient(input.E2EContext)
+	Expect(err).ToNot(HaveOccurred(), "Failed to create compute client")
+
+	// Define a new security group to be used exclusively for this test
+	openStackCluster := &infrav1.OpenStackCluster{}
+	err = input.WorkloadClusterProxy.GetClient().Get(ctx, types.NamespacedName{
+		Namespace: input.Namespace,
+		Name:      input.ClusterName,
+	}, openStackCluster)
+	Expect(err).ToNot(HaveOccurred(), "Failed to get OpenStackCluster")
+
+	sgName := "e2e-sg-override-test"
+	sg, err := shared.CreateSecurityGroup(input.E2EContext, sgName)
+	Expect(err).ToNot(HaveOccurred(), "Failed to create security group for test")
+	defer func() {
+		Expect(shared.DeleteSecurityGroup(input.E2EContext, sg.ID)).To(Succeed())
+	}()
+
+	// Create a new Machine and OpenStackMachine with the override security group
+	machineName := fmt.Sprintf("%s-sg-override", input.ClusterName)
+	shared.Logf("Creating machine %s with security group %s", machineName, sg.Name)
+
+	machine := &clusterv1.Machine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      machineName,
+			Namespace: input.Namespace,
+			Labels: map[string]string{
+				clusterv1.ClusterNameLabel: input.ClusterName,
+			},
+		},
+		Spec: clusterv1.MachineSpec{
+			ClusterName: input.ClusterName,
+			Version:     ptr.To(e2eCtx.E2EConfig.Variables[shared.KubernetesVersion]),
+			Bootstrap: clusterv1.Bootstrap{
+				ConfigRef: &corev1.ObjectReference{
+					APIVersion: "bootstrap.cluster.x-k8s.io/v1beta1",
+					Kind:       "KubeadmConfigTemplate",
+					Name:       fmt.Sprintf("%s-md-0", input.ClusterName),
+				},
+			},
+			InfrastructureRef: corev1.ObjectReference{
+				APIVersion: "infrastructure.cluster.x-k8s.io/v1beta1",
+				Kind:       "OpenStackMachine",
+				Name:       machineName,
+			},
+		},
+	}
+
+	openStackMachine := &infrav1.OpenStackMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      machineName,
+			Namespace: input.Namespace,
+		},
+		Spec: infrav1.OpenStackMachineSpec{
+			// Explicitly set the security group, overriding any cluster defaults
+			SecurityGroups: []infrav1.SecurityGroupParam{
+				{ID: &sg.ID},
+			},
+			Flavor:     e2eCtx.E2EConfig.Variables[shared.OpenstackNodeMachineFlavor],
+			Image:      infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: &e2eCtx.E2EConfig.Variables[shared.OpenstackImageName]}},
+			SSHKeyName: e2eCtx.E2EConfig.Variables[shared.OpenstackSSHKeyName],
+		},
+	}
+
+	// Create the resources
+	err = input.WorkloadClusterProxy.GetClient().Create(ctx, openStackMachine)
+	Expect(err).ToNot(HaveOccurred(), "Failed to create OpenStackMachine")
+	err = input.WorkloadClusterProxy.GetClient().Create(ctx, machine)
+	Expect(err).ToNot(HaveOccurred(), "Failed to create Machine")
+
+	// Wait for the machine to get an instance ID and become ready
+	shared.Logf("Waiting for machine %s to become ready", machineName)
+	framework.WaitForMachineReady(ctx, framework.WaitForMachineReadyInput{
+		Getter:    input.WorkloadClusterProxy.GetClient(),
+		Cluster:   &clusterv1.Cluster{ObjectMeta: metav1.ObjectMeta{Name: input.ClusterName, Namespace: input.Namespace}},
+		Machine:   machine,
+		Timeout:   20 * time.Minute,
+		Intervals: e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes"),
+	})
+
+	// Get the updated OpenStackMachine to find its instance ID
+	err = input.WorkloadClusterProxy.GetClient().Get(ctx, client.ObjectKeyFromObject(openStackMachine), openStackMachine)
+	Expect(err).ToNot(HaveOccurred(), "Failed to get updated OpenStackMachine")
+	Expect(openStackMachine.Status.InstanceID).ToNot(BeNil(), "InstanceID should not be nil")
+
+	// Use the compute client to verify the security groups on the live instance
+	shared.Logf("Verifying security groups on instance %s", *openStackMachine.Status.InstanceID)
+	server, err := servers.Get(computeClient, *openStackMachine.Status.InstanceID).Extract()
+	Expect(err).ToNot(HaveOccurred(), "Failed to get server details from OpenStack")
+
+	// Assert that the ONLY security group is the one we specified
+	Expect(server.SecurityGroups).To(HaveLen(1), "Should only have one security group")
+	Expect(server.SecurityGroups[0].(map[string]interface{})["name"]).To(Equal(sg.Name), "The applied security group should be the override one")
+
+	shared.Logf("Successfully verified security group override")
+
+	// Clean up the machine
+	shared.Logf("Deleting machine %s", machineName)
+	err = input.WorkloadClusterProxy.GetClient().Delete(ctx, machine)
+	Expect(err).ToNot(HaveOccurred(), "Failed to delete machine")
+	err = input.WorkloadClusterProxy.GetClient().Delete(ctx, openStackMachine)
+	Expect(err).ToNot(HaveOccurred(), "Failed to delete OpenStackMachine")
 }
 
 // validatePortConfigurationEdgeCases tests edge cases in port configuration

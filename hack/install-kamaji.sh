@@ -16,6 +16,12 @@
 
 set -euo pipefail
 
+KUBECONFIG_ARG=""
+if [ -n "${1-}" ]; then
+    echo "Using kubeconfig: ${1}"
+    KUBECONFIG_ARG="--kubeconfig ${1}"
+fi
+
 # Simple Kamaji installation using Helm
 # This script installs Kamaji v1.0.0 in the management cluster
 
@@ -35,15 +41,16 @@ helm install kamaji clastix/kamaji \
   --version ${KAMAJI_VERSION} \
   --namespace ${KAMAJI_NAMESPACE} \
   --create-namespace \
+  ${KUBECONFIG_ARG} \
   --wait
 
 # Verify installation
 echo "Verifying Kamaji installation..."
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=kamaji -n ${KAMAJI_NAMESPACE} --timeout=300s
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=kamaji -n ${KAMAJI_NAMESPACE} --timeout=300s ${KUBECONFIG_ARG}
 
 # Create default datastore
 echo "Creating default datastore..."
-cat <<EOF | kubectl apply -f -
+cat <<EOF | kubectl apply -f - ${KUBECONFIG_ARG}
 apiVersion: kamaji.clastix.io/v1alpha1
 kind: DataStore
 metadata:

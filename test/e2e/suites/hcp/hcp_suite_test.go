@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -33,9 +32,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
@@ -118,50 +122,18 @@ var _ = Describe("Hosted Control Plane tests", func() {
 			workloadCluster := e2eCtx.Environment.BootstrapClusterProxy.GetWorkloadCluster(ctx, namespace.Name, managementClusterName)
 			managementKubeconfig := workloadCluster.GetKubeconfigPath()
 
-			By("Installing Kamaji v1.0.0 on management cluster using Helm")
-			shared.Logf("Installing Kamaji v1.0.0 on management cluster")
+			By("Installing Kamaji v1.0.0 on management cluster using shell script")
+			shared.Logf("Installing Kamaji via hack/install-kamaji.sh on management cluster: %s", managementClusterName)
 
-			// Install Kamaji using Helm
-			cmd := exec.Command("helm", "repo", "add", "clastix", "https://clastix.github.io/charts")
-			output, err := cmd.CombinedOutput()
-			shared.Logf("Helm repo add output: %s", string(output))
-			Expect(err).ToNot(HaveOccurred(), "Failed to add Clastix Helm repo: %v", err)
-
-			cmd = exec.Command("helm", "repo", "update")
-			output, err = cmd.CombinedOutput()
-			shared.Logf("Helm repo update output: %s", string(output))
-			Expect(err).ToNot(HaveOccurred(), "Failed to update Helm repos: %v", err)
-
-			cmd = exec.Command("helm", "install", "kamaji", "clastix/kamaji",
-				"--version", "v1.0.0",
-				"--namespace", "kamaji-system",
-				"--create-namespace",
-				"--kubeconfig", managementKubeconfig,
-				"--wait", "--timeout", "10m")
-			output, err = cmd.CombinedOutput()
-			shared.Logf("Kamaji installation output: %s", string(output))
-			Expect(err).ToNot(HaveOccurred(), "Failed to install Kamaji: %v", err)
-
-			By("Creating default DataStore for Kamaji")
-			datastoreYaml := `apiVersion: kamaji.clastix.io/v1alpha1
-kind: DataStore
-metadata:
-  name: default
-  namespace: kamaji-system
-spec:
-  driver: etcd
-  endpoints:
-  - kamaji-etcd.kamaji-system.svc.cluster.local:2379`
-
-			cmd = exec.Command("kubectl", "apply", "--kubeconfig", managementKubeconfig, "-f", "-")
-			cmd.Stdin = strings.NewReader(datastoreYaml)
-			output, err = cmd.CombinedOutput()
-			shared.Logf("DataStore creation output: %s", string(output))
-			Expect(err).ToNot(HaveOccurred(), "Failed to create DataStore: %v", err)
+			installCmd := exec.Command("../../../../hack/install-kamaji.sh", managementKubeconfig)
+			output, err := installCmd.CombinedOutput()
+			shared.Logf("Kamaji installation script output:\n%s", string(output))
+			Expect(err).ToNot(HaveOccurred(), "Failed to install Kamaji using script")
 
 			By("Waiting for Kamaji to be ready")
-			// Give Kamaji some time to initialize
-			time.Sleep(30 * time.Second)
+			// The script waits for pods to be ready, but a small extra delay can prevent race conditions
+			// where the webhook is not yet fully available for the TenantControlPlane.
+			time.Sleep(10 * time.Second)
 
 			By("Creating workload cluster with Kamaji control plane")
 			shared.Logf("Creating HCP workload cluster: %s", workloadClusterName)
@@ -203,7 +175,52 @@ spec:
 				WorkloadClusterProxy: workloadClusterProxy,
 				Namespace:            namespace.Name,
 				ClusterName:          workloadClusterName,
+				E2EContext:           e2eCtx,
 			})
+
+			By("Testing terminal error for missing network")
+			// This test intentionally creates a machine that should fail to validate the terminal error handling
+			func() {
+				// Get the OpenStackCluster and patch its status to remove the network
+				openStackCluster := &infrav1.OpenStackCluster{}
+				err := workloadClusterProxy.GetClient().Get(ctx, types.NamespacedName{Name: workloadClusterName, Namespace: namespace.Name}, openStackCluster)
+				Expect(err).ToNot(HaveOccurred())
+
+				patch := client.MergeFrom(openStackCluster.DeepCopy())
+				openStackCluster.Status.Network = nil
+				Expect(workloadClusterProxy.GetClient().Status().Patch(ctx, openStackCluster, patch)).To(Succeed())
+
+				// Create a machine without a network defined in its spec. This should fail because the cluster network is also gone.
+				machineName := fmt.Sprintf("%s-terminal-test", workloadClusterName)
+				openStackMachine := &infrav1.OpenStackMachine{
+					ObjectMeta: metav1.ObjectMeta{Name: machineName, Namespace: namespace.Name},
+					Spec: infrav1.OpenStackMachineSpec{
+						Flavor:     e2eCtx.E2EConfig.Variables[shared.OpenstackNodeMachineFlavor],
+						Image:      infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: &e2eCtx.E2EConfig.Variables[shared.OpenstackImageName]}},
+						SSHKeyName: e2eCtx.E2EConfig.Variables[shared.OpenstackSSHKeyName],
+					},
+				}
+				Expect(workloadClusterProxy.GetClient().Create(ctx, openStackMachine)).To(Succeed())
+
+				// Assert that the machine gets the terminal error condition
+				g := NewWithT(GinkgoT())
+				g.Eventually(func() (bool, error) {
+					err := workloadClusterProxy.GetClient().Get(ctx, client.ObjectKeyFromObject(openStackMachine), openStackMachine)
+					if err != nil {
+						return false, err
+					}
+					for _, condition := range openStackMachine.Status.Conditions {
+						if condition.Type == clusterv1.ReadyCondition && condition.Status == corev1.ConditionFalse && condition.Severity == clusterv1.ConditionSeverityError && condition.Reason == infrav1.InvalidMachineSpecReason {
+							shared.Logf("Found terminal condition with correct reason: %s", condition.Message)
+							return true, nil
+						}
+					}
+					return false, nil
+				}, 10*time.Minute, 15*time.Second).Should(BeTrue(), "OpenStackMachine should have a terminal error condition for missing network")
+
+				// Clean up the test machine
+				Expect(workloadClusterProxy.GetClient().Delete(ctx, openStackMachine)).To(Succeed())
+			}()
 
 			By("Testing Konnectivity connectivity")
 			ValidateKonectivityConnectivity(ctx, NetworkValidationInput{
