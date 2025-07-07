@@ -521,20 +521,16 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		serverPorts = make([]infrav1.PortOpts, 1)
 	}
 	for i := range serverPorts {
-		if serverPorts[i].Network == nil {
-			serverPorts[i].Network = &infrav1.NetworkParam{
-				ID: &defaultNetworkID,
-			}
-		}
-		if len(serverPorts[i].SecurityGroups) == 0 && defaultSecGroup != nil {
-			serverPorts[i].SecurityGroups = []infrav1.SecurityGroupParam{
-				{
-					ID: defaultSecGroup,
-				},
-			}
+		// Only inject the default network when we actually have an ID.
+		if serverPorts[i].Network == nil && defaultNetworkID != "" {
+			serverPorts[i].Network = &infrav1.NetworkParam{ID: &defaultNetworkID}
 		}
 		if len(openStackMachineSpec.SecurityGroups) > 0 {
-			serverPorts[i].SecurityGroups = append(serverPorts[i].SecurityGroups, openStackMachineSpec.SecurityGroups...)
+			// Machine level security groups override any cluster defaults.
+			serverPorts[i].SecurityGroups = openStackMachineSpec.SecurityGroups
+		} else if len(serverPorts[i].SecurityGroups) == 0 && defaultSecGroup != nil {
+			// Fall back to cluster-managed security group when nothing else specified.
+			serverPorts[i].SecurityGroups = []infrav1.SecurityGroupParam{{ID: defaultSecGroup}}
 		}
 	}
 	openStackServerSpec.Ports = serverPorts
@@ -588,7 +584,18 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 			}
 			return openStackCluster.Spec.IdentityRef
 		}()
-		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
+			// Determine default network ID if the cluster status exposes one.
+		var defaultNetworkID string
+		if openStackCluster.Status.Network != nil {
+			defaultNetworkID = openStackCluster.Status.Network.ID
+		}
+
+		// If no cluster network is available AND the machine spec did not define any ports with a network, we cannot choose a network.
+		if defaultNetworkID == "" && len(openStackMachine.Spec.Ports) == 0 {
+			return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, "no network configured: cluster network is missing and machine spec does not define ports with a network")
+		}
+
+		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), defaultNetworkID)
 		machineServer = &infrav1alpha1.OpenStackServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
