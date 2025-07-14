@@ -146,6 +146,7 @@ func executeCommand(ctx context.Context, p commandParameter) error {
 		return fmt.Errorf("unable to send command %q: %s", "sudo "+p.cmd.cmd, err)
 	}
 	result := strings.TrimSuffix(stdoutBuf.String(), "\n") + "\n" + strings.TrimSuffix(stderrBuf.String(), "\n")
+	//nolint:gosec // disable G306
 	if err := os.WriteFile(logFile, []byte(result), os.ModePerm); err != nil {
 		return fmt.Errorf("error writing log file: %s", err)
 	}

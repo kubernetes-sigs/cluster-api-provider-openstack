@@ -157,8 +157,13 @@ issues:
   - linters:
     - revive
     - stylecheck
-    path: (test)/.*.go
+    path: (.+)_test\.go|(test)/.*.go
     text: should not use dot imports
+  - linters:
+    - revive
+    - stylecheck
+    path: (.+)_test\.go|(test)/.*.go
+    text: unused-parameter
   - linters:
     - revive
     path: test/e2e/shared/defaults.go
