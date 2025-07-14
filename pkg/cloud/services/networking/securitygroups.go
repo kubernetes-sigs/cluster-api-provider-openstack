@@ -71,7 +71,6 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	for k, desiredSecGroup := range desiredSecGroups {
 		var err error
 		observedSecGroups[k], err = s.getSecurityGroupByName(desiredSecGroup.Name)
-
 		if err != nil {
 			return err
 		}

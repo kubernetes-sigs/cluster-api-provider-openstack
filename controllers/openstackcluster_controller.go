@@ -566,6 +566,7 @@ func reconcileNetworkComponents(scope scope.Scope, cluster *clusterv1.Cluster, o
 		// Set APIEndpoints so the Cluster API Cluster Controller can pull them
 		openStackCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
 			Host: host,
+			//nolint:gosec // disable G115
 			Port: int32(apiServerPort),
 		}
 	}
