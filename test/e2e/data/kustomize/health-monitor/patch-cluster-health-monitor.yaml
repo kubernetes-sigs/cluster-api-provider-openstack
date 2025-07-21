@@ -1,0 +1,11 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackCluster
+metadata:
+  name: "${CLUSTER_NAME}"
+spec:
+  apiServerLoadBalancer:
+    monitor:
+      delay: 15
+      timeout: 10
+      maxRetries: 3
+      maxRetriesDown: 2

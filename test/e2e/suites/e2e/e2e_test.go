@@ -32,6 +32,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
@@ -1027,6 +1029,128 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					"Severity": Equal(clusterv1.ConditionSeverityError),
 				},
 			), "OpenStackMachine should be marked not ready with InstanceDeletedReason")
+		})
+	})
+
+	Describe("Workload cluster (health monitor)", func() {
+		It("should configure load balancer health monitor with custom settings", func(ctx context.Context) {
+			shared.Logf("Creating a cluster with custom health monitor configuration")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
+			configCluster.Flavor = shared.FlavorHealthMonitor
+			createCluster(ctx, configCluster, clusterResources)
+
+			openStackCluster, err := shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(openStackCluster.Spec.APIServerLoadBalancer).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Delay).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Delay).To(Equal(15))
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Timeout).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Timeout).To(Equal(10))
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries).To(Equal(3))
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetriesDown).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetriesDown).To(Equal(2))
+
+			shared.Logf("Looking for load balancer for cluster %s", clusterName)
+			expectedLBName := fmt.Sprintf("k8s-clusterapi-cluster-%s-%s-kubeapi", namespace.Name, clusterName)
+			loadBalancers, err := shared.DumpOpenStackLoadBalancers(e2eCtx, loadbalancers.ListOpts{
+				Name: expectedLBName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			if len(loadBalancers) == 0 {
+				shared.Logf("Load balancer not found by name, trying by tags")
+				loadBalancers, err = shared.DumpOpenStackLoadBalancers(e2eCtx, loadbalancers.ListOpts{
+					Tags: []string{clusterName},
+				})
+				Expect(err).NotTo(HaveOccurred())
+			}
+			Expect(loadBalancers).ToNot(BeEmpty(), "Load balancer should exist for cluster")
+
+			loadBalancer := loadBalancers[0]
+			shared.Logf("Found load balancer %s with ID %s", loadBalancer.Name, loadBalancer.ID)
+
+			shared.Logf("Looking for health monitors for load balancer %s", loadBalancer.ID)
+			monitorList, err := shared.DumpOpenStackLoadBalancerMonitors(e2eCtx, monitors.ListOpts{})
+			Expect(err).NotTo(HaveOccurred())
+
+			expectedMonitorName := fmt.Sprintf("%s-6443", loadBalancer.Name)
+
+			var clusterMonitor *monitors.Monitor
+			for i := range monitorList {
+				monitor := &monitorList[i]
+				if monitor.Name == expectedMonitorName || strings.Contains(monitor.Name, loadBalancer.Name) {
+					clusterMonitor = monitor
+					break
+				}
+			}
+			Expect(clusterMonitor).ToNot(BeNil(), "Health monitor should exist for the cluster load balancer")
+
+			shared.Logf("Found health monitor %s with ID %s", clusterMonitor.Name, clusterMonitor.ID)
+
+			Expect(clusterMonitor.Delay).To(Equal(15), "Monitor delay should match configured value")
+			Expect(clusterMonitor.Timeout).To(Equal(10), "Monitor timeout should match configured value")
+			Expect(clusterMonitor.MaxRetries).To(Equal(3), "Monitor maxRetries should match configured value")
+			Expect(clusterMonitor.MaxRetriesDown).To(Equal(2), "Monitor maxRetriesDown should match configured value")
+			Expect(clusterMonitor.Type).To(Equal("TCP"), "Monitor should be TCP type")
+
+			shared.Logf("Testing health monitor configuration update")
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			updatedCluster := openStackCluster.DeepCopy()
+			updatedCluster.Spec.APIServerLoadBalancer.Monitor.Delay = 20
+			updatedCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries = 4
+
+			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, updatedCluster)).To(Succeed())
+
+			Eventually(func() (bool, error) {
+				updatedMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)
+				if err != nil {
+					return false, err
+				}
+				return updatedMonitor.Delay == 20 && updatedMonitor.MaxRetries == 4, nil
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-cluster")...).Should(BeTrue(), "Monitor should be updated with new configuration")
+
+			finalMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(finalMonitor.Delay).To(Equal(20), "Monitor delay should be updated")
+			Expect(finalMonitor.MaxRetries).To(Equal(4), "Monitor maxRetries should be updated")
+			Expect(finalMonitor.Timeout).To(Equal(10), "Monitor timeout should remain unchanged")
+			Expect(finalMonitor.MaxRetriesDown).To(Equal(2), "Monitor maxRetriesDown should remain unchanged")
+
+			shared.Logf("Testing monitor configuration removal and default value reversion")
+			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			clusterWithRemovedMonitor := openStackCluster.DeepCopy()
+			clusterWithRemovedMonitor.Spec.APIServerLoadBalancer.Monitor = nil
+			if clusterWithRemovedMonitor.Annotations == nil {
+				clusterWithRemovedMonitor.Annotations = make(map[string]string)
+			}
+			clusterWithRemovedMonitor.Annotations["test.e2e/monitor-update"] = fmt.Sprintf("%d", time.Now().Unix())
+			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, clusterWithRemovedMonitor)).To(Succeed())
+
+			Eventually(func() (bool, error) {
+				revertedMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)
+				if err != nil {
+					return false, err
+				}
+				return revertedMonitor.Delay == 10 && revertedMonitor.Timeout == 5 &&
+					revertedMonitor.MaxRetries == 5 && revertedMonitor.MaxRetriesDown == 3, nil
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-cluster")...).Should(BeTrue(), "Monitor should revert to all default values when configuration is removed")
+
+			revertedMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(revertedMonitor.Delay).To(Equal(10), "Monitor delay should revert to default value (10)")
+			Expect(revertedMonitor.Timeout).To(Equal(5), "Monitor timeout should revert to default value (5)")
+			Expect(revertedMonitor.MaxRetries).To(Equal(5), "Monitor maxRetries should revert to default value (5)")
+			Expect(revertedMonitor.MaxRetriesDown).To(Equal(3), "Monitor maxRetriesDown should revert to default value (3)")
 		})
 	})
 })

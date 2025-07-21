@@ -40,6 +40,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
+	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
@@ -963,6 +964,54 @@ func DumpOpenStackLoadBalancers(e2eCtx *E2EContext, filter loadbalancers.ListOpt
 		return nil, fmt.Errorf("error getting load balancers: %s", err)
 	}
 	return loadBalancersList, nil
+}
+
+// DumpOpenStackLoadBalancerMonitors gets load balancer health monitors.
+func DumpOpenStackLoadBalancerMonitors(e2eCtx *E2EContext, filter monitors.ListOpts) ([]monitors.Monitor, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return nil, err
+	}
+
+	loadBalancerClient, err := openstack.NewLoadBalancerV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating load balancer client: %s", err)
+	}
+
+	allPages, err := monitors.List(loadBalancerClient, filter).AllPages(context.TODO())
+	if err != nil {
+		return nil, fmt.Errorf("error getting load balancer monitors: %s", err)
+	}
+	monitorsList, err := monitors.ExtractMonitors(allPages)
+	if err != nil {
+		return nil, fmt.Errorf("error extracting load balancer monitors: %s", err)
+	}
+	return monitorsList, nil
+}
+
+// GetOpenStackLoadBalancerMonitor gets a specific load balancer health monitor by ID.
+func GetOpenStackLoadBalancerMonitor(e2eCtx *E2EContext, monitorID string) (*monitors.Monitor, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return nil, err
+	}
+
+	loadBalancerClient, err := openstack.NewLoadBalancerV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating load balancer client: %s", err)
+	}
+
+	monitor, err := monitors.Get(context.TODO(), loadBalancerClient, monitorID).Extract()
+	if err != nil {
+		return nil, fmt.Errorf("error getting load balancer monitor: %s", err)
+	}
+	return monitor, nil
 }
 
 func GetOpenStackServerConsoleLog(e2eCtx *E2EContext, id string) (string, error) {
