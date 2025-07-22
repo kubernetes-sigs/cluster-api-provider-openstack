@@ -1,0 +1,5 @@
+build:
+  buildFlags:
+    - "-tags=e2e"
+  env:
+    CGO_ENABLED: "1" 
