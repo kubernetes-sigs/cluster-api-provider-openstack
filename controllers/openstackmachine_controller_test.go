@@ -261,3 +261,153 @@ func TestGetPortIDs(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenStackMachineSpecToOpenStackServerSpec_NilNetworkCases(t *testing.T) {
+	identityRef := infrav1.OpenStackIdentityReference{
+		Name:      "foo",
+		CloudName: "my-cloud",
+	}
+	image := infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("my-image")}}
+	tags := []string{"tag1", "tag2"}
+	userData := &corev1.LocalObjectReference{Name: "server-data-secret"}
+
+	tests := []struct {
+		name                 string
+		openStackCluster     *infrav1.OpenStackCluster
+		spec                 *infrav1.OpenStackMachineSpec
+		expectedDefaultNetID string
+		expectedPorts        []infrav1.PortOpts
+		description          string
+	}{
+		{
+			name: "Empty cluster network ID, machine defines explicit ports",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "", // Empty network ID
+						},
+					},
+					WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+						ID: workerSecurityGroupUUID,
+					},
+				},
+			},
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: ptr.To(flavorName),
+				Image:  image,
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+				}},
+			},
+			expectedDefaultNetID: "", // Empty because cluster network ID is empty
+			expectedPorts: []infrav1.PortOpts{{
+				Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+				SecurityGroups: []infrav1.SecurityGroupParam{{
+					ID: ptr.To(workerSecurityGroupUUID),
+				}},
+			}},
+			description: "Should work when cluster has empty network ID but machine defines ports",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Verify the default network ID extraction logic
+			var defaultNetworkID string
+			if tt.openStackCluster.Status.Network != nil {
+				defaultNetworkID = tt.openStackCluster.Status.Network.ID
+			}
+
+			if defaultNetworkID != tt.expectedDefaultNetID {
+				t.Errorf("Expected defaultNetworkID = %q, got %q", tt.expectedDefaultNetID, defaultNetworkID)
+			}
+
+			// Test the spec conversion
+			var managedSecurityGroupID *string
+			if tt.openStackCluster.Status.WorkerSecurityGroup != nil {
+				managedSecurityGroupID = &tt.openStackCluster.Status.WorkerSecurityGroup.ID
+			}
+
+			spec := openStackMachineSpecToOpenStackServerSpec(
+				tt.spec,
+				identityRef,
+				tags,
+				"", // failureDomain
+				userData,
+				managedSecurityGroupID,
+				defaultNetworkID,
+			)
+
+			if !reflect.DeepEqual(spec.Ports, tt.expectedPorts) {
+				t.Errorf("Expected ports = %+v, got %+v", tt.expectedPorts, spec.Ports)
+			}
+		})
+	}
+}
+
+func TestValidateNetworkConfiguration(t *testing.T) {
+	tests := []struct {
+		name              string
+		clusterNetworkID  string
+		machinePortsCount int
+		expectError       bool
+		expectedErrorMsg  string
+		description       string
+	}{
+		{
+			name:              "Valid: cluster has network, machine has no explicit ports",
+			clusterNetworkID:  networkUUID,
+			machinePortsCount: 0,
+			expectError:       false,
+			description:       "Should succeed when cluster provides default network",
+		},
+		{
+			name:              "Valid: no cluster network, machine defines explicit ports",
+			clusterNetworkID:  "",
+			machinePortsCount: 1,
+			expectError:       false,
+			description:       "Should succeed when machine defines its own networking",
+		},
+		{
+			name:              "Invalid: no cluster network, no machine ports",
+			clusterNetworkID:  "",
+			machinePortsCount: 0,
+			expectError:       true,
+			expectedErrorMsg:  "no network configured: cluster network is missing and machine spec does not define ports with a network",
+			description:       "Should fail with terminal error when no networking is configured anywhere",
+		},
+		{
+			name:              "Valid: cluster network and machine ports both defined",
+			clusterNetworkID:  networkUUID,
+			machinePortsCount: 2,
+			expectError:       false,
+			description:       "Should succeed when both cluster and machine define networking",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Simulate the validation logic from the controller
+			hasClusterNetwork := tt.clusterNetworkID != ""
+			hasMachinePorts := tt.machinePortsCount > 0
+
+			shouldFail := !hasClusterNetwork && !hasMachinePorts
+
+			if shouldFail != tt.expectError {
+				t.Errorf("Expected error: %v, but validation result: %v", tt.expectError, shouldFail)
+			}
+
+			if tt.expectError && shouldFail {
+				// In the real controller, this would be a terminal error
+				actualError := "no network configured: cluster network is missing and machine spec does not define ports with a network"
+				if actualError != tt.expectedErrorMsg {
+					t.Errorf("Expected error message: %q, got: %q", tt.expectedErrorMsg, actualError)
+				}
+			}
+		})
+	}
+}

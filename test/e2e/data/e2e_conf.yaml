@@ -93,6 +93,7 @@ providers:
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
 
+
 - name: openstack
   type: InfrastructureProvider
   versions:
@@ -182,6 +183,15 @@ variables:
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
+  # HCP/Kamaji configuration
+  KAMAJI_VERSION: "edge-25.7.1"
+  KAMAJI_NAMESPACE: "kamaji-system"
+  CLUSTER_DATASTORE: "default"
+  HCP_SERVICE_TYPE: "LoadBalancer"
+  HCP_CPU_LIMIT: "1000m"
+  HCP_MEMORY_LIMIT: "1Gi"
+  HCP_CPU_REQUEST: "100m"
+  HCP_MEMORY_REQUEST: "300Mi"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.6.1-x86_64-disk"
   OPENSTACK_BASTION_IMAGE_URL: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
   OPENSTACK_BASTION_IMAGE_HASH: 0c839612eb3f2469420f2ccae990827f
@@ -234,3 +244,4 @@ intervals:
   default/wait-machine-remediation: ["10m", "10s"]
   default/wait-image-create: ["15m", "10s"]
   default/wait-image-delete: ["2m", "10s"]
+  default/wait-daemonset: ["10m", "30s"]

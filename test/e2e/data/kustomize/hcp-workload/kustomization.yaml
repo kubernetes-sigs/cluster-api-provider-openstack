@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Build from scratch with our own template file
+resources:
+- hcp-workload-template.yaml
+
+components:
+- ../common-patches/cluster
+- ../common-patches/cni  
+- ../common-patches/ccm
+- ../common-patches/externalNetworkByName
+- ../common-patches/images-without-ref
+
+namePrefix: hcp-workload-

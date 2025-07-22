@@ -60,6 +60,9 @@ const (
 	FlavorFlatcar              = "flatcar"
 	FlavorKubernetesUpgrade    = "k8s-upgrade"
 	FlavorFlatcarSysext        = "flatcar-sysext"
+	FlavorBrokenHCP            = "broken-hcp"
+	FlavorHCPManagement        = "hcp-management"
+	FlavorHCPWorkload          = "hcp-workload"
 )
 
 // DefaultScheme returns the default scheme to use for testing.

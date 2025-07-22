@@ -184,7 +184,10 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-flatcar.yaml \
                  cluster-template-k8s-upgrade.yaml \
 		 cluster-template-flatcar-sysext.yaml \
-		 cluster-template-no-bastion.yaml)
+		 cluster-template-no-bastion.yaml \
+		 cluster-template-hcp-management.yaml \
+		 cluster-template-hcp-workload.yaml \
+		 cluster-template-hcp-broken.yaml)
 # Currently no templates that require CI artifacts
 # $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 
@@ -235,6 +238,16 @@ test-conformance: $(GINKGO) e2e-prerequisites ## Run clusterctl based conformanc
 
 test-conformance-fast: ## Run clusterctl based conformance test on workload cluster (requires Docker) using a subset of the conformance suite in parallel.
 	$(MAKE) test-conformance CONFORMANCE_E2E_ARGS="-kubetest.config-file=$(KUBETEST_FAST_CONF_PATH) -kubetest.ginkgo-nodes=5 $(E2E_ARGS)"
+
+HCP_E2E_ARGS ?=
+HCP_E2E_ARGS += $(E2E_ARGS)
+.PHONY: test-hcp
+test-hcp: $(GINKGO) e2e-prerequisites ## Run HCP (Hosted Control Plane) e2e tests
+	time $(GINKGO) -fail-fast -trace -timeout=3h -show-node-events -v -tags=e2e -nodes=$(E2E_GINKGO_PARALLEL) \
+		--output-dir="$(ARTIFACTS)" --junit-report="junit.hcp_suite.1.xml" \
+		-focus="$(E2E_GINKGO_FOCUS)" $(_SKIP_ARGS) $(E2E_GINKGO_ARGS) ./test/e2e/suites/hcp/... -- \
+			-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
+			-data-folder="$(E2E_DATA_DIR)" $(HCP_E2E_ARGS)
 
 
 

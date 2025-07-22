@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
@@ -564,6 +565,11 @@ func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRule
 	s.scope.Logger().V(6).Info("Creating rule", "description", r.Description, "direction", dir, "portRangeMin", r.PortRangeMin, "portRangeMax", r.PortRangeMax, "proto", proto, "etherType", etherType, "remoteGroupID", r.RemoteGroupID, "remoteIPPrefix", r.RemoteIPPrefix, "securityGroupID", securityGroupID)
 	_, err := s.client.CreateSecGroupRule(createOpts)
 	if err != nil {
+		// Handle HTTP 409 (SecurityGroupRuleExists) as success - the rule already exists
+		if strings.Contains(err.Error(), "SecurityGroupRuleExists") || strings.Contains(err.Error(), "already exists") {
+			s.scope.Logger().V(4).Info("Security group rule already exists, treating as success", "description", r.Description, "securityGroupID", securityGroupID)
+			return nil
+		}
 		return err
 	}
 	return nil

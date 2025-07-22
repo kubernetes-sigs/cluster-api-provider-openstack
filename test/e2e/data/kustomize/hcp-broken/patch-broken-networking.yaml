@@ -1,0 +1,20 @@
+---
+# This patch removes networking configuration from OpenStackCluster
+# to test graceful failure scenarios when cluster network is missing
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackCluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  # Remove managedSubnets to simulate missing network configuration
+  managedSubnets: []
+  # Remove managedSecurityGroups to further test edge cases
+  managedSecurityGroups: null
+  # Keep other required configuration
+  apiServerLoadBalancer:
+    enabled: true
+  externalNetwork:
+    id: ${OPENSTACK_EXTERNAL_NETWORK_ID}
+  identityRef:
+    cloudName: ${OPENSTACK_CLOUD}
+    name: ${CLUSTER_NAME}-cloud-config
