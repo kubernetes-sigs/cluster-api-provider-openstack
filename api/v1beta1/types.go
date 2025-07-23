@@ -290,7 +290,7 @@ type AllocationPool struct {
 	End string `json:"end"`
 }
 
-type PortOpts struct {
+type CommonPortOpts struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
 	// +optional
@@ -320,13 +320,41 @@ type PortOpts struct {
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 
+	ResolvedPortSpecFields `json:",inline"`
+}
+
+// PortOpts defines port parameters.
+type PortOpts struct {
 	// Trunk specifies whether trunking is enabled at the port level. If not
 	// provided the value is inherited from the machine, or false for a
 	// bastion host.
 	// +optional
 	Trunk *bool `json:"trunk,omitempty"`
 
-	ResolvedPortSpecFields `json:",inline"`
+	// Subports is a list of port specifications that will be created as
+	// subports of the trunk.
+	// +optional
+	// +listType=atomic
+	Subports []SubportOpts `json:"subports,omitempty"`
+
+	CommonPortOpts `json:",inline"`
+}
+
+// SubportOpts defines a trunk subport.
+type SubportOpts struct {
+	// SegmentationID is the segmentation ID of the subport. E.g. VLAN ID.
+	// +required
+	// +kubebuilder:validation:Minimum:=1
+	// +kubebuilder:validation:Maximum:=4094
+	SegmentationID int `json:"segmentationID"`
+
+	// SegmentationType is the segmentation type of the subport. E.g. "vlan".
+	// +required
+	// +kubebuilder:validation:Enum=vlan;flat
+	SegmentationType string `json:"segmentationType"`
+
+	// Port contains parameters of the port associated with this subport
+	CommonPortOpts `json:",inline"`
 }
 
 // ResolvePortSpecFields is a convenience struct containing all fields of a
@@ -393,7 +421,7 @@ type ResolvedPortSpecFields struct {
 }
 
 // ResolvedPortSpec is a PortOpts with all contained references fully resolved.
-type ResolvedPortSpec struct {
+type CommonResolvedPortSpec struct {
 	// Name is the name of the port.
 	Name string `json:"name"`
 
@@ -408,10 +436,6 @@ type ResolvedPortSpec struct {
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 
-	// Trunk specifies whether trunking is enabled at the port level.
-	// +optional
-	Trunk optional.Bool `json:"trunk,omitempty"`
-
 	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
 	// +optional
 	// +listType=atomic
@@ -425,8 +449,45 @@ type ResolvedPortSpec struct {
 	ResolvedPortSpecFields `json:",inline"`
 }
 
+type ResolvedPortSpec struct {
+	// Trunk specifies whether trunking is enabled at the port level.
+	// +optional
+	Trunk optional.Bool `json:"trunk,omitempty"`
+
+	// Subports is a list of resolved port specifications that will be created as
+	// subports of the trunk.
+	// +optional
+	// +listType=atomic
+	Subports []ResolvedSubportSpec `json:"subports,omitempty"`
+
+	CommonResolvedPortSpec `json:",inline"`
+}
+
+// ResolvedSubportSpec is a SubportOpts with all contained references fully resolved.
+type ResolvedSubportSpec struct {
+	// SegmentationID is the segmentation ID of the subport. E.g. VLAN ID.
+	SegmentationID int `json:"segmentationID"`
+
+	// SegmentationType is the segmentation type of the subport. E.g. "vlan".
+	SegmentationType string `json:"segmentationType"`
+
+	// Port is a PortOpts with all contained references fully resolved. This is
+	// essentially port which is used as subport in trunk
+	CommonResolvedPortSpec `json:",inline"`
+}
+
 type PortStatus struct {
 	// ID is the unique identifier of the port.
+	// +required
+	ID string `json:"id"`
+
+	// Subports is the list of port IDs which intended to be trunk sub-ports
+	// +optional
+	Subports []SubPortStatus `json:"subports,omitempty"`
+}
+
+type SubPortStatus struct {
+	// ID is the unique identifier of the trunk sub-port.
 	// +required
 	ID string `json:"id"`
 }

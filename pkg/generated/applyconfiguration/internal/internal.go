@@ -1209,6 +1209,12 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupParam
           elementRelationship: atomic
+    - name: subports
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubportOpts
+          elementRelationship: atomic
     - name: tags
       type:
         list:
@@ -1236,6 +1242,12 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
+    - name: subports
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubPortStatus
+          elementRelationship: atomic
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResolvedFixedIP
   map:
     fields:
@@ -1314,6 +1326,12 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+    - name: subports
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResolvedSubportSpec
+          elementRelationship: atomic
     - name: tags
       type:
         list:
@@ -1323,6 +1341,82 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: trunk
       type:
         scalar: boolean
+    - name: valueSpecs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ValueSpec
+          elementRelationship: associative
+          keys:
+          - name
+    - name: vnicType
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResolvedSubportSpec
+  map:
+    fields:
+    - name: adminStateUp
+      type:
+        scalar: boolean
+    - name: allowedAddressPairs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AddressPair
+          elementRelationship: atomic
+    - name: description
+      type:
+        scalar: string
+      default: ""
+    - name: disablePortSecurity
+      type:
+        scalar: boolean
+    - name: fixedIPs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResolvedFixedIP
+          elementRelationship: atomic
+    - name: hostID
+      type:
+        scalar: string
+    - name: macAddress
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: networkID
+      type:
+        scalar: string
+      default: ""
+    - name: profile
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.BindingProfile
+    - name: propagateUplinkStatus
+      type:
+        scalar: boolean
+    - name: securityGroups
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+    - name: segmentationID
+      type:
+        scalar: numeric
+      default: 0
+    - name: segmentationType
+      type:
+        scalar: string
+      default: ""
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
     - name: valueSpecs
       type:
         list:
@@ -1569,6 +1663,13 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubPortStatus
+  map:
+    fields:
+    - name: id
+      type:
+        scalar: string
+      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.Subnet
   map:
     fields:
@@ -1669,6 +1770,79 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubportOpts
+  map:
+    fields:
+    - name: adminStateUp
+      type:
+        scalar: boolean
+    - name: allowedAddressPairs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AddressPair
+          elementRelationship: atomic
+    - name: description
+      type:
+        scalar: string
+    - name: disablePortSecurity
+      type:
+        scalar: boolean
+    - name: fixedIPs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.FixedIP
+          elementRelationship: atomic
+    - name: hostID
+      type:
+        scalar: string
+    - name: macAddress
+      type:
+        scalar: string
+    - name: nameSuffix
+      type:
+        scalar: string
+    - name: network
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.NetworkParam
+    - name: profile
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.BindingProfile
+    - name: propagateUplinkStatus
+      type:
+        scalar: boolean
+    - name: securityGroups
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupParam
+          elementRelationship: atomic
+    - name: segmentationID
+      type:
+        scalar: numeric
+      default: 0
+    - name: segmentationType
+      type:
+        scalar: string
+      default: ""
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: valueSpecs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ValueSpec
+          elementRelationship: associative
+          keys:
+          - name
+    - name: vnicType
+      type:
+        scalar: string
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ValueSpec
   map:
     fields:

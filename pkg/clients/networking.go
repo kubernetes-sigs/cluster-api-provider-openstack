@@ -55,6 +55,7 @@ type NetworkClient interface {
 	DeleteTrunk(id string) error
 
 	ListTrunkSubports(trunkID string) ([]trunks.Subport, error)
+	AddSubports(id string, opts trunks.AddSubportsOpts) (*trunks.Trunk, error)
 	RemoveSubports(id string, opts trunks.RemoveSubportsOpts) error
 
 	ListRouter(opts routers.ListOpts) ([]routers.Router, error)
@@ -249,6 +250,15 @@ func (c networkClient) ListTrunkSubports(trunkID string) ([]trunks.Subport, erro
 		return nil, err
 	}
 	return subports, nil
+}
+
+func (c networkClient) AddSubports(id string, opts trunks.AddSubportsOpts) (*trunks.Trunk, error) {
+	mc := metrics.NewMetricPrometheusContext("trunk", "addsubports")
+	trunk, err := trunks.AddSubports(context.TODO(), c.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return trunk, nil
 }
 
 func (c networkClient) RemoveSubports(id string, opts trunks.RemoveSubportsOpts) error {

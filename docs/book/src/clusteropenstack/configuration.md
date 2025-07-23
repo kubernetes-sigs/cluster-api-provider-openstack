@@ -493,6 +493,38 @@ spec:
 
 Any such ports are created in addition to ports used for connections to networks or subnets.
 
+### Creating Trunks and Subports
+You can create trunk ports and attach subports to them for advanced networking scenarios such as VLAN segmentation. To create a trunk port, set the trunk: true key on a port entry. Subports can be specified using the subports key, which is a list of subport configurations.
+
+The configuration structure for each subport follows the same format as a regular port configuration, except that the trunk and subports keys are not used within subport definitions.
+
+**Example: Creating a trunk port with subports**
+```yaml
+ports:
+  - network:
+      filter:
+        name: trunk-parent-net
+    trunk: true
+    subports:
+      - network:
+          filter:
+            name: vlan-100
+        segmentationID: 100
+        segmentationType: vlan
+      - network:
+          filter:
+            name: vlan-200
+        segmentationID: 200
+        segmentationType: vlan
+```
+
+* trunk: true marks the port as a trunk port.
+* subports is a list of subport definitions to attach to the trunk.
+* Each subport can specify its own network, segmentationID, and segmentationType.
+* The subport configuration supports the same fields as a regular port, except for trunk and subports.
+
+Note: Subports are only valid when attached to a trunk port. Attempting to configure subports without trunk: true will result in an error.
+
 ### Port network and IP addresses
 
 Together, `network` and `fixedIPs` define the network a port will be created on, and the addresses which will be assigned to the port on that network.

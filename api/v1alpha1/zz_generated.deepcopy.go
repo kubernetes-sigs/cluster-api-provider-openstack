@@ -488,7 +488,9 @@ func (in *ServerResources) DeepCopyInto(out *ServerResources) {
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
 		*out = make([]v1beta1.PortStatus, len(*in))
-		copy(*out, *in)
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 

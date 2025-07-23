@@ -25,7 +25,10 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/ptr"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
@@ -108,6 +111,79 @@ func (s *Service) RemoveTrunkSubports(trunkID string) error {
 		err := s.client.DeletePort(subPort.PortID)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// EnsurePorts ensures that every one of desiredPorts is created and has
+// expected trunk and tags.
+func (s *Service) EnsureTrunkSubPorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
+	for i := range desiredPorts {
+		// Fail here if trunk port has not been created
+		if i >= len(resources.Ports) {
+			return fmt.Errorf("ports have not been created")
+		}
+
+		var newSubports []trunks.Subport
+		if ptr.Deref(desiredPorts[i].Trunk, false) {
+			// Retrieve trunk subports and transform it to map for faster validation
+			trnks, err := s.client.ListTrunk(trunks.ListOpts{PortID: resources.Ports[i].ID})
+			if err != nil {
+				return fmt.Errorf("searching trunk: %v", err)
+			}
+
+			if len(trnks) > 1 {
+				return fmt.Errorf("multiple trunks found for port \"%s\"", resources.Ports[i].ID)
+			}
+
+			if len(trnks) == 0 {
+				return fmt.Errorf("trunks not found for port \"%s\"", resources.Ports[i].ID)
+			}
+
+			existingSubports, err := s.client.ListTrunkSubports(trnks[0].ID)
+			if err != nil {
+				return fmt.Errorf("searching for existing port for server: %v", err)
+			}
+			subportMap := make(map[string]trunks.Subport)
+			for _, existringSubport := range existingSubports {
+				subportMap[existringSubport.PortID] = existringSubport
+			}
+
+			// Ensure trunk subports are created as ports
+			for j, desiredSubport := range desiredPorts[i].Subports {
+				subportStatus := infrav1.PortStatus{}
+				if j < len(resources.Ports[i].Subports) {
+					subportStatus.ID = resources.Ports[i].Subports[j].ID
+				}
+				subport, err := s.EnsurePort(eventObject, &infrav1.ResolvedPortSpec{CommonResolvedPortSpec: desiredSubport.CommonResolvedPortSpec}, subportStatus)
+				if err != nil {
+					return err
+				}
+
+				if _, found := subportMap[subport.ID]; !found {
+					newSubports = append(newSubports, trunks.Subport{
+						SegmentationID:   desiredSubport.SegmentationID,
+						SegmentationType: desiredSubport.SegmentationType,
+						PortID:           subport.ID,
+					})
+				}
+
+				if j < len(resources.Ports[i].Subports) {
+					resources.Ports[i].Subports[j].ID = subportStatus.ID
+				} else {
+					resources.Ports[i].Subports = append(resources.Ports[i].Subports, infrav1.SubPortStatus{ID: subport.ID})
+				}
+			}
+
+			// Append subports to trunk
+			if len(newSubports) > 0 {
+				_, err = s.client.AddSubports(trnks[0].ID, trunks.AddSubportsOpts{Subports: newSubports})
+				if err != nil {
+					return fmt.Errorf("failed to add subports to trunk %s: %v", trnks[0].ID, err)
+				}
+			}
 		}
 	}
 

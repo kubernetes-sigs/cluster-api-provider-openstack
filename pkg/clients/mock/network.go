@@ -79,6 +79,21 @@ func (mr *MockNetworkClientMockRecorder) AddRouterInterface(id, opts any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRouterInterface", reflect.TypeOf((*MockNetworkClient)(nil).AddRouterInterface), id, opts)
 }
 
+// AddSubports mocks base method.
+func (m *MockNetworkClient) AddSubports(id string, opts trunks.AddSubportsOpts) (*trunks.Trunk, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddSubports", id, opts)
+	ret0, _ := ret[0].(*trunks.Trunk)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddSubports indicates an expected call of AddSubports.
+func (mr *MockNetworkClientMockRecorder) AddSubports(id, opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSubports", reflect.TypeOf((*MockNetworkClient)(nil).AddSubports), id, opts)
+}
+
 // CreateFloatingIP mocks base method.
 func (m *MockNetworkClient) CreateFloatingIP(opts floatingips.CreateOptsBuilder) (*floatingips.FloatingIP, error) {
 	m.ctrl.T.Helper()

@@ -1565,6 +1565,226 @@ availability zone.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.CommonPortOpts">CommonPortOpts
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubportOpts">SubportOpts</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>network</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
+NetworkParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Network is a query for an openstack network that the port will be created or discovered on.
+This will fail if the query returns more than one network.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Description is a human-readable description for the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameSuffix</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fixedIPs</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">
+[]FixedIP
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port&rsquo;s network.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityGroups</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
+[]SecurityGroupParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tags</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+These tags are applied in addition to the instance&rsquo;s tags, which will also be applied to the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ResolvedPortSpecFields</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">
+ResolvedPortSpecFields
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>ResolvedPortSpecFields</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.CommonResolvedPortSpec">CommonResolvedPortSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedSubportSpec">ResolvedSubportSpec</a>)
+</p>
+<p>
+<p>ResolvedPortSpec is a PortOpts with all contained references fully resolved.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Description is a human-readable description for the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>networkID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>NetworkID is the ID of the network the port will be created in.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tags</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Tags applied to the port (and corresponding trunk, if a trunk is configured.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fixedIPs</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedFixedIP">
+[]ResolvedFixedIP
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port&rsquo;s network.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityGroups</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityGroups is a list of security group IDs to assign to the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ResolvedPortSpecFields</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">
+ResolvedPortSpecFields
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>ResolvedPortSpecFields</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ExternalRouterIPParam">ExternalRouterIPParam
 </h3>
 <p>
@@ -1693,7 +1913,7 @@ which contain any of the given tags will be excluded from the result.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonPortOpts">CommonPortOpts</a>)
 </p>
 <p>
 </p>
@@ -2138,8 +2358,8 @@ FilterByNeutronTags
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonPortOpts">CommonPortOpts</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)
 </p>
 <p>
 <p>NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.</p>
@@ -4010,6 +4230,7 @@ OpenStackMachineTemplateResource
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
 </p>
 <p>
+<p>PortOpts defines port parameters.</p>
 </p>
 <table>
 <thead>
@@ -4019,86 +4240,6 @@ OpenStackMachineTemplateResource
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>
-<code>network</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkParam">
-NetworkParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Network is a query for an openstack network that the port will be created or discovered on.
-This will fail if the query returns more than one network.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>description</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Description is a human-readable description for the port.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nameSuffix</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>fixedIPs</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">
-[]FixedIP
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port&rsquo;s network.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>securityGroups</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupParam">
-[]SecurityGroupParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tags</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Tags applied to the port (and corresponding trunk, if a trunk is configured.)
-These tags are applied in addition to the instance&rsquo;s tags, which will also be applied to the port.</p>
-</td>
-</tr>
 <tr>
 <td>
 <code>trunk</code><br/>
@@ -4115,16 +4256,31 @@ bastion host.</p>
 </tr>
 <tr>
 <td>
-<code>ResolvedPortSpecFields</code><br/>
+<code>subports</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">
-ResolvedPortSpecFields
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubportOpts">
+[]SubportOpts
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Subports is a list of port specifications that will be created as
+subports of the trunk.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>CommonPortOpts</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonPortOpts">
+CommonPortOpts
 </a>
 </em>
 </td>
 <td>
 <p>
-(Members of <code>ResolvedPortSpecFields</code> are embedded into this type.)
+(Members of <code>CommonPortOpts</code> are embedded into this type.)
 </p>
 </td>
 </tr>
@@ -4157,13 +4313,27 @@ string
 <p>ID is the unique identifier of the port.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>subports</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubPortStatus">
+[]SubPortStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Subports is the list of port IDs which intended to be trunk sub-ports</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedFixedIP">ResolvedFixedIP
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonResolvedPortSpec">CommonResolvedPortSpec</a>)
 </p>
 <p>
 <p>ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.</p>
@@ -4282,7 +4452,6 @@ string
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedMachineSpec">ResolvedMachineSpec</a>)
 </p>
 <p>
-<p>ResolvedPortSpec is a PortOpts with all contained references fully resolved.</p>
 </p>
 <table>
 <thead>
@@ -4292,51 +4461,6 @@ string
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the name of the port.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>description</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Description is a human-readable description for the port.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>networkID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>NetworkID is the ID of the network the port will be created in.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tags</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Tags applied to the port (and corresponding trunk, if a trunk is configured.)</p>
-</td>
-</tr>
 <tr>
 <td>
 <code>trunk</code><br/>
@@ -4351,42 +4475,31 @@ bool
 </tr>
 <tr>
 <td>
-<code>fixedIPs</code><br/>
+<code>subports</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedFixedIP">
-[]ResolvedFixedIP
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedSubportSpec">
+[]ResolvedSubportSpec
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port&rsquo;s network.</p>
+<p>Subports is a list of resolved port specifications that will be created as
+subports of the trunk.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>securityGroups</code><br/>
+<code>CommonResolvedPortSpec</code><br/>
 <em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SecurityGroups is a list of security group IDs to assign to the port.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ResolvedPortSpecFields</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">
-ResolvedPortSpecFields
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonResolvedPortSpec">
+CommonResolvedPortSpec
 </a>
 </em>
 </td>
 <td>
 <p>
-(Members of <code>ResolvedPortSpecFields</code> are embedded into this type.)
+(Members of <code>CommonResolvedPortSpec</code> are embedded into this type.)
 </p>
 </td>
 </tr>
@@ -4396,8 +4509,8 @@ ResolvedPortSpecFields
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonPortOpts">CommonPortOpts</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonResolvedPortSpec">CommonResolvedPortSpec</a>)
 </p>
 <p>
 <p>ResolvePortSpecFields is a convenience struct containing all fields of a
@@ -4544,6 +4657,64 @@ bool
 <p>Value specs are extra parameters to include in the API request with OpenStack.
 This is an extension point for the API, so what they do and if they are supported,
 depends on the specific OpenStack implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ResolvedSubportSpec">ResolvedSubportSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpec">ResolvedPortSpec</a>)
+</p>
+<p>
+<p>ResolvedSubportSpec is a SubportOpts with all contained references fully resolved.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>segmentationID</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<p>SegmentationID is the segmentation ID of the subport. E.g. VLAN ID.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>segmentationType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SegmentationType is the segmentation type of the subport. E.g. &ldquo;vlan&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>CommonResolvedPortSpec</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonResolvedPortSpec">
+CommonResolvedPortSpec
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>CommonResolvedPortSpec</code> are embedded into this type.)
+</p>
+<p>Port is a PortOpts with all contained references fully resolved. This is
+essentially port which is used as subport in trunk</p>
 </td>
 </tr>
 </tbody>
@@ -4999,8 +5170,8 @@ FilterByNeutronTags
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>, 
-<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonPortOpts">CommonPortOpts</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineSpec">OpenStackMachineSpec</a>)
 </p>
 <p>
 <p>SecurityGroupParam specifies an OpenStack security group. It may be specified by ID or filter, but not both.</p>
@@ -5350,6 +5521,35 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SubPortStatus">SubPortStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortStatus">PortStatus</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ID is the unique identifier of the trunk sub-port.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.Subnet">Subnet
 </h3>
 <p>
@@ -5625,6 +5825,63 @@ the subnet. These addresses need to have the same IP version as CIDR.</p>
 <p>AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
 If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
 outside of these ranges manually.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.SubportOpts">SubportOpts
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+</p>
+<p>
+<p>SubportOpts defines a trunk subport.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>segmentationID</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<p>SegmentationID is the segmentation ID of the subport. E.g. VLAN ID.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>segmentationType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SegmentationType is the segmentation type of the subport. E.g. &ldquo;vlan&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>CommonPortOpts</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.CommonPortOpts">
+CommonPortOpts
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>CommonPortOpts</code> are embedded into this type.)
+</p>
+<p>Port contains parameters of the port associated with this subport</p>
 </td>
 </tr>
 </tbody>

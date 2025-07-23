@@ -18,84 +18,57 @@ limitations under the License.
 
 package v1beta1
 
-// ResolvedPortSpecApplyConfiguration represents a declarative configuration of the ResolvedPortSpec type for use
+// CommonPortOptsApplyConfiguration represents a declarative configuration of the CommonPortOpts type for use
 // with apply.
-type ResolvedPortSpecApplyConfiguration struct {
-	Trunk                                    *bool                                   `json:"trunk,omitempty"`
-	Subports                                 []ResolvedSubportSpecApplyConfiguration `json:"subports,omitempty"`
-	CommonResolvedPortSpecApplyConfiguration `json:",inline"`
+type CommonPortOptsApplyConfiguration struct {
+	Network                                  *NetworkParamApplyConfiguration        `json:"network,omitempty"`
+	Description                              *string                                `json:"description,omitempty"`
+	NameSuffix                               *string                                `json:"nameSuffix,omitempty"`
+	FixedIPs                                 []FixedIPApplyConfiguration            `json:"fixedIPs,omitempty"`
+	SecurityGroups                           []SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
+	Tags                                     []string                               `json:"tags,omitempty"`
+	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
 }
 
-// ResolvedPortSpecApplyConfiguration constructs a declarative configuration of the ResolvedPortSpec type for use with
+// CommonPortOptsApplyConfiguration constructs a declarative configuration of the CommonPortOpts type for use with
 // apply.
-func ResolvedPortSpec() *ResolvedPortSpecApplyConfiguration {
-	return &ResolvedPortSpecApplyConfiguration{}
+func CommonPortOpts() *CommonPortOptsApplyConfiguration {
+	return &CommonPortOptsApplyConfiguration{}
 }
 
-// WithTrunk sets the Trunk field in the declarative configuration to the given value
+// WithNetwork sets the Network field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Trunk field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithTrunk(value bool) *ResolvedPortSpecApplyConfiguration {
-	b.Trunk = &value
-	return b
-}
-
-// WithSubports adds the given value to the Subports field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Subports field.
-func (b *ResolvedPortSpecApplyConfiguration) WithSubports(values ...*ResolvedSubportSpecApplyConfiguration) *ResolvedPortSpecApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithSubports")
-		}
-		b.Subports = append(b.Subports, *values[i])
-	}
-	return b
-}
-
-// WithName sets the Name field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Name field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithName(value string) *ResolvedPortSpecApplyConfiguration {
-	b.CommonResolvedPortSpecApplyConfiguration.Name = &value
+// If called multiple times, the Network field is set to the value of the last call.
+func (b *CommonPortOptsApplyConfiguration) WithNetwork(value *NetworkParamApplyConfiguration) *CommonPortOptsApplyConfiguration {
+	b.Network = value
 	return b
 }
 
 // WithDescription sets the Description field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Description field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithDescription(value string) *ResolvedPortSpecApplyConfiguration {
-	b.CommonResolvedPortSpecApplyConfiguration.Description = &value
+func (b *CommonPortOptsApplyConfiguration) WithDescription(value string) *CommonPortOptsApplyConfiguration {
+	b.Description = &value
 	return b
 }
 
-// WithNetworkID sets the NetworkID field in the declarative configuration to the given value
+// WithNameSuffix sets the NameSuffix field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the NetworkID field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithNetworkID(value string) *ResolvedPortSpecApplyConfiguration {
-	b.CommonResolvedPortSpecApplyConfiguration.NetworkID = &value
-	return b
-}
-
-// WithTags adds the given value to the Tags field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Tags field.
-func (b *ResolvedPortSpecApplyConfiguration) WithTags(values ...string) *ResolvedPortSpecApplyConfiguration {
-	for i := range values {
-		b.CommonResolvedPortSpecApplyConfiguration.Tags = append(b.CommonResolvedPortSpecApplyConfiguration.Tags, values[i])
-	}
+// If called multiple times, the NameSuffix field is set to the value of the last call.
+func (b *CommonPortOptsApplyConfiguration) WithNameSuffix(value string) *CommonPortOptsApplyConfiguration {
+	b.NameSuffix = &value
 	return b
 }
 
 // WithFixedIPs adds the given value to the FixedIPs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the FixedIPs field.
-func (b *ResolvedPortSpecApplyConfiguration) WithFixedIPs(values ...*ResolvedFixedIPApplyConfiguration) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithFixedIPs(values ...*FixedIPApplyConfiguration) *CommonPortOptsApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithFixedIPs")
 		}
-		b.CommonResolvedPortSpecApplyConfiguration.FixedIPs = append(b.CommonResolvedPortSpecApplyConfiguration.FixedIPs, *values[i])
+		b.FixedIPs = append(b.FixedIPs, *values[i])
 	}
 	return b
 }
@@ -103,9 +76,22 @@ func (b *ResolvedPortSpecApplyConfiguration) WithFixedIPs(values ...*ResolvedFix
 // WithSecurityGroups adds the given value to the SecurityGroups field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the SecurityGroups field.
-func (b *ResolvedPortSpecApplyConfiguration) WithSecurityGroups(values ...string) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithSecurityGroups(values ...*SecurityGroupParamApplyConfiguration) *CommonPortOptsApplyConfiguration {
 	for i := range values {
-		b.CommonResolvedPortSpecApplyConfiguration.SecurityGroups = append(b.CommonResolvedPortSpecApplyConfiguration.SecurityGroups, values[i])
+		if values[i] == nil {
+			panic("nil value passed to WithSecurityGroups")
+		}
+		b.SecurityGroups = append(b.SecurityGroups, *values[i])
+	}
+	return b
+}
+
+// WithTags adds the given value to the Tags field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Tags field.
+func (b *CommonPortOptsApplyConfiguration) WithTags(values ...string) *CommonPortOptsApplyConfiguration {
+	for i := range values {
+		b.Tags = append(b.Tags, values[i])
 	}
 	return b
 }
@@ -113,7 +99,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithSecurityGroups(values ...string
 // WithAdminStateUp sets the AdminStateUp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AdminStateUp field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithAdminStateUp(value bool) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithAdminStateUp(value bool) *CommonPortOptsApplyConfiguration {
 	b.ResolvedPortSpecFieldsApplyConfiguration.AdminStateUp = &value
 	return b
 }
@@ -121,7 +107,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithAdminStateUp(value bool) *Resol
 // WithMACAddress sets the MACAddress field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MACAddress field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithMACAddress(value string) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithMACAddress(value string) *CommonPortOptsApplyConfiguration {
 	b.ResolvedPortSpecFieldsApplyConfiguration.MACAddress = &value
 	return b
 }
@@ -129,7 +115,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithMACAddress(value string) *Resol
 // WithAllowedAddressPairs adds the given value to the AllowedAddressPairs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the AllowedAddressPairs field.
-func (b *ResolvedPortSpecApplyConfiguration) WithAllowedAddressPairs(values ...*AddressPairApplyConfiguration) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithAllowedAddressPairs(values ...*AddressPairApplyConfiguration) *CommonPortOptsApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithAllowedAddressPairs")
@@ -142,7 +128,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithAllowedAddressPairs(values ...*
 // WithHostID sets the HostID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HostID field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithHostID(value string) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithHostID(value string) *CommonPortOptsApplyConfiguration {
 	b.ResolvedPortSpecFieldsApplyConfiguration.HostID = &value
 	return b
 }
@@ -150,7 +136,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithHostID(value string) *ResolvedP
 // WithVNICType sets the VNICType field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the VNICType field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithVNICType(value string) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithVNICType(value string) *CommonPortOptsApplyConfiguration {
 	b.ResolvedPortSpecFieldsApplyConfiguration.VNICType = &value
 	return b
 }
@@ -158,7 +144,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithVNICType(value string) *Resolve
 // WithProfile sets the Profile field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Profile field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithProfile(value *BindingProfileApplyConfiguration) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithProfile(value *BindingProfileApplyConfiguration) *CommonPortOptsApplyConfiguration {
 	b.ResolvedPortSpecFieldsApplyConfiguration.Profile = value
 	return b
 }
@@ -166,7 +152,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithProfile(value *BindingProfileAp
 // WithDisablePortSecurity sets the DisablePortSecurity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the DisablePortSecurity field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithDisablePortSecurity(value bool) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithDisablePortSecurity(value bool) *CommonPortOptsApplyConfiguration {
 	b.ResolvedPortSpecFieldsApplyConfiguration.DisablePortSecurity = &value
 	return b
 }
@@ -174,7 +160,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithDisablePortSecurity(value bool)
 // WithPropagateUplinkStatus sets the PropagateUplinkStatus field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PropagateUplinkStatus field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithPropagateUplinkStatus(value bool) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithPropagateUplinkStatus(value bool) *CommonPortOptsApplyConfiguration {
 	b.ResolvedPortSpecFieldsApplyConfiguration.PropagateUplinkStatus = &value
 	return b
 }
@@ -182,7 +168,7 @@ func (b *ResolvedPortSpecApplyConfiguration) WithPropagateUplinkStatus(value boo
 // WithValueSpecs adds the given value to the ValueSpecs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the ValueSpecs field.
-func (b *ResolvedPortSpecApplyConfiguration) WithValueSpecs(values ...*ValueSpecApplyConfiguration) *ResolvedPortSpecApplyConfiguration {
+func (b *CommonPortOptsApplyConfiguration) WithValueSpecs(values ...*ValueSpecApplyConfiguration) *CommonPortOptsApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithValueSpecs")
