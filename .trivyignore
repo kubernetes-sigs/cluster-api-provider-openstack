@@ -2,3 +2,4 @@
 # According to govulncheck we are not using code that is affected by them anyway
 CVE-2025-22870
 CVE-2025-22872
+CVE-2025-22868
