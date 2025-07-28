@@ -23,5 +23,6 @@ aliases:
     - lentzi90
     - mdbooth
   cluster-api-openstack-reviewers:
+    - bnallapeta
   cluster-api-openstack-emeritus-maintainers:
     - jichenjc
