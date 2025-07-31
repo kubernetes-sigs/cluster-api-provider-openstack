@@ -38,6 +38,8 @@ The content of the release notes differs depending on the type of release, speci
 
 ## Process
 
+There is an [issue template](.github/ISSUE_TEMPLATE/new_release.md) to help track release activities.
+
 1. Make sure your repo is clean by git's standards. It is recommended to use a fresh checkout.
 1. When bumping `X` or `Y` (but not Z or the pre-release suffix) in the release version you must create a new release branch called `release-X.Y`.
    > NOTE: `upstream` should be the name of the remote pointing to `github.com/kubernetes-sigs/cluster-api-provider-openstack`
@@ -74,6 +76,14 @@ The content of the release notes differs depending on the type of release, speci
    If any changes are needed, edit the release notes in the GitHub UI and add any missing artifacts.
 1. Ensure that the release image has been promoted.
 1. Publish release.
+
+### Post release actions
+
+1. When bumping `X` or `Y` (but not Z or the pre-release suffix), update the [periodic jobs](https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/cluster-api-provider-openstack).
+   Make sure there are periodic jobs for the new release branch, and clean up jobs for branches that are no longer supported.
+1. When bumping `X` or `Y` (but not Z or the pre-release suffix), update the [clusterctl upgrade tests](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/test/e2e/suites/e2e/clusterctl_upgrade_test.go) and the [e2e config](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/test/e2e/data/e2e_conf.yaml)
+   to include the new release branch.
+   It is also a good idea to update the Cluster API versions we test against and to clean up older versions that we no longer want to test.
 
 ### Permissions
 
