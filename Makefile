@@ -120,6 +120,8 @@ PULL_POLICY ?= Always
 # Set build time variables including version details
 LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
 
+# Extra arguments for govulncheck, e.g. "-show verbose"
+GOVULNCHECK_ARGS ?=
 
 ## --------------------------------------
 ##@ Testing
@@ -597,8 +599,8 @@ verify-container-images: ## Verify container images
 
 .PHONY: verify-govulncheck
 verify-govulncheck: $(GOVULNCHECK) ## Verify code for vulnerabilities
-	$(GOVULNCHECK) ./... && R1=$$? || R1=$$?; \
-	$(GOVULNCHECK) -C "$(TOOLS_DIR)" ./... && R2=$$? || R2=$$?; \
+	$(GOVULNCHECK) $(GOVULNCHECK_ARGS) ./... && R1=$$? || R1=$$?; \
+	$(GOVULNCHECK) $(GOVULNCHECK_ARGS) -C "$(TOOLS_DIR)" ./... && R2=$$? || R2=$$?; \
 	if [ "$$R1" -ne "0" ] || [ "$$R2" -ne "0" ]; then \
 		exit 1; \
 	fi
