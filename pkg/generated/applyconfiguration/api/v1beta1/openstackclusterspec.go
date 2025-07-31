@@ -19,7 +19,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	corev1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackClusterSpecApplyConfiguration represents a declarative configuration of the OpenStackClusterSpec type for use
@@ -41,7 +41,7 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	ManagedSecurityGroups            *ManagedSecurityGroupsApplyConfiguration      `json:"managedSecurityGroups,omitempty"`
 	DisablePortSecurity              *bool                                         `json:"disablePortSecurity,omitempty"`
 	Tags                             []string                                      `json:"tags,omitempty"`
-	ControlPlaneEndpoint             *apiv1beta1.APIEndpoint                       `json:"controlPlaneEndpoint,omitempty"`
+	ControlPlaneEndpoint             *corev1beta1.APIEndpoint                      `json:"controlPlaneEndpoint,omitempty"`
 	ControlPlaneAvailabilityZones    []string                                      `json:"controlPlaneAvailabilityZones,omitempty"`
 	ControlPlaneOmitAvailabilityZone *bool                                         `json:"controlPlaneOmitAvailabilityZone,omitempty"`
 	Bastion                          *BastionApplyConfiguration                    `json:"bastion,omitempty"`
@@ -202,7 +202,7 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithTags(values ...string) *Ope
 // WithControlPlaneEndpoint sets the ControlPlaneEndpoint field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ControlPlaneEndpoint field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithControlPlaneEndpoint(value apiv1beta1.APIEndpoint) *OpenStackClusterSpecApplyConfiguration {
+func (b *OpenStackClusterSpecApplyConfiguration) WithControlPlaneEndpoint(value corev1beta1.APIEndpoint) *OpenStackClusterSpecApplyConfiguration {
 	b.ControlPlaneEndpoint = &value
 	return b
 }

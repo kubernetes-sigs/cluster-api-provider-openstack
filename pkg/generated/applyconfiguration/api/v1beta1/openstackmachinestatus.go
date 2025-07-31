@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	errors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
-	clusterapiapiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	corev1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackMachineStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineStatus type for use
@@ -36,7 +36,7 @@ type OpenStackMachineStatusApplyConfiguration struct {
 	Resources      *MachineResourcesApplyConfiguration      `json:"resources,omitempty"`
 	FailureReason  *errors.DeprecatedCAPIMachineStatusError `json:"failureReason,omitempty"`
 	FailureMessage *string                                  `json:"failureMessage,omitempty"`
-	Conditions     *clusterapiapiv1beta1.Conditions         `json:"conditions,omitempty"`
+	Conditions     *corev1beta1.Conditions                  `json:"conditions,omitempty"`
 }
 
 // OpenStackMachineStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineStatus type for use with
@@ -114,7 +114,7 @@ func (b *OpenStackMachineStatusApplyConfiguration) WithFailureMessage(value stri
 // WithConditions sets the Conditions field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Conditions field is set to the value of the last call.
-func (b *OpenStackMachineStatusApplyConfiguration) WithConditions(value clusterapiapiv1beta1.Conditions) *OpenStackMachineStatusApplyConfiguration {
+func (b *OpenStackMachineStatusApplyConfiguration) WithConditions(value corev1beta1.Conditions) *OpenStackMachineStatusApplyConfiguration {
 	b.Conditions = &value
 	return b
 }
