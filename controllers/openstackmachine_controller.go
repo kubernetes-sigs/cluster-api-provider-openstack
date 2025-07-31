@@ -475,7 +475,7 @@ func (r *OpenStackMachineReconciler) getMachineServer(ctx context.Context, openS
 
 // openStackMachineSpecToOpenStackServerSpec converts an OpenStackMachineSpec to an OpenStackServerSpec.
 // It returns the OpenStackServerSpec object and an error if there is any.
-func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, defaultNetworkID string) *infrav1alpha1.OpenStackServerSpec {
+func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, openStackCluster *infrav1.OpenStackCluster) *infrav1alpha1.OpenStackServerSpec {
 	openStackServerSpec := &infrav1alpha1.OpenStackServerSpec{
 		AdditionalBlockDevices:            openStackMachineSpec.AdditionalBlockDevices,
 		ConfigDrive:                       openStackMachineSpec.ConfigDrive,
@@ -516,21 +516,39 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	if len(openStackMachineSpec.Ports) == 0 {
 		serverPorts = make([]infrav1.PortOpts, 1)
 	}
-	for i := range serverPorts {
-		if serverPorts[i].Network == nil {
-			serverPorts[i].Network = &infrav1.NetworkParam{
-				ID: &defaultNetworkID,
+
+	var fixedIPs []infrav1.FixedIP
+	if len(openStackCluster.Spec.Subnets) > 0 {
+		fixedIPs = make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
+		for idx, sn := range openStackCluster.Spec.Subnets {
+			fixedIPs[idx] = infrav1.FixedIP{
+				Subnet: &sn,
 			}
 		}
-		if len(serverPorts[i].SecurityGroups) == 0 && defaultSecGroup != nil {
-			serverPorts[i].SecurityGroups = []infrav1.SecurityGroupParam{
+	}
+
+	for i := range serverPorts {
+		serverPort := &serverPorts[i]
+		if serverPort.Network == nil {
+			if openStackCluster.Status.Network.ID != "" {
+				serverPort.Network = &infrav1.NetworkParam{
+					ID: &openStackCluster.Status.Network.ID,
+				}
+				if len(fixedIPs) > 0 {
+					serverPort.FixedIPs = fixedIPs
+				}
+
+			}
+		}
+		if len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
+			serverPort.SecurityGroups = []infrav1.SecurityGroupParam{
 				{
 					ID: defaultSecGroup,
 				},
 			}
 		}
 		if len(openStackMachineSpec.SecurityGroups) > 0 {
-			serverPorts[i].SecurityGroups = append(serverPorts[i].SecurityGroups, openStackMachineSpec.SecurityGroups...)
+			serverPort.SecurityGroups = append(serverPort.SecurityGroups, openStackMachineSpec.SecurityGroups...)
 		}
 	}
 	openStackServerSpec.Ports = serverPorts
@@ -584,7 +602,7 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 			}
 			return openStackCluster.Spec.IdentityRef
 		}()
-		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
+		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster)
 		machineServer = &infrav1alpha1.OpenStackServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
