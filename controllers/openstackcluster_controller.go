@@ -177,7 +177,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		return reconcile.Result{}, err
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
+	if (openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() && openStackCluster.Status.APIServerLoadBalancer.ID != "") {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return reconcile.Result{}, err
