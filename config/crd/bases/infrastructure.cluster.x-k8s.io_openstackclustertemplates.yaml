@@ -108,6 +108,36 @@ spec:
                             description: Flavor is the flavor name that will be used
                               to create the APIServerLoadBalancer Spec.
                             type: string
+                          monitor:
+                            description: Monitor contains configuration for the load
+                              balancer health monitor.
+                            properties:
+                              delay:
+                                description: Delay is the time in seconds between
+                                  sending probes to members.
+                                minimum: 0
+                                type: integer
+                              maxRetries:
+                                description: MaxRetries is the number of successful
+                                  checks before changing the operating status of the
+                                  member to ONLINE.
+                                maximum: 10
+                                minimum: 0
+                                type: integer
+                              maxRetriesDown:
+                                description: MaxRetriesDown is the number of allowed
+                                  check failures before changing the operating status
+                                  of the member to ERROR.
+                                maximum: 10
+                                minimum: 1
+                                type: integer
+                              timeout:
+                                description: Timeout is the maximum time in seconds
+                                  for a monitor to wait for a connection to be established
+                                  before it times out.
+                                minimum: 0
+                                type: integer
+                            type: object
                           network:
                             description: Network defines which network should the
                               load balancer be allocated on.

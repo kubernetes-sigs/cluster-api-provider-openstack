@@ -324,6 +324,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ResolvedServerSpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ResolvedServerSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources":                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResources(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancerMonitor":     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancerMonitor(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice":            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AdditionalBlockDevice(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AddressPair(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AllocationPool":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AllocationPool(ref),
@@ -17301,12 +17302,59 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBa
 							Format:      "",
 						},
 					},
+					"monitor": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Monitor contains configuration for the load balancer health monitor.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancerMonitor"),
+						},
+					},
 				},
 				Required: []string{"enabled"},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancerMonitor", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancerMonitor(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"delay": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Delay is the time in seconds between sending probes to members.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"timeout": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"maxRetries": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRetries is the number of successful checks before changing the operating status of the member to ONLINE.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"maxRetriesDown": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
