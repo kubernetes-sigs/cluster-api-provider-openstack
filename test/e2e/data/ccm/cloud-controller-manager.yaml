@@ -1,6 +1,23 @@
 # From: https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml
 ---
 apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-config
+  namespace: kube-system
+stringData:
+  clouds.conf: |
+    [Global]
+    auth-url=
+    application-credential-id=
+    application-credential-secret=
+    region=
+    [LoadBalancer]
+    use-octavia=true
+    floating-network-id=<your-floating-network-id>
+    subnet-id=<your-subnet-id>
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cloud-controller-manager
@@ -26,7 +43,6 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/control-plane: ""
-      # we need user root to read the cloud.conf from the host
       securityContext:
         runAsUser: 0
       tolerations:
@@ -40,17 +56,19 @@ spec:
       serviceAccountName: cloud-controller-manager
       containers:
         - name: openstack-cloud-controller-manager
-          image: >-
-            registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.32.0
+          image: registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.32.0
           args:
             - /bin/openstack-cloud-controller-manager
             - --v=1
             - --cluster-name=$(CLUSTER_NAME)
-            - --cloud-config=$(CLOUD_CONFIG)
+            - --cloud-config=/etc/cloud/clouds.conf
             - --cloud-provider=openstack
             - --use-service-account-credentials=false
             - --bind-address=127.0.0.1
           volumeMounts:
+            - mountPath: /etc/cloud
+              name: cloud-config
+              readOnly: true
             - mountPath: /etc/kubernetes
               name: k8s
               readOnly: true
@@ -65,11 +83,14 @@ spec:
               cpu: 200m
           env:
             - name: CLOUD_CONFIG
-              value: /etc/kubernetes/cloud.conf
+              value: /etc/cloud/clouds.conf
             - name: CLUSTER_NAME
               value: kubernetes
       hostNetwork: true
       volumes:
+        - name: cloud-config
+          secret:
+            secretName: cloud-config
         - hostPath:
             path: /etc/kubernetes
             type: DirectoryOrCreate

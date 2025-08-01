@@ -106,9 +106,9 @@ func installKamajiUsingClusterctl(ctx context.Context, hcpCtx *HCPTestContext, e
 	clusterctl.InitManagementClusterAndWatchControllerLogs(ctx, clusterctl.InitManagementClusterAndWatchControllerLogsInput{
 		ClusterProxy:            hcpCtx.ManagementCluster,
 		ClusterctlConfigPath:    e2eCtx.Environment.ClusterctlConfigPath,
-		InfrastructureProviders: []string{},
-		BootstrapProviders:      []string{},
-		ControlPlaneProviders:   []string{"kamaji:v0.15.3"},
+		InfrastructureProviders: []string{"openstack"},
+		BootstrapProviders:      []string{"kubeadm"},
+		ControlPlaneProviders:   []string{"kubeadm"},
 		CoreProvider:            "",
 		LogFolder:               filepath.Join(e2eCtx.Settings.ArtifactFolder, "clusters", hcpCtx.ManagementCluster.GetName()),
 	}, e2eCtx.E2EConfig.GetIntervals("hcp", "wait-controllers")...)

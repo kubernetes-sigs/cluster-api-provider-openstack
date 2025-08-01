@@ -43,6 +43,7 @@ TEST_E2E_DIR := test/e2e
 # Files
 E2E_DATA_DIR ?= $(REPO_ROOT)/test/e2e/data
 E2E_CONF_PATH  ?= $(E2E_DATA_DIR)/e2e_conf.yaml
+E2E_CONF_PATH_HCP  ?= $(E2E_DATA_DIR)/e2e_conf_hcp.yaml
 KUBETEST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance.yaml)
 KUBETEST_FAST_CONF_PATH ?= $(abspath $(E2E_DATA_DIR)/kubetest/conformance-fast.yaml)
 GO_INSTALL := ./scripts/go_install.sh
@@ -208,7 +209,7 @@ test-e2e: $(GINKGO) e2e-prerequisites ## Run e2e tests
 	time $(GINKGO) -fail-fast -trace -timeout=3h -show-node-events -v -tags=e2e -nodes=$(E2E_GINKGO_PARALLEL) \
 		--output-dir="$(ARTIFACTS)" --junit-report="junit.e2e_suite.1.xml" \
 		-focus="$(E2E_GINKGO_FOCUS)" $(_SKIP_ARGS) $(E2E_GINKGO_ARGS) ./test/e2e/suites/e2e/... -- \
-			-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
+			-config-path="$(E2E_CONF_PATH_HCP)" -artifacts-folder="$(ARTIFACTS)" \
 			-data-folder="$(E2E_DATA_DIR)" $(E2E_ARGS)
 
 # Pre-compile tests
@@ -218,7 +219,7 @@ build-e2e-tests: $(GINKGO)
 	$(GINKGO) build -tags=e2e ./test/e2e/suites/e2e/...
 
 .PHONY: e2e-image
-e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"
+e2e-image: CONTROLLER_IMG_TAG = "ghcr.io/orkhanorganization/k8s-staging-capi-openstack/capi-openstack-controller:e2e"
 e2e-image: docker-build
 
 # Pull all the images references in test/e2e/data/e2e_conf.yaml
@@ -246,7 +247,7 @@ test-hcp: $(GINKGO) e2e-prerequisites ## Run HCP (Hosted Control Plane) e2e test
 	time $(GINKGO) -fail-fast -trace -timeout=3h -show-node-events -v -tags=e2e -nodes=$(E2E_GINKGO_PARALLEL) \
 		--output-dir="$(ARTIFACTS)" --junit-report="junit.hcp_suite.1.xml" \
 		-focus="$(E2E_GINKGO_FOCUS)" $(_SKIP_ARGS) $(E2E_GINKGO_ARGS) ./test/e2e/suites/hcp/... -- \
-			-config-path="$(E2E_CONF_PATH)" -artifacts-folder="$(ARTIFACTS)" \
+			-config-path="$(E2E_CONF_PATH_HCP)" -artifacts-folder="$(ARTIFACTS)" \
 			-data-folder="$(E2E_DATA_DIR)" $(HCP_E2E_ARGS)
 
 

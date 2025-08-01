@@ -8,7 +8,7 @@ managementClusterName: capo-e2e
 
 images:
 # Use local dev images built source tree;
-- name: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
+- name: ghcr.io/orkhanorganization/k8s-staging-capi-openstack/capi-openstack-controller:e2e 
   loadBehavior: mustLoad
 - name: quay.io/orc/openstack-resource-controller:v2.2.0
   loadBehavior: tryLoad
@@ -66,40 +66,14 @@ providers:
       new: "imagePullPolicy: IfNotPresent"
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
-- name: kubeadm
-  type: ControlPlaneProvider
-  versions:
-  - name: "{go://sigs.k8s.io/cluster-api@v1.10}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.10}/control-plane-components.yaml"
-    type: url
-    contract: v1beta1
-    files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
-    replacements:
-    - old: "imagePullPolicy: Always"
-      new: "imagePullPolicy: IfNotPresent"
-    - old: "--leader-elect"
-      new: "--leader-elect=false\n        - --sync-period=1m"
-  # For clusterctl upgrade test
-  - name: "{go://sigs.k8s.io/cluster-api@v1.9}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.9}/control-plane-components.yaml"
-    type: url
-    contract: v1beta1
-    files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
-    replacements:
-    - old: "imagePullPolicy: Always"
-      new: "imagePullPolicy: IfNotPresent"
-    - old: "--leader-elect"
-      new: "--leader-elect=false\n        - --sync-period=1m"
 
 
 
-- name: kamaji
+- name: kubeadm 
   type: ControlPlaneProvider
   versions:
     - name: v0.15.3
-      value: "https://github.com/clastix/kamaji/releases/download/v0.15.3/kamaji-cluster-api-control-plane-components.yaml"
+      value:  "https://raw.githubusercontent.com/clastix/cluster-api-control-plane-provider-kamaji/v0.15.3/config/control-plane-components.yaml"
       type: url
       contract: v1beta1
       files:
@@ -154,7 +128,7 @@ providers:
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
-      new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
+      new: ghcr.io/orkhanorganization/k8s-staging-capi-openstack/capi-openstack-controller:e2e 
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
     - old: "--v=2"
@@ -219,7 +193,6 @@ variables:
   OPENSTACK_CLOUD_CACERT_B64: "Cg=="
   OPENSTACK_CLOUD_YAML_FILE: '../../../../clouds.yaml'
   OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR: "m1.medium"
-
   OPENSTACK_FAILURE_DOMAIN: "testaz1"
   OPENSTACK_FAILURE_DOMAIN_ALT: "testaz2"
   OPENSTACK_IMAGE_NAME: "ubuntu-2404-kube-v1.33.1"
