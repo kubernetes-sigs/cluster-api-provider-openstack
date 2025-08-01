@@ -43,10 +43,9 @@ As an administrator managing clusters across multiple OpenStack regions, I want 
 
 ```go
 type OpenStackClusterIdentity struct {
-    metav1.TypeMeta   `json:",inline"`
+    metav1.TypeMeta `json:",inline"`
     metav1.ObjectMeta `json:"metadata,omitempty"`
-    Spec   OpenStackClusterIdentitySpec   `json:"spec,omitempty"`
-    Status OpenStackClusterIdentityStatus `json:"status,omitempty"`
+    Spec OpenStackClusterIdentitySpec `json:"spec,omitempty"`
 }
 
 type OpenStackClusterIdentitySpec struct {
@@ -62,10 +61,6 @@ type OpenStackClusterIdentitySpec struct {
 type OpenStackCredentialSecretReference struct {
     Name      string `json:"name"`
     Namespace string `json:"namespace"`
-}
-
-type OpenStackClusterIdentityStatus struct {
-    Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
 ```
 
@@ -87,7 +82,7 @@ type OpenStackIdentityReference struct {
     // +optional
     Name string `json:"name,omitempty"`
     
-    // CloudName required for Secret type, ignored for ClusterIdentity type
+    // CloudName required for Secret type, forbidden for ClusterIdentity type
     // +optional
     CloudName string `json:"cloudName,omitempty"`
     
@@ -188,7 +183,7 @@ type OpenStackIdentityReference struct {
     // +optional
     Name string `json:"name,omitempty"`
     
-    // CloudName required for Secret type, ignored for ClusterIdentity type
+    // CloudName required for Secret type, forbidden for ClusterIdentity type
     // +optional
     CloudName string `json:"cloudName,omitempty"`
     
@@ -342,43 +337,5 @@ This change automatically enables cluster identity support for:
 - `OpenStackCluster` resources
 - `OpenStackMachine` resources  
 - `OpenStackServer` resources
-
-## Conditions
-
-Following the existing CAPO pattern for simple resources (like OpenStackFloatingIPPool), the `OpenStackClusterIdentityStatus` uses a single condition:
-
-- **Ready**: Indicates whether the identity can be used for authentication. This includes secret accessibility, structure validation, and credential validation. Different reason codes provide specific failure details.
-
-### Example Condition States
-
-**Secret not found:**
-```yaml
-status:
-  conditions:
-  - type: Ready
-    status: "False"
-    reason: SecretNotFound
-    message: "Secret 'openstack-creds' not found in namespace 'capo-system'"
-```
-
-**Authentication failure:**
-```yaml
-status:
-  conditions:
-  - type: Ready
-    status: "False"
-    reason: AuthenticationFailed
-    message: "OpenStack authentication failed: invalid credentials for cloud 'openstack'"
-```
-
-**Ready state:**
-```yaml
-status:
-  conditions:
-  - type: Ready
-    status: "True"
-    reason: CredentialsValid
-    message: "OpenStack credentials validated successfully"
-```
 
 This proposal provides centralized credential management while maintaining full backward compatibility and following established Kubernetes patterns (discriminated union).
