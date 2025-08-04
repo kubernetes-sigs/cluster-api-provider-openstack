@@ -562,5 +562,3 @@ kubectl get openstackservers
 ```
 
 This object is immutable and is created by the controller when a machine or a bastion is created. The `OpenStackServer` object is deleted when the machine or the bastion is deleted.
-
-
