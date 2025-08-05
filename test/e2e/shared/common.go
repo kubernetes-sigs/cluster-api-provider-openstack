@@ -33,7 +33,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/util"
@@ -169,8 +169,7 @@ func getOpenStackClusterFromMachine(ctx context.Context, client client.Client, m
 	}
 
 	key = types.NamespacedName{
-		Namespace: cluster.Spec.InfrastructureRef.Namespace,
-		Name:      cluster.Spec.InfrastructureRef.Name,
+		Name: cluster.Spec.InfrastructureRef.Name,
 	}
 	openStackCluster := &infrav1.OpenStackCluster{}
 	err = client.Get(ctx, key, openStackCluster)
@@ -194,10 +193,10 @@ func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, management
 		return fmt.Errorf("couldn't create directory %q for logs: %s", outputPath, err)
 	}
 
-	if m.Spec.ProviderID == nil {
+	if m.Spec.ProviderID == "" {
 		return fmt.Errorf("unable to get logs for machine since it has no provider ID")
 	}
-	providerID := getIDFromProviderID(*m.Spec.ProviderID)
+	providerID := getIDFromProviderID(m.Spec.ProviderID)
 
 	consolLog, err := GetOpenStackServerConsoleLog(o.E2EContext, providerID)
 	if err != nil {

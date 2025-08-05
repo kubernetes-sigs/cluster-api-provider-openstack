@@ -31,7 +31,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/patch"
@@ -615,7 +616,7 @@ func Test_getAPIServerPort(t *testing.T) {
 			name: "with a control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: "192.168.0.1",
 						Port: 6444,
 					},

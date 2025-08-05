@@ -49,14 +49,14 @@ func FuzzMutateTestFunc(input FuzzMutateTestFuncInput) func(*testing.T) {
 			for i := 0; i < 10000; i++ {
 				// Create the spoke and fuzz it
 				spokeBefore := input.Spoke.DeepCopyObject().(conversion.Convertible)
-				fuzzer.Fuzz(spokeBefore)
+				fuzzer.Fill(spokeBefore)
 
 				// First convert spoke to hub
 				hubBefore := input.Hub.DeepCopyObject().(conversion.Hub)
 				g.Expect(spokeBefore.ConvertTo(hubBefore)).To(gomega.Succeed())
 
 				// Fuzz the converted hub with permitted mutations
-				mutateFuzzer.Fuzz(hubBefore)
+				mutateFuzzer.Fill(hubBefore)
 
 				// Convert hub back to spoke
 				spokeAfter := input.Spoke.DeepCopyObject().(conversion.Convertible)
@@ -79,14 +79,14 @@ func FuzzMutateTestFunc(input FuzzMutateTestFuncInput) func(*testing.T) {
 			for i := 0; i < 10000; i++ {
 				// Create the hub and fuzz it
 				hubBefore := input.Hub.DeepCopyObject().(conversion.Hub)
-				fuzzer.Fuzz(hubBefore)
+				fuzzer.Fill(hubBefore)
 
 				// First convert hub to spoke
 				spokeBefore := input.Spoke.DeepCopyObject().(conversion.Convertible)
 				g.Expect(spokeBefore.ConvertFrom(hubBefore)).To(gomega.Succeed())
 
 				// Fuzz the converted spoke with permitted mutations
-				mutateFuzzer.Fuzz(spokeBefore)
+				mutateFuzzer.Fill(spokeBefore)
 
 				// Convert spoke back to hub
 				hubAfter := input.Hub.DeepCopyObject().(conversion.Hub)

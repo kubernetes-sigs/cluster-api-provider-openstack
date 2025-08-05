@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
@@ -58,7 +58,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 
 			By("Setting the control plane endpoint")
-			cluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
+			cluster.Spec.ControlPlaneEndpoint = &clusterv1b1.APIEndpoint{
 				Host: "foo",
 				Port: 1234,
 			}

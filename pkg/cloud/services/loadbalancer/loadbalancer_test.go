@@ -33,7 +33,7 @@ import (
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -70,7 +70,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				Enabled: ptr.To(true),
 			},
 			DisableAPIServerFloatingIP: ptr.To(true),
-			ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+			ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 				Host: apiHostname,
 				Port: 6443,
 			},
@@ -190,7 +190,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						},
 					},
 					DisableAPIServerFloatingIP: ptr.To(true),
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
@@ -291,7 +291,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						},
 					},
 					DisableAPIServerFloatingIP: ptr.To(true),
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
@@ -384,7 +384,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						},
 					},
 					DisableAPIServerFloatingIP: ptr.To(true),
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
@@ -541,7 +541,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: ptr.To(true),
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
@@ -555,7 +555,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: ptr.To(true),
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
 						Port: 6443,
 					},
@@ -629,7 +629,7 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 			name: "API server FIP with valid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
 					},
@@ -642,7 +642,7 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 			name: "API server FIP with invalid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1b1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
 						Port: 6443,
 					},

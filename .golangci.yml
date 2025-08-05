@@ -62,73 +62,77 @@ linters-settings:
     - prefix(sigs.k8s.io/cluster-api-provider-openstack)
   gocritic:
     enabled-tags:
-      - diagnostic
-      - experimental
-      - performance
+    - diagnostic
+    - experimental
+    - performance
     disabled-checks:
-      - appendAssign
-      - dupImport # https://github.com/go-critic/go-critic/issues/845
-      - evalOrder
-      - ifElseChain
-      - octalLiteral
-      - regexpSimplify
-      - sloppyReassign
-      - truncateCmp
-      - typeDefFirst
-      - unnamedResult
-      - unnecessaryDefer
-      - whyNoLint
-      - wrapperFunc
-      - rangeValCopy
-      - hugeParam
+    - appendAssign
+    - dupImport # https://github.com/go-critic/go-critic/issues/845
+    - evalOrder
+    - ifElseChain
+    - octalLiteral
+    - regexpSimplify
+    - sloppyReassign
+    - truncateCmp
+    - typeDefFirst
+    - unnamedResult
+    - unnecessaryDefer
+    - whyNoLint
+    - wrapperFunc
+    - rangeValCopy
+    - hugeParam
   importas:
     no-unaliased: true
     alias:
-      # Kubernetes
-      - pkg: k8s.io/api/core/v1
-        alias: corev1
-      - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-        alias: apiextensionsv1
-      - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
-        alias: metav1
-      - pkg: k8s.io/apimachinery/pkg/api/errors
-        alias: apierrors
-      - pkg: k8s.io/apimachinery/pkg/util/errors
-        alias: kerrors
-      # Controller Runtime
-      - pkg: sigs.k8s.io/controller-runtime
-        alias: ctrl
-      # CAPO
-      - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1
-        alias: infrav1alpha1
-      - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
-        alias: infrav1
-      - pkg: sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors
-        alias: capoerrors
-      # CAPI
-      - pkg: sigs.k8s.io/cluster-api/api/v1alpha3
-        alias: clusterv1alpha3
-      - pkg: sigs.k8s.io/cluster-api/api/v1alpha4
-        alias: clusterv1alpha4
-      - pkg: sigs.k8s.io/cluster-api/api/v1beta1
-        alias: clusterv1
-      # CABPK
-      - pkg: sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha3
-        alias: bootstrapv1alpha3
-      - pkg: sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4
-        alias: bootstrapv1alpha4
-      - pkg: sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1
-        alias: bootstrapv1
-      # KCP
-      - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1alpha3
-        alias: controlplanev1alpha3
-      - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1alpha4
-        alias: controlplanev1alpha4
-      - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1
-        alias: controlplanev1
-      # ORC
-      - pkg: github.com/k-orc/openstack-resource-controller/api/v1alpha1
-        alias: orcv1alpha1
+    # Kubernetes
+    - pkg: k8s.io/api/core/v1
+      alias: corev1
+    - pkg: k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+      alias: apiextensionsv1
+    - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+      alias: metav1
+    - pkg: k8s.io/apimachinery/pkg/api/errors
+      alias: apierrors
+    - pkg: k8s.io/apimachinery/pkg/util/errors
+      alias: kerrors
+    # Controller Runtime
+    - pkg: sigs.k8s.io/controller-runtime
+      alias: ctrl
+    # CAPO
+    - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1
+      alias: infrav1alpha1
+    - pkg: sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+      alias: infrav1
+    - pkg: sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors
+      alias: capoerrors
+    # CAPI
+    - pkg: sigs.k8s.io/cluster-api/api/v1alpha3
+      alias: clusterv1alpha3
+    - pkg: sigs.k8s.io/cluster-api/api/v1alpha4
+      alias: clusterv1alpha4
+    - pkg: sigs.k8s.io/cluster-api/api/v1beta1
+      alias: clusterv1b1
+    - pkg: sigs.k8s.io/cluster-api/api/core/v1beta2
+      alias: clusterv1
+    - pkg: sigs.k8s.io/cluster-api/api/ipam/v1beta2
+      alias: ipamv1
+    # CABPK
+    - pkg: sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha3
+      alias: bootstrapv1alpha3
+    - pkg: sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1alpha4
+      alias: bootstrapv1alpha4
+    - pkg: sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1
+      alias: bootstrapv1
+    # KCP
+    - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1alpha3
+      alias: controlplanev1alpha3
+    - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1alpha4
+      alias: controlplanev1alpha4
+    - pkg: sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1
+      alias: controlplanev1
+    # ORC
+    - pkg: github.com/k-orc/openstack-resource-controller/api/v1alpha1
+      alias: orcv1alpha1
 
   nolintlint:
     # https://github.com/golangci/golangci-lint/issues/3228
@@ -174,11 +178,17 @@ issues:
     - stylecheck
     text: "ST1003: should not use underscores in Go names;"
     path: pkg/utils/conversioncommon/.*.go
+  - linters:
+    - staticcheck
+    text: 'SA1019: "sigs.k8s.io/cluster-api/api/core/v1beta1" is deprecated: This package is deprecated and is going to be removed when support for v1beta1 will be dropped.'
+  - linters:
+    - staticcheck
+    text: 'SA1019: "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions" is deprecated: This package is deprecated and is going to be removed when support for v1beta1 will be dropped. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.'
   exclude-files:
   - "zz_generated.*\\.go$"
 
 run:
-  go: "1.23"
+  go: "1.24"
   timeout: 10m
   build-tags:
   - e2e
