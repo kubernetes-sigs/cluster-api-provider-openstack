@@ -197,7 +197,7 @@ variables:
   # The default user for SSH connections from bastion to machines
   SSH_USER_MACHINE: "ubuntu"
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
-  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3602.2.0-kube-v1.28.2"
+  OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-3815.2.0-kube-v1.28.5"
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]
