@@ -25,6 +25,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/v2/api/v1alpha1"
@@ -69,6 +70,7 @@ func DefaultScheme() *runtime.Scheme {
 	framework.TryAddDefaultSchemes(sc)
 
 	err := errors.Join(
+		clusterv1b1.AddToScheme(sc),
 		orcv1alpha1.AddToScheme(sc),
 		infrav1alpha1.AddToScheme(sc),
 		infrav1.AddToScheme(sc),

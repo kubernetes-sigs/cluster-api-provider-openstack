@@ -32,7 +32,8 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/collections"
@@ -335,7 +336,7 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 	}
 
 	// Create a new list in case any AZs have been removed from OpenStack
-	openStackCluster.Status.FailureDomains = make(clusterv1.FailureDomains)
+	openStackCluster.Status.FailureDomains = make(clusterv1b1.FailureDomains)
 	for _, az := range availabilityZones {
 		// By default, the AZ is used or not used for control plane nodes depending on the flag
 		found := !ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
@@ -344,7 +345,8 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 			found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
 		}
 		// Add the AZ object to the failure domains for the cluster
-		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1.FailureDomainSpec{
+
+		openStackCluster.Status.FailureDomains[az.ZoneName] = clusterv1b1.FailureDomainSpec{
 			ControlPlane: found,
 		}
 	}
@@ -871,7 +873,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 		return err
 	}
 
-	openStackCluster.Spec.ControlPlaneEndpoint = &clusterv1.APIEndpoint{
+	openStackCluster.Spec.ControlPlaneEndpoint = &clusterv1b1.APIEndpoint{
 		Host: host,
 		Port: apiServerPort,
 	}

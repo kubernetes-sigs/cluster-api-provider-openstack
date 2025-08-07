@@ -17,12 +17,21 @@ providers:
 - name: cluster-api
   type: CoreProvider
   versions:
+  - name: "v1.11.99"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.11.0-beta.2/core-components.yaml"
+    type: "url"
+    contract: v1beta2
+    replacements:
+    - old: --metrics-addr=127.0.0.1:8080
+      new: --metrics-addr=:8080
+    files:
+    - sourcePath: "../data/shared/capi/metadata.yaml"
   - name: "{go://sigs.k8s.io/cluster-api@v1.10}"
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.10}/core-components.yaml"
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
+    - sourcePath: "../data/shared/capi/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -34,7 +43,7 @@ providers:
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
+    - sourcePath: "../data/shared/capi/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -43,12 +52,21 @@ providers:
 - name: kubeadm
   type: BootstrapProvider
   versions:
+  - name: "v1.11.99"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.11.0-beta.2/bootstrap-components.yaml"
+    type: "url"
+    contract: v1beta2
+    replacements:
+    - old: --metrics-addr=127.0.0.1:8080
+      new: --metrics-addr=:8080
+    files:
+    - sourcePath: "../data/shared/capi/metadata.yaml"
   - name: "{go://sigs.k8s.io/cluster-api@v1.10}"
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.10}/bootstrap-components.yaml"
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
+    - sourcePath: "../data/shared/capi/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -60,7 +78,7 @@ providers:
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
+    - sourcePath: "../data/shared/capi/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -69,12 +87,21 @@ providers:
 - name: kubeadm
   type: ControlPlaneProvider
   versions:
+  - name: "v1.11.99"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.11.0-beta.2/control-plane-components.yaml"
+    type: "url"
+    contract: v1beta2
+    replacements:
+    - old: --metrics-addr=127.0.0.1:8080
+      new: --metrics-addr=:8080
+    files:
+    - sourcePath: "../data/shared/capi/metadata.yaml"
   - name: "{go://sigs.k8s.io/cluster-api@v1.10}"
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.10}/control-plane-components.yaml"
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
+    - sourcePath: "../data/shared/capi/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -86,7 +113,7 @@ providers:
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1/metadata.yaml"
+    - sourcePath: "../data/shared/capi/metadata.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -101,7 +128,7 @@ providers:
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
+    - sourcePath: "../data/shared/provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
@@ -116,7 +143,7 @@ providers:
     type: url
     contract: v1beta1
     files:
-    - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
+    - sourcePath: "../data/shared/provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
@@ -125,13 +152,13 @@ providers:
       new: "--v=4"
     - old: "--leader-elect"
       new: "--leader-elect=false\n        - --sync-period=1m"
-  - name: v0.12.99
+  - name: v0.13.99
     value: ../../../config/default
     # This is the upcoming version.
     # Specify no contract so that upgrade tests that start from a specific contract won't pick it up.
-    # contract: v1beta1
+    # contract: v1beta2
     files:
-    - sourcePath: "../data/shared/v1beta1_provider/metadata.yaml"
+    - sourcePath: "../data/shared/provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
     replacements:

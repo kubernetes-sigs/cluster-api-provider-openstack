@@ -587,9 +587,7 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
-sigs.k8s.io/cluster-api/api/v1beta1.Conditions
-</a>
+sigs.k8s.io/cluster-api/api/core/v1beta1.Conditions
 </em>
 </td>
 <td>
@@ -951,9 +949,7 @@ ServerResources
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="https://doc.crds.dev/github.com/kubernetes-sigs/cluster-api@v1.6.0">
-sigs.k8s.io/cluster-api/api/v1beta1.Conditions
-</a>
+sigs.k8s.io/cluster-api/api/core/v1beta1.Conditions
 </em>
 </td>
 <td>

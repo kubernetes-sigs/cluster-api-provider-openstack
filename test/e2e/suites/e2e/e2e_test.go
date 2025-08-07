@@ -50,8 +50,9 @@ import (
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
+	bootstrapv1 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta2"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
@@ -864,10 +865,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				azs := make(map[string]struct{})
 				for _, machine := range machines {
 					failureDomain := machine.Spec.FailureDomain
-					if failureDomain == nil {
+					if failureDomain == "" {
 						continue
 					}
-					azs[*failureDomain] = struct{}{}
+					azs[failureDomain] = struct{}{}
 				}
 
 				azSlice := make([]string, 0, len(azs))
@@ -920,7 +921,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 				server := allServers[openstackMachineName]
 				Expect(server.AvailabilityZone).To(
-					Equal(*machine.Spec.FailureDomain),
+					Equal(machine.Spec.FailureDomain),
 					fmt.Sprintf("Server %s was not scheduled in the correct AZ", machine.Name))
 
 				// Check that all machines have the expected volumes:
@@ -961,11 +962,11 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			// Expect all control plane machines to have volumes in the same AZ as the machine, and the default volume type
 			for _, machine := range controlPlaneMachines {
 				rootVolume := rootVolumes[machine.Name]
-				Expect(rootVolume.AvailabilityZone).To(Equal(*machine.Spec.FailureDomain))
+				Expect(rootVolume.AvailabilityZone).To(Equal(machine.Spec.FailureDomain))
 				Expect(rootVolume.VolumeType).NotTo(Equal(volumeTypeAlt))
 
 				additionalVolume := additionalVolumes[machine.Name]
-				Expect(additionalVolume.AvailabilityZone).To(Equal(*machine.Spec.FailureDomain))
+				Expect(additionalVolume.AvailabilityZone).To(Equal(machine.Spec.FailureDomain))
 				Expect(additionalVolume.VolumeType).NotTo(Equal(volumeTypeAlt))
 			}
 
@@ -990,13 +991,13 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			shared.Logf("Waiting for the OpenStackMachine to have a condition that the server has been unexpectedly deleted")
 			retries := 0
-			Eventually(func() (clusterv1.Condition, error) {
+			Eventually(func() (clusterv1b1.Condition, error) {
 				k8sClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
 
 				openStackMachine := &infrav1.OpenStackMachine{}
 				err := k8sClient.Get(ctx, crclient.ObjectKey{Name: controlPlaneMachines[0].Name, Namespace: controlPlaneMachines[0].Namespace}, openStackMachine)
 				if err != nil {
-					return clusterv1.Condition{}, err
+					return clusterv1b1.Condition{}, err
 				}
 				for _, condition := range openStackMachine.Status.Conditions {
 					if condition.Type == infrav1.InstanceReadyCondition {
@@ -1015,10 +1016,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					})
 				err = k8sClient.Patch(ctx, openStackMachine, ssa.ApplyConfigPatch(applyConfig), crclient.ForceOwnership, crclient.FieldOwner("capo-e2e"))
 				if err != nil {
-					return clusterv1.Condition{}, err
+					return clusterv1b1.Condition{}, err
 				}
 
-				return clusterv1.Condition{}, errors.New("condition InstanceReadyCondition not found")
+				return clusterv1b1.Condition{}, errors.New("condition InstanceReadyCondition not found")
 			}, time.Minute*3, time.Second*10).Should(MatchFields(
 				IgnoreExtras,
 				Fields{
@@ -1026,7 +1027,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					"Status":   Equal(corev1.ConditionFalse),
 					"Reason":   Equal(infrav1.InstanceDeletedReason),
 					"Message":  Equal(infrav1.ServerUnexpectedDeletedMessage),
-					"Severity": Equal(clusterv1.ConditionSeverityError),
+					"Severity": Equal(clusterv1b1.ConditionSeverityError),
 				},
 			), "OpenStackMachine should be marked not ready with InstanceDeletedReason")
 		})
@@ -1180,7 +1181,7 @@ func getInstanceIDForMachine(machine *clusterv1.Machine) string {
 	providerID := machine.Spec.ProviderID
 	Expect(providerID).NotTo(BeNil())
 
-	providerIDSplit := strings.SplitN(*providerID, ":///", 2)
+	providerIDSplit := strings.SplitN(providerID, ":///", 2)
 	Expect(providerIDSplit[0]).To(Equal("openstack"))
 	return providerIDSplit[1]
 }
@@ -1286,9 +1287,15 @@ func makeJoinBootstrapConfigTemplate(namespace, name string) *bootstrapv1.Kubead
 					JoinConfiguration: &bootstrapv1.JoinConfiguration{
 						NodeRegistration: bootstrapv1.NodeRegistrationOptions{
 							Name: "{{ local_hostname }}",
-							KubeletExtraArgs: map[string]string{
-								"cloud-config":   "/etc/kubernetes/cloud.conf",
-								"cloud-provider": "openstack",
+							KubeletExtraArgs: []bootstrapv1.Arg{
+								{
+									Name:  "cloud-provider",
+									Value: "openstack",
+								},
+								{
+									Name:  "cloud-config",
+									Value: "/etc/kubernetes/cloud.conf",
+								},
 							},
 						},
 					},
@@ -1329,22 +1336,20 @@ func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain 
 				},
 				Spec: clusterv1.MachineSpec{
 					ClusterName:   clusterName,
-					FailureDomain: &failureDomain,
+					FailureDomain: failureDomain,
 					Bootstrap: clusterv1.Bootstrap{
-						ConfigRef: &corev1.ObjectReference{
-							Kind:       "KubeadmConfigTemplate",
-							APIVersion: bootstrapv1.GroupVersion.String(),
-							Name:       mdName,
-							Namespace:  namespace,
+						ConfigRef: &clusterv1.ContractVersionedObjectReference{
+							Kind:     "KubeadmConfigTemplate",
+							APIGroup: bootstrapv1.GroupVersion.Group,
+							Name:     mdName,
 						},
 					},
-					InfrastructureRef: corev1.ObjectReference{
-						Kind:       "OpenStackMachineTemplate",
-						APIVersion: infrav1.SchemeGroupVersion.String(),
-						Name:       mdName,
-						Namespace:  namespace,
+					InfrastructureRef: clusterv1.ContractVersionedObjectReference{
+						Kind:     "OpenStackMachineTemplate",
+						APIGroup: infrav1.GroupName,
+						Name:     mdName,
 					},
-					Version: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion)),
+					Version: e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
 				},
 			},
 		},

@@ -46,7 +46,10 @@ declare -a gen_openapi_args=(
     # We need to include all referenced types in our generated openapi schema
     # or applyconfiguration-gen won't be able to use it. Helpfully it will
     # generate an error including the missing type.
-    --extra-pkgs sigs.k8s.io/cluster-api/api/v1beta1
+    --extra-pkgs sigs.k8s.io/cluster-api/api/core/v1beta2
+    --extra-pkgs sigs.k8s.io/cluster-api/api/ipam/v1beta2
+    --extra-pkgs sigs.k8s.io/cluster-api/api/core/v1beta1
+    --extra-pkgs sigs.k8s.io/cluster-api/api/ipam/v1beta1
     --extra-pkgs k8s.io/api/core/v1
 )
 

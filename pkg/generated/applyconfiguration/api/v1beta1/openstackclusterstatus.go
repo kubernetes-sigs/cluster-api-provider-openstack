@@ -20,7 +20,7 @@ package v1beta1
 
 import (
 	errors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
-	apiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	corev1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackClusterStatusApplyConfiguration represents a declarative configuration of the OpenStackClusterStatus type for use
@@ -31,7 +31,7 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	ExternalNetwork           *NetworkStatusApplyConfiguration            `json:"externalNetwork,omitempty"`
 	Router                    *RouterApplyConfiguration                   `json:"router,omitempty"`
 	APIServerLoadBalancer     *LoadBalancerApplyConfiguration             `json:"apiServerLoadBalancer,omitempty"`
-	FailureDomains            *apiv1beta1.FailureDomains                  `json:"failureDomains,omitempty"`
+	FailureDomains            *corev1beta1.FailureDomains                 `json:"failureDomains,omitempty"`
 	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration      `json:"controlPlaneSecurityGroup,omitempty"`
 	WorkerSecurityGroup       *SecurityGroupStatusApplyConfiguration      `json:"workerSecurityGroup,omitempty"`
 	BastionSecurityGroup      *SecurityGroupStatusApplyConfiguration      `json:"bastionSecurityGroup,omitempty"`
@@ -89,7 +89,7 @@ func (b *OpenStackClusterStatusApplyConfiguration) WithAPIServerLoadBalancer(val
 // WithFailureDomains sets the FailureDomains field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the FailureDomains field is set to the value of the last call.
-func (b *OpenStackClusterStatusApplyConfiguration) WithFailureDomains(value apiv1beta1.FailureDomains) *OpenStackClusterStatusApplyConfiguration {
+func (b *OpenStackClusterStatusApplyConfiguration) WithFailureDomains(value corev1beta1.FailureDomains) *OpenStackClusterStatusApplyConfiguration {
 	b.FailureDomains = &value
 	return b
 }

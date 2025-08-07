@@ -32,11 +32,12 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	ipamv1 "sigs.k8s.io/cluster-api/exp/ipam/api/v1beta1"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
+	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
-	"sigs.k8s.io/cluster-api/util/conditions"
+	"sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -122,7 +123,7 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		// Propagate terminal errors
 		terminalError := &capoerrors.TerminalError{}
 		if errors.As(reterr, &terminalError) {
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, terminalError.Reason, clusterv1.ConditionSeverityError, "%s", terminalError.Message)
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, terminalError.Reason, clusterv1b1.ConditionSeverityError, "%s", terminalError.Message)
 		}
 
 		if err := patchServer(ctx, patchHelper, openStackServer); err != nil {
@@ -148,7 +149,7 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 func patchServer(ctx context.Context, patchHelper *patch.Helper, openStackServer *infrav1alpha1.OpenStackServer, options ...patch.Option) error {
 	// Always update the readyCondition by summarizing the state of other conditions.
-	applicableConditions := []clusterv1.ConditionType{
+	applicableConditions := []clusterv1b1.ConditionType{
 		infrav1.InstanceReadyCondition,
 	}
 
@@ -158,9 +159,9 @@ func patchServer(ctx context.Context, patchHelper *patch.Helper, openStackServer
 	// Also, if requested, we are adding additional options like e.g. Patch ObservedGeneration when issuing the
 	// patch at the end of the reconcile loop.
 	options = append(options,
-		patch.WithOwnedConditions{Conditions: []clusterv1.ConditionType{
+		patch.WithOwnedConditions{Conditions: []string{
 			clusterv1.ReadyCondition,
-			infrav1.InstanceReadyCondition,
+			string(infrav1.InstanceReadyCondition),
 		}},
 	)
 	conditions.SetSummary(openStackServer,
@@ -255,7 +256,7 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 		}
 	} else {
 		if err := computeService.DeleteInstance(openStackServer, instanceStatus); err != nil {
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1.ConditionSeverityError, "Deleting instance failed: %v", err)
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1b1.ConditionSeverityError, "Deleting instance failed: %v", err)
 			return fmt.Errorf("delete instance: %w", err)
 		}
 	}
@@ -363,7 +364,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 
 	if floatingAddressClaim != nil {
 		if err := r.associateIPAddressFromIPAddressClaim(ctx, openStackServer, instanceStatus, instanceNS, floatingAddressClaim, networkingService); err != nil {
-			conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1.ConditionSeverityError, "Failed while associating ip from pool: %v", err)
+			conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1b1.ConditionSeverityError, "Failed while associating ip from pool: %v", err)
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition)
@@ -380,12 +381,12 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 		openStackServer.Status.Ready = true
 	case infrav1.InstanceStateError:
 		scope.Logger().Info("Server instance state is ERROR", "id", instanceStatus.ID())
-		conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1.ConditionSeverityError, "")
+		conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1b1.ConditionSeverityError, "")
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
 		scope.Logger().Info("Server instance state is DELETED, no actions")
-		conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, "")
+		conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1b1.ConditionSeverityError, "")
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateBuild, infrav1.InstanceStateUndefined:
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
@@ -451,7 +452,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 				msg = infrav1.ServerUnexpectedDeletedMessage
 				reason = infrav1.InstanceNotFoundReason
 			}
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, reason, clusterv1.ConditionSeverityError, msg)
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, reason, clusterv1b1.ConditionSeverityError, "%s", msg)
 			return nil, err
 		}
 	}
@@ -475,7 +476,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 		instanceSpec.Name = openStackServer.Name
 		instanceStatus, err = computeService.CreateInstance(openStackServer, instanceSpec, portIDs)
 		if err != nil {
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1.ConditionSeverityError, "%s", err.Error())
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceCreateFailedReason, clusterv1b1.ConditionSeverityError, "%s", err.Error())
 			openStackServer.Status.InstanceState = &infrav1.InstanceStateError
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)
 		}
@@ -573,7 +574,7 @@ func (r *OpenStackServerReconciler) reconcileFloatingAddressFromPool(ctx context
 	var claim *ipamv1.IPAddressClaim
 	claim, err := r.getOrCreateIPAddressClaimForFloatingAddress(ctx, scope, openStackServer)
 	if err != nil {
-		conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1.ConditionSeverityInfo, "Failed to reconcile floating IP claims: %v", err)
+		conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1b1.ConditionSeverityInfo, "Failed to reconcile floating IP claims: %v", err)
 		return nil, true, err
 	}
 	if claim.Status.AddressRef.Name == "" {
@@ -615,7 +616,11 @@ func (r *OpenStackServerReconciler) getOrCreateIPAddressClaimForFloatingAddress(
 			Labels:     map[string]string{},
 		},
 		Spec: ipamv1.IPAddressClaimSpec{
-			PoolRef: *poolRef,
+			PoolRef: ipamv1.IPPoolReference{
+				Name:     poolRef.Name,
+				Kind:     poolRef.Kind,
+				APIGroup: *poolRef.APIGroup,
+			},
 		},
 	}
 
@@ -656,7 +661,7 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 	}
 
 	if fip == nil {
-		conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1.ConditionSeverityError, "floating IP does not exist")
+		conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1b1.ConditionSeverityError, "floating IP does not exist")
 		return fmt.Errorf("floating IP %q does not exist", address.Spec.Address)
 	}
 
@@ -666,7 +671,7 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 	}
 
 	if port == nil {
-		conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1.ConditionSeverityError, "Can't find port for floating IP %q on external network %s", fip.FloatingIP, fip.FloatingNetworkID)
+		conditions.MarkFalse(openStackServer, infrav1.FloatingAddressFromPoolReadyCondition, infrav1.FloatingAddressFromPoolErrorReason, clusterv1b1.ConditionSeverityError, "Can't find port for floating IP %q on external network %s", fip.FloatingIP, fip.FloatingNetworkID)
 		return fmt.Errorf("port for floating IP %q on network %s does not exist", fip.FloatingIP, fip.FloatingNetworkID)
 	}
 

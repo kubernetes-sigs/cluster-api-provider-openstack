@@ -34,8 +34,8 @@ func FuzzRestorer[T any](t *testing.T, name string, f func(*T, *T)) {
 		for i := 0; i < 1000; i++ {
 			previous := new(T)
 			dst := new(T)
-			fuzz.Fuzz(previous)
-			fuzz.Fuzz(dst)
+			fuzz.Fill(previous)
+			fuzz.Fill(dst)
 
 			func() {
 				defer func() {

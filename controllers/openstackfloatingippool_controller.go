@@ -22,16 +22,15 @@ import (
 	"fmt"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	ipamv1 "sigs.k8s.io/cluster-api/exp/ipam/api/v1beta1"
-	"sigs.k8s.io/cluster-api/util/conditions"
+	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
+	"sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -163,11 +162,11 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 						},
 					},
 					Spec: ipamv1.IPAddressSpec{
-						ClaimRef: corev1.LocalObjectReference{
+						ClaimRef: ipamv1.IPAddressClaimReference{
 							Name: claim.Name,
 						},
-						PoolRef: corev1.TypedLocalObjectReference{
-							APIGroup: ptr.To(infrav1alpha1.SchemeGroupVersion.Group),
+						PoolRef: ipamv1.IPPoolReference{
+							APIGroup: infrav1alpha1.SchemeGroupVersion.Group,
 							Kind:     pool.Kind,
 							Name:     pool.Name,
 						},
@@ -355,14 +354,14 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 	// If we have reached the maximum number of IPs, we should not create more IPs
 	if maxIPs != -1 && len(pool.Status.ClaimedIPs) >= maxIPs {
 		scope.Logger().Info("MaxIPs reached", "pool", pool.Name)
-		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.MaxIPsReachedReason, clusterv1.ConditionSeverityError, "Maximum number of IPs reached, we will not allocate more IPs for this pool")
+		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.MaxIPsReachedReason, clusterv1b1.ConditionSeverityError, "Maximum number of IPs reached, we will not allocate more IPs for this pool")
 		return "", errMaxIPsReached
 	}
 
 	fp, err := networkingService.CreateFloatingIPForPool(pool)
 	if err != nil {
 		scope.Logger().Error(err, "Failed to create floating IP", "pool", pool.Name)
-		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, "Failed to create floating IP: %v", err)
+		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1.OpenStackErrorReason, clusterv1b1.ConditionSeverityError, "Failed to create floating IP: %v", err)
 		return "", err
 	}
 	defer func() {
@@ -409,7 +408,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 
 	network, err := networkingService.GetNetworkByParam(networkParam, networking.ExternalNetworksOnly)
 	if err != nil {
-		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.UnableToFindNetwork, clusterv1.ConditionSeverityError, "Failed to find network: %v", err)
+		conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.UnableToFindNetwork, clusterv1b1.ConditionSeverityError, "Failed to find network: %v", err)
 		return fmt.Errorf("failed to find network: %w", err)
 	}
 

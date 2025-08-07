@@ -46,8 +46,8 @@ func fuzzCustomValidator[O any, PO pointerToObject[O]](t *testing.T, name string
 		for i := 0; i < 1000; i++ {
 			var previous PO = new(O)
 			var dst PO = new(O)
-			fuzz.Fuzz(previous)
-			fuzz.Fuzz(dst)
+			fuzz.Fill(previous)
+			fuzz.Fill(dst)
 
 			checkPanic := func(f func(), name string, args ...runtime.Object) {
 				defer func() {
