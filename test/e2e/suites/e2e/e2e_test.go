@@ -51,7 +51,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/ptr"
 	bootstrapv1 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta2"
-	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/test/framework"
@@ -991,13 +991,13 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			shared.Logf("Waiting for the OpenStackMachine to have a condition that the server has been unexpectedly deleted")
 			retries := 0
-			Eventually(func() (clusterv1b1.Condition, error) {
+			Eventually(func() (clusterv1beta1.Condition, error) {
 				k8sClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
 
 				openStackMachine := &infrav1.OpenStackMachine{}
 				err := k8sClient.Get(ctx, crclient.ObjectKey{Name: controlPlaneMachines[0].Name, Namespace: controlPlaneMachines[0].Namespace}, openStackMachine)
 				if err != nil {
-					return clusterv1b1.Condition{}, err
+					return clusterv1beta1.Condition{}, err
 				}
 				for _, condition := range openStackMachine.Status.Conditions {
 					if condition.Type == infrav1.InstanceReadyCondition {
@@ -1016,10 +1016,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					})
 				err = k8sClient.Patch(ctx, openStackMachine, ssa.ApplyConfigPatch(applyConfig), crclient.ForceOwnership, crclient.FieldOwner("capo-e2e"))
 				if err != nil {
-					return clusterv1b1.Condition{}, err
+					return clusterv1beta1.Condition{}, err
 				}
 
-				return clusterv1b1.Condition{}, errors.New("condition InstanceReadyCondition not found")
+				return clusterv1beta1.Condition{}, errors.New("condition InstanceReadyCondition not found")
 			}, time.Minute*3, time.Second*10).Should(MatchFields(
 				IgnoreExtras,
 				Fields{
@@ -1027,7 +1027,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					"Status":   Equal(corev1.ConditionFalse),
 					"Reason":   Equal(infrav1.InstanceDeletedReason),
 					"Message":  Equal(infrav1.ServerUnexpectedDeletedMessage),
-					"Severity": Equal(clusterv1b1.ConditionSeverityError),
+					"Severity": Equal(clusterv1beta1.ConditionSeverityError),
 				},
 			), "OpenStackMachine should be marked not ready with InstanceDeletedReason")
 		})
