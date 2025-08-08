@@ -110,10 +110,18 @@ linters-settings:
       alias: clusterv1alpha3
     - pkg: sigs.k8s.io/cluster-api/api/v1alpha4
       alias: clusterv1alpha4
-    - pkg: sigs.k8s.io/cluster-api/api/v1beta1
-      alias: clusterv1b1
     - pkg: sigs.k8s.io/cluster-api/api/core/v1beta2
       alias: clusterv1
+    - pkg: sigs.k8s.io/cluster-api/api/core/v1beta1
+      alias: clusterv1beta1
+    - pkg: sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions
+      alias: v1beta1conditions
+    - pkg: sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions/v1beta2
+      alias: deprecatedv1beta2conditions
+    - pkg: sigs.k8s.io/cluster-api/util/conditions/deprecated/v1beta1
+      alias: deprecatedv1beta1conditions
+    - pkg: sigs.k8s.io/cluster-api/util/deprecated/v1beta1/patch
+      alias: v1beta1patch
     - pkg: sigs.k8s.io/cluster-api/api/ipam/v1beta2
       alias: ipamv1
     # CABPK
