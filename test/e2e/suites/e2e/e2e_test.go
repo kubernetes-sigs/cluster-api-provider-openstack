@@ -1284,17 +1284,17 @@ func makeJoinBootstrapConfigTemplate(namespace, name string) *bootstrapv1.Kubead
 		Spec: bootstrapv1.KubeadmConfigTemplateSpec{
 			Template: bootstrapv1.KubeadmConfigTemplateResource{
 				Spec: bootstrapv1.KubeadmConfigSpec{
-					JoinConfiguration: &bootstrapv1.JoinConfiguration{
+					JoinConfiguration: bootstrapv1.JoinConfiguration{
 						NodeRegistration: bootstrapv1.NodeRegistrationOptions{
 							Name: "{{ local_hostname }}",
 							KubeletExtraArgs: []bootstrapv1.Arg{
 								{
 									Name:  "cloud-provider",
-									Value: "openstack",
+									Value: ptr.To("openstack"),
 								},
 								{
 									Name:  "cloud-config",
-									Value: "/etc/kubernetes/cloud.conf",
+									Value: ptr.To("/etc/kubernetes/cloud.conf"),
 								},
 							},
 						},
@@ -1338,7 +1338,7 @@ func makeMachineDeployment(namespace, mdName, clusterName string, failureDomain 
 					ClusterName:   clusterName,
 					FailureDomain: failureDomain,
 					Bootstrap: clusterv1.Bootstrap{
-						ConfigRef: &clusterv1.ContractVersionedObjectReference{
+						ConfigRef: clusterv1.ContractVersionedObjectReference{
 							Kind:     "KubeadmConfigTemplate",
 							APIGroup: bootstrapv1.GroupVersion.Group,
 							Name:     mdName,

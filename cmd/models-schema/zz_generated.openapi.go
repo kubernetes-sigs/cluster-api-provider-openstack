@@ -26576,6 +26576,7 @@ func schema_cluster_api_api_core_v1beta2_Bootstrap(ref common.ReferenceCallback)
 					"configRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "configRef is a reference to a bootstrap provider-specific resource that holds configuration details. The reference is optional to allow users/operators to specify Bootstrap.DataSecretName without the need of a controller.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.ContractVersionedObjectReference"),
 						},
 					},
@@ -26655,7 +26656,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterAvailabilityGate(ref common.Refe
 					"conditionType": {
 						SchemaProps: spec.SchemaProps{
 							Description: "conditionType refers to a condition with matching type in the Cluster's condition list. If the conditions doesn't exist, it will be treated as unknown. Note: Both Cluster API conditions or conditions added by 3rd party controllers can be used as availability gates.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26807,7 +26807,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassPatch(ref common.ReferenceC
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the patch.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26870,7 +26869,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassRef(ref common.ReferenceCal
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the ClusterClass that should be used for the topology. name must be a valid ClusterClass name and because of that be at most 253 characters in length and it must consist only of lower case alphanumeric characters, hyphens (-) and periods (.), and must start and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27065,7 +27063,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassStatusVariable(ref common.R
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the variable.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27115,7 +27112,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassStatusVariableDefinition(re
 					"from": {
 						SchemaProps: spec.SchemaProps{
 							Description: "from specifies the origin of the variable definition. This will be `inline` for variables defined in the ClusterClass or the name of a patch defined in the ClusterClass for variables discovered from a DiscoverVariables runtime extensions.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27123,7 +27119,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassStatusVariableDefinition(re
 					"required": {
 						SchemaProps: spec.SchemaProps{
 							Description: "required specifies if the variable is required. Note: this applies to the variable as a whole and thus the top-level object defined in the schema. If nested fields are required, this will be specified inside the schema.",
-							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -27161,7 +27156,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassTemplateReference(ref commo
 					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "kind of the template. kind must consist of alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27169,7 +27163,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassTemplateReference(ref commo
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the template. name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27177,7 +27170,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassTemplateReference(ref commo
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
 							Description: "apiVersion of the template. apiVersion must be fully qualified domain name followed by / and a version.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27228,7 +27220,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassVariable(ref common.Referen
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the variable.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27236,7 +27227,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterClassVariable(ref common.Referen
 					"required": {
 						SchemaProps: spec.SchemaProps{
 							Description: "required specifies if the variable is required. Note: this applies to the variable as a whole and thus the top-level object defined in the schema. If nested fields are required, this will be specified inside the schema.",
-							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -27530,18 +27520,21 @@ func schema_cluster_api_api_core_v1beta2_ClusterSpec(ref common.ReferenceCallbac
 					"controlPlaneRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "controlPlaneRef is an optional reference to a provider-specific resource that holds the details for provisioning the Control Plane for a Cluster.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.ContractVersionedObjectReference"),
 						},
 					},
 					"infrastructureRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "infrastructureRef is a reference to a provider-specific resource that holds the details for provisioning infrastructure for a cluster in said provider.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.ContractVersionedObjectReference"),
 						},
 					},
 					"topology": {
 						SchemaProps: spec.SchemaProps{
 							Description: "topology encapsulates the topology for the cluster. NOTE: It is required to enable the ClusterTopology feature gate flag to activate managed topologies support; this feature is highly experimental, and parts of it might still be not implemented.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.Topology"),
 						},
 					},
@@ -27726,7 +27719,6 @@ func schema_cluster_api_api_core_v1beta2_ClusterVariable(ref common.ReferenceCal
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the variable.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27815,7 +27807,6 @@ func schema_cluster_api_api_core_v1beta2_ContractVersionedObjectReference(ref co
 					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "kind of the resource being referenced. kind must consist of alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27823,7 +27814,6 @@ func schema_cluster_api_api_core_v1beta2_ContractVersionedObjectReference(ref co
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the resource being referenced. name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27831,7 +27821,6 @@ func schema_cluster_api_api_core_v1beta2_ContractVersionedObjectReference(ref co
 					"apiGroup": {
 						SchemaProps: spec.SchemaProps{
 							Description: "apiGroup is the group of the resource being referenced. apiGroup must be fully qualified domain name. The corresponding version for this reference will be looked up from the contract labels of the corresponding CRD of the resource being referenced.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -27867,6 +27856,7 @@ func schema_cluster_api_api_core_v1beta2_ControlPlaneClass(ref common.ReferenceC
 					"machineInfrastructure": {
 						SchemaProps: spec.SchemaProps{
 							Description: "machineInfrastructure defines the metadata and infrastructure information for control plane machines.\n\nThis field is supported if and only if the control plane provider template referenced above is Machine based and supports setting replicas.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.ControlPlaneClassMachineInfrastructureTemplate"),
 						},
 					},
@@ -28009,6 +27999,7 @@ func schema_cluster_api_api_core_v1beta2_ControlPlaneClassHealthCheckRemediation
 					"templateRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "templateRef is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.MachineHealthCheckRemediationTemplateReference"),
 						},
 					},
@@ -28291,6 +28282,7 @@ func schema_cluster_api_api_core_v1beta2_ControlPlaneTopologyHealthCheckRemediat
 					"templateRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "templateRef is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.MachineHealthCheckRemediationTemplateReference"),
 						},
 					},
@@ -28461,7 +28453,6 @@ func schema_cluster_api_api_core_v1beta2_FailureDomain(ref common.ReferenceCallb
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the failure domain.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28556,7 +28547,6 @@ func schema_cluster_api_api_core_v1beta2_JSONPatch(ref common.ReferenceCallback)
 					"op": {
 						SchemaProps: spec.SchemaProps{
 							Description: "op defines the operation of the patch. Note: Only `add`, `replace` and `remove` are supported.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28564,7 +28554,6 @@ func schema_cluster_api_api_core_v1beta2_JSONPatch(ref common.ReferenceCallback)
 					"path": {
 						SchemaProps: spec.SchemaProps{
 							Description: "path defines the path of the patch. Note: Only the spec of a template can be patched, thus the path has to start with /spec/. Note: For now the only allowed array modifications are `append` and `prepend`, i.e.: * for op: `add`: only index 0 (prepend) and - (append) are allowed * for op: `replace` or `remove`: no indexes are allowed",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28838,6 +28827,7 @@ func schema_cluster_api_api_core_v1beta2_JSONSchemaProps(ref common.ReferenceCal
 					"x-metadata": {
 						SchemaProps: spec.SchemaProps{
 							Description: "x-metadata is the metadata of a variable or a nested field within a variable. It can be used to add additional data for higher level tools.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.VariableSchemaMetadata"),
 						},
 					},
@@ -28965,7 +28955,6 @@ func schema_cluster_api_api_core_v1beta2_MachineAddress(ref common.ReferenceCall
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "type is the machine address type, one of Hostname, ExternalIP, InternalIP, ExternalDNS or InternalDNS.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -28973,7 +28962,6 @@ func schema_cluster_api_api_core_v1beta2_MachineAddress(ref common.ReferenceCall
 					"address": {
 						SchemaProps: spec.SchemaProps{
 							Description: "address is the machine address.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29114,7 +29102,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentClass(ref common.Refer
 					"class": {
 						SchemaProps: spec.SchemaProps{
 							Description: "class denotes a type of worker node present in the cluster, this name MUST be unique within a ClusterClass and can be referenced in the Cluster to create a managed MachineDeployment.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29322,6 +29309,7 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentClassHealthCheckRemedi
 					"templateRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "templateRef is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.MachineHealthCheckRemediationTemplateReference"),
 						},
 					},
@@ -29477,7 +29465,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentClassRolloutStrategy(r
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "type of rollout. Allowed values are RollingUpdate and OnDelete. Default is RollingUpdate.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29676,7 +29663,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentRolloutStrategy(ref co
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "type of rollout. Allowed values are RollingUpdate and OnDelete. Default is RollingUpdate.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29734,7 +29720,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentSpec(ref common.Refere
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "clusterName is the name of the Cluster this object belongs to.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29913,7 +29898,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentTopology(ref common.Re
 					"class": {
 						SchemaProps: spec.SchemaProps{
 							Description: "class is the name of the MachineDeploymentClass used to create the set of worker nodes. This should match one of the deployment classes defined in the ClusterClass object mentioned in the `Cluster.Spec.Class` field.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -29921,7 +29905,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentTopology(ref common.Re
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the unique identifier for this MachineDeploymentTopology. The value is used with other unique identifiers to create a MachineDeployment's Name (e.g. cluster's name, etc). In case the name is greater than the allowed maximum length, the values are hashed together.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -30106,6 +30089,7 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentTopologyHealthCheckRem
 					"templateRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "templateRef is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.MachineHealthCheckRemediationTemplateReference"),
 						},
 					},
@@ -30218,7 +30202,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDeploymentTopologyRolloutStrateg
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "type of rollout. Allowed values are RollingUpdate and OnDelete. Default is RollingUpdate.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -30439,7 +30422,6 @@ func schema_cluster_api_api_core_v1beta2_MachineDrainRuleDrainConfig(ref common.
 					"behavior": {
 						SchemaProps: spec.SchemaProps{
 							Description: "behavior defines the drain behavior. Can be either \"Drain\", \"Skip\", or \"WaitCompleted\". \"Drain\" means that the Pods to which this MachineDrainRule applies will be drained. If behavior is set to \"Drain\" the order in which Pods are drained can be configured with the order field. When draining Pods of a Node the Pods will be grouped by order and one group after another will be drained (by increasing order). Cluster API will wait until all Pods of a group are terminated / removed from the Node before starting with the next group. \"Skip\" means that the Pods to which this MachineDrainRule applies will be skipped during drain. \"WaitCompleted\" means that the pods to which this MachineDrainRule applies will never be evicted and we wait for them to be completed, it is enforced that pods marked with this behavior always have Order=0.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -30805,6 +30787,7 @@ func schema_cluster_api_api_core_v1beta2_MachineHealthCheckRemediation(ref commo
 					"templateRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "templateRef is a reference to a remediation template provided by an infrastructure provider.\n\nThis field is completely optional, when filled, the MachineHealthCheck controller creates a new object from the template referenced and hands off remediation of the machine to a controller that lives outside of Cluster API.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.MachineHealthCheckRemediationTemplateReference"),
 						},
 					},
@@ -30826,7 +30809,6 @@ func schema_cluster_api_api_core_v1beta2_MachineHealthCheckRemediationTemplateRe
 					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "kind of the remediation template. kind must consist of alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -30834,7 +30816,6 @@ func schema_cluster_api_api_core_v1beta2_MachineHealthCheckRemediationTemplateRe
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the remediation template. name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -30842,7 +30823,6 @@ func schema_cluster_api_api_core_v1beta2_MachineHealthCheckRemediationTemplateRe
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
 							Description: "apiVersion of the remediation template. apiVersion must be fully qualified domain name followed by / and a version. NOTE: This field must be kept in sync with the APIVersion of the remediation template.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -30892,7 +30872,6 @@ func schema_cluster_api_api_core_v1beta2_MachineHealthCheckSpec(ref common.Refer
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "clusterName is the name of the Cluster this object belongs to.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -31155,7 +31134,6 @@ func schema_cluster_api_api_core_v1beta2_MachineNodeReference(ref common.Referen
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the node. name must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -31235,7 +31213,6 @@ func schema_cluster_api_api_core_v1beta2_MachinePoolClass(ref common.ReferenceCa
 					"class": {
 						SchemaProps: spec.SchemaProps{
 							Description: "class denotes a type of machine pool present in the cluster, this name MUST be unique within a ClusterClass and can be referenced in the Cluster to create a managed MachinePool.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -31513,7 +31490,6 @@ func schema_cluster_api_api_core_v1beta2_MachinePoolSpec(ref common.ReferenceCal
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "clusterName is the name of the Cluster this object belongs to.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -31709,7 +31685,6 @@ func schema_cluster_api_api_core_v1beta2_MachinePoolTopology(ref common.Referenc
 					"class": {
 						SchemaProps: spec.SchemaProps{
 							Description: "class is the name of the MachinePoolClass used to create the pool of worker nodes. This should match one of the deployment classes defined in the ClusterClass object mentioned in the `Cluster.Spec.Class` field.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -31717,7 +31692,6 @@ func schema_cluster_api_api_core_v1beta2_MachinePoolTopology(ref common.Referenc
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the unique identifier for this MachinePoolTopology. The value is used with other unique identifiers to create a MachinePool's Name (e.g. cluster's name, etc). In case the name is greater than the allowed maximum length, the values are hashed together.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -31924,7 +31898,6 @@ func schema_cluster_api_api_core_v1beta2_MachineReadinessGate(ref common.Referen
 					"conditionType": {
 						SchemaProps: spec.SchemaProps{
 							Description: "conditionType refers to a condition with matching type in the Machine's condition list. If the conditions doesn't exist, it will be treated as unknown. Note: Both Cluster API conditions or conditions added by 3rd party controllers can be used as readiness gates.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32096,7 +32069,6 @@ func schema_cluster_api_api_core_v1beta2_MachineSetSpec(ref common.ReferenceCall
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "clusterName is the name of the Cluster this object belongs to.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32307,7 +32279,6 @@ func schema_cluster_api_api_core_v1beta2_MachineSpec(ref common.ReferenceCallbac
 					"clusterName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "clusterName is the name of the Cluster this object belongs to.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32431,6 +32402,7 @@ func schema_cluster_api_api_core_v1beta2_MachineStatus(ref common.ReferenceCallb
 					"nodeRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "nodeRef will point to the corresponding Node if it exists.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.MachineNodeReference"),
 						},
 					},
@@ -32704,7 +32676,6 @@ func schema_cluster_api_api_core_v1beta2_PatchSelector(ref common.ReferenceCallb
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
 							Description: "apiVersion filters templates by apiVersion. apiVersion must be fully qualified domain name followed by / and a version.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32712,7 +32683,6 @@ func schema_cluster_api_api_core_v1beta2_PatchSelector(ref common.ReferenceCallb
 					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "kind filters templates by kind. kind must consist of alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32857,7 +32827,6 @@ func schema_cluster_api_api_core_v1beta2_Topology(ref common.ReferenceCallback) 
 					"version": {
 						SchemaProps: spec.SchemaProps{
 							Description: "version is the Kubernetes version of the cluster.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32917,7 +32886,6 @@ func schema_cluster_api_api_core_v1beta2_UnhealthyNodeCondition(ref common.Refer
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "type of Node condition",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32925,7 +32893,6 @@ func schema_cluster_api_api_core_v1beta2_UnhealthyNodeCondition(ref common.Refer
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "status of the condition, one of True, False, Unknown.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -32933,7 +32900,6 @@ func schema_cluster_api_api_core_v1beta2_UnhealthyNodeCondition(ref common.Refer
 					"timeoutSeconds": {
 						SchemaProps: spec.SchemaProps{
 							Description: "timeoutSeconds is the duration that a node must be in a given status for, after which the node is considered unhealthy. For example, with a value of \"1h\", the node must match the status for at least 1 hour before being considered unhealthy.",
-							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -32955,7 +32921,6 @@ func schema_cluster_api_api_core_v1beta2_ValidationRule(ref common.ReferenceCall
 					"rule": {
 						SchemaProps: spec.SchemaProps{
 							Description: "rule represents the expression which will be evaluated by CEL. ref: https://github.com/google/cel-spec The Rule is scoped to the location of the x-kubernetes-validations extension in the schema. The `self` variable in the CEL expression is bound to the scoped value. If the Rule is scoped to an object with properties, the accessible properties of the object are field selectable via `self.field` and field presence can be checked via `has(self.field)`. If the Rule is scoped to an object with additionalProperties (i.e. a map) the value of the map are accessible via `self[mapKey]`, map containment can be checked via `mapKey in self` and all entries of the map are accessible via CEL macros and functions such as `self.all(...)`. If the Rule is scoped to an array, the elements of the array are accessible via `self[i]` and also by macros and functions. If the Rule is scoped to a scalar, `self` is bound to the scalar value. Examples: - Rule scoped to a map of objects: {\"rule\": \"self.components['Widget'].priority < 10\"} - Rule scoped to a list of integers: {\"rule\": \"self.values.all(value, value >= 0 && value < 100)\"} - Rule scoped to a string value: {\"rule\": \"self.startsWith('kube')\"}\n\nUnknown data preserved in custom resources via x-kubernetes-preserve-unknown-fields is not accessible in CEL expressions. This includes: - Unknown field values that are preserved by object schemas with x-kubernetes-preserve-unknown-fields. - Object properties where the property schema is of an \"unknown type\". An \"unknown type\" is recursively defined as:\n  - A schema with no type and x-kubernetes-preserve-unknown-fields set to true\n  - An array where the items schema is of an \"unknown type\"\n  - An object where the additionalProperties schema is of an \"unknown type\"\n\nOnly property names of the form `[a-zA-Z_.-/][a-zA-Z0-9_.-/]*` are accessible. Accessible property names are escaped according to the following rules when accessed in the expression: - '__' escapes to '__underscores__' - '.' escapes to '__dot__' - '-' escapes to '__dash__' - '/' escapes to '__slash__' - Property names that exactly match a CEL RESERVED keyword escape to '__{keyword}__'. The keywords are:\n\t  \"true\", \"false\", \"null\", \"in\", \"as\", \"break\", \"const\", \"continue\", \"else\", \"for\", \"function\", \"if\",\n\t  \"import\", \"let\", \"loop\", \"package\", \"namespace\", \"return\".\nExamples:\n  - Rule accessing a property named \"namespace\": {\"rule\": \"self.__namespace__ > 0\"}\n  - Rule accessing a property named \"x-prop\": {\"rule\": \"self.x__dash__prop > 0\"}\n  - Rule accessing a property named \"redact__d\": {\"rule\": \"self.redact__underscores__d > 0\"}\n\nIf `rule` makes use of the `oldSelf` variable it is implicitly a `transition rule`.\n\nBy default, the `oldSelf` variable is the same type as `self`.\n\nTransition rules by default are applied only on UPDATE requests and are skipped if an old value could not be found.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
