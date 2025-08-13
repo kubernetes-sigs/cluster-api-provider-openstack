@@ -34,7 +34,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	clusterv1b1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
@@ -557,7 +557,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 		setupMocks      func(r *recorders)
 		wantServer      *servers.Server
 		wantErr         bool
-		wantCondition   *clusterv1b1.Condition
+		wantCondition   *clusterv1beta1.Condition
 	}{
 		{
 			name: "instanceID set in status but server not found",
@@ -570,7 +570,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 			},
 			wantErr: false,
-			wantCondition: &clusterv1b1.Condition{
+			wantCondition: &clusterv1beta1.Condition{
 				Type:    infrav1.InstanceReadyCondition,
 				Status:  corev1.ConditionFalse,
 				Reason:  infrav1.InstanceNotFoundReason,
@@ -588,7 +588,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				r.compute.GetServer(instanceUUID).Return(nil, fmt.Errorf("error"))
 			},
 			wantErr: true,
-			wantCondition: &clusterv1b1.Condition{
+			wantCondition: &clusterv1beta1.Condition{
 				Type:    infrav1.InstanceReadyCondition,
 				Status:  corev1.ConditionFalse,
 				Reason:  infrav1.OpenStackErrorReason,
@@ -661,7 +661,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				r.compute.CreateServer(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 			},
 			wantErr: true,
-			wantCondition: &clusterv1b1.Condition{
+			wantCondition: &clusterv1beta1.Condition{
 				Type:    infrav1.InstanceReadyCondition,
 				Status:  corev1.ConditionFalse,
 				Reason:  infrav1.InstanceCreateFailedReason,
