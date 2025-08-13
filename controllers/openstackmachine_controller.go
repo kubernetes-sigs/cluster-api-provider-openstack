@@ -440,7 +440,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 		// so the error could be something temporary.
 		// If not, it is more likely a configuration error so we set failure and never retry.
 		scope.Logger().Info("Machine instance state is ERROR", "id", openStackServer.Status.InstanceID)
-		if machine.Status.NodeRef == nil {
+		if !machine.Status.NodeRef.IsDefined() {
 			err := fmt.Errorf("instance state %v is unexpected", openStackServer.Status.InstanceState)
 			openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, err)
 		}
