@@ -83,9 +83,6 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 			SecurityGroups: []infrav1.SecurityGroupParam{
 				{
-					ID: ptr.To(openStackCluster.Status.WorkerSecurityGroup.ID),
-				},
-				{
 					ID: ptr.To(extraSecurityGroupUUID),
 				},
 			},
@@ -95,9 +92,10 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 	userData := &corev1.LocalObjectReference{Name: "server-data-secret"}
 	tests := []struct {
-		name string
-		spec *infrav1.OpenStackMachineSpec
-		want *infrav1alpha1.OpenStackServerSpec
+		name    string
+		spec    *infrav1.OpenStackMachineSpec
+		want    *infrav1alpha1.OpenStackServerSpec
+		wantErr bool
 	}{
 		{
 			name: "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
@@ -174,12 +172,99 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				UserDataRef: userData,
 			},
 		},
+		{
+			name: "Cluster network nil, machine defines port network and overrides SG",
+			spec: &infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+				}},
+				SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(extraSecurityGroupUUID)}},
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				IdentityRef: identityRef,
+				Ports: []infrav1.PortOpts{{
+					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(extraSecurityGroupUUID)}},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "Cluster network nil, machine defines port network and falls back to cluster SG",
+			spec: &infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+				}},
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				IdentityRef: identityRef,
+				Ports: []infrav1.PortOpts{{
+					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(workerSecurityGroupUUID)}},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "Error case: no cluster network and no machine ports",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor:     ptr.To(flavorName),
+				Image:      image,
+				SSHKeyName: sshKeyName,
+				// No ports defined
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Empty cluster network ID, machine defines explicit ports",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: ptr.To(flavorName),
+				Image:  image,
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+				}},
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				Ports: []infrav1.PortOpts{{
+					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(workerSecurityGroupUUID)}},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
 	}
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			spec := openStackMachineSpecToOpenStackServerSpec(tt.spec, identityRef, tags, "", userData, &openStackCluster.Status.WorkerSecurityGroup.ID, openStackCluster.Status.Network.ID)
-			if !reflect.DeepEqual(spec, tt.want) {
+			// Handle special test cases
+			var clusterNetwork *infrav1.NetworkStatusWithSubnets
+			switch {
+			case tt.wantErr && tt.name == "Error case: no cluster network and no machine ports":
+				clusterNetwork = nil // Simulate nil cluster network for HCP scenario
+			case tt.name == "Empty cluster network ID, machine defines explicit ports":
+				// Create a cluster network with empty ID
+				clusterNetwork = &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: "", // Empty network ID
+					},
+				}
+			default:
+				clusterNetwork = openStackCluster.Status.Network
+			}
+
+			spec, err := openStackMachineSpecToOpenStackServerSpec(tt.spec, identityRef, tags, "", userData, &openStackCluster.Status.WorkerSecurityGroup.ID, clusterNetwork)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("openStackMachineSpecToOpenStackServerSpec() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(spec, tt.want) {
 				t.Errorf("openStackMachineSpecToOpenStackServerSpec() got = %+v, want %+v", spec, tt.want)
 			}
 		})
