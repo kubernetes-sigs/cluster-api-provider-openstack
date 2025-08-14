@@ -218,6 +218,10 @@ type OpenStackClusterStatus struct {
 	// +optional
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
+	// APIServerLoadBalancers describes all api server load balancers in multi-AZ scenarios
+	// +optional
+	APIServerLoadBalancers []LoadBalancer `json:"apiServerLoadBalancers,omitempty"`
+
 	// FailureDomains represent OpenStack availability zones
 	FailureDomains clusterv1beta1.FailureDomains `json:"failureDomains,omitempty"`
 

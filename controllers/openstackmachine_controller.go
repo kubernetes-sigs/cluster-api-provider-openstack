@@ -401,7 +401,11 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	openStackMachine.Status.Addresses = addresses
 
 	if util.IsControlPlaneMachine(machine) {
-		err = r.reconcileAPIServerLoadBalancer(scope, openStackCluster, openStackMachine, instanceStatus, instanceNS, clusterResourceName)
+		var failureDomain string
+		if machine.Spec.FailureDomain != nil {
+			failureDomain = *machine.Spec.FailureDomain
+		}
+		err = r.reconcileAPIServerLoadBalancer(scope, openStackCluster, openStackMachine, instanceStatus, instanceNS, clusterResourceName, failureDomain)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -616,7 +620,7 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 	return machineServer, nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, instanceNS *compute.InstanceNetworkStatus, clusterResourceName string) error {
+func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, instanceNS *compute.InstanceNetworkStatus, clusterResourceName, failureDomain string) error {
 	scope.Logger().Info("Reconciling APIServerLoadBalancer")
 	computeService, err := compute.NewService(scope)
 	if err != nil {
@@ -629,7 +633,7 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 	}
 
 	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
-		err = r.reconcileLoadBalancerMember(scope, openStackCluster, openStackMachine, instanceNS, clusterResourceName)
+		err = r.reconcileLoadBalancerMember(scope, openStackCluster, openStackMachine, instanceNS, clusterResourceName, failureDomain)
 		if err != nil {
 			v1beta1conditions.MarkFalse(openStackMachine, infrav1.APIServerIngressReadyCondition, infrav1.LoadBalancerMemberErrorReason, clusterv1beta1.ConditionSeverityError, "Reconciling load balancer member failed: %v", err)
 			return fmt.Errorf("reconcile load balancer member: %w", err)
@@ -691,14 +695,14 @@ func getManagedSecurityGroup(openStackCluster *infrav1.OpenStackCluster, machine
 	return nil
 }
 
-func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterResourceName string) error {
+func (r *OpenStackMachineReconciler) reconcileLoadBalancerMember(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceNS *compute.InstanceNetworkStatus, clusterResourceName, failureDomain string) error {
 	ip := instanceNS.IP(openStackCluster.Status.Network.Name)
 	loadbalancerService, err := loadbalancer.NewService(scope)
 	if err != nil {
 		return err
 	}
 
-	return loadbalancerService.ReconcileLoadBalancerMember(openStackCluster, openStackMachine, clusterResourceName, ip)
+	return loadbalancerService.ReconcileLoadBalancerMember(openStackCluster, openStackMachine, clusterResourceName, ip, failureDomain)
 }
 
 // OpenStackClusterToOpenStackMachines is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation

@@ -612,61 +612,160 @@ func getBastionSecurityGroupID(openStackCluster *infrav1.OpenStackCluster) *stri
 
 func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
 	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
-	if lbSpec.IsEnabled() {
-		lbStatus := openStackCluster.Status.APIServerLoadBalancer
-		if lbStatus == nil {
-			lbStatus = &infrav1.LoadBalancer{}
-			openStackCluster.Status.APIServerLoadBalancer = lbStatus
-		}
+	if !lbSpec.IsEnabled() {
+		return nil
+	}
 
-		lbNetStatus := lbStatus.LoadBalancerNetwork
-		if lbNetStatus == nil {
-			lbNetStatus = &infrav1.NetworkStatusWithSubnets{
-				NetworkStatus: infrav1.NetworkStatus{},
-			}
-		}
+	lbStatus := openStackCluster.Status.APIServerLoadBalancer
+	if lbStatus == nil {
+		lbStatus = &infrav1.LoadBalancer{}
+		openStackCluster.Status.APIServerLoadBalancer = lbStatus
+	}
 
-		if lbSpec.Network != nil {
-			lbNet, err := networkingService.GetNetworkByParam(lbSpec.Network)
-			if err != nil {
-				if errors.Is(err, capoerrors.ErrFilterMatch) {
-					handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err), true)
-				}
-				return fmt.Errorf("failed to find network: %w", err)
-			}
-
-			lbNetStatus.Name = lbNet.Name
-			lbNetStatus.ID = lbNet.ID
-			lbNetStatus.Tags = lbNet.Tags
-
-			// Filter out only relevant subnets specified by the spec
-			lbNetStatus.Subnets = []infrav1.Subnet{}
-			for _, s := range lbSpec.Subnets {
-				matchFound := false
-				for _, subnetID := range lbNet.Subnets {
-					subnet, err := networkingService.GetSubnetByParam(&s)
-					if s.ID != nil && subnetID == *s.ID && err == nil {
-						matchFound = true
-						lbNetStatus.Subnets = append(
-							lbNetStatus.Subnets, infrav1.Subnet{
-								ID:   subnet.ID,
-								Name: subnet.Name,
-								CIDR: subnet.CIDR,
-								Tags: subnet.Tags,
-							})
-					}
-				}
-				if !matchFound {
-					handleUpdateOSCError(openStackCluster, fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets), false)
-					return fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets)
-				}
-			}
-
-			openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+	lbNetStatus := lbStatus.LoadBalancerNetwork
+	if lbNetStatus == nil {
+		lbNetStatus = &infrav1.NetworkStatusWithSubnets{
+			NetworkStatus: infrav1.NetworkStatus{},
 		}
 	}
 
+	if lbSpec.Network != nil {
+		return resolveExplicitNetwork(openStackCluster, networkingService, lbSpec, lbNetStatus)
+	}
+	return resolveClusterNetwork(openStackCluster, lbSpec, lbNetStatus)
+}
+
+func resolveExplicitNetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, lbSpec *infrav1.APIServerLoadBalancer, lbNetStatus *infrav1.NetworkStatusWithSubnets) error {
+	lbNet, err := networkingService.GetNetworkByParam(lbSpec.Network)
+	if err != nil {
+		if errors.Is(err, capoerrors.ErrFilterMatch) {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err), true)
+		}
+		return fmt.Errorf("failed to find network: %w", err)
+	}
+
+	lbNetStatus.Name = lbNet.Name
+	lbNetStatus.ID = lbNet.ID
+	lbNetStatus.Tags = lbNet.Tags
+
+	if len(lbSpec.Subnets) > 0 {
+		return resolveExplicitSubnets(openStackCluster, networkingService, lbSpec, lbNet, lbNetStatus)
+	}
+	return resolveNetworkSubnets(networkingService, lbNet, lbNetStatus, openStackCluster, lbSpec)
+}
+
+func resolveExplicitSubnets(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service, lbSpec *infrav1.APIServerLoadBalancer, lbNet *networks.Network, lbNetStatus *infrav1.NetworkStatusWithSubnets) error {
+	lbNetStatus.Subnets = []infrav1.Subnet{}
+	for _, s := range lbSpec.Subnets {
+		subnet, err := networkingService.GetSubnetByParam(&s)
+		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find subnet %v: %w", s, err), false)
+			return fmt.Errorf("failed to find subnet %v: %w", s, err)
+		}
+
+		// Ensure the subnet belongs to the specified network
+		if subnet.NetworkID != lbNet.ID {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("subnet %s does not belong to network %s", subnet.ID, lbNet.ID), false)
+			return fmt.Errorf("subnet %s does not belong to network %s", subnet.ID, lbNet.ID)
+		}
+
+		lbNetStatus.Subnets = append(lbNetStatus.Subnets, infrav1.Subnet{
+			ID:   subnet.ID,
+			Name: subnet.Name,
+			CIDR: subnet.CIDR,
+			Tags: subnet.Tags,
+		})
+	}
+
+	return validateMultiAZConfiguration(openStackCluster, lbSpec, lbNetStatus)
+}
+
+func resolveNetworkSubnets(networkingService *networking.Service, lbNet *networks.Network, lbNetStatus *infrav1.NetworkStatusWithSubnets, openStackCluster *infrav1.OpenStackCluster, lbSpec *infrav1.APIServerLoadBalancer) error {
+	// No explicit subnets - use all subnets from the network
+	// This maintains backward compatibility for single-AZ scenarios
+	lbNetStatus.Subnets = []infrav1.Subnet{}
+	for _, subnetID := range lbNet.Subnets {
+		// Create a SubnetParam with the ID to fetch subnet details
+		subnetParam := &infrav1.SubnetParam{
+			ID: &subnetID,
+		}
+		subnet, err := networkingService.GetSubnetByParam(subnetParam)
+		if err != nil {
+			return fmt.Errorf("failed to get subnet %s: %w", subnetID, err)
+		}
+		lbNetStatus.Subnets = append(lbNetStatus.Subnets, infrav1.Subnet{
+			ID:   subnet.ID,
+			Name: subnet.Name,
+			CIDR: subnet.CIDR,
+			Tags: subnet.Tags,
+		})
+	}
+
+	openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+
+	// Also populate the multi-AZ load balancers status list for consistency
+	// This ensures that both the legacy single load balancer status and the new multi-AZ status are populated
+	if len(lbSpec.AvailabilityZones) > 0 || lbSpec.AvailabilityZone != nil {
+		updateMultiAZLoadBalancerNetwork(openStackCluster, lbNetStatus)
+	}
 	return nil
+}
+
+func validateMultiAZConfiguration(openStackCluster *infrav1.OpenStackCluster, lbSpec *infrav1.APIServerLoadBalancer, lbNetStatus *infrav1.NetworkStatusWithSubnets) error {
+	// Validate multi-AZ configuration: subnets and AZs should match
+	availabilityZones := lbSpec.AvailabilityZones
+	if lbSpec.AvailabilityZone != nil && len(availabilityZones) == 0 {
+		availabilityZones = []string{*lbSpec.AvailabilityZone}
+	}
+
+	if len(availabilityZones) > 0 && len(lbNetStatus.Subnets) != len(availabilityZones) {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("mismatch between availability zones and subnets: %d AZs but %d subnets", len(availabilityZones), len(lbNetStatus.Subnets)), false)
+		return fmt.Errorf("mismatch between availability zones and subnets: %d AZs but %d subnets", len(availabilityZones), len(lbNetStatus.Subnets))
+	}
+
+	openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+
+	// Also populate the multi-AZ load balancers status list for consistency
+	// This ensures that both the legacy single load balancer status and the new multi-AZ status are populated
+	if len(lbSpec.AvailabilityZones) > 0 || lbSpec.AvailabilityZone != nil {
+		updateMultiAZLoadBalancerNetwork(openStackCluster, lbNetStatus)
+	}
+	return nil
+}
+
+func resolveClusterNetwork(openStackCluster *infrav1.OpenStackCluster, lbSpec *infrav1.APIServerLoadBalancer, lbNetStatus *infrav1.NetworkStatusWithSubnets) error {
+	// No explicit network specified - use cluster network for backward compatibility
+	// In multi-AZ scenarios without explicit network config, we'll use the cluster network
+	// and its subnets, assuming they're properly configured for multi-AZ
+	if openStackCluster.Status.Network != nil && len(openStackCluster.Status.Network.Subnets) > 0 {
+		lbNetStatus.NetworkStatus = openStackCluster.Status.Network.NetworkStatus
+		lbNetStatus.Subnets = openStackCluster.Status.Network.Subnets
+		openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+
+		// Initialize the multi-AZ load balancers status list if not already present
+		if openStackCluster.Status.APIServerLoadBalancers == nil {
+			openStackCluster.Status.APIServerLoadBalancers = []infrav1.LoadBalancer{}
+		}
+
+		// Also populate the multi-AZ load balancers status list for consistency
+		if len(lbSpec.AvailabilityZones) > 0 || lbSpec.AvailabilityZone != nil {
+			updateMultiAZLoadBalancerNetwork(openStackCluster, lbNetStatus)
+		}
+	}
+	return nil
+}
+
+// updateMultiAZLoadBalancerNetwork updates the network information for all load balancers in the multi-AZ status list.
+func updateMultiAZLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, networkStatus *infrav1.NetworkStatusWithSubnets) {
+	// Initialize the multi-AZ load balancers status list if not already present
+	if openStackCluster.Status.APIServerLoadBalancers == nil {
+		openStackCluster.Status.APIServerLoadBalancers = []infrav1.LoadBalancer{}
+	}
+
+	// Update network information for all load balancers in the multi-AZ list
+	for i := range openStackCluster.Status.APIServerLoadBalancers {
+		openStackCluster.Status.APIServerLoadBalancers[i].LoadBalancerNetwork = networkStatus
+	}
 }
 
 func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
