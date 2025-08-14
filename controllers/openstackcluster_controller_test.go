@@ -931,6 +931,288 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Expect(testCluster.Status.APIServerLoadBalancers).ToNot(BeNil())
 			Expect(len(testCluster.Status.APIServerLoadBalancers)).To(Equal(0)) // Empty until load balancers are created
 		})
+
+		It("should derive AvailabilityZones from AvailabilityZoneSubnets when empty", func() {
+			const lbNetworkID = "11111111-2222-3333-4444-555555555555"
+			const subnet1ID = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
+			const subnet2ID = "aaaaaaaa-bbbb-cccc-dddd-222222222222"
+
+			testCluster.SetName("multi-az-derive-azs-from-mapping")
+			testCluster.Spec = infrav1.OpenStackClusterSpec{
+				APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+					Enabled: ptr.To(true),
+					Network: &infrav1.NetworkParam{ID: ptr.To(lbNetworkID)},
+					// AvailabilityZones intentionally empty; should be derived from mapping order.
+					AvailabilityZoneSubnets: []infrav1.AZSubnetMapping{
+						{AvailabilityZone: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To(subnet1ID)}},
+						{AvailabilityZone: "az2", Subnet: infrav1.SubnetParam{ID: ptr.To(subnet2ID)}},
+					},
+				},
+			}
+			testCluster.Status = infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net-id"},
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+			Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+			log := GinkgoLogr
+			clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+			Expect(err).To(BeNil())
+			scope := scope.NewWithLogger(clientScope, log)
+
+			networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+			networkClientRecorder.GetNetwork(lbNetworkID).Return(&networks.Network{
+				ID:   lbNetworkID,
+				Name: "lb-network",
+			}, nil)
+			networkClientRecorder.GetSubnet(subnet1ID).Return(&subnets.Subnet{
+				ID:        subnet1ID,
+				Name:      "lb-subnet-1",
+				CIDR:      "10.0.1.0/24",
+				NetworkID: lbNetworkID,
+			}, nil)
+			networkClientRecorder.GetSubnet(subnet2ID).Return(&subnets.Subnet{
+				ID:        subnet2ID,
+				Name:      "lb-subnet-2",
+				CIDR:      "10.0.2.0/24",
+				NetworkID: lbNetworkID,
+			}, nil)
+
+			networkingService, err := networking.NewService(scope)
+			Expect(err).To(BeNil())
+
+			err = resolveLoadBalancerNetwork(testCluster, networkingService)
+			Expect(err).To(BeNil())
+
+			// AZs should be derived from mapping order
+			Expect(testCluster.Spec.APIServerLoadBalancer.AvailabilityZones).To(Equal([]string{"az1", "az2"}))
+			Expect(testCluster.Status.APIServerLoadBalancer).ToNot(BeNil())
+			Expect(testCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork).ToNot(BeNil())
+			Expect(testCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets).To(HaveLen(2))
+			Expect(testCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets[0].ID).To(Equal(subnet1ID))
+			Expect(testCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets[1].ID).To(Equal(subnet2ID))
+		})
+
+		It("should prefer AvailabilityZoneSubnets over positional Subnets", func() {
+			const lbNetworkID = "deafbeef-dead-beef-dead-beefdeadbeef"
+			const mapped1 = "11111111-1111-1111-1111-111111111111"
+			const mapped2 = "22222222-2222-2222-2222-222222222222"
+			const positional1 = "33333333-3333-3333-3333-333333333333"
+			const positional2 = "44444444-4444-4444-4444-444444444444"
+
+			testCluster.SetName("multi-az-mapping-precedence")
+			testCluster.Spec = infrav1.OpenStackClusterSpec{
+				APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+					Enabled:           ptr.To(true),
+					Network:           &infrav1.NetworkParam{ID: ptr.To(lbNetworkID)},
+					AvailabilityZones: []string{"az1", "az2"},
+					// Positional Subnets present, but mapping should take precedence.
+					Subnets: []infrav1.SubnetParam{
+						{ID: ptr.To(positional1)},
+						{ID: ptr.To(positional2)},
+					},
+					AvailabilityZoneSubnets: []infrav1.AZSubnetMapping{
+						{AvailabilityZone: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To(mapped1)}},
+						{AvailabilityZone: "az2", Subnet: infrav1.SubnetParam{ID: ptr.To(mapped2)}},
+					},
+				},
+			}
+			testCluster.Status = infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net-id"},
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+			Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+			log := GinkgoLogr
+			clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+			Expect(err).To(BeNil())
+			scope := scope.NewWithLogger(clientScope, log)
+
+			rec := mockScopeFactory.NetworkClient.EXPECT()
+			rec.GetNetwork(lbNetworkID).Return(&networks.Network{ID: lbNetworkID, Name: "lb-network"}, nil)
+			// Only mapping subnets are resolved
+			rec.GetSubnet(mapped1).Return(&subnets.Subnet{
+				ID:        mapped1, Name: "mapped-1", CIDR: "10.0.1.0/24", NetworkID: lbNetworkID,
+			}, nil)
+			rec.GetSubnet(mapped2).Return(&subnets.Subnet{
+				ID:        mapped2, Name: "mapped-2", CIDR: "10.0.2.0/24", NetworkID: lbNetworkID,
+			}, nil)
+
+			networkingService, err := networking.NewService(scope)
+			Expect(err).To(BeNil())
+
+			err = resolveLoadBalancerNetwork(testCluster, networkingService)
+			Expect(err).To(BeNil())
+
+			// Verify LB network subnets follow mapping, not positional Subnets
+			lbNet := testCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork
+			Expect(lbNet).ToNot(BeNil())
+			Expect(lbNet.Subnets).To(HaveLen(2))
+			Expect(lbNet.Subnets[0].ID).To(Equal(mapped1))
+			Expect(lbNet.Subnets[1].ID).To(Equal(mapped2))
+		})
+
+		It("should error if a mapped subnet is not in the LB network", func() {
+			const lbNetworkID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+			const wrongSubnetID = "ffffffff-1111-2222-3333-444444444444"
+
+			testCluster.SetName("multi-az-mapping-wrong-network")
+			testCluster.Spec = infrav1.OpenStackClusterSpec{
+				APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+					Enabled: ptr.To(true),
+					Network: &infrav1.NetworkParam{ID: ptr.To(lbNetworkID)},
+					AvailabilityZoneSubnets: []infrav1.AZSubnetMapping{
+						{AvailabilityZone: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To(wrongSubnetID)}},
+					},
+				},
+			}
+			testCluster.Status = infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net-id"},
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+			Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+			log := GinkgoLogr
+			clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+			Expect(err).To(BeNil())
+			scope := scope.NewWithLogger(clientScope, log)
+
+			rec := mockScopeFactory.NetworkClient.EXPECT()
+			rec.GetNetwork(lbNetworkID).Return(&networks.Network{ID: lbNetworkID, Name: "lb-network"}, nil)
+			// Return a subnet from a different network
+			rec.GetSubnet(wrongSubnetID).Return(&subnets.Subnet{
+				ID:        wrongSubnetID, Name: "wrong", CIDR: "10.10.0.0/24", NetworkID: "different-net",
+			}, nil)
+
+			networkingService, err := networking.NewService(scope)
+			Expect(err).To(BeNil())
+
+			err = resolveLoadBalancerNetwork(testCluster, networkingService)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should error on duplicate AZ entries in AvailabilityZoneSubnets", func() {
+			const lbNetworkID = "00000000-0000-0000-0000-000000000000"
+			const subnetID = "12345678-1234-1234-1234-1234567890ab"
+
+			testCluster.SetName("multi-az-mapping-duplicate-az")
+			testCluster.Spec = infrav1.OpenStackClusterSpec{
+				APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+					Enabled: ptr.To(true),
+					Network: &infrav1.NetworkParam{ID: ptr.To(lbNetworkID)},
+					AvailabilityZoneSubnets: []infrav1.AZSubnetMapping{
+						{AvailabilityZone: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To(subnetID)}},
+						{AvailabilityZone: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To(subnetID)}},
+					},
+				},
+			}
+			testCluster.Status = infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net-id"}},
+			}
+
+			Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+			Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+			log := GinkgoLogr
+			clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+			Expect(err).To(BeNil())
+			scope := scope.NewWithLogger(clientScope, log)
+
+			rec := mockScopeFactory.NetworkClient.EXPECT()
+			rec.GetNetwork(lbNetworkID).Return(&networks.Network{ID: lbNetworkID, Name: "lb-network"}, nil)
+			rec.GetSubnet(subnetID).Return(&subnets.Subnet{ID: subnetID, Name: "s", CIDR: "10.0.0.0/24", NetworkID: lbNetworkID}, nil).AnyTimes()
+
+			networkingService, err := networking.NewService(scope)
+			Expect(err).To(BeNil())
+
+			err = resolveLoadBalancerNetwork(testCluster, networkingService)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should error when AvailabilityZones and AvailabilityZoneSubnets disagree", func() {
+			const lbNetworkID = "99999999-8888-7777-6666-555555555555"
+			const subnetID = "aaaaaaaa-0000-0000-0000-aaaaaaaaaaaa"
+
+			testCluster.SetName("multi-az-mapping-azs-mismatch")
+			testCluster.Spec = infrav1.OpenStackClusterSpec{
+				APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+					Enabled:           ptr.To(true),
+					Network:           &infrav1.NetworkParam{ID: ptr.To(lbNetworkID)},
+					AvailabilityZones: []string{"az1"},
+					AvailabilityZoneSubnets: []infrav1.AZSubnetMapping{
+						{AvailabilityZone: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To(subnetID)}},
+						{AvailabilityZone: "az2", Subnet: infrav1.SubnetParam{ID: ptr.To(subnetID)}},
+					},
+				},
+			}
+			testCluster.Status = infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net-id"}},
+			}
+
+			Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+			Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+			log := GinkgoLogr
+			clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+			Expect(err).To(BeNil())
+			scope := scope.NewWithLogger(clientScope, log)
+
+			rec := mockScopeFactory.NetworkClient.EXPECT()
+			rec.GetNetwork(lbNetworkID).Return(&networks.Network{ID: lbNetworkID, Name: "lb-network"}, nil)
+			rec.GetSubnet(subnetID).Return(&subnets.Subnet{ID: subnetID, Name: "s", CIDR: "10.0.0.0/24", NetworkID: lbNetworkID}, nil).AnyTimes()
+
+			networkingService, err := networking.NewService(scope)
+			Expect(err).To(BeNil())
+
+			err = resolveLoadBalancerNetwork(testCluster, networkingService)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should preserve a user-provided ControlPlaneEndpoint host", func() {
+			// Minimal cluster with user DNS set; APIServerLoadBalancer omitted (disabled)
+			testCluster.SetName("preserve-user-cpe")
+			testCluster.Spec = infrav1.OpenStackClusterSpec{
+				ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					Host: "user.example.com",
+					Port: 6443,
+				},
+			}
+			testCluster.Status = infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{ID: "net-id"},
+					Subnets:       []infrav1.Subnet{{ID: "subnet-1", CIDR: "10.0.0.0/24"}},
+				},
+			}
+
+			Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+			Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+			log := GinkgoLogr
+			clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+			Expect(err).To(BeNil())
+			scope := scope.NewWithLogger(clientScope, log)
+			networkingService, err := networking.NewService(scope)
+			Expect(err).To(BeNil())
+
+			// Run resolve network bits to satisfy reconcile preconditions
+			Expect(resolveClusterNetwork(testCluster, &infrav1.APIServerLoadBalancer{}, &infrav1.NetworkStatusWithSubnets{})).To(BeNil())
+
+			// Ensure that the host remains as user-provided when reconciling endpoint
+			err = reconcileControlPlaneEndpoint(scope, networkingService, testCluster, capiCluster.Name)
+			Expect(err).To(BeNil())
+			Expect(testCluster.Spec.ControlPlaneEndpoint).ToNot(BeNil())
+			Expect(testCluster.Spec.ControlPlaneEndpoint.Host).To(Equal("user.example.com"))
+			Expect(testCluster.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(6443)))
+		})
 	})
 })
 

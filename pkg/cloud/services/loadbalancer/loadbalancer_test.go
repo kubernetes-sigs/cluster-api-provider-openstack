@@ -2001,3 +2001,294 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 		})
 	}
 }
+func Test_CreateLoadBalancer_UsesVipSubnetIDOverride_Mapping(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	g := NewWithT(t)
+	log := testr.New(t)
+	mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+	lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// Cluster with LB enabled, explicit mapping present
+	cluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+				Enabled: ptr.To(true),
+				// mapping takes precedence
+				AvailabilityZoneSubnets: []infrav1.AZSubnetMapping{
+					{AvailabilityZone: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To("subnet-1")}},
+					{AvailabilityZone: "az2", Subnet: infrav1.SubnetParam{ID: ptr.To("subnet-2")}},
+				},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			APIServerLoadBalancer: &infrav1.LoadBalancer{
+				LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID:   "lb-net",
+						Name: "lb-network",
+					},
+					// controller resolved order matches mapping order
+					Subnets: []infrav1.Subnet{
+						{ID: "subnet-1", CIDR: "192.168.1.0/24"},
+						{ID: "subnet-2", CIDR: "192.168.2.0/24"},
+					},
+				},
+			},
+			ExternalNetwork: &infrav1.NetworkStatus{ID: "ext-id"},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net"},
+				Subnets:       []infrav1.Subnet{{ID: "cluster-subnet-1", CIDR: "10.0.0.0/24"}},
+			},
+		},
+	}
+
+	// Migration lists - not relevant here; allow empty lists
+	mockScopeFactory.LbClient.EXPECT().ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListListeners(gomock.Any()).Return([]listeners.Listener{}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListPools(gomock.Any()).Return([]pools.Pool{}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListMonitors(gomock.Any()).Return([]monitors.Monitor{}, nil).AnyTimes()
+
+	// Octavia features
+	mockScopeFactory.LbClient.EXPECT().ListLoadBalancerProviders().Return([]providers.Provider{{Name: "ovn"}}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListOctaviaVersions().Return([]apiversions.APIVersion{{ID: "2.23"}, {ID: "2.24"}}, nil).AnyTimes()
+
+	// Expect CreateLoadBalancer for az1 with VipSubnetID "subnet-1"
+	mockScopeFactory.LbClient.EXPECT().
+		CreateLoadBalancer(gomock.Any()).
+		DoAndReturn(func(arg any) (*loadbalancers.LoadBalancer, error) {
+			opts := arg.(loadbalancers.CreateOpts)
+			g.Expect(opts.VipSubnetID).To(Equal("subnet-1"))
+			return &loadbalancers.LoadBalancer{
+				ID:                 "lb-az1",
+				Name:               "k8s-clusterapi-cluster-test-az1-kubeapi",
+				VipSubnetID:        opts.VipSubnetID,
+				ProvisioningStatus: "ACTIVE",
+			}, nil
+		})
+
+	// Get after creation
+	mockScopeFactory.LbClient.EXPECT().GetLoadBalancer("lb-az1").Return(&loadbalancers.LoadBalancer{
+		ID:                 "lb-az1",
+		Name:               "k8s-clusterapi-cluster-test-az1-kubeapi",
+		VipSubnetID:        "subnet-1",
+		ProvisioningStatus: "ACTIVE",
+	}, nil).AnyTimes()
+
+	// Listener/pool/monitor for port 6443 (minimal path)
+	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).DoAndReturn(func(arg any) (*listeners.Listener, error) {
+		return &listeners.Listener{ID: "listener-az1-6443", Name: "k8s-clusterapi-cluster-test-az1-kubeapi-6443", ProvisioningStatus: "ACTIVE"}, nil
+	})
+	mockScopeFactory.LbClient.EXPECT().GetListener("listener-az1-6443").Return(&listeners.Listener{ID: "listener-az1-6443"}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().CreatePool(gomock.Any()).Return(&pools.Pool{ID: "pool-az1-6443", Name: "k8s-clusterapi-cluster-test-az1-kubeapi-6443"}, nil)
+	mockScopeFactory.LbClient.EXPECT().CreateMonitor(gomock.Any()).Return(&monitors.Monitor{ID: "monitor-az1-6443", Name: "k8s-clusterapi-cluster-test-az1-kubeapi-6443"}, nil)
+
+	// Expect CreateLoadBalancer for az2 with VipSubnetID "subnet-2"
+	mockScopeFactory.LbClient.EXPECT().
+		CreateLoadBalancer(gomock.Any()).
+		DoAndReturn(func(arg any) (*loadbalancers.LoadBalancer, error) {
+			opts := arg.(loadbalancers.CreateOpts)
+			g.Expect(opts.VipSubnetID).To(Equal("subnet-2"))
+			return &loadbalancers.LoadBalancer{
+				ID:                 "lb-az2",
+				Name:               "k8s-clusterapi-cluster-test-az2-kubeapi",
+				VipSubnetID:        opts.VipSubnetID,
+				ProvisioningStatus: "ACTIVE",
+			}, nil
+		})
+
+	mockScopeFactory.LbClient.EXPECT().GetLoadBalancer("lb-az2").Return(&loadbalancers.LoadBalancer{
+		ID:                 "lb-az2",
+		Name:               "k8s-clusterapi-cluster-test-az2-kubeapi",
+		VipSubnetID:        "subnet-2",
+		ProvisioningStatus: "ACTIVE",
+	}, nil).AnyTimes()
+
+	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).DoAndReturn(func(arg any) (*listeners.Listener, error) {
+		return &listeners.Listener{ID: "listener-az2-6443", Name: "k8s-clusterapi-cluster-test-az2-kubeapi-6443", ProvisioningStatus: "ACTIVE"}, nil
+	})
+	mockScopeFactory.LbClient.EXPECT().GetListener("listener-az2-6443").Return(&listeners.Listener{ID: "listener-az2-6443"}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().CreatePool(gomock.Any()).Return(&pools.Pool{ID: "pool-az2-6443", Name: "k8s-clusterapi-cluster-test-az2-kubeapi-6443"}, nil)
+	mockScopeFactory.LbClient.EXPECT().CreateMonitor(gomock.Any()).Return(&monitors.Monitor{ID: "monitor-az2-6443", Name: "k8s-clusterapi-cluster-test-az2-kubeapi-6443"}, nil)
+
+	// Networking FIP calls should be allowed but not required (DisableAPIServerFloatingIP defaults false).
+	networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
+	networkRecorder.CreateFloatingIP(gomock.Any()).Return(&floatingips.FloatingIP{ID: "fip-id", FloatingIP: "198.51.100.10"}, nil).AnyTimes()
+	networkRecorder.ListFloatingIP(gomock.Any()).Return([]floatingips.FloatingIP{}, nil).AnyTimes()
+
+	_, err = lbs.ReconcileLoadBalancers(cluster, "test", 6443)
+	g.Expect(err).NotTo(HaveOccurred())
+}
+
+func Test_CreateLoadBalancer_UsesVipSubnetIDOverride_Positional(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	g := NewWithT(t)
+	log := testr.New(t)
+	mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+	lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+	g.Expect(err).NotTo(HaveOccurred())
+
+	// Cluster with LB enabled, no mapping, positional fallback
+	cluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+				Enabled:           ptr.To(true),
+				AvailabilityZones: []string{"az1", "az2"},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			APIServerLoadBalancer: &infrav1.LoadBalancer{
+				LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{ID: "lb-net"},
+					Subnets: []infrav1.Subnet{
+						{ID: "subnet-1"},
+						{ID: "subnet-2"},
+					},
+				},
+			},
+			ExternalNetwork: &infrav1.NetworkStatus{ID: "ext-id"},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net"},
+				Subnets:       []infrav1.Subnet{{ID: "cluster-subnet-1"}},
+			},
+		},
+	}
+
+	// Migration lists - allow empty
+	mockScopeFactory.LbClient.EXPECT().ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListListeners(gomock.Any()).Return([]listeners.Listener{}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListPools(gomock.Any()).Return([]pools.Pool{}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListMonitors(gomock.Any()).Return([]monitors.Monitor{}, nil).AnyTimes()
+
+	mockScopeFactory.LbClient.EXPECT().ListLoadBalancerProviders().Return([]providers.Provider{{Name: "ovn"}}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().ListOctaviaVersions().Return([]apiversions.APIVersion{{ID: "2.24"}}, nil).AnyTimes()
+
+	// az1 -> subnet-1
+	mockScopeFactory.LbClient.EXPECT().
+		CreateLoadBalancer(gomock.Any()).
+		DoAndReturn(func(arg any) (*loadbalancers.LoadBalancer, error) {
+			opts := arg.(loadbalancers.CreateOpts)
+			g.Expect(opts.VipSubnetID).To(Equal("subnet-1"))
+			return &loadbalancers.LoadBalancer{ID: "lb-az1", Name: "k8s-clusterapi-cluster-test-az1-kubeapi", VipSubnetID: opts.VipSubnetID, ProvisioningStatus: "ACTIVE"}, nil
+		})
+	mockScopeFactory.LbClient.EXPECT().GetLoadBalancer("lb-az1").Return(&loadbalancers.LoadBalancer{ID: "lb-az1", ProvisioningStatus: "ACTIVE"}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).Return(&listeners.Listener{ID: "listener-az1-6443", ProvisioningStatus: "ACTIVE"}, nil)
+	mockScopeFactory.LbClient.EXPECT().GetListener("listener-az1-6443").Return(&listeners.Listener{ID: "listener-az1-6443"}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().CreatePool(gomock.Any()).Return(&pools.Pool{ID: "pool-az1-6443"}, nil)
+	mockScopeFactory.LbClient.EXPECT().CreateMonitor(gomock.Any()).Return(&monitors.Monitor{ID: "monitor-az1-6443"}, nil)
+
+	// az2 -> subnet-2
+	mockScopeFactory.LbClient.EXPECT().
+		CreateLoadBalancer(gomock.Any()).
+		DoAndReturn(func(arg any) (*loadbalancers.LoadBalancer, error) {
+			opts := arg.(loadbalancers.CreateOpts)
+			g.Expect(opts.VipSubnetID).To(Equal("subnet-2"))
+			return &loadbalancers.LoadBalancer{ID: "lb-az2", Name: "k8s-clusterapi-cluster-test-az2-kubeapi", VipSubnetID: opts.VipSubnetID, ProvisioningStatus: "ACTIVE"}, nil
+		})
+	mockScopeFactory.LbClient.EXPECT().GetLoadBalancer("lb-az2").Return(&loadbalancers.LoadBalancer{ID: "lb-az2", ProvisioningStatus: "ACTIVE"}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).Return(&listeners.Listener{ID: "listener-az2-6443", ProvisioningStatus: "ACTIVE"}, nil)
+	mockScopeFactory.LbClient.EXPECT().GetListener("listener-az2-6443").Return(&listeners.Listener{ID: "listener-az2-6443"}, nil).AnyTimes()
+	mockScopeFactory.LbClient.EXPECT().CreatePool(gomock.Any()).Return(&pools.Pool{ID: "pool-az2-6443"}, nil)
+	mockScopeFactory.LbClient.EXPECT().CreateMonitor(gomock.Any()).Return(&monitors.Monitor{ID: "monitor-az2-6443"}, nil)
+
+	// Network FIP helpers
+	networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
+	networkRecorder.CreateFloatingIP(gomock.Any()).Return(&floatingips.FloatingIP{ID: "fip-id", FloatingIP: "198.51.100.11"}, nil).AnyTimes()
+	networkRecorder.ListFloatingIP(gomock.Any()).Return([]floatingips.FloatingIP{}, nil).AnyTimes()
+
+	_, err = lbs.ReconcileLoadBalancers(cluster, "test", 6443)
+	g.Expect(err).NotTo(HaveOccurred())
+}
+
+func Test_DeleteLoadBalancer_PendingDeleteRequeues(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	g := NewWithT(t)
+	log := testr.New(t)
+	mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+	lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+	g.Expect(err).NotTo(HaveOccurred())
+
+	cluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+				Enabled:           ptr.To(true),
+				AvailabilityZones: []string{"az1"},
+			},
+		},
+	}
+
+	// Legacy name (no AZ) - not existing
+	mockScopeFactory.LbClient.EXPECT().
+		ListLoadBalancers(loadbalancers.ListOpts{Name: "k8s-clusterapi-cluster-test-kubeapi"}).
+		Return([]loadbalancers.LoadBalancer{}, nil)
+
+	// AZ name exists but is PENDING_DELETE
+	mockScopeFactory.LbClient.EXPECT().
+		ListLoadBalancers(loadbalancers.ListOpts{Name: "k8s-clusterapi-cluster-test-az1-kubeapi"}).
+		Return([]loadbalancers.LoadBalancer{
+			{
+				ID:                 "lb-az1",
+				Name:               "k8s-clusterapi-cluster-test-az1-kubeapi",
+				ProvisioningStatus: "PENDING_DELETE",
+			},
+		}, nil)
+
+	// No DeleteLoadBalancer should be called for PENDING_DELETE
+
+	result, err := lbs.DeleteLoadBalancer(cluster, "test")
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(result).NotTo(BeNil()) // requeue to wait for deletion
+}
+
+func Test_DeleteLoadBalancer_CascadeDeletionRequeues(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	g := NewWithT(t)
+	log := testr.New(t)
+	mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+	lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+	g.Expect(err).NotTo(HaveOccurred())
+
+	cluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+				Enabled:           ptr.To(true),
+				AvailabilityZones: []string{"az1"},
+			},
+		},
+	}
+
+	// Legacy name - not existing
+	mockScopeFactory.LbClient.EXPECT().
+		ListLoadBalancers(loadbalancers.ListOpts{Name: "k8s-clusterapi-cluster-test-kubeapi"}).
+		Return([]loadbalancers.LoadBalancer{}, nil)
+
+	// AZ name exists and is ACTIVE -> should call DeleteLoadBalancer(cascade)
+	mockScopeFactory.LbClient.EXPECT().
+		ListLoadBalancers(loadbalancers.ListOpts{Name: "k8s-clusterapi-cluster-test-az1-kubeapi"}).
+		Return([]loadbalancers.LoadBalancer{
+			{
+				ID:                 "lb-az1",
+				Name:               "k8s-clusterapi-cluster-test-az1-kubeapi",
+				ProvisioningStatus: "ACTIVE",
+				VipPortID:          "", // simplify, no FIP work
+			},
+		}, nil)
+
+	mockScopeFactory.LbClient.EXPECT().DeleteLoadBalancer("lb-az1", gomock.Any()).Return(nil)
+
+	result, err := lbs.DeleteLoadBalancer(cluster, "test")
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(result).NotTo(BeNil()) // requeue to ensure cleanup completion
+}

@@ -836,7 +836,18 @@ func (b *Bastion) IsEnabled() bool {
 	return b.Enabled == nil || *b.Enabled
 }
 
-type APIServerLoadBalancer struct {
+ // AZSubnetMapping maps a specific availability zone to a subnet for the API server
+ // load balancer VIP placement.
+ type AZSubnetMapping struct {
+ 	// AvailabilityZone is the name of the failure domain (AZ).
+ 	// +kubebuilder:validation:MinLength:=1
+ 	AvailabilityZone string `json:"availabilityZone"`
+ 
+ 	// Subnet is the subnet where the VIP for this AZ should be allocated.
+ 	Subnet SubnetParam `json:"subnet"`
+ }
+ 
+ type APIServerLoadBalancer struct {
 	// Enabled defines whether a load balancer should be created. This value
 	// defaults to true if an APIServerLoadBalancer is given.
 	//
@@ -884,6 +895,15 @@ type APIServerLoadBalancer struct {
 	// +optional
 	// +listType=set
 	AvailabilityZones []string `json:"availabilityZones,omitempty"`
+	
+	// AvailabilityZoneSubnets maps availability zones to explicit subnets that should be used
+	// for VIP allocation of per-AZ API server load balancers.
+	// When specified, this mapping is preferred over positional matching between AvailabilityZones
+	// and Subnets. If both AvailabilityZoneSubnets and AvailabilityZones are specified, the sets must match.
+	// +optional
+	// +listType=map
+	// +listMapKey=availabilityZone
+	AvailabilityZoneSubnets []AZSubnetMapping `json:"availabilityZoneSubnets,omitempty"`
 
 	// Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
 	//+optional

@@ -106,25 +106,47 @@ func (s *Service) ReconcileLoadBalancers(openStackCluster *infrav1.OpenStackClus
 	}
 
 	// Convert the availability zones to azSubnet structs
-	// For single AZ case (no AZ specified), create a default AZ
+	// Prefer explicit AZ->Subnet mappings when provided; otherwise fallback to positional mapping.
 	var azInfo []azSubnet
-	if len(openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones) == 0 {
-		// Create a default AZ with "default" as name
+	lbStatus := openStackCluster.Status.APIServerLoadBalancer
+	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
+
+	if lbStatus == nil || lbStatus.LoadBalancerNetwork == nil || len(lbStatus.LoadBalancerNetwork.Subnets) == 0 {
+		return false, fmt.Errorf("load balancer network information not available")
+	}
+
+	if len(lbSpec.AvailabilityZoneSubnets) > 0 {
+		// Controller resolves and orders LoadBalancerNetwork.Subnets to match AvailabilityZoneSubnets,
+		// so we can index by the same position here.
+		if len(lbSpec.AvailabilityZoneSubnets) > len(lbStatus.LoadBalancerNetwork.Subnets) {
+			return false, fmt.Errorf("mismatch between availabilityZoneSubnets and resolved subnets: more mappings than subnets")
+		}
+		for i, m := range lbSpec.AvailabilityZoneSubnets {
+			az := m.AvailabilityZone
+			azInfo = append(azInfo, azSubnet{
+				az:     &az,
+				subnet: lbStatus.LoadBalancerNetwork.Subnets[i],
+			})
+		}
+	} else if len(lbSpec.AvailabilityZones) == 0 {
+		// Single-AZ default
 		defaultAZ := "default"
 		azInfo = append(azInfo, azSubnet{
 			az:     &defaultAZ,
-			subnet: openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets[0],
+			subnet: lbStatus.LoadBalancerNetwork.Subnets[0],
 		})
 		s.scope.Logger().Info("No availability zones specified, using default")
 	} else {
-		// For multi-AZ case, create an entry for each specified AZ
-		for i, az := range openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZones {
-			if i >= len(openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets) {
+		// Positional fallback: AvailabilityZones[i] maps to Subnets[i]
+		for i, az := range lbSpec.AvailabilityZones {
+			if i >= len(lbStatus.LoadBalancerNetwork.Subnets) {
 				return false, fmt.Errorf("mismatch between availability zones and subnets: more AZs than subnets")
 			}
+			// capture loop variable
+			azCopy := az
 			azInfo = append(azInfo, azSubnet{
-				az:     &az,
-				subnet: openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.Subnets[i],
+				az:     &azCopy,
+				subnet: lbStatus.LoadBalancerNetwork.Subnets[i],
 			})
 		}
 	}
@@ -168,7 +190,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		openStackCluster.Status.APIServerLoadBalancer = lbStatus
 	}
 
-	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName, azInfo.az)
+	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName, azInfo.az, azInfo.subnet.ID)
 	if err != nil {
 		if errors.Is(err, capoerrors.ErrFilterMatch) {
 			return true, err
@@ -365,7 +387,7 @@ func (s *Service) isAllowsCIDRSSupported(lb *loadbalancers.LoadBalancer) (bool, 
 }
 
 // getOrCreateAPILoadBalancer returns an existing API loadbalancer if it already exists, or creates a new one if it does not.
-func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, availabilityZone *string) (*loadbalancers.LoadBalancer, error) {
+func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, availabilityZone *string, vipSubnetIDOverride string) (*loadbalancers.LoadBalancer, error) {
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lb, err := s.checkIfLbExists(loadBalancerName)
 	if err != nil {
@@ -394,10 +416,11 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		vipNetworkID = lbNetwork.ID
 	}
 
-	if len(lbNetwork.Subnets) > 0 {
-		// Currently only the first subnet is taken into account.
-		// This can be fixed as soon as we switch over to gophercloud release that
-		// contains AdditionalVips field.
+	// Prefer the caller-provided VIP subnet ID (per-AZ mapping), otherwise fall back to the first subnet
+	// from the LB network, and finally the first subnet of the cluster network.
+	if vipSubnetIDOverride != "" {
+		vipSubnetID = vipSubnetIDOverride
+	} else if len(lbNetwork.Subnets) > 0 {
 		vipSubnetID = lbNetwork.Subnets[0].ID
 	}
 
