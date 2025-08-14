@@ -219,6 +219,8 @@ type OpenStackClusterStatus struct {
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
 	// APIServerLoadBalancers describes all api server load balancers in multi-AZ scenarios
+	// +listType=map
+	// +listMapKey=availabilityZone
 	// +optional
 	APIServerLoadBalancers []LoadBalancer `json:"apiServerLoadBalancers,omitempty"`
 

@@ -985,6 +985,23 @@ string
 </tr>
 <tr>
 <td>
+<code>availabilityZoneSubnets</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.AZSubnetMapping">
+[]AZSubnetMapping
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AvailabilityZoneSubnets maps availability zones to explicit subnets that should be used
+for VIP allocation of per-AZ API server load balancers.
+When specified, this mapping is preferred over positional matching between AvailabilityZones
+and Subnets. If both AvailabilityZoneSubnets and AvailabilityZones are specified, the sets must match.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>flavor</code><br/>
 <em>
 string
@@ -997,28 +1014,51 @@ string
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>monitor</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancerMonitor">
 APIServerLoadBalancerMonitor
 </a>
+=======
+<code>allowCrossAZLoadBalancerMembers</code><br/>
+<em>
+bool
+>>>>>>> adb9a7be (fix: api validation)
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<<<<<<< HEAD
 <p>Monitor contains configuration for the load balancer health monitor.</p>
+=======
+<p>AllowCrossAZLoadBalancerMembers controls whether machines can be registered
+to load balancers in different availability zones. When set to false (default),
+machines will only be registered to load balancers in the same availability zone
+as the machine. When set to true, machines can be registered to load balancers
+in any availability zone, enabling cross-AZ traffic.</p>
+>>>>>>> adb9a7be (fix: api validation)
 </td>
 </tr>
 </tbody>
 </table>
+<<<<<<< HEAD
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancerMonitor">APIServerLoadBalancerMonitor
+=======
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AZSubnetMapping">AZSubnetMapping
+>>>>>>> adb9a7be (fix: api validation)
 </h3>
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>)
 </p>
 <p>
+<<<<<<< HEAD
 <p>APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.</p>
+=======
+<p>AZSubnetMapping maps a specific availability zone to a subnet for the API server
+load balancer VIP placement.</p>
+>>>>>>> adb9a7be (fix: api validation)
 </p>
 <table>
 <thead>
@@ -1030,6 +1070,7 @@ APIServerLoadBalancerMonitor
 <tbody>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>delay</code><br/>
 <em>
 int
@@ -1038,10 +1079,20 @@ int
 <td>
 <em>(Optional)</em>
 <p>Delay is the time in seconds between sending probes to members.</p>
+=======
+<code>availabilityZone</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AvailabilityZone is the name of the failure domain (AZ).</p>
+>>>>>>> adb9a7be (fix: api validation)
 </td>
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>timeout</code><br/>
 <em>
 int
@@ -1074,6 +1125,17 @@ int
 <td>
 <em>(Optional)</em>
 <p>MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.</p>
+=======
+<code>subnet</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
+SubnetParam
+</a>
+</em>
+</td>
+<td>
+<p>Subnet is the subnet where the VIP for this AZ should be allocated.</p>
+>>>>>>> adb9a7be (fix: api validation)
 </td>
 </tr>
 </tbody>
@@ -1966,6 +2028,19 @@ If subnets are specified within the LoadBalancerNetwork currently only the first
 subnet in the list is taken into account.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>availabilityZone</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AvailabilityZone is the availability zone where the load balancer is deployed.
+This field is populated for load balancers in multi-AZ scenarios.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources
@@ -2740,6 +2815,20 @@ LoadBalancer
 <td>
 <em>(Optional)</em>
 <p>APIServerLoadBalancer describes the api server load balancer if one exists</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiServerLoadBalancers</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.LoadBalancer">
+[]LoadBalancer
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>APIServerLoadBalancers describes all api server load balancers in multi-AZ scenarios</p>
 </td>
 </tr>
 <tr>
@@ -5529,6 +5618,7 @@ FilterByNeutronTags
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.AZSubnetMapping">AZSubnetMapping</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ExternalRouterIPParam">ExternalRouterIPParam</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.FixedIP">FixedIP</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec</a>)

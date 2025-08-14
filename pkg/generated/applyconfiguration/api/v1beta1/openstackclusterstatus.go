@@ -31,7 +31,12 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	ExternalNetwork           *NetworkStatusApplyConfiguration            `json:"externalNetwork,omitempty"`
 	Router                    *RouterApplyConfiguration                   `json:"router,omitempty"`
 	APIServerLoadBalancer     *LoadBalancerApplyConfiguration             `json:"apiServerLoadBalancer,omitempty"`
+<<<<<<< HEAD
 	FailureDomains            *corev1beta1.FailureDomains                 `json:"failureDomains,omitempty"`
+=======
+	APIServerLoadBalancers    []LoadBalancerApplyConfiguration            `json:"apiServerLoadBalancers,omitempty"`
+	FailureDomains            *apiv1beta1.FailureDomains                  `json:"failureDomains,omitempty"`
+>>>>>>> adb9a7be (fix: api validation)
 	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration      `json:"controlPlaneSecurityGroup,omitempty"`
 	WorkerSecurityGroup       *SecurityGroupStatusApplyConfiguration      `json:"workerSecurityGroup,omitempty"`
 	BastionSecurityGroup      *SecurityGroupStatusApplyConfiguration      `json:"bastionSecurityGroup,omitempty"`
@@ -83,6 +88,19 @@ func (b *OpenStackClusterStatusApplyConfiguration) WithRouter(value *RouterApply
 // If called multiple times, the APIServerLoadBalancer field is set to the value of the last call.
 func (b *OpenStackClusterStatusApplyConfiguration) WithAPIServerLoadBalancer(value *LoadBalancerApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
 	b.APIServerLoadBalancer = value
+	return b
+}
+
+// WithAPIServerLoadBalancers adds the given value to the APIServerLoadBalancers field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the APIServerLoadBalancers field.
+func (b *OpenStackClusterStatusApplyConfiguration) WithAPIServerLoadBalancers(values ...*LoadBalancerApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAPIServerLoadBalancers")
+		}
+		b.APIServerLoadBalancers = append(b.APIServerLoadBalancers, *values[i])
+	}
 	return b
 }
 

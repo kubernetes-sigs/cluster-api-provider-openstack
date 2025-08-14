@@ -372,6 +372,9 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: numeric
           elementRelationship: associative
+    - name: allowCrossAZLoadBalancerMembers
+      type:
+        scalar: boolean
     - name: allowedCIDRs
       type:
         list:
@@ -381,6 +384,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: availabilityZone
       type:
         scalar: string
+    - name: availabilityZoneSubnets
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AZSubnetMapping
+          elementRelationship: associative
+          keys:
+          - availabilityZone
     - name: availabilityZones
       type:
         list:
@@ -408,6 +419,7 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetParam
           elementRelationship: atomic
+<<<<<<< HEAD
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.APIServerLoadBalancerMonitor
   map:
     fields:
@@ -423,6 +435,19 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: timeout
       type:
         scalar: numeric
+=======
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AZSubnetMapping
+  map:
+    fields:
+    - name: availabilityZone
+      type:
+        scalar: string
+      default: ""
+    - name: subnet
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetParam
+      default: {}
+>>>>>>> adb9a7be (fix: api validation)
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AdditionalBlockDevice
   map:
     fields:
@@ -586,6 +611,9 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+    - name: availabilityZone
+      type:
+        scalar: string
     - name: id
       type:
         scalar: string
@@ -845,6 +873,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: apiServerLoadBalancer
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.LoadBalancer
+    - name: apiServerLoadBalancers
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.LoadBalancer
+          elementRelationship: associative
+          keys:
+          - availabilityZone
     - name: bastion
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.BastionStatus

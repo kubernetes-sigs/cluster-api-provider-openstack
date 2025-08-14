@@ -83,6 +83,15 @@ spec:
                               type: integer
                             type: array
                             x-kubernetes-list-type: set
+                          allowCrossAZLoadBalancerMembers:
+                            default: false
+                            description: |-
+                              AllowCrossAZLoadBalancerMembers controls whether machines can be registered
+                              to load balancers in different availability zones. When set to false (default),
+                              machines will only be registered to load balancers in the same availability zone
+                              as the machine. When set to true, machines can be registered to load balancers
+                              in any availability zone, enabling cross-AZ traffic.
+                            type: boolean
                           allowedCIDRs:
                             description: AllowedCIDRs restrict access to all API-Server
                               listeners to the given address CIDRs.
@@ -94,6 +103,117 @@ spec:
                             description: AvailabilityZone is the failure domain that
                               will be used to create the APIServerLoadBalancer Spec.
                             type: string
+                          availabilityZoneSubnets:
+                            description: |-
+                              AvailabilityZoneSubnets maps availability zones to explicit subnets that should be used
+                              for VIP allocation of per-AZ API server load balancers.
+                              When specified, this mapping is preferred over positional matching between AvailabilityZones
+                              and Subnets. If both AvailabilityZoneSubnets and AvailabilityZones are specified, the sets must match.
+                            items:
+                              description: |-
+                                AZSubnetMapping maps a specific availability zone to a subnet for the API server
+                                load balancer VIP placement.
+                              properties:
+                                availabilityZone:
+                                  description: AvailabilityZone is the name of the
+                                    failure domain (AZ).
+                                  minLength: 1
+                                  type: string
+                                subnet:
+                                  description: Subnet is the subnet where the VIP
+                                    for this AZ should be allocated.
+                                  maxProperties: 1
+                                  minProperties: 1
+                                  properties:
+                                    filter:
+                                      description: Filter specifies a filter to select
+                                        the subnet. It must match exactly one subnet.
+                                      minProperties: 1
+                                      properties:
+                                        cidr:
+                                          type: string
+                                        description:
+                                          type: string
+                                        gatewayIP:
+                                          type: string
+                                        ipVersion:
+                                          type: integer
+                                        ipv6AddressMode:
+                                          type: string
+                                        ipv6RAMode:
+                                          type: string
+                                        name:
+                                          type: string
+                                        notTags:
+                                          description: |-
+                                            NotTags is a list of tags to filter by. If specified, resources which
+                                            contain all of the given tags will be excluded from the result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        notTagsAny:
+                                          description: |-
+                                            NotTagsAny is a list of tags to filter by. If specified, resources
+                                            which contain any of the given tags will be excluded from the result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        projectID:
+                                          type: string
+                                        tags:
+                                          description: |-
+                                            Tags is a list of tags to filter by. If specified, the resource must
+                                            have all of the tags specified to be included in the result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        tagsAny:
+                                          description: |-
+                                            TagsAny is a list of tags to filter by. If specified, the resource
+                                            must have at least one of the tags specified to be included in the
+                                            result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    id:
+                                      description: ID is the uuid of the subnet. It
+                                        will not be validated.
+                                      format: uuid
+                                      type: string
+                                  type: object
+                              required:
+                              - availabilityZone
+                              - subnet
+                              type: object
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - availabilityZone
+                            x-kubernetes-list-type: map
                           availabilityZones:
                             description: AvailabilityZone sis the failure domain that
                               will be used to create the APIServerLoadBalancer Spec.
