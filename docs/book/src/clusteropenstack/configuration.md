@@ -489,13 +489,17 @@ Status shape
   - name, id, ip, internalIP, tags, availabilityZone, loadBalancerNetwork, allowedCIDRs
 
 Naming scheme for discovery
-CAPO discovers and adopts pre-existing LBs by name. The name formula is:
-- Legacy single-LB: k8s-clusterapi-cluster-<namespace>-<cluster-name>-kubeapi
-- Multi-AZ LB: k8s-clusterapi-cluster-<namespace>-<cluster-name>-<az>-kubeapi
-- Default pseudo-AZ: k8s-clusterapi-cluster-<namespace>-<cluster-name>-default-kubeapi
+CAPO discovers and adopts pre-existing LBs by name. The name formulas are:
+```text
+Legacy single-LB:  k8s-clusterapi-cluster-${NAMESPACE}-${CLUSTER_NAME}-kubeapi
+Multi-AZ LB:       k8s-clusterapi-cluster-${NAMESPACE}-${CLUSTER_NAME}-${AZ}-kubeapi
+Default pseudo-AZ: k8s-clusterapi-cluster-${NAMESPACE}-${CLUSTER_NAME}-default-kubeapi
+```
 
 Per-port resources are named as:
-- <lbName>-<port> (listeners, pools, monitors)
+```text
+${LB_NAME}-${PORT}  # listeners, pools, monitors
+```
 
 Terraform example: pre-create LBs CAPO will adopt
 
@@ -620,10 +624,12 @@ How CAPO migrates existing resources
 - The rename/adoption process is idempotent.
 
 Naming conventions used for discovery/adoption
-- Legacy LB: k8s-clusterapi-cluster-<namespace>-<cluster-name>-kubeapi
-- Per AZ: k8s-clusterapi-cluster-<namespace>-<cluster-name>-<az>-kubeapi
-- Default pseudo-AZ: k8s-clusterapi-cluster-<namespace>-<cluster-name>-default-kubeapi
-- Per-port resources: <lbName>-<port>
+```text
+Legacy LB:           k8s-clusterapi-cluster-${NAMESPACE}-${CLUSTER_NAME}-kubeapi
+Per AZ:              k8s-clusterapi-cluster-${NAMESPACE}-${CLUSTER_NAME}-${AZ}-kubeapi
+Default pseudo-AZ:   k8s-clusterapi-cluster-${NAMESPACE}-${CLUSTER_NAME}-default-kubeapi
+Per-port resources:  ${LB_NAME}-${PORT}
+```
 
 Migration paths
 
