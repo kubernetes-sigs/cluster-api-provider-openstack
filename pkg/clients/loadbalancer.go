@@ -37,6 +37,7 @@ import (
 
 type LbClient interface {
 	CreateLoadBalancer(opts loadbalancers.CreateOptsBuilder) (*loadbalancers.LoadBalancer, error)
+	UpdateLoadBalancer(id string, opts loadbalancers.UpdateOpts) (*loadbalancers.LoadBalancer, error)
 	ListLoadBalancers(opts loadbalancers.ListOptsBuilder) ([]loadbalancers.LoadBalancer, error)
 	GetLoadBalancer(id string) (*loadbalancers.LoadBalancer, error)
 	DeleteLoadBalancer(id string, opts loadbalancers.DeleteOptsBuilder) error
@@ -46,6 +47,7 @@ type LbClient interface {
 	GetListener(id string) (*listeners.Listener, error)
 	DeleteListener(id string) error
 	CreatePool(opts pools.CreateOptsBuilder) (*pools.Pool, error)
+	UpdatePool(id string, opts pools.UpdateOptsBuilder) (*pools.Pool, error)
 	ListPools(opts pools.ListOptsBuilder) ([]pools.Pool, error)
 	GetPool(id string) (*pools.Pool, error)
 	DeletePool(id string) error
@@ -53,8 +55,9 @@ type LbClient interface {
 	ListPoolMember(poolID string, opts pools.ListMembersOptsBuilder) ([]pools.Member, error)
 	DeletePoolMember(poolID string, lbMemberID string) error
 	CreateMonitor(opts monitors.CreateOptsBuilder) (*monitors.Monitor, error)
+	UpdateMonitor(id string, opts monitors.UpdateOpts) (*monitors.Monitor, error)
 	ListMonitors(opts monitors.ListOptsBuilder) ([]monitors.Monitor, error)
-	UpdateMonitor(id string, opts monitors.UpdateOptsBuilder) (*monitors.Monitor, error)
+
 	DeleteMonitor(id string) error
 	ListLoadBalancerProviders() ([]providers.Provider, error)
 	ListOctaviaVersions() ([]apiversions.APIVersion, error)
@@ -81,6 +84,15 @@ func NewLbClient(providerClient *gophercloud.ProviderClient, providerClientOpts 
 func (l lbClient) CreateLoadBalancer(opts loadbalancers.CreateOptsBuilder) (*loadbalancers.LoadBalancer, error) {
 	mc := metrics.NewMetricPrometheusContext("loadbalancer", "create")
 	lb, err := loadbalancers.Create(context.TODO(), l.serviceClient, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return lb, nil
+}
+
+func (l lbClient) UpdateLoadBalancer(id string, opts loadbalancers.UpdateOpts) (*loadbalancers.LoadBalancer, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer", "update")
+	lb, err := loadbalancers.Update(context.TODO(), l.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -168,6 +180,15 @@ func (l lbClient) CreatePool(opts pools.CreateOptsBuilder) (*pools.Pool, error) 
 	return pool, nil
 }
 
+func (l lbClient) UpdatePool(id string, opts pools.UpdateOptsBuilder) (*pools.Pool, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "update")
+	pool, err := pools.Update(context.TODO(), l.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return pool, nil
+}
+
 func (l lbClient) ListPools(opts pools.ListOptsBuilder) ([]pools.Pool, error) {
 	mc := metrics.NewMetricPrometheusContext("loadbalancer_pool", "list")
 	allPages, err := pools.List(l.serviceClient, opts).AllPages(context.TODO())
@@ -231,6 +252,15 @@ func (l lbClient) CreateMonitor(opts monitors.CreateOptsBuilder) (*monitors.Moni
 	return monitor, nil
 }
 
+func (l lbClient) UpdateMonitor(id string, opts monitors.UpdateOpts) (*monitors.Monitor, error) {
+	mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "update")
+	monitor, err := monitors.Update(context.TODO(), l.serviceClient, id, opts).Extract()
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return monitor, nil
+}
+
 func (l lbClient) ListMonitors(opts monitors.ListOptsBuilder) ([]monitors.Monitor, error) {
 	mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "list")
 	allPages, err := monitors.List(l.serviceClient, opts).AllPages(context.TODO())
@@ -238,15 +268,6 @@ func (l lbClient) ListMonitors(opts monitors.ListOptsBuilder) ([]monitors.Monito
 		return nil, err
 	}
 	return monitors.ExtractMonitors(allPages)
-}
-
-func (l lbClient) UpdateMonitor(id string, opts monitors.UpdateOptsBuilder) (*monitors.Monitor, error) {
-	mc := metrics.NewMetricPrometheusContext("loadbalancer_healthmonitor", "update")
-	monitor, err := monitors.Update(context.TODO(), l.serviceClient, id, opts).Extract()
-	if mc.ObserveRequest(err) != nil {
-		return nil, err
-	}
-	return monitor, nil
 }
 
 func (l lbClient) DeleteMonitor(id string) error {

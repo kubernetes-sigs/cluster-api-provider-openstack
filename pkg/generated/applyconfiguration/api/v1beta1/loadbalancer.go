@@ -28,6 +28,7 @@ type LoadBalancerApplyConfiguration struct {
 	AllowedCIDRs        []string                                    `json:"allowedCIDRs,omitempty"`
 	Tags                []string                                    `json:"tags,omitempty"`
 	LoadBalancerNetwork *NetworkStatusWithSubnetsApplyConfiguration `json:"loadBalancerNetwork,omitempty"`
+	AvailabilityZone    *string                                     `json:"availabilityZone,omitempty"`
 }
 
 // LoadBalancerApplyConfiguration constructs a declarative configuration of the LoadBalancer type for use with
@@ -93,5 +94,13 @@ func (b *LoadBalancerApplyConfiguration) WithTags(values ...string) *LoadBalance
 // If called multiple times, the LoadBalancerNetwork field is set to the value of the last call.
 func (b *LoadBalancerApplyConfiguration) WithLoadBalancerNetwork(value *NetworkStatusWithSubnetsApplyConfiguration) *LoadBalancerApplyConfiguration {
 	b.LoadBalancerNetwork = value
+	return b
+}
+
+// WithAvailabilityZone sets the AvailabilityZone field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AvailabilityZone field is set to the value of the last call.
+func (b *LoadBalancerApplyConfiguration) WithAvailabilityZone(value string) *LoadBalancerApplyConfiguration {
+	b.AvailabilityZone = &value
 	return b
 }

@@ -327,6 +327,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.ServerResources":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_ServerResources(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancer(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancerMonitor":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBalancerMonitor(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AZSubnetMapping":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AZSubnetMapping(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AdditionalBlockDevice":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AdditionalBlockDevice(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair":                                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AddressPair(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AllocationPool":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AllocationPool(ref),
@@ -17523,7 +17524,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBa
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Subnets define which subnets should the load balancer be allocated on. It is expected that subnets are located on the network specified in this resource. Only the first element is taken into account. kubebuilder:validation:MaxLength:=2",
+							Description: "Subnets define which subnets should the load balancer be allocated on. It is expected that subnets are located on the network specified in this resource. The length of the list must match the length of the AvailabilityZone list. kubebuilder:validation:MaxLength:=2",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -17542,6 +17543,48 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBa
 							Format:      "",
 						},
 					},
+					"availabilityZones": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AvailabilityZone sis the failure domain that will be used to create the APIServerLoadBalancer Spec.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"availabilityZoneSubnets": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"availabilityZone",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AvailabilityZoneSubnets maps availability zones to explicit subnets that should be used for VIP allocation of per-AZ API server load balancers. When specified, this mapping is preferred over positional matching between AvailabilityZones and Subnets. If both AvailabilityZoneSubnets and AvailabilityZones are specified, the sets must match.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AZSubnetMapping"),
+									},
+								},
+							},
+						},
+					},
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.",
@@ -17555,12 +17598,19 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBa
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancerMonitor"),
 						},
 					},
+					"allowCrossAZLoadBalancerMembers": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AllowCrossAZLoadBalancerMembers controls whether machines can be registered to load balancers in different availability zones. When set to false (default), machines will only be registered to load balancers in the same availability zone as the machine. When set to true, machines can be registered to load balancers in any availability zone, enabling cross-AZ traffic.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"enabled"},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancerMonitor", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancerMonitor", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AZSubnetMapping", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"},
 	}
 }
 
@@ -17602,6 +17652,37 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_APIServerLoadBa
 				},
 			},
 		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_AZSubnetMapping(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "AZSubnetMapping maps a specific availability zone to a subnet for the API server load balancer VIP placement.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"availabilityZone": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AvailabilityZone is the name of the failure domain (AZ).",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subnet": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Subnet is the subnet where the VIP for this AZ should be allocated.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"),
+						},
+					},
+				},
+				Required: []string{"availabilityZone", "subnet"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"},
 	}
 }
 
@@ -18192,8 +18273,16 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(re
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets"),
 						},
 					},
+					"availabilityZone": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AvailabilityZone is the availability zone where the load balancer is deployed. This field is populated for load balancers in multi-AZ scenarios and is the list-map key for OpenStackClusterStatus.APIServerLoadBalancers. It must be present (required) for list-map entries.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
-				Required: []string{"name", "id", "ip", "internalIP"},
+				Required: []string{"name", "id", "ip", "internalIP", "availabilityZone"},
 			},
 		},
 		Dependencies: []string{
@@ -18915,6 +19004,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 						SchemaProps: spec.SchemaProps{
 							Description: "APIServerLoadBalancer describes the api server load balancer if one exists",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer"),
+						},
+					},
+					"apiServerLoadBalancers": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"availabilityZone",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "APIServerLoadBalancers describes all api server load balancers in multi-AZ scenarios",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer"),
+									},
+								},
+							},
 						},
 					},
 					"failureDomains": {

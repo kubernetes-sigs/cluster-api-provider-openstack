@@ -21,15 +21,18 @@ package v1beta1
 // APIServerLoadBalancerApplyConfiguration represents a declarative configuration of the APIServerLoadBalancer type for use
 // with apply.
 type APIServerLoadBalancerApplyConfiguration struct {
-	Enabled          *bool                                           `json:"enabled,omitempty"`
-	AdditionalPorts  []int                                           `json:"additionalPorts,omitempty"`
-	AllowedCIDRs     []string                                        `json:"allowedCIDRs,omitempty"`
-	Provider         *string                                         `json:"provider,omitempty"`
-	Network          *NetworkParamApplyConfiguration                 `json:"network,omitempty"`
-	Subnets          []SubnetParamApplyConfiguration                 `json:"subnets,omitempty"`
-	AvailabilityZone *string                                         `json:"availabilityZone,omitempty"`
-	Flavor           *string                                         `json:"flavor,omitempty"`
-	Monitor          *APIServerLoadBalancerMonitorApplyConfiguration `json:"monitor,omitempty"`
+	Enabled                         *bool                                           `json:"enabled,omitempty"`
+	AdditionalPorts                 []int                                           `json:"additionalPorts,omitempty"`
+	AllowedCIDRs                    []string                                        `json:"allowedCIDRs,omitempty"`
+	Provider                        *string                                         `json:"provider,omitempty"`
+	Network                         *NetworkParamApplyConfiguration                 `json:"network,omitempty"`
+	Subnets                         []SubnetParamApplyConfiguration                 `json:"subnets,omitempty"`
+	AvailabilityZone                *string                                         `json:"availabilityZone,omitempty"`
+	AvailabilityZones               []string                                        `json:"availabilityZones,omitempty"`
+	AvailabilityZoneSubnets         []AZSubnetMappingApplyConfiguration             `json:"availabilityZoneSubnets,omitempty"`
+	Flavor                          *string                                         `json:"flavor,omitempty"`
+	Monitor                         *APIServerLoadBalancerMonitorApplyConfiguration `json:"monitor,omitempty"`
+	AllowCrossAZLoadBalancerMembers *bool                                           `json:"allowCrossAZLoadBalancerMembers,omitempty"`
 }
 
 // APIServerLoadBalancerApplyConfiguration constructs a declarative configuration of the APIServerLoadBalancer type for use with
@@ -103,6 +106,29 @@ func (b *APIServerLoadBalancerApplyConfiguration) WithAvailabilityZone(value str
 	return b
 }
 
+// WithAvailabilityZones adds the given value to the AvailabilityZones field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AvailabilityZones field.
+func (b *APIServerLoadBalancerApplyConfiguration) WithAvailabilityZones(values ...string) *APIServerLoadBalancerApplyConfiguration {
+	for i := range values {
+		b.AvailabilityZones = append(b.AvailabilityZones, values[i])
+	}
+	return b
+}
+
+// WithAvailabilityZoneSubnets adds the given value to the AvailabilityZoneSubnets field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AvailabilityZoneSubnets field.
+func (b *APIServerLoadBalancerApplyConfiguration) WithAvailabilityZoneSubnets(values ...*AZSubnetMappingApplyConfiguration) *APIServerLoadBalancerApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAvailabilityZoneSubnets")
+		}
+		b.AvailabilityZoneSubnets = append(b.AvailabilityZoneSubnets, *values[i])
+	}
+	return b
+}
+
 // WithFlavor sets the Flavor field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Flavor field is set to the value of the last call.
@@ -116,5 +142,13 @@ func (b *APIServerLoadBalancerApplyConfiguration) WithFlavor(value string) *APIS
 // If called multiple times, the Monitor field is set to the value of the last call.
 func (b *APIServerLoadBalancerApplyConfiguration) WithMonitor(value *APIServerLoadBalancerMonitorApplyConfiguration) *APIServerLoadBalancerApplyConfiguration {
 	b.Monitor = value
+	return b
+}
+
+// WithAllowCrossAZLoadBalancerMembers sets the AllowCrossAZLoadBalancerMembers field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AllowCrossAZLoadBalancerMembers field is set to the value of the last call.
+func (b *APIServerLoadBalancerApplyConfiguration) WithAllowCrossAZLoadBalancerMembers(value bool) *APIServerLoadBalancerApplyConfiguration {
+	b.AllowCrossAZLoadBalancerMembers = &value
 	return b
 }

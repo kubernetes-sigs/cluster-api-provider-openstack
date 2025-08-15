@@ -689,6 +689,12 @@ type LoadBalancer struct {
 	// subnet in the list is taken into account.
 	// +optional
 	LoadBalancerNetwork *NetworkStatusWithSubnets `json:"loadBalancerNetwork,omitempty"`
+	// AvailabilityZone is the availability zone where the load balancer is deployed.
+	// This field is populated for load balancers in multi-AZ scenarios and is the list-map key
+	// for OpenStackClusterStatus.APIServerLoadBalancers.
+	// It must be present (required) for list-map entries.
+	// +kubebuilder:validation:Required
+	AvailabilityZone string `json:"availabilityZone"`
 }
 
 // SecurityGroupStatus represents the basic information of the associated
@@ -832,6 +838,17 @@ func (b *Bastion) IsEnabled() bool {
 	return b.Enabled == nil || *b.Enabled
 }
 
+// AZSubnetMapping maps a specific availability zone to a subnet for the API server
+// load balancer VIP placement.
+type AZSubnetMapping struct {
+	// AvailabilityZone is the name of the failure domain (AZ).
+	// +kubebuilder:validation:MinLength:=1
+	AvailabilityZone string `json:"availabilityZone"`
+
+	// Subnet is the subnet where the VIP for this AZ should be allocated.
+	Subnet SubnetParam `json:"subnet"`
+}
+
 type APIServerLoadBalancer struct {
 	// Enabled defines whether a load balancer should be created. This value
 	// defaults to true if an APIServerLoadBalancer is given.
@@ -866,7 +883,7 @@ type APIServerLoadBalancer struct {
 
 	// Subnets define which subnets should the load balancer be allocated on.
 	// It is expected that subnets are located on the network specified in this resource.
-	// Only the first element is taken into account.
+	// The length of the list must match the length of the AvailabilityZone list.
 	// +optional
 	// +listType=atomic
 	// kubebuilder:validation:MaxLength:=2
@@ -876,6 +893,20 @@ type APIServerLoadBalancer struct {
 	//+optional
 	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 
+	// AvailabilityZone sis the failure domain that will be used to create the APIServerLoadBalancer Spec.
+	// +optional
+	// +listType=set
+	AvailabilityZones []string `json:"availabilityZones,omitempty"`
+
+	// AvailabilityZoneSubnets maps availability zones to explicit subnets that should be used
+	// for VIP allocation of per-AZ API server load balancers.
+	// When specified, this mapping is preferred over positional matching between AvailabilityZones
+	// and Subnets. If both AvailabilityZoneSubnets and AvailabilityZones are specified, the sets must match.
+	// +optional
+	// +listType=map
+	// +listMapKey=availabilityZone
+	AvailabilityZoneSubnets []AZSubnetMapping `json:"availabilityZoneSubnets,omitempty"`
+
 	// Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
 	//+optional
 	Flavor optional.String `json:"flavor,omitempty"`
@@ -883,6 +914,15 @@ type APIServerLoadBalancer struct {
 	// Monitor contains configuration for the load balancer health monitor.
 	//+optional
 	Monitor *APIServerLoadBalancerMonitor `json:"monitor,omitempty"`
+
+	// AllowCrossAZLoadBalancerMembers controls whether machines can be registered
+	// to load balancers in different availability zones. When set to false (default),
+	// machines will only be registered to load balancers in the same availability zone
+	// as the machine. When set to true, machines can be registered to load balancers
+	// in any availability zone, enabling cross-AZ traffic.
+	//+optional
+	//+kubebuilder:default:=false
+	AllowCrossAZLoadBalancerMembers *bool `json:"allowCrossAZLoadBalancerMembers,omitempty"`
 }
 
 // APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
@@ -921,6 +961,15 @@ func (s *APIServerLoadBalancer) IsZero() bool {
 func (s *APIServerLoadBalancer) IsEnabled() bool {
 	// The CRD default value for Enabled is true, so if the field is nil, it should be considered as true.
 	return s != nil && (s.Enabled == nil || *s.Enabled)
+}
+
+// AllowsCrossAZLoadBalancerMembers returns true if machines can be registered
+// to load balancers in different availability zones than their own.
+func (s *APIServerLoadBalancer) AllowsCrossAZLoadBalancerMembers() bool {
+	if s.AllowCrossAZLoadBalancerMembers == nil {
+		return false // Default is false for same-AZ only
+	}
+	return *s.AllowCrossAZLoadBalancerMembers
 }
 
 // ResolvedMachineSpec contains resolved references to resources required by the machine.
