@@ -419,7 +419,6 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetParam
           elementRelationship: atomic
-<<<<<<< HEAD
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.APIServerLoadBalancerMonitor
   map:
     fields:
@@ -435,7 +434,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: timeout
       type:
         scalar: numeric
-=======
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AZSubnetMapping
   map:
     fields:
@@ -447,7 +445,6 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetParam
       default: {}
->>>>>>> adb9a7be (fix: api validation)
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AdditionalBlockDevice
   map:
     fields:

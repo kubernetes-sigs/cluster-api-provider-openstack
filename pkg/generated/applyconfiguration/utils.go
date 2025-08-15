@@ -54,13 +54,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.AllocationPoolApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("APIServerLoadBalancer"):
 		return &apiv1beta1.APIServerLoadBalancerApplyConfiguration{}
-<<<<<<< HEAD
 	case v1beta1.SchemeGroupVersion.WithKind("APIServerLoadBalancerMonitor"):
 		return &apiv1beta1.APIServerLoadBalancerMonitorApplyConfiguration{}
-=======
 	case v1beta1.SchemeGroupVersion.WithKind("AZSubnetMapping"):
 		return &apiv1beta1.AZSubnetMappingApplyConfiguration{}
->>>>>>> adb9a7be (fix: api validation)
 	case v1beta1.SchemeGroupVersion.WithKind("Bastion"):
 		return &apiv1beta1.BastionApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("BastionStatus"):

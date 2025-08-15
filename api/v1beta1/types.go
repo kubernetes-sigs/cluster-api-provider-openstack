@@ -836,18 +836,18 @@ func (b *Bastion) IsEnabled() bool {
 	return b.Enabled == nil || *b.Enabled
 }
 
- // AZSubnetMapping maps a specific availability zone to a subnet for the API server
- // load balancer VIP placement.
- type AZSubnetMapping struct {
- 	// AvailabilityZone is the name of the failure domain (AZ).
- 	// +kubebuilder:validation:MinLength:=1
- 	AvailabilityZone string `json:"availabilityZone"`
- 
- 	// Subnet is the subnet where the VIP for this AZ should be allocated.
- 	Subnet SubnetParam `json:"subnet"`
- }
- 
- type APIServerLoadBalancer struct {
+// AZSubnetMapping maps a specific availability zone to a subnet for the API server
+// load balancer VIP placement.
+type AZSubnetMapping struct {
+	// AvailabilityZone is the name of the failure domain (AZ).
+	// +kubebuilder:validation:MinLength:=1
+	AvailabilityZone string `json:"availabilityZone"`
+
+	// Subnet is the subnet where the VIP for this AZ should be allocated.
+	Subnet SubnetParam `json:"subnet"`
+}
+
+type APIServerLoadBalancer struct {
 	// Enabled defines whether a load balancer should be created. This value
 	// defaults to true if an APIServerLoadBalancer is given.
 	//
@@ -895,7 +895,7 @@ func (b *Bastion) IsEnabled() bool {
 	// +optional
 	// +listType=set
 	AvailabilityZones []string `json:"availabilityZones,omitempty"`
-	
+
 	// AvailabilityZoneSubnets maps availability zones to explicit subnets that should be used
 	// for VIP allocation of per-AZ API server load balancers.
 	// When specified, this mapping is preferred over positional matching between AvailabilityZones
@@ -909,10 +909,18 @@ func (b *Bastion) IsEnabled() bool {
 	//+optional
 	Flavor optional.String `json:"flavor,omitempty"`
 
-<<<<<<< HEAD
 	// Monitor contains configuration for the load balancer health monitor.
 	//+optional
 	Monitor *APIServerLoadBalancerMonitor `json:"monitor,omitempty"`
+
+	// AllowCrossAZLoadBalancerMembers controls whether machines can be registered
+	// to load balancers in different availability zones. When set to false (default),
+	// machines will only be registered to load balancers in the same availability zone
+	// as the machine. When set to true, machines can be registered to load balancers
+	// in any availability zone, enabling cross-AZ traffic.
+	//+optional
+	//+kubebuilder:default:=false
+	AllowCrossAZLoadBalancerMembers *bool `json:"allowCrossAZLoadBalancerMembers,omitempty"`
 }
 
 // APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
@@ -942,16 +950,6 @@ type APIServerLoadBalancerMonitor struct {
 	//+kubebuilder:validation:Maximum=10
 	//+kubebuilder:default:3
 	MaxRetriesDown int `json:"maxRetriesDown,omitempty"`
-=======
-	// AllowCrossAZLoadBalancerMembers controls whether machines can be registered
-	// to load balancers in different availability zones. When set to false (default),
-	// machines will only be registered to load balancers in the same availability zone
-	// as the machine. When set to true, machines can be registered to load balancers
-	// in any availability zone, enabling cross-AZ traffic.
-	//+optional
-	//+kubebuilder:default:=false
-	AllowCrossAZLoadBalancerMembers *bool `json:"allowCrossAZLoadBalancerMembers,omitempty"`
->>>>>>> 540c6f4f (feat: create load balancers per az)
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {

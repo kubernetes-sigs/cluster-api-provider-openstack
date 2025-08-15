@@ -31,12 +31,8 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	ExternalNetwork           *NetworkStatusApplyConfiguration            `json:"externalNetwork,omitempty"`
 	Router                    *RouterApplyConfiguration                   `json:"router,omitempty"`
 	APIServerLoadBalancer     *LoadBalancerApplyConfiguration             `json:"apiServerLoadBalancer,omitempty"`
-<<<<<<< HEAD
-	FailureDomains            *corev1beta1.FailureDomains                 `json:"failureDomains,omitempty"`
-=======
 	APIServerLoadBalancers    []LoadBalancerApplyConfiguration            `json:"apiServerLoadBalancers,omitempty"`
-	FailureDomains            *apiv1beta1.FailureDomains                  `json:"failureDomains,omitempty"`
->>>>>>> adb9a7be (fix: api validation)
+	FailureDomains            *corev1beta1.FailureDomains                 `json:"failureDomains,omitempty"`
 	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration      `json:"controlPlaneSecurityGroup,omitempty"`
 	WorkerSecurityGroup       *SecurityGroupStatusApplyConfiguration      `json:"workerSecurityGroup,omitempty"`
 	BastionSecurityGroup      *SecurityGroupStatusApplyConfiguration      `json:"bastionSecurityGroup,omitempty"`

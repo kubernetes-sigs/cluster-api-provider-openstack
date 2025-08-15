@@ -1014,51 +1014,44 @@ string
 </tr>
 <tr>
 <td>
-<<<<<<< HEAD
 <code>monitor</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancerMonitor">
 APIServerLoadBalancerMonitor
 </a>
-=======
-<code>allowCrossAZLoadBalancerMembers</code><br/>
-<em>
-bool
->>>>>>> adb9a7be (fix: api validation)
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<<<<<<< HEAD
 <p>Monitor contains configuration for the load balancer health monitor.</p>
-=======
+</td>
+</tr>
+<tr>
+<td>
+<code>allowCrossAZLoadBalancerMembers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 <p>AllowCrossAZLoadBalancerMembers controls whether machines can be registered
 to load balancers in different availability zones. When set to false (default),
 machines will only be registered to load balancers in the same availability zone
 as the machine. When set to true, machines can be registered to load balancers
 in any availability zone, enabling cross-AZ traffic.</p>
->>>>>>> adb9a7be (fix: api validation)
 </td>
 </tr>
 </tbody>
 </table>
-<<<<<<< HEAD
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancerMonitor">APIServerLoadBalancerMonitor
-=======
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AZSubnetMapping">AZSubnetMapping
->>>>>>> adb9a7be (fix: api validation)
 </h3>
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>)
 </p>
 <p>
-<<<<<<< HEAD
 <p>APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.</p>
-=======
-<p>AZSubnetMapping maps a specific availability zone to a subnet for the API server
-load balancer VIP placement.</p>
->>>>>>> adb9a7be (fix: api validation)
 </p>
 <table>
 <thead>
@@ -1070,7 +1063,6 @@ load balancer VIP placement.</p>
 <tbody>
 <tr>
 <td>
-<<<<<<< HEAD
 <code>delay</code><br/>
 <em>
 int
@@ -1079,20 +1071,10 @@ int
 <td>
 <em>(Optional)</em>
 <p>Delay is the time in seconds between sending probes to members.</p>
-=======
-<code>availabilityZone</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>AvailabilityZone is the name of the failure domain (AZ).</p>
->>>>>>> adb9a7be (fix: api validation)
 </td>
 </tr>
 <tr>
 <td>
-<<<<<<< HEAD
 <code>timeout</code><br/>
 <em>
 int
@@ -1125,7 +1107,41 @@ int
 <td>
 <em>(Optional)</em>
 <p>MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.</p>
-=======
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.AZSubnetMapping">AZSubnetMapping
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer</a>)
+</p>
+<p>
+<p>AZSubnetMapping maps a specific availability zone to a subnet for the API server
+load balancer VIP placement.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>availabilityZone</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AvailabilityZone is the name of the failure domain (AZ).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>subnet</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetParam">
@@ -1135,7 +1151,6 @@ SubnetParam
 </td>
 <td>
 <p>Subnet is the subnet where the VIP for this AZ should be allocated.</p>
->>>>>>> adb9a7be (fix: api validation)
 </td>
 </tr>
 </tbody>
