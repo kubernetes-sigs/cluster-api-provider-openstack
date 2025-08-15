@@ -18275,13 +18275,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(re
 					},
 					"availabilityZone": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AvailabilityZone is the availability zone where the load balancer is deployed. This field is populated for load balancers in multi-AZ scenarios.",
+							Description: "AvailabilityZone is the availability zone where the load balancer is deployed. This field is populated for load balancers in multi-AZ scenarios and is the list-map key for OpenStackClusterStatus.APIServerLoadBalancers. It must be present (required) for list-map entries.",
+							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 				},
-				Required: []string{"name", "id", "ip", "internalIP"},
+				Required: []string{"name", "id", "ip", "internalIP", "availabilityZone"},
 			},
 		},
 		Dependencies: []string{

@@ -202,10 +202,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	lbStatus.ID = lb.ID
 	lbStatus.InternalIP = lb.VipAddress
 	lbStatus.Tags = lb.Tags
-	lbStatus.AvailabilityZone = azInfo.az
+	lbStatus.AvailabilityZone = ptr.Deref(azInfo.az, "")
 
 	// Update the multi-AZ load balancer list
-	s.updateMultiAZLoadBalancerStatus(openStackCluster, lb, azInfo.az)
+	s.updateMultiAZLoadBalancerStatus(openStackCluster, lb, ptr.Deref(azInfo.az, ""))
 
 	if lb.ProvisioningStatus != loadBalancerProvisioningStatusActive {
 		var err error
@@ -236,7 +236,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		lbStatus.IP = fp.FloatingIP
 
 		// Also update the floating IP in the multi-AZ load balancer list
-		s.updateMultiAZLoadBalancerFloatingIP(openStackCluster, azInfo.az, fp.FloatingIP)
+		s.updateMultiAZLoadBalancerFloatingIP(openStackCluster, ptr.Deref(azInfo.az, ""), fp.FloatingIP)
 
 		if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
 			return false, err
@@ -252,16 +252,16 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	if allowedCIDRsSupported {
 		lbStatus.AllowedCIDRs = getCanonicalAllowedCIDRs(openStackCluster)
 		// Also update the allowed CIDRs in the multi-AZ load balancer list
-		s.updateMultiAZLoadBalancerAllowedCIDRs(openStackCluster, azInfo.az, lbStatus.AllowedCIDRs)
+		s.updateMultiAZLoadBalancerAllowedCIDRs(openStackCluster, ptr.Deref(azInfo.az, ""), lbStatus.AllowedCIDRs)
 	} else {
 		lbStatus.AllowedCIDRs = nil
 		// Also update the allowed CIDRs in the multi-AZ load balancer list
-		s.updateMultiAZLoadBalancerAllowedCIDRs(openStackCluster, azInfo.az, nil)
+		s.updateMultiAZLoadBalancerAllowedCIDRs(openStackCluster, ptr.Deref(azInfo.az, ""), nil)
 	}
 
 	// Update the load balancer network information in the multi-AZ list
 	if lbStatus.LoadBalancerNetwork != nil {
-		s.updateMultiAZLoadBalancerNetwork(openStackCluster, azInfo.az, lbStatus.LoadBalancerNetwork)
+		s.updateMultiAZLoadBalancerNetwork(openStackCluster, ptr.Deref(azInfo.az, ""), lbStatus.LoadBalancerNetwork)
 	}
 
 	portList := []int{apiServerPort}
@@ -841,13 +841,13 @@ func (s *Service) selectTargetLoadBalancers(openStackCluster *infrav1.OpenStackC
 	if machineAZ != nil {
 		// Find load balancers in the same AZ
 		for _, lb := range openStackCluster.Status.APIServerLoadBalancers {
-			if lb.AvailabilityZone != nil && *lb.AvailabilityZone == *machineAZ {
+			if lb.AvailabilityZone == *machineAZ {
 				targets = append(targets, lb)
 			}
 		}
 		// Also check legacy load balancer if it doesn't have an AZ set (backward compatibility)
 		if openStackCluster.Status.APIServerLoadBalancer != nil &&
-			openStackCluster.Status.APIServerLoadBalancer.AvailabilityZone == nil {
+			openStackCluster.Status.APIServerLoadBalancer.AvailabilityZone == "" {
 			targets = append(targets, *openStackCluster.Status.APIServerLoadBalancer)
 		}
 	} else if openStackCluster.Status.APIServerLoadBalancer != nil {
@@ -1387,7 +1387,7 @@ func (s *Service) renameAPIServerMonitor(clusterResourceName, azClusterResourceN
 }
 
 // updateMultiAZLoadBalancerStatus updates the APIServerLoadBalancers list with the current load balancer status.
-func (s *Service) updateMultiAZLoadBalancerStatus(openStackCluster *infrav1.OpenStackCluster, lb *loadbalancers.LoadBalancer, az *string) {
+func (s *Service) updateMultiAZLoadBalancerStatus(openStackCluster *infrav1.OpenStackCluster, lb *loadbalancers.LoadBalancer, az string) {
 	if openStackCluster.Status.APIServerLoadBalancers == nil {
 		openStackCluster.Status.APIServerLoadBalancers = []infrav1.LoadBalancer{}
 	}
@@ -1422,14 +1422,14 @@ func (s *Service) updateMultiAZLoadBalancerStatus(openStackCluster *infrav1.Open
 }
 
 // updateMultiAZLoadBalancerFloatingIP updates the floating IP for a specific load balancer in the multi-AZ list.
-func (s *Service) updateMultiAZLoadBalancerFloatingIP(openStackCluster *infrav1.OpenStackCluster, az *string, floatingIP string) {
+func (s *Service) updateMultiAZLoadBalancerFloatingIP(openStackCluster *infrav1.OpenStackCluster, az string, floatingIP string) {
 	if openStackCluster.Status.APIServerLoadBalancers == nil {
 		return
 	}
 
 	for i := range openStackCluster.Status.APIServerLoadBalancers {
 		lb := &openStackCluster.Status.APIServerLoadBalancers[i]
-		if (az == nil && lb.AvailabilityZone == nil) || (az != nil && lb.AvailabilityZone != nil && *az == *lb.AvailabilityZone) {
+		if lb.AvailabilityZone == az {
 			lb.IP = floatingIP
 			break
 		}
@@ -1437,14 +1437,14 @@ func (s *Service) updateMultiAZLoadBalancerFloatingIP(openStackCluster *infrav1.
 }
 
 // updateMultiAZLoadBalancerAllowedCIDRs updates the allowed CIDRs for a specific load balancer in the multi-AZ list.
-func (s *Service) updateMultiAZLoadBalancerAllowedCIDRs(openStackCluster *infrav1.OpenStackCluster, az *string, allowedCIDRs []string) {
+func (s *Service) updateMultiAZLoadBalancerAllowedCIDRs(openStackCluster *infrav1.OpenStackCluster, az string, allowedCIDRs []string) {
 	if openStackCluster.Status.APIServerLoadBalancers == nil {
 		return
 	}
 
 	for i := range openStackCluster.Status.APIServerLoadBalancers {
 		lb := &openStackCluster.Status.APIServerLoadBalancers[i]
-		if (az == nil && lb.AvailabilityZone == nil) || (az != nil && lb.AvailabilityZone != nil && *az == *lb.AvailabilityZone) {
+		if lb.AvailabilityZone == az {
 			lb.AllowedCIDRs = allowedCIDRs
 			break
 		}
@@ -1452,14 +1452,14 @@ func (s *Service) updateMultiAZLoadBalancerAllowedCIDRs(openStackCluster *infrav
 }
 
 // updateMultiAZLoadBalancerNetwork updates the load balancer network information for a specific load balancer in the multi-AZ list.
-func (s *Service) updateMultiAZLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, az *string, lbNetwork *infrav1.NetworkStatusWithSubnets) {
+func (s *Service) updateMultiAZLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, az string, lbNetwork *infrav1.NetworkStatusWithSubnets) {
 	if openStackCluster.Status.APIServerLoadBalancers == nil {
 		return
 	}
 
 	for i := range openStackCluster.Status.APIServerLoadBalancers {
 		lb := &openStackCluster.Status.APIServerLoadBalancers[i]
-		if (az == nil && lb.AvailabilityZone == nil) || (az != nil && lb.AvailabilityZone != nil && *az == *lb.AvailabilityZone) {
+		if lb.AvailabilityZone == az {
 			lb.LoadBalancerNetwork = lbNetwork
 			break
 		}

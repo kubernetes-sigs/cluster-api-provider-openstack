@@ -2051,9 +2051,10 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>AvailabilityZone is the availability zone where the load balancer is deployed.
-This field is populated for load balancers in multi-AZ scenarios.</p>
+This field is populated for load balancers in multi-AZ scenarios and is the list-map key
+for OpenStackClusterStatus.APIServerLoadBalancers.
+It must be present (required) for list-map entries.</p>
 </td>
 </tr>
 </tbody>

@@ -2265,7 +2265,9 @@ spec:
                   availabilityZone:
                     description: |-
                       AvailabilityZone is the availability zone where the load balancer is deployed.
-                      This field is populated for load balancers in multi-AZ scenarios.
+                      This field is populated for load balancers in multi-AZ scenarios and is the list-map key
+                      for OpenStackClusterStatus.APIServerLoadBalancers.
+                      It must be present (required) for list-map entries.
                     type: string
                   id:
                     type: string
@@ -2323,6 +2325,7 @@ spec:
                       type: string
                     type: array
                 required:
+                - availabilityZone
                 - id
                 - internalIP
                 - ip
@@ -2342,7 +2345,9 @@ spec:
                     availabilityZone:
                       description: |-
                         AvailabilityZone is the availability zone where the load balancer is deployed.
-                        This field is populated for load balancers in multi-AZ scenarios.
+                        This field is populated for load balancers in multi-AZ scenarios and is the list-map key
+                        for OpenStackClusterStatus.APIServerLoadBalancers.
+                        It must be present (required) for list-map entries.
                       type: string
                     id:
                       type: string
@@ -2401,6 +2406,7 @@ spec:
                         type: string
                       type: array
                   required:
+                  - availabilityZone
                   - id
                   - internalIP
                   - ip

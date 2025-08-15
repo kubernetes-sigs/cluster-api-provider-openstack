@@ -611,6 +611,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: availabilityZone
       type:
         scalar: string
+      default: ""
     - name: id
       type:
         scalar: string

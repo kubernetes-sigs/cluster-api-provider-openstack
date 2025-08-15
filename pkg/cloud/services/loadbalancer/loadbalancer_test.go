@@ -1759,12 +1759,12 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				{
 					ID:               "lb-us-west-1a",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1a"),
+					AvailabilityZone: "us-west-1a",
 				},
 				{
 					ID:               "lb-us-west-1b",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1b-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1b"),
+					AvailabilityZone: "us-west-1b",
 				},
 			},
 			expectMemberCreations: []string{"pool-lb-us-west-1a"}, // Only same AZ
@@ -1777,12 +1777,12 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				{
 					ID:               "lb-us-west-1a",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1a"),
+					AvailabilityZone: "us-west-1a",
 				},
 				{
 					ID:               "lb-us-west-1b",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1b-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1b"),
+					AvailabilityZone: "us-west-1b",
 				},
 			},
 			expectMemberCreations: []string{"pool-lb-us-west-1a", "pool-lb-us-west-1b"}, // All AZs when cross-AZ enabled
@@ -1806,12 +1806,12 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				{
 					ID:               "lb-us-west-1a",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1a"),
+					AvailabilityZone: "us-west-1a",
 				},
 				{
 					ID:               "lb-us-west-1b",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1b-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1b"),
+					AvailabilityZone: "us-west-1b",
 				},
 			},
 			expectMemberCreations: []string{}, // No registrations - machine AZ doesn't match any LB AZ
@@ -1824,7 +1824,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				{
 					ID:               "lb-us-west-1a",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1a"),
+					AvailabilityZone: "us-west-1a",
 				},
 			},
 			expectMemberCreations: []string{}, // No registration when machine has no AZ and same-AZ only
@@ -1837,12 +1837,12 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				{
 					ID:               "lb-us-west-1a",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1a"),
+					AvailabilityZone: "us-west-1a",
 				},
 				{
 					ID:               "lb-us-west-1b",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1b-kubeapi",
-					AvailabilityZone: ptr.To("us-west-1b"),
+					AvailabilityZone: "us-west-1b",
 				},
 			},
 			expectMemberCreations: []string{"pool-lb-us-west-1a", "pool-lb-us-west-1b"}, // Register to all when cross-AZ enabled
@@ -1942,9 +1942,9 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				} else if allowCrossAZ {
 					// Cross-AZ enabled: process all LBs
 					shouldProcess = true
-				} else if tt.machineFailureDomain != "" && lb.AvailabilityZone != nil {
+				} else if tt.machineFailureDomain != "" {
 					// Same-AZ only: process only if machine AZ matches LB AZ
-					shouldProcess = tt.machineFailureDomain == *lb.AvailabilityZone
+					shouldProcess = tt.machineFailureDomain == lb.AvailabilityZone
 				}
 
 				if shouldProcess {

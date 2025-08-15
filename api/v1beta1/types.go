@@ -690,9 +690,11 @@ type LoadBalancer struct {
 	// +optional
 	LoadBalancerNetwork *NetworkStatusWithSubnets `json:"loadBalancerNetwork,omitempty"`
 	// AvailabilityZone is the availability zone where the load balancer is deployed.
-	// This field is populated for load balancers in multi-AZ scenarios.
-	// +optional
-	AvailabilityZone *string `json:"availabilityZone,omitempty"`
+	// This field is populated for load balancers in multi-AZ scenarios and is the list-map key
+	// for OpenStackClusterStatus.APIServerLoadBalancers.
+	// It must be present (required) for list-map entries.
+	// +kubebuilder:validation:Required
+	AvailabilityZone string `json:"availabilityZone"`
 }
 
 // SecurityGroupStatus represents the basic information of the associated

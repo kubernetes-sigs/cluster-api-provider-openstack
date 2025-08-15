@@ -28,6 +28,7 @@ import (
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
 	. "github.com/onsi/gomega"    //nolint:revive
 	"go.uber.org/mock/gomock"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -125,22 +126,40 @@ var _ = Describe("OpenStackCluster controller", func() {
 			PropagationPolicy: &orphan,
 		}
 
-		// Remove finalizers and delete openstackcluster
-		patchHelper, err := patch.NewHelper(testCluster, k8sClient)
-		Expect(err).To(BeNil())
-		testCluster.SetFinalizers([]string{})
-		err = patchHelper.Patch(ctx, testCluster)
-		Expect(err).To(BeNil())
-		err = k8sClient.Delete(ctx, testCluster, &deleteOptions)
-		Expect(err).To(BeNil())
-		// Remove finalizers and delete cluster
-		patchHelper, err = patch.NewHelper(capiCluster, k8sClient)
-		Expect(err).To(BeNil())
-		capiCluster.SetFinalizers([]string{})
-		err = patchHelper.Patch(ctx, capiCluster)
-		Expect(err).To(BeNil())
-		err = k8sClient.Delete(ctx, capiCluster, &deleteOptions)
-		Expect(err).To(BeNil())
+		// Remove finalizers and delete openstackcluster if it exists
+		{
+			current := &infrav1.OpenStackCluster{}
+			err := k8sClient.Get(ctx, types.NamespacedName{Namespace: testNamespace, Name: testCluster.Name}, current)
+			if err == nil {
+				patchHelper, err := patch.NewHelper(current, k8sClient)
+				Expect(err).To(BeNil())
+				current.SetFinalizers([]string{})
+				err = patchHelper.Patch(ctx, current)
+				Expect(err).To(BeNil())
+				err = k8sClient.Delete(ctx, current, &deleteOptions)
+				Expect(err).To(BeNil())
+			} else {
+				Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			}
+		}
+
+		// Remove finalizers and delete cluster if it exists
+		{
+			current := &clusterv1.Cluster{}
+			err := k8sClient.Get(ctx, types.NamespacedName{Namespace: testNamespace, Name: capiCluster.Name}, current)
+			if err == nil {
+				patchHelper, err := patch.NewHelper(current, k8sClient)
+				Expect(err).To(BeNil())
+				current.SetFinalizers([]string{})
+				err = patchHelper.Patch(ctx, current)
+				Expect(err).To(BeNil())
+				err = k8sClient.Delete(ctx, current, &deleteOptions)
+				Expect(err).To(BeNil())
+			} else {
+				Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			}
+		}
+
 		input := framework.DeleteNamespaceInput{
 			Deleter: k8sClient,
 			Name:    testNamespace,
@@ -1119,23 +1138,17 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Network: &infrav1.NetworkStatusWithSubnets{NetworkStatus: infrav1.NetworkStatus{ID: "cluster-net-id"}},
 			}
 
-			Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
-			Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
-
-			log := GinkgoLogr
-			clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
-			Expect(err).To(BeNil())
-			scope := scope.NewWithLogger(clientScope, log)
-
-			rec := mockScopeFactory.NetworkClient.EXPECT()
-			rec.GetNetwork(lbNetworkID).Return(&networks.Network{ID: lbNetworkID, Name: "lb-network"}, nil)
-			rec.GetSubnet(subnetID).Return(&subnets.Subnet{ID: subnetID, Name: "s", CIDR: "10.0.0.0/24", NetworkID: lbNetworkID}, nil).AnyTimes()
-
-			networkingService, err := networking.NewService(scope)
-			Expect(err).To(BeNil())
-
-			err = resolveLoadBalancerNetwork(testCluster, networkingService)
-			Expect(err).To(HaveOccurred())
+			// Creating the object should fail validation at the API layer due to duplicate listMapKey
+			err := k8sClient.Create(ctx, testCluster)
+			Expect(err).ToNot(BeNil())
+			Expect(apierrors.IsInvalid(err)).To(BeTrue())
+			// Verify the field path indicates the duplicate entry
+			se, ok := err.(*apierrors.StatusError)
+			Expect(ok).To(BeTrue())
+			Expect(se.ErrStatus.Details).ToNot(BeNil())
+			Expect(se.ErrStatus.Details.Causes).ToNot(BeEmpty())
+			Expect(se.ErrStatus.Details.Causes[0].Type).To(Equal(metav1.CauseTypeFieldValueDuplicate))
+			Expect(se.ErrStatus.Details.Causes[0].Field).To(ContainSubstring("spec.apiServerLoadBalancer.availabilityZoneSubnets"))
 		})
 
 		It("should error when AvailabilityZones and AvailabilityZoneSubnets disagree", func() {
@@ -1333,12 +1346,12 @@ func TestUpdateMultiAZLoadBalancerNetwork(t *testing.T) {
 				{
 					ID:               "lb-1",
 					Name:             "test-lb-1",
-					AvailabilityZone: ptr.To("az1"),
+					AvailabilityZone: "az1",
 				},
 				{
 					ID:               "lb-2",
 					Name:             "test-lb-2",
-					AvailabilityZone: ptr.To("az2"),
+					AvailabilityZone: "az2",
 				},
 			},
 			networkStatus: &infrav1.NetworkStatusWithSubnets{
