@@ -25,6 +25,7 @@
   - [API server floating IP](#api-server-floating-ip)
     - [Disabling the API server floating IP](#disabling-the-api-server-floating-ip)
     - [Restrict Access to the API server](#restrict-access-to-the-api-server)
+  - [Multi-AZ API server load balancer](#multi-az-api-server-load-balancer)
   - [Network Filters](#network-filters)
   - [Multiple Networks](#multiple-networks)
   - [Subnet Filters](#subnet-filters)
@@ -163,12 +164,12 @@ source env.rc <path/to/clouds.yaml> <cloud>
 
 The following variables are set.
 
-| Variable | Meaning |
- :----- | :--------
-| OPENSTACK_CLOUD | The cloud name which is used as second argument |
-| OPENSTACK_CLOUD_YAML_B64 | The secret used by Cluster API Provider OpenStack accessing OpenStack |
+| Variable                          | Meaning                                                                                                                                                                                                                                                                                  |
+| :-------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OPENSTACK_CLOUD                   | The cloud name which is used as second argument                                                                                                                                                                                                                                          |
+| OPENSTACK_CLOUD_YAML_B64          | The secret used by Cluster API Provider OpenStack accessing OpenStack                                                                                                                                                                                                                    |
 | OPENSTACK_CLOUD_PROVIDER_CONF_B64 | The content of [cloud.conf](https://git.k8s.io/cloud-provider-openstack/docs/openstack-cloud-controller-manager/using-openstack-cloud-controller-manager.md#deploy-a-kubernetes-cluster-with-openstack-cloud-controller-manager-using-kubeadm) which is used by OpenStack cloud provider |
-| OPENSTACK_CLOUD_CACERT_B64 | The content of your custom CA file which can be specified in your clouds.yaml by `ca-file`, mandatory when openstack endpoint is `https` |
+| OPENSTACK_CLOUD_CACERT_B64        | The content of your custom CA file which can be specified in your clouds.yaml by `ca-file`, mandatory when openstack endpoint is `https`                                                                                                                                                 |
 
 Note: Only the [external cloud provider](https://cluster-api-openstack.sigs.k8s.io/topics/external-cloud-provider.html) supports [Application Credentials](https://docs.openstack.org/keystone/latest/user/application_credentials.html).
 
@@ -384,6 +385,302 @@ If you locked out yourself or the CAPO management cluster, you can easily clear 
 openstack loadbalancer listener unset --allowed-cidrs <listener ID>
 ```
 
+## Multi-AZ API server load balancer
+
+This section explains how to configure a multi-AZ API server load balancer for CAPO clusters, how the AZ to subnet mapping works, how CAPO discovers and adopts pre-created Octavia resources, and how to migrate from single-AZ to multi-AZ. A Terraform example is included to pre-create per-AZ load balancers that CAPO will use.
+
+Key concepts
+- One API server load balancer (LB) per Availability Zone (AZ) for the control plane endpoint.
+- AZ to subnet mapping can be specified explicitly or derived positionally.
+- The status list of per-AZ load balancers is a list-map keyed by availabilityZone and the key is required (duplicates are rejected by API validation).
+- CAPO discovers pre-existing Octavia load balancers by name and adopts them if named according to CAPO’s scheme; correctly named resources are not recreated.
+
+Spec fields
+- spec.apiServerLoadBalancer.enabled: enable or disable LB reconciliation
+- spec.apiServerLoadBalancer.network: network to host the VIPs
+- spec.apiServerLoadBalancer.subnets: list of subnets on the LB network
+- spec.apiServerLoadBalancer.availabilityZones: list of AZs; positional mapping to subnets when mapping is not provided
+- spec.apiServerLoadBalancer.availabilityZoneSubnets: explicit AZ to Subnet mapping; takes precedence over positional subnets
+- spec.apiServerLoadBalancer.additionalPorts: listener ports in addition to the Kubernetes API port
+- spec.apiServerLoadBalancer.allowedCIDRs: optional CIDR ACL for the listener VIPs (requires provider support)
+- spec.apiServerLoadBalancer.allowCrossAZLoadBalancerMembers: allow registering nodes to load balancers in all AZs
+
+Validation and behavior
+- Mapping precedence: If availabilityZoneSubnets is provided, it is used and takes precedence over positional subnets.
+- Positional mapping: If only availabilityZones is provided, AvailabilityZones[i] maps to Subnets[i].
+- Defaults: If no AZs are provided, CAPO creates a single default mapping.
+- List-map key: status.apiServerLoadBalancers is a list-map keyed by availabilityZone; duplicates of the same AZ are rejected by the API server.
+- Backward compatibility: a legacy single LB without an AZ is still considered during member registration where appropriate.
+
+Examples
+
+1) Explicit AZ to subnet mapping (recommended)
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackCluster
+metadata:
+  name: my-cluster
+  namespace: default
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+    network:
+      id: 6c90b532-7ba0-418a-a276-5ae55060b5b0
+    availabilityZoneSubnets:
+      - availabilityZone: az1
+        subnet:
+          id: cad5a91a-36de-4388-823b-b0cc82cadfdc
+      - availabilityZone: az2
+        subnet:
+          id: e2407c18-c4e7-4d3d-befa-8eec5d8756f2
+```
+
+2) Positional mapping between AZs and subnets
+```yaml
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+    network:
+      id: 6c90b532-7ba0-418a-a276-5ae55060b5b0
+    availabilityZones:
+      - az1
+      - az2
+    subnets:
+      - id: cad5a91a-36de-4388-823b-b0cc82cadfdc
+      - id: e2407c18-c4e7-4d3d-befa-8eec5d8756f2
+```
+
+3) Deriving AZs from mapping order
+```yaml
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+    network:
+      id: 11111111-2222-3333-4444-555555555555
+    availabilityZoneSubnets:
+      - availabilityZone: az1
+        subnet:
+          id: aaaaaaaa-bbbb-cccc-dddd-111111111111
+      - availabilityZone: az2
+        subnet:
+          id: aaaaaaaa-bbbb-cccc-dddd-222222222222
+```
+
+4) Allow cross-AZ member registration
+```yaml
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+    allowCrossAZLoadBalancerMembers: true
+```
+
+5) Restrict access using allowed CIDRs (provider support required)
+```yaml
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+    allowedCIDRs:
+      - 192.0.2.0/24
+      - 203.0.113.10
+```
+
+Status shape
+- Per-AZ entries are recorded in status.apiServerLoadBalancers, where each entry includes:
+  - name, id, ip, internalIP, tags, availabilityZone, loadBalancerNetwork, allowedCIDRs
+
+Naming scheme for discovery
+CAPO discovers and adopts pre-existing LBs by name. The name formula is:
+- Legacy single-LB: k8s-clusterapi-cluster-<namespace>-<cluster-name>-kubeapi
+- Multi-AZ LB: k8s-clusterapi-cluster-<namespace>-<cluster-name>-<az>-kubeapi
+- Default pseudo-AZ: k8s-clusterapi-cluster-<namespace>-<cluster-name>-default-kubeapi
+
+Per-port resources are named as:
+- <lbName>-<port> (listeners, pools, monitors)
+
+Terraform example: pre-create LBs CAPO will adopt
+
+The following example pre-creates per-AZ Octavia load balancers, listeners, pools and monitors on a given network and subnets. Ensure the names match the scheme above so CAPO adopts them.
+
+Variables
+```hcl
+variable "project_id"   { type = string }
+variable "region"       { type = string }
+variable "cluster_ns"   { type = string } # Kubernetes namespace of the Cluster
+variable "cluster_name" { type = string } # Cluster.metadata.name
+variable "lb_network_id"{ type = string } # Network for VIPs
+variable "az_to_subnet" { type = map(string) } # map of az => subnet_id
+variable "api_ports" {
+  type    = list(number)
+  default = [6443]
+}
+```
+
+Provider
+```hcl
+provider "openstack" {
+  region = var.region
+  # auth via env vars or explicit fields
+}
+```
+
+Per-AZ resources
+```hcl
+# Build cluster resource name and LB names, plus a per-AZ-per-port map
+locals {
+  cluster_res_name = "${var.cluster_ns}-${var.cluster_name}"
+  azs              = keys(var.az_to_subnet)
+
+  az_ports = {
+    for pair in flatten([
+      for az in local.azs : [
+        for p in var.api_ports : {
+          key  = "${az}-${p}"
+          az   = az
+          port = p
+        }
+      ]
+    ]) : pair.key => { az = pair.az, port = pair.port }
+  }
+}
+
+# Create a load balancer per AZ
+resource "openstack_lb_loadbalancer_v2" "apilb" {
+  for_each          = var.az_to_subnet
+  name              = "k8s-clusterapi-cluster-${local.cluster_res_name}-${each.key}-kubeapi"
+  vip_subnet_id     = each.value
+  vip_network_id    = var.lb_network_id
+  provider          = null        # use cloud default or set explicitly
+  flavor_id         = null        # optional flavor
+  tags              = []          # optional CAPO tags
+  availability_zone = each.key    # if supported by your cloud/provider
+}
+
+# Listener per port per AZ
+resource "openstack_lb_listener_v2" "api" {
+  for_each        = local.az_ports
+  name            = "${openstack_lb_loadbalancer_v2.apilb[each.value.az].name}-${each.value.port}"
+  protocol        = "TCP"
+  protocol_port   = each.value.port
+  loadbalancer_id = openstack_lb_loadbalancer_v2.apilb[each.value.az].id
+
+  # Optional allowed CIDRs if supported by your Octavia provider
+  # allowed_cidrs = ["192.0.2.0/24"]
+}
+
+# Pool per listener
+resource "openstack_lb_pool_v2" "api" {
+  for_each    = local.az_ports
+  name        = "${openstack_lb_loadbalancer_v2.apilb[each.value.az].name}-${each.value.port}"
+  protocol    = "TCP"
+  lb_method   = "ROUND_ROBIN"
+  listener_id = openstack_lb_listener_v2.api[each.key].id
+}
+
+# Monitor per pool
+resource "openstack_lb_monitor_v2" "api" {
+  for_each         = local.az_ports
+  name             = "${openstack_lb_loadbalancer_v2.apilb[each.value.az].name}-${each.value.port}"
+  pool_id          = openstack_lb_pool_v2.api[each.key].id
+  type             = "TCP"
+  delay            = 10
+  timeout          = 5
+  max_retries      = 5
+  max_retries_down = 3
+}
+```
+
+Notes for Terraform adoption
+- Names must exactly match CAPO’s expected scheme for CAPO to adopt existing resources and avoid creating new ones.
+- CAPO will reconcile listeners, pools and monitors to ensure their settings match the cluster spec; using the same per-port suffix naming allows CAPO to find and adopt them by name.
+- If using a floating IP for the API server, either:
+  - Create and associate it to the LB VIP port outside of CAPO, or
+  - Let CAPO manage it by omitting FIP creation and setting spec.apiServerFloatingIP or leaving it unset to allocate automatically.
+- If using allowed CIDRs, ensure your Octavia provider supports VIP ACLs for TCP listeners.
+
+Migration: single-AZ to multi-AZ
+
+Overview
+- CAPO can reconcile one LB per Availability Zone.
+- Multi-AZ is configured via:
+  - availabilityZones (positional mapping) or
+  - availabilityZoneSubnets (explicit mapping, recommended).
+- status.apiServerLoadBalancers is a list-map keyed by availabilityZone; duplicates are rejected by API validation.
+
+What changes in the API
+- Spec
+  - Legacy: spec.apiServerLoadBalancer.availabilityZone (single value)
+  - Multi-AZ: spec.apiServerLoadBalancer.availabilityZones []string or spec.apiServerLoadBalancer.availabilityZoneSubnets []AZSubnetMapping
+  - Network via spec.apiServerLoadBalancer.network and subnets via spec.apiServerLoadBalancer.subnets (positional) or availabilityZoneSubnets (explicit).
+- Status
+  - status.apiServerLoadBalancers entries include availabilityZone (required key) with name, id, ip, internalIP, tags, loadBalancerNetwork, allowedCIDRs.
+
+How CAPO migrates existing resources
+- CAPO automatically migrates naming for the legacy single LB and its child resources (listener, pool, monitor) to AZ-specific naming on the first multi-AZ reconciliation.
+- If a per-AZ LB already exists with the expected name, CAPO adopts it; otherwise it creates the missing one.
+- The rename/adoption process is idempotent.
+
+Naming conventions used for discovery/adoption
+- Legacy LB: k8s-clusterapi-cluster-<namespace>-<cluster-name>-kubeapi
+- Per AZ: k8s-clusterapi-cluster-<namespace>-<cluster-name>-<az>-kubeapi
+- Default pseudo-AZ: k8s-clusterapi-cluster-<namespace>-<cluster-name>-default-kubeapi
+- Per-port resources: <lbName>-<port>
+
+Migration paths
+
+Path A: Positional mapping (minimal change)
+```yaml
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+    network:
+      id: <lb-network-id>
+    availabilityZones: ["az1", "az2"]
+    subnets:
+      - id: <subnet-az1>
+      - id: <subnet-az2>
+```
+
+Path B: Explicit mapping (recommended)
+```yaml
+spec:
+  apiServerLoadBalancer:
+    enabled: true
+    network:
+      id: <lb-network-id>
+    availabilityZoneSubnets:
+      - availabilityZone: az1
+        subnet:
+          id: <subnet-az1>
+      - availabilityZone: az2
+        subnet:
+          id: <subnet-az2>
+```
+
+Floating IPs and control plane endpoint
+- If spec.disableAPIServerFloatingIP is false (default), CAPO can allocate or adopt a floating IP for each LB (depending on configuration).
+- If spec.apiServerFloatingIP is set or spec.ControlPlaneEndpoint.Host resolves to an address, CAPO reconciles accordingly. Ensure reachability from the management cluster.
+
+Cross-AZ member registration
+- With spec.apiServerLoadBalancer.allowCrossAZLoadBalancerMembers: true, CAPO registers control plane members into all per-AZ LBs. If false, it registers only into the same-AZ LB (with legacy fallback when no AZ is set).
+
+Safe rollout procedure
+1) (Optional) Pre-create per-AZ LBs using Terraform with the exact naming scheme and VIP subnets you plan to use.
+2) Update the cluster spec to enable multi-AZ using positional or explicit mapping.
+3) Apply the manifest and reconcile:
+   - CAPO renames/adopts legacy resources into AZ-specific naming and/or creates new per-AZ resources as needed.
+   - status.apiServerLoadBalancers is populated.
+4) Verify:
+   - kubectl get openstackcluster -o yaml (inspect status.apiServerLoadBalancers)
+   - openstack loadbalancer list and openstack loadbalancer listener list reflect expected names and ports
+5) (Optional) Configure allowedCIDRs and verify Octavia provider support.
+
+Backout
+- Remove availabilityZones/availabilityZoneSubnets from spec to return to a single legacy LB. Existing per-AZ LBs are not automatically deleted; plan cleanup if rolling back.
+
+Troubleshooting
+- Duplicate AZ entries in availabilityZoneSubnets are invalid and rejected by the API server.
+- Positional mode requires equal counts of availabilityZones and subnets.
+- Ensure the LB network and subnets used in the spec match the network attached to the pre-created LBs; CAPO does not change an existing VIP subnet.
 ## Network Filters
 
 If you have a complex query that you want to use to lookup a network, then you can do this by using a network filter. More details about the filter can be found in [NetworkParam](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/api/v1beta1/types.go)
