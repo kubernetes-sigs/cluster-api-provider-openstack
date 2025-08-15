@@ -2080,7 +2080,7 @@ func Test_CreateLoadBalancer_UsesVipSubnetIDOverride_Mapping(t *testing.T) {
 	}, nil).AnyTimes()
 
 	// Listener/pool/monitor for port 6443 (minimal path)
-	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).DoAndReturn(func(arg any) (*listeners.Listener, error) {
+	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).DoAndReturn(func(_ any) (*listeners.Listener, error) {
 		return &listeners.Listener{ID: "listener-az1-6443", Name: "k8s-clusterapi-cluster-test-az1-kubeapi-6443", ProvisioningStatus: "ACTIVE"}, nil
 	})
 	mockScopeFactory.LbClient.EXPECT().GetListener("listener-az1-6443").Return(&listeners.Listener{ID: "listener-az1-6443"}, nil).AnyTimes()
@@ -2108,7 +2108,7 @@ func Test_CreateLoadBalancer_UsesVipSubnetIDOverride_Mapping(t *testing.T) {
 		ProvisioningStatus: "ACTIVE",
 	}, nil).AnyTimes()
 
-	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).DoAndReturn(func(arg any) (*listeners.Listener, error) {
+	mockScopeFactory.LbClient.EXPECT().CreateListener(gomock.Any()).DoAndReturn(func(_ any) (*listeners.Listener, error) {
 		return &listeners.Listener{ID: "listener-az2-6443", Name: "k8s-clusterapi-cluster-test-az2-kubeapi-6443", ProvisioningStatus: "ACTIVE"}, nil
 	})
 	mockScopeFactory.LbClient.EXPECT().GetListener("listener-az2-6443").Return(&listeners.Listener{ID: "listener-az2-6443"}, nil).AnyTimes()

@@ -746,13 +746,13 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 }
 
 func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName, ip, machineFailureDomain string) error {
+	// Preconditions
 	if openStackCluster.Status.Network == nil {
 		return errors.New("network is not yet available in openStackCluster.Status")
 	}
 	if len(openStackCluster.Status.Network.Subnets) == 0 {
 		return errors.New("network.Subnets are not yet available in openStackCluster.Status")
 	}
-	// Check if we have either legacy LB or multi-AZ LBs
 	if openStackCluster.Status.APIServerLoadBalancer == nil &&
 		len(openStackCluster.Status.APIServerLoadBalancers) == 0 {
 		return errors.New("no load balancers available in openStackCluster.Status")
@@ -761,14 +761,9 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		return errors.New("ControlPlaneEndpoint is not yet set in openStackCluster.Spec")
 	}
 
-	// Get the machine's AZ from its failure domain
-	var machineAZ *string
-	if machineFailureDomain != "" {
-		machineAZ = &machineFailureDomain
-	}
+	// Determine machine AZ and cross-AZ behavior
+	machineAZ := machineAZPtr(machineFailureDomain)
 
-	// Determine which load balancers to register to based on cross-AZ setting
-	var targetLoadBalancers []infrav1.LoadBalancer
 	allowsCrossAZ := false
 	if openStackCluster.Spec.APIServerLoadBalancer != nil {
 		allowsCrossAZ = openStackCluster.Spec.APIServerLoadBalancer.AllowsCrossAZLoadBalancerMembers()
@@ -778,38 +773,14 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		s.scope.Logger().Info("Cross-AZ load balancer members allowed, registering machine to all load balancers",
 			"machineName", openStackMachine.Name,
 			"machineAZ", machineAZ)
-
-		// Register to all load balancers (both legacy and multi-AZ)
-		if openStackCluster.Status.APIServerLoadBalancer != nil {
-			targetLoadBalancers = append(targetLoadBalancers, *openStackCluster.Status.APIServerLoadBalancer)
-		}
-		if openStackCluster.Status.APIServerLoadBalancers != nil {
-			targetLoadBalancers = append(targetLoadBalancers, openStackCluster.Status.APIServerLoadBalancers...)
-		}
 	} else {
 		s.scope.Logger().Info("Cross-AZ load balancer members disabled, registering machine only to same-AZ load balancers",
 			"machineName", openStackMachine.Name,
 			"machineAZ", machineAZ)
-
-		// Register only to load balancers in the same AZ
-		if machineAZ != nil {
-			// Find load balancers in the same AZ
-			for _, lb := range openStackCluster.Status.APIServerLoadBalancers {
-				if lb.AvailabilityZone != nil && *lb.AvailabilityZone == *machineAZ {
-					targetLoadBalancers = append(targetLoadBalancers, lb)
-				}
-			}
-			
-			// Also check legacy load balancer if it doesn't have an AZ set (backward compatibility)
-			if openStackCluster.Status.APIServerLoadBalancer != nil && 
-				openStackCluster.Status.APIServerLoadBalancer.AvailabilityZone == nil {
-				targetLoadBalancers = append(targetLoadBalancers, *openStackCluster.Status.APIServerLoadBalancer)
-			}
-		} else if openStackCluster.Status.APIServerLoadBalancer != nil {
-			// Machine has no AZ, register to legacy load balancer only for backward compatibility
-			targetLoadBalancers = append(targetLoadBalancers, *openStackCluster.Status.APIServerLoadBalancer)
-		}
 	}
+
+	// Compute target LBs
+	targetLoadBalancers := s.selectTargetLoadBalancers(openStackCluster, machineAZ, allowsCrossAZ)
 
 	if len(targetLoadBalancers) == 0 {
 		s.scope.Logger().Info("No target load balancers found for machine registration",
@@ -825,105 +796,164 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		"targetLoadBalancers", len(targetLoadBalancers),
 		"allowsCrossAZ", allowsCrossAZ)
 
-	var portList []int
-	if openStackCluster.Spec.ControlPlaneEndpoint != nil {
-		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
-	}
-	if openStackCluster.Spec.APIServerLoadBalancer != nil {
-		portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
-	}
+	// Build port list once
+	portList := s.buildAPIServerPortList(openStackCluster)
 
-	// Register the machine to each target load balancer
+	// Reconcile per target LB
 	for _, targetLB := range targetLoadBalancers {
 		if targetLB.ID == "" {
 			s.scope.Logger().Info("Skipping load balancer with empty ID", "lbName", targetLB.Name)
 			continue
 		}
+		if err := s.reconcileMembersForLB(openStackCluster, openStackMachine, clusterResourceName, ip, targetLB, portList); err != nil {
+			return err
+		}
+	}
 
-		loadBalancerName := targetLB.Name
-		if loadBalancerName == "" {
-			// Fallback to legacy naming if name is not set
-			loadBalancerName = getLoadBalancerName(clusterResourceName)
+	return nil
+}
+
+// machineAZPtr returns a pointer to the machine failure domain if non-empty.
+func machineAZPtr(fd string) *string {
+	if fd == "" {
+		return nil
+	}
+	return ptr.To(fd)
+}
+
+// selectTargetLoadBalancers chooses the set of LBs the machine should register with
+// based on cross-AZ setting and machine AZ.
+func (s *Service) selectTargetLoadBalancers(openStackCluster *infrav1.OpenStackCluster, machineAZ *string, allowsCrossAZ bool) []infrav1.LoadBalancer {
+	var targets []infrav1.LoadBalancer
+
+	if allowsCrossAZ {
+		// Register to all load balancers (both legacy and multi-AZ)
+		if openStackCluster.Status.APIServerLoadBalancer != nil {
+			targets = append(targets, *openStackCluster.Status.APIServerLoadBalancer)
+		}
+		if openStackCluster.Status.APIServerLoadBalancers != nil {
+			targets = append(targets, openStackCluster.Status.APIServerLoadBalancers...)
+		}
+		return targets
+	}
+
+	// Same-AZ only
+	if machineAZ != nil {
+		// Find load balancers in the same AZ
+		for _, lb := range openStackCluster.Status.APIServerLoadBalancers {
+			if lb.AvailabilityZone != nil && *lb.AvailabilityZone == *machineAZ {
+				targets = append(targets, lb)
+			}
+		}
+		// Also check legacy load balancer if it doesn't have an AZ set (backward compatibility)
+		if openStackCluster.Status.APIServerLoadBalancer != nil &&
+			openStackCluster.Status.APIServerLoadBalancer.AvailabilityZone == nil {
+			targets = append(targets, *openStackCluster.Status.APIServerLoadBalancer)
+		}
+	} else if openStackCluster.Status.APIServerLoadBalancer != nil {
+		// Machine has no AZ, register to legacy load balancer only for backward compatibility
+		targets = append(targets, *openStackCluster.Status.APIServerLoadBalancer)
+	}
+
+	return targets
+}
+
+// buildAPIServerPortList returns the list of ports to register on the LB.
+func (s *Service) buildAPIServerPortList(openStackCluster *infrav1.OpenStackCluster) []int {
+	var ports []int
+	if openStackCluster.Spec.ControlPlaneEndpoint != nil {
+		ports = append(ports, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
+	}
+	if openStackCluster.Spec.APIServerLoadBalancer != nil {
+		ports = append(ports, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	}
+	return ports
+}
+
+// reconcileMembersForLB ensures the machine is registered as a member across all provided ports for a specific LB.
+func (s *Service) reconcileMembersForLB(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName, ip string, targetLB infrav1.LoadBalancer, ports []int) error {
+	loadBalancerName := targetLB.Name
+	if loadBalancerName == "" {
+		// Fallback to legacy naming if name is not set
+		loadBalancerName = getLoadBalancerName(clusterResourceName)
+	}
+
+	s.scope.Logger().Info("Reconciling load balancer member for specific LB",
+		"loadBalancerName", loadBalancerName,
+		"loadBalancerID", targetLB.ID,
+		"targetAZ", targetLB.AvailabilityZone)
+
+	for _, port := range ports {
+		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
+		name := lbPortObjectsName + "-" + openStackMachine.Name
+
+		pool, err := s.checkIfPoolExists(lbPortObjectsName)
+		if err != nil {
+			return err
+		}
+		if pool == nil {
+			s.scope.Logger().Info("Load balancer pool does not exist yet, skipping",
+				"poolName", lbPortObjectsName,
+				"loadBalancerName", loadBalancerName)
+			continue
 		}
 
-		s.scope.Logger().Info("Reconciling load balancer member for specific LB",
-			"loadBalancerName", loadBalancerName,
-			"loadBalancerID", targetLB.ID,
-			"targetAZ", targetLB.AvailabilityZone)
+		lbMember, err := s.checkIfLbMemberExists(pool.ID, name)
+		if err != nil {
+			return err
+		}
 
-		for _, port := range portList {
-			lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
-			name := lbPortObjectsName + "-" + openStackMachine.Name
-
-			pool, err := s.checkIfPoolExists(lbPortObjectsName)
-			if err != nil {
-				return err
-			}
-			if pool == nil {
-				s.scope.Logger().Info("Load balancer pool does not exist yet, skipping",
-					"poolName", lbPortObjectsName,
-					"loadBalancerName", loadBalancerName)
+		if lbMember != nil {
+			// check if we have to recreate the LB Member
+			if lbMember.Address == ip {
+				// nothing to do continue to next port
 				continue
 			}
 
-			lbMember, err := s.checkIfLbMemberExists(pool.ID, name)
-			if err != nil {
-				return err
-			}
-
-			if lbMember != nil {
-				// check if we have to recreate the LB Member
-				if lbMember.Address == ip {
-					// nothing to do continue to next port
-					continue
-				}
-
-				s.scope.Logger().Info("Deleting load balancer member because the IP of the machine changed",
-					"memberName", name,
-					"oldIP", lbMember.Address,
-					"newIP", ip)
-
-				// lb member changed so let's delete it so we can create it again with the correct IP
-				_, err = s.waitForLoadBalancerActive(targetLB.ID)
-				if err != nil {
-					return err
-				}
-				if err := s.loadbalancerClient.DeletePoolMember(pool.ID, lbMember.ID); err != nil {
-					return err
-				}
-				_, err = s.waitForLoadBalancerActive(targetLB.ID)
-				if err != nil {
-					return err
-				}
-			}
-
-			s.scope.Logger().Info("Creating load balancer member",
+			s.scope.Logger().Info("Deleting load balancer member because the IP of the machine changed",
 				"memberName", name,
-				"poolID", pool.ID,
-				"loadBalancerID", targetLB.ID,
-				"ip", ip)
+				"oldIP", lbMember.Address,
+				"newIP", ip)
 
-			// if we got to this point we should either create or re-create the lb member
-			lbMemberOpts := pools.CreateMemberOpts{
-				Name:         name,
-				ProtocolPort: port,
-				Address:      ip,
-				Tags:         openStackCluster.Spec.Tags,
-			}
-
+			// lb member changed so let's delete it so we can create it again with the correct IP
 			if _, err := s.waitForLoadBalancerActive(targetLB.ID); err != nil {
 				return err
 			}
-
-			if _, err := s.loadbalancerClient.CreatePoolMember(pool.ID, lbMemberOpts); err != nil {
+			if err := s.loadbalancerClient.DeletePoolMember(pool.ID, lbMember.ID); err != nil {
 				return err
 			}
-
 			if _, err := s.waitForLoadBalancerActive(targetLB.ID); err != nil {
 				return err
 			}
 		}
+
+		s.scope.Logger().Info("Creating load balancer member",
+			"memberName", name,
+			"poolID", pool.ID,
+			"loadBalancerID", targetLB.ID,
+			"ip", ip)
+
+		// if we got to this point we should either create or re-create the lb member
+		lbMemberOpts := pools.CreateMemberOpts{
+			Name:         name,
+			ProtocolPort: port,
+			Address:      ip,
+			Tags:         openStackCluster.Spec.Tags,
+		}
+
+		if _, err := s.waitForLoadBalancerActive(targetLB.ID); err != nil {
+			return err
+		}
+
+		if _, err := s.loadbalancerClient.CreatePoolMember(pool.ID, lbMemberOpts); err != nil {
+			return err
+		}
+
+		if _, err := s.waitForLoadBalancerActive(targetLB.ID); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -935,19 +965,19 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 
 	// Collect all load balancer names to delete (both legacy and multi-AZ formats)
 	var loadBalancerNames []string
-	
+
 	// Add legacy single load balancer name
 	legacyLoadBalancerName := getLoadBalancerName(clusterResourceName)
 	loadBalancerNames = append(loadBalancerNames, legacyLoadBalancerName)
 
 	// Add multi-AZ load balancer names
 	availabilityZones := lbSpec.AvailabilityZones
-	
+
 	// Handle legacy single AZ case
 	if lbSpec.AvailabilityZone != nil && len(availabilityZones) == 0 {
 		availabilityZones = []string{*lbSpec.AvailabilityZone}
 	}
-	
+
 	// If no AZ specified, check for default AZ load balancer
 	if len(availabilityZones) == 0 {
 		defaultAZName := fmt.Sprintf("%s-default", clusterResourceName)
@@ -964,7 +994,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 
 	// Track any pending deletions for requeue
 	var pendingDeletions []string
-		deletedLoadBalancers := make([]string, 0, len(loadBalancerNames))
+	deletedLoadBalancers := make([]string, 0, len(loadBalancerNames))
 
 	// Iterate through all potential load balancer names and delete them
 	for _, loadBalancerName := range loadBalancerNames {
@@ -1020,7 +1050,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 
 		record.Eventf(openStackCluster, "SuccessfulDeleteLoadBalancer", "Deleted load balancer %s with id %s", lb.Name, lb.ID)
 		deletedLoadBalancers = append(deletedLoadBalancers, lb.Name)
-		
+
 		// Remove the load balancer from the multi-AZ status list
 		s.removeLoadBalancerFromMultiAZStatus(openStackCluster, lb.ID)
 	}
