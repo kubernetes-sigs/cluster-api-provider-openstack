@@ -401,10 +401,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	openStackMachine.Status.Addresses = addresses
 
 	if util.IsControlPlaneMachine(machine) {
-		var failureDomain string
-		if machine.Spec.FailureDomain != nil {
-			failureDomain = *machine.Spec.FailureDomain
-		}
+		failureDomain := machine.Spec.FailureDomain
 		err = r.reconcileAPIServerLoadBalancer(scope, openStackCluster, openStackMachine, instanceStatus, instanceNS, clusterResourceName, failureDomain)
 		if err != nil {
 			return ctrl.Result{}, err

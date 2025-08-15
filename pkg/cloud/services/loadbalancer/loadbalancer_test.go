@@ -1019,13 +1019,13 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 	}
 
 	tests := []struct {
-		name               string
-		openStackCluster   *infrav1.OpenStackCluster
+		name                string
+		openStackCluster    *infrav1.OpenStackCluster
 		clusterResourceName string
-		apiServerPort      int
-		expectLoadBalancer func(m *mock.MockLbClientMockRecorder)
-		want               bool
-		wantError          error
+		apiServerPort       int
+		expectLoadBalancer  func(m *mock.MockLbClientMockRecorder)
+		want                bool
+		wantError           error
 	}{
 		{
 			name: "single-AZ default scenario (no AZ specified)",
@@ -1035,63 +1035,63 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 				return cluster
 			}(),
 			clusterResourceName: "test-cluster",
-			apiServerPort:      6443,
+			apiServerPort:       6443,
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				// Expect migration calls first
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil).AnyTimes()
 				m.ListListeners(gomock.Any()).Return([]listeners.Listener{}, nil).AnyTimes()
 				m.ListPools(gomock.Any()).Return([]pools.Pool{}, nil).AnyTimes()
 				m.ListMonitors(gomock.Any()).Return([]monitors.Monitor{}, nil).AnyTimes()
-				
+
 				// Expect load balancer creation for default AZ
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
 				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-default",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-default-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-1",
+					ID:                 "lb-default",
+					Name:               "k8s-clusterapi-cluster-test-cluster-default-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-1",
 				}, nil)
-				
+
 				// Expect waiting for load balancer to be active
 				m.GetLoadBalancer("lb-default").Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-default",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-default-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-1",
+					ID:                 "lb-default",
+					Name:               "k8s-clusterapi-cluster-test-cluster-default-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-1",
 				}, nil).AnyTimes()
-				
+
 				// Expect Octavia version check for allowed CIDRs support
 				m.ListOctaviaVersions().Return([]apiversions.APIVersion{
 					{ID: "2.24"},
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}, nil)
-				
+
 				// Expect listener creation
 				m.CreateListener(gomock.Any()).Return(&listeners.Listener{
-					ID:              "listener-default",
-					Name:            "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
+					ID:                 "listener-default",
+					Name:               "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
-				
+
 				// Expect waiting for listener to be ready
 				m.GetListener("listener-default").Return(&listeners.Listener{
-					ID:              "listener-default",
-					Name:            "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
+					ID:                 "listener-default",
+					Name:               "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil).AnyTimes()
-				
+
 				// Expect pool creation
 				m.CreatePool(gomock.Any()).Return(&pools.Pool{
-					ID:              "pool-default",
-					Name:            "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
+					ID:                 "pool-default",
+					Name:               "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
-				
+
 				// Expect monitor creation
 				m.CreateMonitor(gomock.Any()).Return(&monitors.Monitor{
-					ID:              "monitor-default",
-					Name:            "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
+					ID:                 "monitor-default",
+					Name:               "k8s-clusterapi-cluster-test-cluster-default-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
 			},
@@ -1106,102 +1106,102 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 				return cluster
 			}(),
 			clusterResourceName: "test-cluster",
-			apiServerPort:      6443,
+			apiServerPort:       6443,
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				// Expect migration calls first
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil).AnyTimes()
 				m.ListListeners(gomock.Any()).Return([]listeners.Listener{}, nil).AnyTimes()
 				m.ListPools(gomock.Any()).Return([]pools.Pool{}, nil).AnyTimes()
 				m.ListMonitors(gomock.Any()).Return([]monitors.Monitor{}, nil).AnyTimes()
-				
+
 				// Expect load balancer creation for az1
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
 				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-az1",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-az1-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-1",
+					ID:                 "lb-az1",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az1-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-1",
 				}, nil)
-				
+
 				// Expect waiting for load balancer to be active
 				m.GetLoadBalancer("lb-az1").Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-az1",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-az1-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-1",
+					ID:                 "lb-az1",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az1-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-1",
 				}, nil).AnyTimes()
-				
+
 				// Expect Octavia version check for allowed CIDRs support
 				m.ListOctaviaVersions().Return([]apiversions.APIVersion{
 					{ID: "2.24"},
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}, nil).AnyTimes()
-				
+
 				// Expect listener, pool, monitor creation for az1
 				m.CreateListener(gomock.Any()).Return(&listeners.Listener{
-					ID:              "listener-az1",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
+					ID:                 "listener-az1",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
-				
+
 				// Expect waiting for listener to be ready
 				m.GetListener("listener-az1").Return(&listeners.Listener{
-					ID:              "listener-az1",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
+					ID:                 "listener-az1",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil).AnyTimes()
-				
+
 				m.CreatePool(gomock.Any()).Return(&pools.Pool{
-					ID:              "pool-az1",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
+					ID:                 "pool-az1",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
 				m.CreateMonitor(gomock.Any()).Return(&monitors.Monitor{
-					ID:              "monitor-az1",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
+					ID:                 "monitor-az1",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az1-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
-				
-				// Expect load balancer creation for az2  
+
+				// Expect load balancer creation for az2
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
 				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-az2",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-az2-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-2",
+					ID:                 "lb-az2",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az2-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-2",
 				}, nil)
-				
+
 				// Expect waiting for load balancer to be active
 				m.GetLoadBalancer("lb-az2").Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-az2",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-az2-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-2",
+					ID:                 "lb-az2",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az2-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-2",
 				}, nil).AnyTimes()
-				
+
 				// Expect listener, pool, monitor creation for az2
 				m.CreateListener(gomock.Any()).Return(&listeners.Listener{
-					ID:              "listener-az2",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
+					ID:                 "listener-az2",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
-				
+
 				// Expect waiting for listener to be ready
 				m.GetListener("listener-az2").Return(&listeners.Listener{
-					ID:              "listener-az2",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
+					ID:                 "listener-az2",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil).AnyTimes()
-				
+
 				m.CreatePool(gomock.Any()).Return(&pools.Pool{
-					ID:              "pool-az2",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
+					ID:                 "pool-az2",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
 				m.CreateMonitor(gomock.Any()).Return(&monitors.Monitor{
-					ID:              "monitor-az2",
-					Name:            "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
+					ID:                 "monitor-az2",
+					Name:               "k8s-clusterapi-cluster-test-cluster-az2-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
 			},
@@ -1217,68 +1217,68 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 				return cluster
 			}(),
 			clusterResourceName: "test-cluster",
-			apiServerPort:      6443,
+			apiServerPort:       6443,
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				// Expect migration calls first
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil).AnyTimes()
 				m.ListListeners(gomock.Any()).Return([]listeners.Listener{}, nil).AnyTimes()
 				m.ListPools(gomock.Any()).Return([]pools.Pool{}, nil).AnyTimes()
 				m.ListMonitors(gomock.Any()).Return([]monitors.Monitor{}, nil).AnyTimes()
-				
+
 				// Expect Octavia version check for allowed CIDRs support
 				m.ListOctaviaVersions().Return([]apiversions.APIVersion{
 					{ID: "2.24"},
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}, nil).AnyTimes()
-				
+
 				// For each AZ, expect load balancer creation
 				for i, az := range []string{"az1", "az2", "az3"} {
 					subnetID := fmt.Sprintf("subnet-%d", i+1)
 					lbName := fmt.Sprintf("k8s-clusterapi-cluster-test-cluster-%s-kubeapi", az)
 					lbID := fmt.Sprintf("lb-%s", az)
-					
+
 					m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
 					m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
-						ID:                   lbID,
-						Name:                 lbName,
-						ProvisioningStatus:   "ACTIVE",
-						VipSubnetID:         subnetID,
+						ID:                 lbID,
+						Name:               lbName,
+						ProvisioningStatus: "ACTIVE",
+						VipSubnetID:        subnetID,
 					}, nil)
-					
+
 					// Expect waiting for load balancer to be active
 					m.GetLoadBalancer(lbID).Return(&loadbalancers.LoadBalancer{
-						ID:                   lbID,
-						Name:                 lbName,
-						ProvisioningStatus:   "ACTIVE",
-						VipSubnetID:         subnetID,
+						ID:                 lbID,
+						Name:               lbName,
+						ProvisioningStatus: "ACTIVE",
+						VipSubnetID:        subnetID,
 					}, nil).AnyTimes()
-					
+
 					// For each port (6443, 8080, 9090), expect listener/pool/monitor creation
 					for _, port := range []int{6443, 8080, 9090} {
 						portObjectName := fmt.Sprintf("%s-%d", lbName, port)
 						listenerID := fmt.Sprintf("listener-%s-%d", az, port)
 						m.CreateListener(gomock.Any()).Return(&listeners.Listener{
-							ID:              listenerID,
-							Name:            portObjectName,
+							ID:                 listenerID,
+							Name:               portObjectName,
 							ProvisioningStatus: "ACTIVE",
 						}, nil)
-						
+
 						// Expect waiting for listener to be ready
 						m.GetListener(listenerID).Return(&listeners.Listener{
-							ID:              listenerID,
-							Name:            portObjectName,
+							ID:                 listenerID,
+							Name:               portObjectName,
 							ProvisioningStatus: "ACTIVE",
 						}, nil).AnyTimes()
-						
+
 						m.CreatePool(gomock.Any()).Return(&pools.Pool{
-							ID:              fmt.Sprintf("pool-%s-%d", az, port),
-							Name:            portObjectName,
+							ID:                 fmt.Sprintf("pool-%s-%d", az, port),
+							Name:               portObjectName,
 							ProvisioningStatus: "ACTIVE",
 						}, nil)
 						m.CreateMonitor(gomock.Any()).Return(&monitors.Monitor{
-							ID:              fmt.Sprintf("monitor-%s-%d", az, port),
-							Name:            portObjectName,
+							ID:                 fmt.Sprintf("monitor-%s-%d", az, port),
+							Name:               portObjectName,
 							ProvisioningStatus: "ACTIVE",
 						}, nil)
 					}
@@ -1296,63 +1296,63 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 				return cluster
 			}(),
 			clusterResourceName: "test-cluster",
-			apiServerPort:      6443,
+			apiServerPort:       6443,
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				// Expect migration calls first
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil).AnyTimes()
 				m.ListListeners(gomock.Any()).Return([]listeners.Listener{}, nil).AnyTimes()
 				m.ListPools(gomock.Any()).Return([]pools.Pool{}, nil).AnyTimes()
 				m.ListMonitors(gomock.Any()).Return([]monitors.Monitor{}, nil).AnyTimes()
-				
+
 				// Expect Octavia version check for allowed CIDRs support
 				m.ListOctaviaVersions().Return([]apiversions.APIVersion{
 					{ID: "2.24"},
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}, nil).AnyTimes()
-				
+
 				// Expect load balancer creation for migrated AZ
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
 				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-legacy-az",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-1",
+					ID:                 "lb-legacy-az",
+					Name:               "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-1",
 				}, nil)
-				
+
 				// Expect waiting for load balancer to be active
 				m.GetLoadBalancer("lb-legacy-az").Return(&loadbalancers.LoadBalancer{
-					ID:                   "lb-legacy-az",
-					Name:                 "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi",
-					ProvisioningStatus:   "ACTIVE",
-					VipSubnetID:         "subnet-1",
+					ID:                 "lb-legacy-az",
+					Name:               "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+					VipSubnetID:        "subnet-1",
 				}, nil).AnyTimes()
-				
+
 				// Expect listener creation
 				m.CreateListener(gomock.Any()).Return(&listeners.Listener{
-					ID:              "listener-legacy-az",
-					Name:            "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
+					ID:                 "listener-legacy-az",
+					Name:               "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
-				
+
 				// Expect waiting for listener to be ready
 				m.GetListener("listener-legacy-az").Return(&listeners.Listener{
-					ID:              "listener-legacy-az",
-					Name:            "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
+					ID:                 "listener-legacy-az",
+					Name:               "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil).AnyTimes()
-				
+
 				// Expect pool creation
 				m.CreatePool(gomock.Any()).Return(&pools.Pool{
-					ID:              "pool-legacy-az",
-					Name:            "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
+					ID:                 "pool-legacy-az",
+					Name:               "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
-				
+
 				// Expect monitor creation
 				m.CreateMonitor(gomock.Any()).Return(&monitors.Monitor{
-					ID:              "monitor-legacy-az",
-					Name:            "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
+					ID:                 "monitor-legacy-az",
+					Name:               "k8s-clusterapi-cluster-test-cluster-legacy-az-kubeapi-6443",
 					ProvisioningStatus: "ACTIVE",
 				}, nil)
 			},
@@ -1367,7 +1367,7 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 				return cluster
 			}(),
 			clusterResourceName: "test-cluster",
-			apiServerPort:      6443,
+			apiServerPort:       6443,
 			expectLoadBalancer: func(_ *mock.MockLbClientMockRecorder) {
 				// No expectations as it should fail early
 			},
@@ -1382,7 +1382,7 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 				return cluster
 			}(),
 			clusterResourceName: "test-cluster",
-			apiServerPort:      6443,
+			apiServerPort:       6443,
 			expectLoadBalancer: func(_ *mock.MockLbClientMockRecorder) {
 				// No expectations as it should fail early
 			},
@@ -1402,14 +1402,14 @@ func Test_ReconcileLoadBalancers(t *testing.T) {
 
 			// Set up load balancer mock expectations
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
-			
+
 			// Set up network client mock expectations for CreateFloatingIP calls
 			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
 			networkRecorder.CreateFloatingIP(gomock.Any()).Return(&floatingips.FloatingIP{
 				ID:         "floating-ip-id",
 				FloatingIP: "192.168.1.100",
 			}, nil).AnyTimes()
-			
+
 			// Add expectation for ListFloatingIP calls
 			networkRecorder.ListFloatingIP(gomock.Any()).Return([]floatingips.FloatingIP{}, nil).AnyTimes()
 
@@ -1431,7 +1431,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 	baseCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
 			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-				Enabled: ptr.To(true),
+				Enabled:         ptr.To(true),
 				AdditionalPorts: []int{8080},
 			},
 		},
@@ -1447,11 +1447,11 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 		wantError           error
 	}{
 		{
-			name:             "migrate single-AZ to multi-AZ format with default AZ",
-			openStackCluster: baseCluster.DeepCopy(),
+			name:                "migrate single-AZ to multi-AZ format with default AZ",
+			openStackCluster:    baseCluster.DeepCopy(),
 			clusterResourceName: "test-cluster",
 			azInfo: azSubnet{
-				az: func() *string { s := "default"; return &s }(),
+				az:     func() *string { s := "default"; return &s }(),
 				subnet: infrav1.Subnet{ID: "subnet-1"},
 			},
 			apiServerPort: 6443,
@@ -1463,13 +1463,13 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-test-cluster-kubeapi",
 					},
 				}, nil)
-				
+
 				// Rename load balancer
 				m.UpdateLoadBalancer("existing-lb", gomock.Any()).Return(&loadbalancers.LoadBalancer{
 					ID:   "existing-lb",
 					Name: "k8s-clusterapi-cluster-test-cluster-default-kubeapi",
 				}, nil)
-				
+
 				// Check and rename listener for port 6443
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]listeners.Listener{
 					{
@@ -1478,7 +1478,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdateListener("existing-listener-6443", gomock.Any()).Return(&listeners.Listener{}, nil)
-				
+
 				// Check and rename pool for port 6443
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]pools.Pool{
 					{
@@ -1487,7 +1487,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdatePool("existing-pool-6443", gomock.Any()).Return(&pools.Pool{}, nil)
-				
+
 				// Check and rename monitor for port 6443
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]monitors.Monitor{
 					{
@@ -1496,7 +1496,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdateMonitor("existing-monitor-6443", gomock.Any()).Return(&monitors.Monitor{}, nil)
-				
+
 				// Check and rename listener for port 8080
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]listeners.Listener{
 					{
@@ -1505,7 +1505,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdateListener("existing-listener-8080", gomock.Any()).Return(&listeners.Listener{}, nil)
-				
+
 				// Check and rename pool for port 8080
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]pools.Pool{
 					{
@@ -1514,7 +1514,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdatePool("existing-pool-8080", gomock.Any()).Return(&pools.Pool{}, nil)
-				
+
 				// Check and rename monitor for port 8080
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]monitors.Monitor{
 					{
@@ -1527,11 +1527,11 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name:             "migrate to named AZ format",
-			openStackCluster: baseCluster.DeepCopy(),
+			name:                "migrate to named AZ format",
+			openStackCluster:    baseCluster.DeepCopy(),
 			clusterResourceName: "test-cluster",
 			azInfo: azSubnet{
-				az: func() *string { s := "us-west-1a"; return &s }(),
+				az:     func() *string { s := "us-west-1a"; return &s }(),
 				subnet: infrav1.Subnet{ID: "subnet-1"},
 			},
 			apiServerPort: 6443,
@@ -1543,13 +1543,13 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-test-cluster-kubeapi",
 					},
 				}, nil)
-				
+
 				// Rename load balancer
 				m.UpdateLoadBalancer("existing-lb", gomock.Any()).Return(&loadbalancers.LoadBalancer{
 					ID:   "existing-lb",
 					Name: "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi",
 				}, nil)
-				
+
 				// Check and rename listener for port 6443
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]listeners.Listener{
 					{
@@ -1558,7 +1558,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdateListener("existing-listener-6443", gomock.Any()).Return(&listeners.Listener{}, nil)
-				
+
 				// Check and rename pool for port 6443
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]pools.Pool{
 					{
@@ -1567,7 +1567,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdatePool("existing-pool-6443", gomock.Any()).Return(&pools.Pool{}, nil)
-				
+
 				// Check and rename monitor for port 6443
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]monitors.Monitor{
 					{
@@ -1576,7 +1576,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdateMonitor("existing-monitor-6443", gomock.Any()).Return(&monitors.Monitor{}, nil)
-				
+
 				// Check and rename listener for port 8080
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]listeners.Listener{
 					{
@@ -1585,7 +1585,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdateListener("existing-listener-8080", gomock.Any()).Return(&listeners.Listener{}, nil)
-				
+
 				// Check and rename pool for port 8080
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]pools.Pool{
 					{
@@ -1594,7 +1594,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 					},
 				}, nil)
 				m.UpdatePool("existing-pool-8080", gomock.Any()).Return(&pools.Pool{}, nil)
-				
+
 				// Check and rename monitor for port 8080
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]monitors.Monitor{
 					{
@@ -1607,26 +1607,26 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name:             "no migration needed - no existing resources",
-			openStackCluster: baseCluster.DeepCopy(),
+			name:                "no migration needed - no existing resources",
+			openStackCluster:    baseCluster.DeepCopy(),
 			clusterResourceName: "new-cluster",
 			azInfo: azSubnet{
-				az: func() *string { s := testAZ1; return &s }(),
+				az:     func() *string { s := testAZ1; return &s }(),
 				subnet: infrav1.Subnet{ID: "subnet-1"},
 			},
 			apiServerPort: 6443,
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				// Check for old load balancer - doesn't exist
 				m.ListLoadBalancers(loadbalancers.ListOpts{Name: "k8s-clusterapi-cluster-new-cluster-kubeapi"}).Return([]loadbalancers.LoadBalancer{}, nil)
-				
+
 				// Check for old listeners - don't exist
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-new-cluster-kubeapi-6443"}).Return([]listeners.Listener{}, nil)
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-new-cluster-kubeapi-8080"}).Return([]listeners.Listener{}, nil)
-				
+
 				// Check for old pools - don't exist
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-new-cluster-kubeapi-6443"}).Return([]pools.Pool{}, nil)
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-new-cluster-kubeapi-8080"}).Return([]pools.Pool{}, nil)
-				
+
 				// Check for old monitors - don't exist
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-new-cluster-kubeapi-6443"}).Return([]monitors.Monitor{}, nil)
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-new-cluster-kubeapi-8080"}).Return([]monitors.Monitor{}, nil)
@@ -1634,7 +1634,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name:             "migration skipped when load balancer disabled",
+			name: "migration skipped when load balancer disabled",
 			openStackCluster: func() *infrav1.OpenStackCluster {
 				cluster := baseCluster.DeepCopy()
 				cluster.Spec.APIServerLoadBalancer.Enabled = ptr.To(false)
@@ -1642,7 +1642,7 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 			}(),
 			clusterResourceName: "test-cluster",
 			azInfo: azSubnet{
-				az: func() *string { s := "az1"; return &s }(),
+				az:     func() *string { s := "az1"; return &s }(),
 				subnet: infrav1.Subnet{ID: "subnet-1"},
 			},
 			apiServerPort: 6443,
@@ -1652,26 +1652,26 @@ func Test_migrateAPIServerLoadBalancer(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name:             "resources already have correct names - no updates needed",
-			openStackCluster: baseCluster.DeepCopy(),
+			name:                "resources already have correct names - no updates needed",
+			openStackCluster:    baseCluster.DeepCopy(),
 			clusterResourceName: "test-cluster",
 			azInfo: azSubnet{
-				az: func() *string { s := "az1"; return &s }(),
+				az:     func() *string { s := "az1"; return &s }(),
 				subnet: infrav1.Subnet{ID: "subnet-1"},
 			},
 			apiServerPort: 6443,
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				// Check if old load balancer exists - it doesn't
 				m.ListLoadBalancers(loadbalancers.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi"}).Return([]loadbalancers.LoadBalancer{}, nil)
-				
+
 				// Check listeners - they don't exist with old names
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]listeners.Listener{}, nil)
 				m.ListListeners(listeners.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]listeners.Listener{}, nil)
-				
+
 				// Check pools - they don't exist with old names
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]pools.Pool{}, nil)
 				m.ListPools(pools.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]pools.Pool{}, nil)
-				
+
 				// Check monitors - they don't exist with old names
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-6443"}).Return([]monitors.Monitor{}, nil)
 				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-test-cluster-kubeapi-8080"}).Return([]monitors.Monitor{}, nil)
@@ -1743,7 +1743,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	tests := []struct {
-		name                   string
+		name                  string
 		allowCrossAZ          *bool
 		machineFailureDomain  string
 		existingLoadBalancers []infrav1.LoadBalancer
@@ -1762,7 +1762,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 					AvailabilityZone: ptr.To("us-west-1a"),
 				},
 				{
-					ID:               "lb-us-west-1b", 
+					ID:               "lb-us-west-1b",
 					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1b-kubeapi",
 					AvailabilityZone: ptr.To("us-west-1b"),
 				},
@@ -1776,7 +1776,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 			existingLoadBalancers: []infrav1.LoadBalancer{
 				{
 					ID:               "lb-us-west-1a",
-					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi", 
+					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1a-kubeapi",
 					AvailabilityZone: ptr.To("us-west-1a"),
 				},
 				{
@@ -1810,7 +1810,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				},
 				{
 					ID:               "lb-us-west-1b",
-					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1b-kubeapi", 
+					Name:             "k8s-clusterapi-cluster-test-cluster-us-west-1b-kubeapi",
 					AvailabilityZone: ptr.To("us-west-1b"),
 				},
 			},
@@ -1856,7 +1856,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 
 			// Create mock scope factory
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
-			
+
 			// Create service
 			lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			g.Expect(err).NotTo(HaveOccurred())
@@ -1868,7 +1868,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 						Enabled:                         ptr.To(true),
 						AllowCrossAZLoadBalancerMembers: tt.allowCrossAZ,
 					},
-					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1beta1.APIEndpoint{
 						Host: "192.168.1.100",
 						Port: 6443,
 					},
@@ -1882,7 +1882,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 						},
 						Subnets: []infrav1.Subnet{
 							{
-								ID:   "subnet-id", 
+								ID:   "subnet-id",
 								Name: "test-subnet",
 								CIDR: "10.0.0.0/24",
 							},
@@ -1910,7 +1910,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 			for _, lb := range allLoadBalancers {
 				poolID := "pool-" + lb.ID
 				poolName := lb.Name + "-6443" // Pool name includes the port
-				
+
 				// Mock checkIfPoolExists call - the function searches by pool name
 				mockScopeFactory.LbClient.EXPECT().
 					ListPools(pools.ListOpts{
@@ -1931,11 +1931,11 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 				poolID := "pool-" + lb.ID
 				poolName := lb.Name + "-6443"
 				memberName := poolName + "-" // The function appends a dash for member name
-				
+
 				// Check if this LB should be processed based on our cross-AZ logic
 				shouldProcess := false
 				allowCrossAZ := openStackCluster.Spec.APIServerLoadBalancer.AllowsCrossAZLoadBalancerMembers()
-				
+
 				if tt.legacyLoadBalancer != nil && lb.ID == tt.legacyLoadBalancer.ID {
 					// Legacy LB always gets processed
 					shouldProcess = true
@@ -1963,7 +1963,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 							break
 						}
 					}
-					
+
 					if shouldCreateMember {
 						mockScopeFactory.LbClient.EXPECT().
 							CreatePoolMember(poolID, gomock.Any()).
@@ -2001,6 +2001,7 @@ func Test_ReconcileLoadBalancerMember_CrossAZLogic(t *testing.T) {
 		})
 	}
 }
+
 func Test_CreateLoadBalancer_UsesVipSubnetIDOverride_Mapping(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

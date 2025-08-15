@@ -1038,10 +1038,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			rec.GetNetwork(lbNetworkID).Return(&networks.Network{ID: lbNetworkID, Name: "lb-network"}, nil)
 			// Only mapping subnets are resolved
 			rec.GetSubnet(mapped1).Return(&subnets.Subnet{
-				ID:        mapped1, Name: "mapped-1", CIDR: "10.0.1.0/24", NetworkID: lbNetworkID,
+				ID: mapped1, Name: "mapped-1", CIDR: "10.0.1.0/24", NetworkID: lbNetworkID,
 			}, nil)
 			rec.GetSubnet(mapped2).Return(&subnets.Subnet{
-				ID:        mapped2, Name: "mapped-2", CIDR: "10.0.2.0/24", NetworkID: lbNetworkID,
+				ID: mapped2, Name: "mapped-2", CIDR: "10.0.2.0/24", NetworkID: lbNetworkID,
 			}, nil)
 
 			networkingService, err := networking.NewService(scope)
@@ -1090,7 +1090,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			rec.GetNetwork(lbNetworkID).Return(&networks.Network{ID: lbNetworkID, Name: "lb-network"}, nil)
 			// Return a subnet from a different network
 			rec.GetSubnet(wrongSubnetID).Return(&subnets.Subnet{
-				ID:        wrongSubnetID, Name: "wrong", CIDR: "10.10.0.0/24", NetworkID: "different-net",
+				ID: wrongSubnetID, Name: "wrong", CIDR: "10.10.0.0/24", NetworkID: "different-net",
 			}, nil)
 
 			networkingService, err := networking.NewService(scope)
@@ -1181,7 +1181,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			// Minimal cluster with user DNS set; APIServerLoadBalancer omitted (disabled)
 			testCluster.SetName("preserve-user-cpe")
 			testCluster.Spec = infrav1.OpenStackClusterSpec{
-				ControlPlaneEndpoint: &clusterv1.APIEndpoint{
+				ControlPlaneEndpoint: &clusterv1beta1.APIEndpoint{
 					Host: "user.example.com",
 					Port: 6443,
 				},
@@ -1298,7 +1298,7 @@ func TestResolveLoadBalancerNetwork(t *testing.T) {
 				t.Logf("Test %s should expect an error", tt.name)
 			} else {
 				// Test should succeed and verify the expected results
-				t.Logf("Test %s should succeed with networkID=%s, subnetCount=%d", 
+				t.Logf("Test %s should succeed with networkID=%s, subnetCount=%d",
 					tt.name, tt.expectedNetworkID, tt.expectedSubnetCount)
 			}
 		})
@@ -1307,13 +1307,13 @@ func TestResolveLoadBalancerNetwork(t *testing.T) {
 
 func TestUpdateMultiAZLoadBalancerNetwork(t *testing.T) {
 	tests := []struct {
-		name                    string
-		initialLoadBalancers    []infrav1.LoadBalancer
-		networkStatus          *infrav1.NetworkStatusWithSubnets
+		name                      string
+		initialLoadBalancers      []infrav1.LoadBalancer
+		networkStatus             *infrav1.NetworkStatusWithSubnets
 		expectedLoadBalancerCount int
 	}{
 		{
-			name: "initialize empty multi-AZ load balancers list",
+			name:                 "initialize empty multi-AZ load balancers list",
 			initialLoadBalancers: nil,
 			networkStatus: &infrav1.NetworkStatusWithSubnets{
 				NetworkStatus: infrav1.NetworkStatus{
@@ -1336,7 +1336,7 @@ func TestUpdateMultiAZLoadBalancerNetwork(t *testing.T) {
 					AvailabilityZone: ptr.To("az1"),
 				},
 				{
-					ID:               "lb-2", 
+					ID:               "lb-2",
 					Name:             "test-lb-2",
 					AvailabilityZone: ptr.To("az2"),
 				},
