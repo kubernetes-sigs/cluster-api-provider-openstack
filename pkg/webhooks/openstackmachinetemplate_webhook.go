@@ -48,7 +48,7 @@ type openStackMachineTemplateWebhook struct{}
 var _ webhook.CustomValidator = &openStackMachineTemplateWebhook{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineTemplateWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackMachineTemplateWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
 	newObj, err := castToOpenStackMachineTemplate(objRaw)
 	if err != nil {
 		return nil, err
@@ -60,11 +60,11 @@ func (*openStackMachineTemplateWebhook) ValidateCreate(_ context.Context, objRaw
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "template", "spec", "providerID"), "cannot be set in templates"))
 	}
 
-	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
+	return nil, webhook.validate(newObj)
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	oldObj, err := castToOpenStackMachineTemplate(oldObjRaw)
 	if err != nil {
@@ -88,11 +88,11 @@ func (*openStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldO
 		)
 	}
 
-	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
+	return nil, webhook.validate(newObj)
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	return nil, nil
 }
 
@@ -102,4 +102,15 @@ func castToOpenStackMachineTemplate(obj runtime.Object) (*infrav1.OpenStackMachi
 		return nil, fmt.Errorf("expected an OpenStackMachineTemplate but got a %T", obj)
 	}
 	return cast, nil
+}
+
+func (webhook *openStackMachineTemplateWebhook) validate(newObj *infrav1.OpenStackMachineTemplate) error {
+	var allErrs field.ErrorList
+
+	allErrs = append(allErrs, newObj.Spec.Template.Spec.Image.Validate(*field.NewPath("Spec", "Template", "Spec", "Image"))...)
+
+	if len(allErrs) == 0 {
+		return nil
+	}
+	return apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachineTemplate").GroupKind(), newObj.Name, allErrs)
 }
