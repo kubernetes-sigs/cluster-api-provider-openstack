@@ -172,16 +172,6 @@ linters:
       - linters:
           - staticcheck
         text: 'SA1019: "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions" is deprecated: This package is deprecated and is going to be removed when support for v1beta1 will be dropped. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.'
-      # TODO(stephenfin): Remove all of these iteratively
-      - linters:
-          - staticcheck
-        text: "ST1005: error strings should not be capitalized"
-      - linters:
-          - staticcheck
-        text: "QF1003: could use tagged switch on .*"
-      - linters:
-          - staticcheck
-        text: "QF1008: could remove embedded field \".*\" from selector"
     paths:
       - zz_generated.*\.go$
       - third_party$

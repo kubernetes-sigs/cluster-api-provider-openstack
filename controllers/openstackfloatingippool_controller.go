@@ -91,7 +91,7 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, err
 	}
 
-	if pool.ObjectMeta.DeletionTimestamp.IsZero() {
+	if pool.DeletionTimestamp.IsZero() {
 		// Add finalizer if it does not exist
 		if controllerutil.AddFinalizer(pool, infrav1alpha1.OpenStackFloatingIPPoolFinalizer) {
 			return ctrl.Result{}, r.Client.Update(ctx, pool)
@@ -125,7 +125,7 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 
 	for _, claim := range claims.Items {
 		log := log.WithValues("claim", claim.Name)
-		if !claim.ObjectMeta.DeletionTimestamp.IsZero() {
+		if !claim.DeletionTimestamp.IsZero() {
 			continue
 		}
 
@@ -281,7 +281,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 
 	for i := 0; i < len(ipAddresses.Items); i++ {
 		ipAddress := &(ipAddresses.Items[i])
-		if ipAddress.ObjectMeta.DeletionTimestamp.IsZero() {
+		if ipAddress.DeletionTimestamp.IsZero() {
 			pool.Status.ClaimedIPs = append(pool.Status.ClaimedIPs, ipAddress.Spec.Address)
 			continue
 		}

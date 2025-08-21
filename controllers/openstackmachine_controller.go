@@ -380,7 +380,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	if instanceStatus == nil {
 		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1beta1.ConditionSeverityError, infrav1.ServerUnexpectedDeletedMessage)
-		openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, errors.New(infrav1.ServerUnexpectedDeletedMessage)) //nolint:stylecheck // This error is not used as an error
+		openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, errors.New(infrav1.ServerUnexpectedDeletedMessage)) //nolint:staticcheck // This error is not used as an error
 		return ctrl.Result{}, nil
 	}
 
@@ -714,7 +714,7 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx con
 		log := log.WithValues("objectMapper", "openStackClusterToOpenStackMachine", "namespace", c.Namespace, "openStackCluster", c.Name)
 
 		// Don't handle deleted OpenStackClusters
-		if !c.ObjectMeta.DeletionTimestamp.IsZero() {
+		if !c.DeletionTimestamp.IsZero() {
 			log.V(4).Info("OpenStackClusters has a deletion timestamp, skipping mapping.")
 			return nil
 		}
@@ -744,7 +744,7 @@ func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(
 		log := log.WithValues("objectMapper", "clusterToOpenStackMachine", "namespace", c.Namespace, "cluster", c.Name)
 
 		// Don't handle deleted clusters
-		if !c.ObjectMeta.DeletionTimestamp.IsZero() {
+		if !c.DeletionTimestamp.IsZero() {
 			log.V(4).Info("Cluster has a deletion timestamp, skipping mapping.")
 			return nil
 		}
