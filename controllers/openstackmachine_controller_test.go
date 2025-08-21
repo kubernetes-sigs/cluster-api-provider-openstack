@@ -83,6 +83,9 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 			SecurityGroups: []infrav1.SecurityGroupParam{
 				{
+					ID: ptr.To(openStackCluster.Status.WorkerSecurityGroup.ID),
+				},
+				{
 					ID: ptr.To(extraSecurityGroupUUID),
 				},
 			},
@@ -189,8 +192,11 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			want: &infrav1alpha1.OpenStackServerSpec{
 				IdentityRef: identityRef,
 				Ports: []infrav1.PortOpts{{
-					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
-					SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(extraSecurityGroupUUID)}},
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{
+						{ID: ptr.To(workerSecurityGroupUUID)},
+						{ID: ptr.To(extraSecurityGroupUUID)},
+					},
 				}},
 				Tags:        tags,
 				UserDataRef: userData,
