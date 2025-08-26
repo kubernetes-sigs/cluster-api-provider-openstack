@@ -269,7 +269,9 @@ generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	$(CONTROLLER_GEN) \
 		paths=./api/... \
 		crd:crdVersions=v1 \
-		output:crd:dir=$(CRD_ROOT) \
+		output:crd:dir=$(CRD_ROOT)
+	$(CONTROLLER_GEN) \
+		paths=./pkg/webhooks/... \
 		output:webhook:dir=$(WEBHOOK_ROOT) \
 		webhook
 	$(CONTROLLER_GEN) \

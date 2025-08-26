@@ -14,19 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha7
+package webhooks
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// log is for logging in this package.
-var _ = logf.Log.WithName("openstackmachinelist-resource")
+func aggregateObjErrors(gk schema.GroupKind, name string, allErrs field.ErrorList) (admission.Warnings, error) {
+	if len(allErrs) == 0 {
+		return nil, nil
+	}
 
-func (r *OpenStackMachineList) SetupWebhookWithManager(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(r).
-		Complete()
+	return nil, apierrors.NewInvalid(
+		gk,
+		name,
+		allErrs,
+	)
 }

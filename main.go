@@ -49,6 +49,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/webhooks"
 	"sigs.k8s.io/cluster-api-provider-openstack/version"
 )
 
@@ -297,32 +298,11 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte, sco
 }
 
 func setupWebhooks(mgr ctrl.Manager) {
-	if err := (&infrav1.OpenStackMachineTemplateWebhook{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineTemplate")
-		os.Exit(1)
-	}
-	if err := (&infrav1.OpenStackMachineTemplateList{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineTemplateList")
-		os.Exit(1)
-	}
-	if err := (&infrav1.OpenStackCluster{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackCluster")
-		os.Exit(1)
-	}
-	if err := (&infrav1.OpenStackClusterTemplate{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterTemplate")
-		os.Exit(1)
-	}
-	if err := (&infrav1.OpenStackMachine{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachine")
-		os.Exit(1)
-	}
-	if err := (&infrav1.OpenStackMachineList{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackMachineList")
-		os.Exit(1)
-	}
-	if err := (&infrav1.OpenStackClusterList{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "OpenStackClusterList")
+	errs := webhooks.RegisterAllWithManager(mgr)
+	if len(errs) > 0 {
+		for i := range errs {
+			setupLog.Error(errs[i], "unable to register webhook")
+		}
 		os.Exit(1)
 	}
 }
