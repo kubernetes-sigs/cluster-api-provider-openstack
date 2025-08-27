@@ -52,8 +52,8 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 
 	// If the server is bound to a cluster, we use the cluster name to generate the port description.
 	var clusterName string
-	if openStackServer.ObjectMeta.Labels[clusterv1.ClusterNameLabel] != "" {
-		clusterName = openStackServer.ObjectMeta.Labels[clusterv1.ClusterNameLabel]
+	if openStackServer.Labels[clusterv1.ClusterNameLabel] != "" {
+		clusterName = openStackServer.Labels[clusterv1.ClusterNameLabel]
 	}
 
 	computeService, err := NewService(scope)
