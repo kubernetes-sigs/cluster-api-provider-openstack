@@ -480,7 +480,18 @@ func (r *OpenStackMachineReconciler) getMachineServer(ctx context.Context, openS
 
 // openStackMachineSpecToOpenStackServerSpec converts an OpenStackMachineSpec to an OpenStackServerSpec.
 // It returns the OpenStackServerSpec object and an error if there is any.
-func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, defaultNetworkID string) *infrav1alpha1.OpenStackServerSpec {
+func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, clusterNetwork *infrav1.NetworkStatusWithSubnets) (*infrav1alpha1.OpenStackServerSpec, error) {
+	// Determine default network ID if the cluster status exposes one.
+	var defaultNetworkID string
+	if clusterNetwork != nil {
+		defaultNetworkID = clusterNetwork.ID
+	}
+
+	// If no cluster network is available AND the machine spec did not define any ports with a network, we cannot choose a network.
+	if defaultNetworkID == "" && len(openStackMachineSpec.Ports) == 0 {
+		return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, "no network configured: cluster network is missing and machine spec does not define ports with a network")
+	}
+
 	openStackServerSpec := &infrav1alpha1.OpenStackServerSpec{
 		AdditionalBlockDevices:            openStackMachineSpec.AdditionalBlockDevices,
 		ConfigDrive:                       openStackMachineSpec.ConfigDrive,
@@ -522,7 +533,8 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		serverPorts = make([]infrav1.PortOpts, 1)
 	}
 	for i := range serverPorts {
-		if serverPorts[i].Network == nil {
+		// Only inject the default network when we actually have an ID.
+		if serverPorts[i].Network == nil && defaultNetworkID != "" {
 			serverPorts[i].Network = &infrav1.NetworkParam{
 				ID: &defaultNetworkID,
 			}
@@ -540,7 +552,7 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	}
 	openStackServerSpec.Ports = serverPorts
 
-	return openStackServerSpec
+	return openStackServerSpec, nil
 }
 
 // reconcileMachineServer reconciles the OpenStackServer object for the OpenStackMachine.
@@ -589,7 +601,10 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 			}
 			return openStackCluster.Spec.IdentityRef
 		}()
-		machineServerSpec := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network.ID)
+		machineServerSpec, err := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network)
+		if err != nil {
+			return nil, err
+		}
 		machineServer = &infrav1alpha1.OpenStackServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
