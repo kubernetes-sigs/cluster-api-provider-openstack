@@ -100,6 +100,7 @@ prerequisites_log="${ARTIFACTS}/logs/e2e-prerequisites.log"
     retry 10 10 scp $(get_ssh_common_args) "${container_archive}" "cloud@${CONTROLLER_IP}:capo-e2e-image.tar"
     retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo chown root:root capo-e2e-image.tar
     retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo chmod u=rw,g=r,o=r capo-e2e-image.tar
+    retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo mkdir -p /var/www/html
     retry 10 10 $(get_ssh_cmd) ${CONTROLLER_IP} -- sudo mv capo-e2e-image.tar /var/www/html/capo-e2e-image.tar
 ) >"$prerequisites_log" 2>&1 &
 build_pid=$!

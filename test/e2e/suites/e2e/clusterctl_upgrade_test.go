@@ -33,7 +33,7 @@ import (
 var (
 	capoRelease011 string
 	capoRelease012 string
-	capiRelease19  string
+	capiRelease110 string
 )
 
 var _ = Describe("When testing clusterctl upgrades for CAPO (v0.11=>current) and ORC (v1.0.2=>current) [clusterctl-upgrade]", func() {
@@ -44,9 +44,9 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.11=>current) and
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
 		capoRelease011 = "v" + capoRelease011
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
-		capiRelease19, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.9")
+		capiRelease110, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.10")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
-		capiRelease19 = "v" + capiRelease19
+		capiRelease110 = "v" + capiRelease110
 	})
 
 	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
@@ -56,12 +56,12 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.11=>current) and
 			BootstrapClusterProxy:             e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:                    e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:                       false,
-			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease19 + "/clusterctl-{OS}-{ARCH}",
+			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease110 + "/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract:         "v1beta1",
 			InitWithInfrastructureProviders:   []string{"openstack:" + capoRelease011},
-			InitWithCoreProvider:              "cluster-api:" + capiRelease19,
-			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease19},
-			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease19},
+			InitWithCoreProvider:              "cluster-api:" + capiRelease110,
+			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease110},
+			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease110},
 			MgmtFlavor:                        shared.FlavorDefault,
 			WorkloadFlavor:                    shared.FlavorDefault,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
@@ -78,9 +78,9 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
 		capoRelease012 = "v" + capoRelease012
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
-		capiRelease19, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.9")
+		capiRelease110, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.10")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
-		capiRelease19 = "v" + capiRelease19
+		capiRelease110 = "v" + capiRelease110
 	})
 
 	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
@@ -90,12 +90,12 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 			BootstrapClusterProxy:             e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:                    e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:                       false,
-			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease19 + "/clusterctl-{OS}-{ARCH}",
+			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease110 + "/clusterctl-{OS}-{ARCH}",
 			InitWithProvidersContract:         "v1beta1",
 			InitWithInfrastructureProviders:   []string{"openstack:" + capoRelease012},
-			InitWithCoreProvider:              "cluster-api:" + capiRelease19,
-			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease19},
-			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease19},
+			InitWithCoreProvider:              "cluster-api:" + capiRelease110,
+			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease110},
+			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease110},
 			MgmtFlavor:                        shared.FlavorDefault,
 			WorkloadFlavor:                    shared.FlavorDefault,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),

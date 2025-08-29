@@ -197,7 +197,7 @@ $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template.yaml: $(E2E_KUSTOMIZE_DIR)/wit
 $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/cluster-template-%.yaml: $(E2E_KUSTOMIZE_DIR)/% $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
-e2e-prerequisites: $(GINKGO) e2e-templates e2e-image test-e2e-image-prerequisites ## Build all artifacts required by e2e tests
+e2e-prerequisites: $(GINKGO) e2e-templates e2e-image ## Build all artifacts required by e2e tests
 
 # Can be run manually, e.g. via:
 # export OPENSTACK_CLOUD_YAML_FILE="$(pwd)/clouds.yaml"
@@ -220,12 +220,6 @@ build-e2e-tests: $(GINKGO)
 .PHONY: e2e-image
 e2e-image: CONTROLLER_IMG_TAG = "gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e"
 e2e-image: docker-build
-
-# Pull all the images references in test/e2e/data/e2e_conf.yaml
-test-e2e-image-prerequisites:
-	docker pull registry.k8s.io/cluster-api/cluster-api-controller:v1.10.1
-	docker pull registry.k8s.io/cluster-api/kubeadm-bootstrap-controller:v1.10.1
-	docker pull registry.k8s.io/cluster-api/kubeadm-control-plane-controller:v1.10.1
 
 CONFORMANCE_E2E_ARGS ?= -kubetest.config-file=$(KUBETEST_CONF_PATH)
 CONFORMANCE_E2E_ARGS += $(E2E_ARGS)
