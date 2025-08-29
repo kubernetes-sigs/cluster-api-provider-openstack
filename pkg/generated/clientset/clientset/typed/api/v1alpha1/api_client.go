@@ -28,12 +28,17 @@ import (
 
 type InfrastructureV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	OpenStackClusterIdentitiesGetter
 	OpenStackServersGetter
 }
 
 // InfrastructureV1alpha1Client is used to interact with features provided by the infrastructure.cluster.x-k8s.io group.
 type InfrastructureV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *InfrastructureV1alpha1Client) OpenStackClusterIdentities(namespace string) OpenStackClusterIdentityInterface {
+	return newOpenStackClusterIdentities(c, namespace)
 }
 
 func (c *InfrastructureV1alpha1Client) OpenStackServers(namespace string) OpenStackServerInterface {

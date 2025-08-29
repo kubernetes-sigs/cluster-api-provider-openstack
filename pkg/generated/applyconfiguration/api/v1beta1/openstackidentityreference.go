@@ -21,6 +21,7 @@ package v1beta1
 // OpenStackIdentityReferenceApplyConfiguration represents a declarative configuration of the OpenStackIdentityReference type for use
 // with apply.
 type OpenStackIdentityReferenceApplyConfiguration struct {
+	Type      *string `json:"type,omitempty"`
 	Name      *string `json:"name,omitempty"`
 	CloudName *string `json:"cloudName,omitempty"`
 	Region    *string `json:"region,omitempty"`
@@ -30,6 +31,14 @@ type OpenStackIdentityReferenceApplyConfiguration struct {
 // apply.
 func OpenStackIdentityReference() *OpenStackIdentityReferenceApplyConfiguration {
 	return &OpenStackIdentityReferenceApplyConfiguration{}
+}
+
+// WithType sets the Type field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Type field is set to the value of the last call.
+func (b *OpenStackIdentityReferenceApplyConfiguration) WithType(value string) *OpenStackIdentityReferenceApplyConfiguration {
+	b.Type = &value
+	return b
 }
 
 // WithName sets the Name field in the declarative configuration to the given value

@@ -18,6 +18,7 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - namespaces
   - secrets
   verbs:
   - get
@@ -42,6 +43,14 @@ rules:
   - clusters/status
   - machines
   - machines/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - openstackclusteridentities
   verbs:
   - get
   - list

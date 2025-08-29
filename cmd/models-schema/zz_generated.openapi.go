@@ -315,6 +315,10 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                          schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
 		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                           schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
 		"k8s.io/apimachinery/pkg/version.Info":                                                              schema_k8sio_apimachinery_pkg_version_Info(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackClusterIdentity":                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackClusterIdentity(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackClusterIdentityList":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackClusterIdentityList(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackClusterIdentitySpec":              schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackClusterIdentitySpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackCredentialSecretReference":        schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackCredentialSecretReference(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPool":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPool(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolList":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolList(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackFloatingIPPoolSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPoolSpec(ref),
@@ -16754,6 +16758,155 @@ func schema_k8sio_apimachinery_pkg_version_Info(ref common.ReferenceCallback) co
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackClusterIdentity(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackClusterIdentity is a cluster-scoped identity that centralizes OpenStack credentials.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackClusterIdentitySpec"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackClusterIdentitySpec"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackClusterIdentityList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackClusterIdentityList contains a list of OpenStackClusterIdentity.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackClusterIdentity"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackClusterIdentity"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackClusterIdentitySpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackClusterIdentitySpec defines the desired state for an OpenStackClusterIdentity.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"secretRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SecretRef references the credentials Secret containing a `clouds.yaml` file.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackCredentialSecretReference"),
+						},
+					},
+					"namespaceSelector": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NamespaceSelector limits which namespaces may use this identity. If nil, all namespaces are allowed.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
+						},
+					},
+				},
+				Required: []string{"secretRef"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector", "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1.OpenStackCredentialSecretReference"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackCredentialSecretReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackCredentialSecretReference references a Secret containing OpenStack credentials.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the Secret which contains a `clouds.yaml` key (and optionally `cacert`).",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Namespace where the Secret resides.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name", "namespace"},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1alpha1_OpenStackFloatingIPPool(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -19120,9 +19273,16 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackIdenti
 				Description: "OpenStackIdentityReference is a reference to an infrastructure provider identity to be used to provision cluster resources.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type specifies the identity reference type. Defaults to Secret for backward compatibility.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of a secret in the same namespace as the resource being provisioned. The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file. The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.",
+							Description: "Name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned, or the name of an OpenStackClusterIdentity (type=ClusterIdentity). The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file. The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
