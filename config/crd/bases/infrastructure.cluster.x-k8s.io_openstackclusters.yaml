@@ -511,9 +511,10 @@ spec:
                             type: string
                           name:
                             description: |-
-                              Name is the name of a secret in the same namespace as the resource being provisioned.
-                              The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
-                              The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
+                              Name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned,
+                              or the name of an OpenStackClusterIdentity (type=ClusterIdentity).
+                              The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
+                              The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
                             type: string
                           region:
                             description: |-
@@ -521,14 +522,27 @@ spec:
                               any value in clouds.yaml. If specified for an OpenStackMachine, its
                               value will be included in providerID.
                             type: string
+                          type:
+                            default: Secret
+                            description: Type specifies the identity reference type.
+                              Defaults to Secret for backward compatibility.
+                            enum:
+                            - Secret
+                            - ClusterIdentity
+                            type: string
                         required:
                         - cloudName
                         - name
+                        - type
                         type: object
                         x-kubernetes-validations:
                         - message: region is immutable
                           rule: (!has(self.region) && !has(oldSelf.region)) || self.region
                             == oldSelf.region
+                        - message: name is required
+                          rule: has(self.name)
+                        - message: cloudName is required
+                          rule: has(self.cloudName)
                       image:
                         description: |-
                           The image to use for your server instance.
@@ -1521,9 +1535,10 @@ spec:
                     type: string
                   name:
                     description: |-
-                      Name is the name of a secret in the same namespace as the resource being provisioned.
-                      The secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
-                      The secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
+                      Name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned,
+                      or the name of an OpenStackClusterIdentity (type=ClusterIdentity).
+                      The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
+                      The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
                     type: string
                   region:
                     description: |-
@@ -1531,14 +1546,27 @@ spec:
                       any value in clouds.yaml. If specified for an OpenStackMachine, its
                       value will be included in providerID.
                     type: string
+                  type:
+                    default: Secret
+                    description: Type specifies the identity reference type. Defaults
+                      to Secret for backward compatibility.
+                    enum:
+                    - Secret
+                    - ClusterIdentity
+                    type: string
                 required:
                 - cloudName
                 - name
+                - type
                 type: object
                 x-kubernetes-validations:
                 - message: region is immutable
                   rule: (!has(self.region) && !has(oldSelf.region)) || self.region
                     == oldSelf.region
+                - message: name is required
+                  rule: has(self.name)
+                - message: cloudName is required
+                  rule: has(self.cloudName)
               managedSecurityGroups:
                 description: |-
                   ManagedSecurityGroups determines whether OpenStack security groups for the cluster

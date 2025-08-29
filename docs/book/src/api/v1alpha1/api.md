@@ -4,8 +4,95 @@
 </p>
 Resource Types:
 <ul><li>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackClusterIdentity">OpenStackClusterIdentity</a>
+</li><li>
 <a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackServer">OpenStackServer</a>
 </li></ul>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackClusterIdentity">OpenStackClusterIdentity
+</h3>
+<p>
+<p>OpenStackClusterIdentity is a cluster-scoped identity that centralizes OpenStack credentials.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+infrastructure.cluster.x-k8s.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>OpenStackClusterIdentity</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+Kubernetes meta/v1.ObjectMeta
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackClusterIdentitySpec">
+OpenStackClusterIdentitySpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>secretRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackCredentialSecretReference">
+OpenStackCredentialSecretReference
+</a>
+</em>
+</td>
+<td>
+<p>SecretRef references the credentials Secret containing a <code>clouds.yaml</code> file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceSelector</code><br/>
+<em>
+Kubernetes meta/v1.LabelSelector
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NamespaceSelector limits which namespaces may use this identity. If nil, all namespaces are allowed.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackServer">OpenStackServer
 </h3>
 <p>
@@ -310,6 +397,91 @@ OpenStackServerStatus
 </em>
 </td>
 <td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackClusterIdentitySpec">OpenStackClusterIdentitySpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackClusterIdentity">OpenStackClusterIdentity</a>)
+</p>
+<p>
+<p>OpenStackClusterIdentitySpec defines the desired state for an OpenStackClusterIdentity.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretRef</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackCredentialSecretReference">
+OpenStackCredentialSecretReference
+</a>
+</em>
+</td>
+<td>
+<p>SecretRef references the credentials Secret containing a <code>clouds.yaml</code> file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceSelector</code><br/>
+<em>
+Kubernetes meta/v1.LabelSelector
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NamespaceSelector limits which namespaces may use this identity. If nil, all namespaces are allowed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackCredentialSecretReference">OpenStackCredentialSecretReference
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.OpenStackClusterIdentitySpec">OpenStackClusterIdentitySpec</a>)
+</p>
+<p>
+<p>OpenStackCredentialSecretReference references a Secret containing OpenStack credentials.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the Secret which contains a <code>clouds.yaml</code> key (and optionally <code>cacert</code>).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Namespace where the Secret resides.</p>
 </td>
 </tr>
 </tbody>
