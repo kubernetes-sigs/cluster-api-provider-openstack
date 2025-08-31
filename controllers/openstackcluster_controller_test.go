@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -146,6 +147,134 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Name:    testNamespace,
 		}
 		framework.DeleteNamespace(ctx, input)
+	})
+
+	It("should create OpenStackClusterIdentity (CRD present)", func() {
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		id := &infrav1alpha1.OpenStackClusterIdentity{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("id-%d", GinkgoRandomSeed()),
+			},
+			Spec: infrav1alpha1.OpenStackClusterIdentitySpec{
+				SecretRef: infrav1alpha1.OpenStackCredentialSecretReference{
+					Name:      "creds",
+					Namespace: "capo-system",
+				},
+			},
+		}
+		Expect(k8sClient.Create(ctx, id)).To(Succeed())
+
+		// Cleanup cluster-scoped resource since it won't be deleted with namespace
+		DeferCleanup(func() {
+			Expect(k8sClient.Delete(ctx, id)).To(Succeed())
+		})
+	})
+
+	It("should successfully create OpenStackCluster with valid identityRef", func() {
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		c := &infrav1.OpenStackCluster{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "cluster-valid-identity",
+				Namespace: testNamespace,
+			},
+			Spec: infrav1.OpenStackClusterSpec{
+				IdentityRef: infrav1.OpenStackIdentityReference{
+					Name:      "creds",
+					CloudName: "openstack",
+					// Type should default to "Secret"
+				},
+			},
+		}
+		err = k8sClient.Create(ctx, c)
+		Expect(err).To(Succeed())
+
+		// Verify the object was created and Type was defaulted
+		created := &infrav1.OpenStackCluster{}
+		err = k8sClient.Get(ctx, client.ObjectKey{Name: c.Name, Namespace: c.Namespace}, created)
+		Expect(err).To(Succeed())
+		Expect(created.Spec.IdentityRef.Type).To(Equal("Secret"))
+		Expect(created.Spec.IdentityRef.Name).To(Equal("creds"))
+		Expect(created.Spec.IdentityRef.CloudName).To(Equal("openstack"))
+	})
+
+	It("should successfully create OpenStackCluster with ClusterIdentity type", func() {
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		c := &infrav1.OpenStackCluster{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "cluster-clusteridentity-type",
+				Namespace: testNamespace,
+			},
+			Spec: infrav1.OpenStackClusterSpec{
+				IdentityRef: infrav1.OpenStackIdentityReference{
+					Type:      "ClusterIdentity",
+					Name:      "global-creds",
+					CloudName: "openstack",
+					Region:    "RegionOne",
+				},
+			},
+		}
+		err = k8sClient.Create(ctx, c)
+		Expect(err).To(Succeed())
+
+		// Verify all fields are preserved
+		created := &infrav1.OpenStackCluster{}
+		err = k8sClient.Get(ctx, client.ObjectKey{Name: c.Name, Namespace: c.Namespace}, created)
+		Expect(err).To(Succeed())
+		Expect(created.Spec.IdentityRef.Type).To(Equal("ClusterIdentity"))
+		Expect(created.Spec.IdentityRef.Name).To(Equal("global-creds"))
+		Expect(created.Spec.IdentityRef.CloudName).To(Equal("openstack"))
+		Expect(created.Spec.IdentityRef.Region).To(Equal("RegionOne"))
+	})
+
+	It("should accept cluster and default identityRef.type to Secret", func() {
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "creds",
+				CloudName: "openstack",
+				// Type omitted -> should default to Secret
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		fetched := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, types.NamespacedName{Name: testClusterName, Namespace: testNamespace}, fetched)).To(Succeed())
+		Expect(fetched.Spec.IdentityRef.Type).To(Equal("Secret"))
+	})
+
+	It("should reject updates that modify identityRef.region (immutable)", func() {
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Type:      "Secret",
+				Name:      "creds",
+				CloudName: "openstack",
+				Region:    "RegionOne",
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		// Try to update region
+		fetched := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, types.NamespacedName{Name: testClusterName, Namespace: testNamespace}, fetched)).To(Succeed())
+		fetched.Spec.IdentityRef.Region = "RegionTwo"
+		Expect(k8sClient.Update(ctx, fetched)).ToNot(Succeed())
 	})
 
 	It("should do nothing when owner is missing", func() {
