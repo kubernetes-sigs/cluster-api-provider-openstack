@@ -67,6 +67,7 @@ var (
 	testDefaultCloudsYAML = []byte("clouds: { default: {} }\n")
 )
 
+// ensureSchemes creates a runtime scheme with all required API types for testing.
 func ensureSchemes(t *testing.T) *runtime.Scheme {
 	t.Helper()
 	local := runtime.NewScheme()
@@ -82,6 +83,7 @@ func ensureSchemes(t *testing.T) *runtime.Scheme {
 	return local
 }
 
+// createResTestSecret creates a test Secret with the given namespace, name, and data.
 func createResTestSecret(namespace, name string, data map[string][]byte) *corev1.Secret {
 	secret := &corev1.Secret{}
 	secret.Namespace = namespace
@@ -90,6 +92,7 @@ func createResTestSecret(namespace, name string, data map[string][]byte) *corev1
 	return secret
 }
 
+// createTestNamespace creates a test Namespace with the given name and labels.
 func createTestNamespace(name string, labels map[string]string) *corev1.Namespace {
 	ns := &corev1.Namespace{}
 	ns.Name = name
@@ -97,6 +100,7 @@ func createTestNamespace(name string, labels map[string]string) *corev1.Namespac
 	return ns
 }
 
+// createTestClusterIdentity creates a test OpenStackClusterIdentity with the given name and namespace selector.
 func createTestClusterIdentity(name string, selector *metav1.LabelSelector) *infrav1alpha1.OpenStackClusterIdentity {
 	identity := &infrav1alpha1.OpenStackClusterIdentity{}
 	identity.Name = name
@@ -108,7 +112,7 @@ func createTestClusterIdentity(name string, selector *metav1.LabelSelector) *inf
 	return identity
 }
 
-// newFakeClient creates a fake client with the provided scheme and objects.
+// newFakeClient creates a fake Kubernetes client with the provided scheme and objects.
 func newFakeClient(sch *runtime.Scheme, objs ...client.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(sch).WithObjects(objs...).Build()
 }
@@ -129,6 +133,7 @@ func assertResolutionReached(t *testing.T, err error) {
 	}
 }
 
+// assertDenied verifies that the error is an IdentityAccessDeniedError.
 func assertDenied(t *testing.T, err error) {
 	t.Helper()
 	var denied *IdentityAccessDeniedError
@@ -137,6 +142,7 @@ func assertDenied(t *testing.T, err error) {
 	}
 }
 
+// assertNotDenied verifies that the error is NOT an IdentityAccessDeniedError.
 func assertNotDenied(t *testing.T, err error) {
 	t.Helper()
 	var denied *IdentityAccessDeniedError
@@ -145,6 +151,7 @@ func assertNotDenied(t *testing.T, err error) {
 	}
 }
 
+// TestNewClientScopeFromObject_Resolution tests credential resolution logic for both Secret and ClusterIdentity paths.
 func TestNewClientScopeFromObject_Resolution(t *testing.T) {
 	t.Parallel()
 	localScheme := ensureSchemes(t)

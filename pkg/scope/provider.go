@@ -120,12 +120,10 @@ func (f *providerScopeFactory) NewClientScopeFromObject(ctx context.Context, ctr
 	}
 
 	// Read cloud from the resolved secret using the provided cloudName
-	c, cert, err := getCloudFromSecret(ctx, ctrlClient, secretNamespace, secretName, identityRef.CloudName)
+	cloud, caCert, err := getCloudFromSecret(ctx, ctrlClient, secretNamespace, secretName, identityRef.CloudName)
 	if err != nil {
 		return nil, err
 	}
-	cloud = c
-	caCert = cert
 
 	if caCert == nil {
 		caCert = defaultCACert

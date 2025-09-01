@@ -331,6 +331,33 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		})
 	})
 
+	Describe("Workload cluster (cluster-identity)", func() {
+		It("should be creatable and deletable", func(ctx context.Context) {
+			shared.Logf("Creating a cluster with ClusterIdentity")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
+			configCluster.Flavor = shared.FlavorClusterIdentity
+			createCluster(ctx, configCluster, clusterResources)
+
+			md := clusterResources.MachineDeployments
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(workerMachines).To(HaveLen(int(*configCluster.WorkerMachineCount)))
+			Expect(controlPlaneMachines).To(HaveLen(int(*configCluster.ControlPlaneMachineCount)))
+		})
+	})
+
 	Describe("Workload cluster (no bastion)", func() {
 		It("should be creatable and deletable", func(ctx context.Context) {
 			shared.Logf("Creating a cluster")

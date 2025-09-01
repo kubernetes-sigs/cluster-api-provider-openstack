@@ -69,7 +69,7 @@ spec:
     cloudName: openstack
 ```
 
-## Using a Secret directly (legacy/default)
+## Using a Secret directly (default)
 - If you don’t need cross-namespace identities, use a Secret in the same namespace.
 ```yaml
 spec:

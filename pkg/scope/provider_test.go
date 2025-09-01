@@ -47,6 +47,7 @@ var (
 	testCACert = []byte("-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----\n")
 )
 
+// buildCoreScheme creates a runtime scheme with core Kubernetes API types for testing.
 func buildCoreScheme(t *testing.T) *runtime.Scheme {
 	t.Helper()
 	sch := runtime.NewScheme()
@@ -56,6 +57,7 @@ func buildCoreScheme(t *testing.T) *runtime.Scheme {
 	return sch
 }
 
+// createTestSecret creates a test Secret in the test namespace with the given name and data.
 func createTestSecret(name string, data map[string][]byte) *corev1.Secret {
 	secret := &corev1.Secret{}
 	secret.Namespace = testNamespace
@@ -64,6 +66,7 @@ func createTestSecret(name string, data map[string][]byte) *corev1.Secret {
 	return secret
 }
 
+// TestGetCloudFromSecret_SuccessWithCACert tests successful cloud retrieval when CA certificate is present.
 func TestGetCloudFromSecret_SuccessWithCACert(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -88,6 +91,7 @@ func TestGetCloudFromSecret_SuccessWithCACert(t *testing.T) {
 	}
 }
 
+// TestGetCloudFromSecret_SuccessWithoutCACert tests successful cloud retrieval when CA certificate is not present.
 func TestGetCloudFromSecret_SuccessWithoutCACert(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -111,6 +115,7 @@ func TestGetCloudFromSecret_SuccessWithoutCACert(t *testing.T) {
 	}
 }
 
+// TestGetCloudFromSecret_MissingSecret tests error handling when the secret does not exist.
 func TestGetCloudFromSecret_MissingSecret(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -123,6 +128,7 @@ func TestGetCloudFromSecret_MissingSecret(t *testing.T) {
 	}
 }
 
+// TestGetCloudFromSecret_MissingCloudsKey tests error handling when the clouds.yaml key is missing from the secret.
 func TestGetCloudFromSecret_MissingCloudsKey(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -141,6 +147,7 @@ func TestGetCloudFromSecret_MissingCloudsKey(t *testing.T) {
 	}
 }
 
+// TestGetCloudFromSecret_EmptyCloudName tests error handling when cloudName is empty.
 func TestGetCloudFromSecret_EmptyCloudName(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -158,6 +165,7 @@ func TestGetCloudFromSecret_EmptyCloudName(t *testing.T) {
 	}
 }
 
+// TestGetCloudFromSecret_InvalidCloudName tests behavior when cloudName does not exist in clouds.yaml.
 func TestGetCloudFromSecret_InvalidCloudName(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
