@@ -49,6 +49,11 @@ var _ = Describe("Filter API validations", func() {
 		cluster = &infrav1.OpenStackCluster{}
 		cluster.Namespace = namespace.Name
 		cluster.GenerateName = clusterNamePrefix
+		// Provide a minimal valid IdentityRef by default so cluster create succeeds
+		cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+			Name:      "creds",
+			CloudName: "openstack",
+		}
 	})
 
 	DescribeTable("Allow valid neutron filter tags", func(tags []infrav1.FilterByNeutronTags) {

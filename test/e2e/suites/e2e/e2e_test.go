@@ -331,6 +331,65 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		})
 	})
 
+	Describe("Workload cluster (cluster-identity)", func() {
+		It("should be creatable and deletable", func(ctx context.Context) {
+			shared.Logf("Creating a cluster with ClusterIdentity")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(1))
+			configCluster.Flavor = shared.FlavorClusterIdentity
+			createCluster(ctx, configCluster, clusterResources)
+
+			md := clusterResources.MachineDeployments
+			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName:       clusterName,
+				Namespace:         namespace.Name,
+				MachineDeployment: *md[0],
+			})
+			controlPlaneMachines := framework.GetControlPlaneMachinesByCluster(ctx, framework.GetControlPlaneMachinesByClusterInput{
+				Lister:      e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				ClusterName: clusterName,
+				Namespace:   namespace.Name,
+			})
+			Expect(workerMachines).To(HaveLen(int(*configCluster.WorkerMachineCount)))
+			Expect(controlPlaneMachines).To(HaveLen(int(*configCluster.ControlPlaneMachineCount)))
+		})
+	})
+
+	Describe("Workload cluster (cluster-identity denied)", func() {
+		It("should fail to reconcile new workers when namespaceSelector denies access", func(ctx context.Context) {
+			shared.Logf("Creating a cluster with ClusterIdentity (denied flavor) and 0 workers")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(0))
+			configCluster.Flavor = shared.FlavorClusterIdentityDenied
+			createCluster(ctx, configCluster, clusterResources)
+
+			// Create a new MachineDeployment that should fail to reconcile due to denied identity access
+			mdName := clusterName + "-md-denied"
+			replicas := int32(1)
+			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
+				Creator:                 e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
+				MachineDeployment:       makeMachineDeployment(namespace.Name, mdName, clusterName, e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackFailureDomain), replicas),
+				BootstrapConfigTemplate: makeJoinBootstrapConfigTemplate(namespace.Name, mdName),
+				InfraMachineTemplate:    makeOpenStackMachineTemplate(namespace.Name, clusterName, mdName),
+			})
+
+			// Assert that no worker servers are created
+			machineTags := fmt.Sprintf("%s,%s", clusterName, "machine")
+			Consistently(func() (int, error) {
+				serversList, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Tags: machineTags})
+				if err != nil {
+					return -1, err
+				}
+				return len(serversList), nil
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")[0]).Should(Equal(0))
+		})
+	})
+
 	Describe("Workload cluster (no bastion)", func() {
 		It("should be creatable and deletable", func(ctx context.Context) {
 			shared.Logf("Creating a cluster")

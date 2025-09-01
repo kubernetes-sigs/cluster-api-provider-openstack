@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
 - ../../../../../kustomize/v1beta1/default
+- openstackclusteridentity.yaml
 
 components:
 - ../common-patches/cluster
@@ -11,4 +12,10 @@ components:
 - ../common-patches/ccm
 - ../common-patches/externalNetworkByName
 - ../common-patches/images
-- ../common-patches/dns-fix
+
+patches:
+- path: patch-openstackcluster-identityref.yaml
+  target:
+    kind: OpenStackCluster
+    name: ${CLUSTER_NAME}
+
