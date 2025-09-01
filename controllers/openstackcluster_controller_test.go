@@ -261,6 +261,32 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(fetched.Spec.IdentityRef.Type).To(Equal("Secret"))
 	})
 
+	It("should fail when namespace is denied access to ClusterIdentity", func() {
+		testCluster.SetName("identity-access-denied")
+		testCluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+			Type:      "ClusterIdentity",
+			Name:      "test-cluster-identity",
+			CloudName: "openstack",
+		}
+
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		identityAccessErr := &scope.IdentityAccessDeniedError{
+			IdentityName:       "test-cluster-identity",
+			RequesterNamespace: testNamespace,
+		}
+		mockScopeFactory.SetClientScopeCreateError(identityAccessErr)
+
+		req := createRequestFromOSCluster(testCluster)
+		result, err := reconciler.Reconcile(ctx, req)
+
+		Expect(err).To(MatchError(identityAccessErr))
+		Expect(result).To(Equal(reconcile.Result{}))
+	})
+
 	It("should reject updates that modify identityRef.region (immutable)", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			IdentityRef: infrav1.OpenStackIdentityReference{
