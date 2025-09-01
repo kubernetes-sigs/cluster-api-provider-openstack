@@ -1,8 +1,0 @@
----
-- op: replace
-  path: /spec/identityRef
-  value:
-    type: ClusterIdentity
-    name: ${CLUSTER_NAME}-cluster-identity
-    cloudName: ${OPENSTACK_CLOUD}
-
