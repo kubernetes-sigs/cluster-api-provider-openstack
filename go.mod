@@ -15,7 +15,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.25.2
 	github.com/onsi/gomega v1.38.2
 	github.com/prometheus/client_golang v1.23.0
-	github.com/spf13/pflag v1.0.7
+	github.com/spf13/pflag v1.0.9
 	go.uber.org/mock v0.6.0
 	golang.org/x/crypto v0.41.0
 	golang.org/x/text v0.28.0
