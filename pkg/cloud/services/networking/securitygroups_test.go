@@ -681,3 +681,62 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSGControlPlaneAdditionalPorts(t *testing.T) {
+	tests := []struct {
+		name  string
+		ports []int
+		want  []resolvedSecurityGroupRuleSpec
+	}{
+		{
+			name:  "no ports",
+			ports: []int{},
+			want:  []resolvedSecurityGroupRuleSpec{},
+		},
+		{
+			name:  "single port",
+			ports: []int{6443},
+			want: []resolvedSecurityGroupRuleSpec{
+				{
+					Description:  "Additional port",
+					Direction:    "ingress",
+					EtherType:    "IPv4",
+					Protocol:     "tcp",
+					PortRangeMin: 6443,
+					PortRangeMax: 6443,
+				},
+			},
+		},
+		{
+			name:  "multiple ports",
+			ports: []int{80, 443},
+			want: []resolvedSecurityGroupRuleSpec{
+				{
+					Description:  "Additional port",
+					Direction:    "ingress",
+					EtherType:    "IPv4",
+					Protocol:     "tcp",
+					PortRangeMin: 80,
+					PortRangeMax: 80,
+				},
+				{
+					Description:  "Additional port",
+					Direction:    "ingress",
+					EtherType:    "IPv4",
+					Protocol:     "tcp",
+					PortRangeMin: 443,
+					PortRangeMax: 443,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getSGControlPlaneAdditionalPorts(tt.ports)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getSGControlPlaneAdditionalPorts() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
