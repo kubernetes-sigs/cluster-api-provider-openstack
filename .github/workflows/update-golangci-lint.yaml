@@ -19,7 +19,7 @@ jobs:
       current_version: ${{ steps.check_version.outputs.current_version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Get latest golangci-lint version
