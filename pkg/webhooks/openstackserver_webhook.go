@@ -50,7 +50,7 @@ type openStackServerWebhook struct{}
 var _ webhook.CustomValidator = &openStackServerWebhook{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackServerWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackServerWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	newObj, err := castToOpenStackServer(objRaw)
 	if err != nil {
@@ -71,11 +71,11 @@ func (*openStackServerWebhook) ValidateCreate(_ context.Context, objRaw runtime.
 		}
 	}
 
-	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
+	return nil, webhook.validate(newObj)
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
 	oldObj, err := castToOpenStackServer(oldObjRaw)
 	if err != nil {
 		return nil, err
@@ -120,11 +120,11 @@ func (*openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, ne
 		)
 	}
 
-	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
+	return nil, webhook.validate(newObj)
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackServerWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackServerWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	return nil, nil
 }
 
@@ -134,4 +134,15 @@ func castToOpenStackServer(obj runtime.Object) (*infrav1alpha1.OpenStackServer, 
 		return nil, fmt.Errorf("expected an OpenStackServer but got a %T", obj)
 	}
 	return cast, nil
+}
+
+func (webhook *openStackServerWebhook) validate(newObj *infrav1alpha1.OpenStackServer) error {
+	var allErrs field.ErrorList
+
+	allErrs = append(allErrs, newObj.Spec.Image.Validate(*field.NewPath("Spec", "Image"))...)
+
+	if len(allErrs) == 0 {
+		return nil
+	}
+	return apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackServer").GroupKind(), newObj.Name, allErrs)
 }
