@@ -5,6 +5,7 @@
 - [Configuration](clusteropenstack/configuration.md)
 - [Topics](./topics/index.md)
     - [external cloud provider](./topics/external-cloud-provider.md)
+    - [hosted control plane](./topics/hosted-control-plane.md)
     - [move from bootstrap](./topics/mover.md)
     - [trouble shooting](./topics/troubleshooting.md)
     - [CRD Changes](./topics/crd-changes/index.md)

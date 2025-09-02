@@ -103,6 +103,7 @@ updates:
   - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
   # These dependencies are skipped because they require a newer version of go:
   - dependency-name: "github.com/a8m/envsubst"
+  - dependency-name: "github.com/onsi/gomega"
   labels:
     - "area/dependency"
     - "ok-to-test"

@@ -132,7 +132,7 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 	}()
 
-	if !openStackServer.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !openStackServer.DeletionTimestamp.IsZero() {
 		// When moving a cluster, we need to populate the server status with the resources
 		// that were in another object's status.
 		// This is because the status is not persisted across CAPI resources moves.
@@ -626,8 +626,8 @@ func (r *OpenStackServerReconciler) getOrCreateIPAddressClaimForFloatingAddress(
 
 	// If the OpenStackServer has a ClusterNameLabel, set it on the IPAddressClaim as well.
 	// This is useful for garbage collection of IPAddressClaims when a Cluster is deleted.
-	if openStackServer.ObjectMeta.Labels[clusterv1.ClusterNameLabel] != "" {
-		claim.ObjectMeta.Labels[clusterv1.ClusterNameLabel] = openStackServer.ObjectMeta.Labels[clusterv1.ClusterNameLabel]
+	if openStackServer.Labels[clusterv1.ClusterNameLabel] != "" {
+		claim.Labels[clusterv1.ClusterNameLabel] = openStackServer.Labels[clusterv1.ClusterNameLabel]
 	}
 
 	if err := r.Client.Create(ctx, claim); err != nil {

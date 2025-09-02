@@ -278,14 +278,14 @@ $(GOVULNCHECK): # Build govulncheck.
 
 .PHONY: lint
 lint: $(GOLANGCI_LINT) ## Lint codebase
-	$(GOLANGCI_LINT) run -v --fast=false
+	$(GOLANGCI_LINT) run -v
 
 .PHONY: lint-update
 lint-update: $(GOLANGCI_LINT) ## Lint codebase
-	$(GOLANGCI_LINT) run -v --fast=false --fix
+	$(GOLANGCI_LINT) run -v --fix
 
 lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
-	$(GOLANGCI_LINT) run -v --fast=true
+	$(GOLANGCI_LINT) run -v --fast-only
 
 ## --------------------------------------
 ##@ Generate

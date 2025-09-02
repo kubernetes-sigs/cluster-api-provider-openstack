@@ -187,7 +187,7 @@ type OpenStackLogCollector struct {
 
 // CollectMachineLog gets logs for the OpenStack resources related to the given machine.
 func (o OpenStackLogCollector) CollectMachineLog(ctx context.Context, managementClusterClient client.Client, m *clusterv1.Machine, outputPath string) error {
-	Logf("Collecting logs for machine %q and storing them in %q", m.ObjectMeta.Name, outputPath)
+	Logf("Collecting logs for machine %q and storing them in %q", m.Name, outputPath)
 
 	if err := os.MkdirAll(outputPath, 0o750); err != nil {
 		return fmt.Errorf("couldn't create directory %q for logs: %s", outputPath, err)

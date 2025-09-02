@@ -311,7 +311,8 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 			return nil, fmt.Errorf("block device name 'root' is reserved")
 		}
 
-		if blockDeviceSpec.Storage.Type == infrav1.VolumeBlockDevice {
+		switch blockDeviceSpec.Storage.Type {
+		case infrav1.VolumeBlockDevice:
 			blockDevice, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, &blockDeviceSpec, "", fmt.Sprintf("Additional block device for %s", instanceSpec.Name))
 			if err != nil {
 				return nil, err
@@ -319,11 +320,11 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 			bdUUID = blockDevice.ID
 			sourceType = servers.SourceVolume
 			destinationType = servers.DestinationVolume
-		} else if blockDeviceSpec.Storage.Type == infrav1.LocalBlockDevice {
+		case infrav1.LocalBlockDevice:
 			sourceType = servers.SourceBlank
 			destinationType = servers.DestinationLocal
 			localDiskSizeGiB = blockDeviceSpec.SizeGiB
-		} else {
+		default:
 			return nil, fmt.Errorf("invalid block device type %s", blockDeviceSpec.Storage.Type)
 		}
 
