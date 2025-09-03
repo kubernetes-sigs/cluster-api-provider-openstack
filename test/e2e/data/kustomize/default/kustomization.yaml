@@ -11,3 +11,4 @@ components:
 - ../common-patches/ccm
 - ../common-patches/externalNetworkByName
 - ../common-patches/images
+- ../common-patches/dns-fix

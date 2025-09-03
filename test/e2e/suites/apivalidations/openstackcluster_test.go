@@ -47,6 +47,11 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			cluster = &infrav1.OpenStackCluster{}
 			cluster.Namespace = namespace.Name
 			cluster.GenerateName = clusterNamePrefix
+			// Provide a minimal valid IdentityRef by default so success-case tests can create the cluster
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Name:      "creds",
+				CloudName: "openstack",
+			}
 		})
 
 		It("should allow the smallest permissible cluster spec", func() {
@@ -234,6 +239,119 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		It("should allow apiServerPort 65535", func() {
 			u := unstructuredClusterWithAPIPort(math.MaxUint16)
 			Expect(createObj(u)).To(Succeed(), "OpenStackCluster creation should succeed")
+		})
+
+		// OpenStackIdentityReference validation tests
+		It("should reject when identityRef.name is missing", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				CloudName: "openstack",
+				// Name missing
+			}
+			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail when identityRef.name is missing")
+		})
+
+		It("should reject when identityRef.cloudName is missing", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Name: "creds",
+				// CloudName missing
+			}
+			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail when identityRef.cloudName is missing")
+		})
+
+		It("should default identityRef.type to Secret when omitted", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Name:      "creds",
+				CloudName: "openstack",
+				// Type omitted -> should default to Secret
+			}
+			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			fetched := &infrav1.OpenStackCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetched)).To(Succeed(), "OpenStackCluster fetch should succeed")
+			Expect(fetched.Spec.IdentityRef.Type).To(Equal("Secret"), "identityRef.type should default to Secret")
+		})
+
+		It("should reject updates that modify identityRef.region (immutable)", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Name:      "creds",
+				CloudName: "openstack",
+				Region:    "RegionOne",
+			}
+			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			// Attempt to change region
+			cluster.Spec.IdentityRef.Region = "RegionTwo"
+			Expect(k8sClient.Update(ctx, cluster)).NotTo(Succeed(), "Updating identityRef.region should fail")
+		})
+
+		It("should reject updates that set identityRef.region when previously unset", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Name:      "creds",
+				CloudName: "openstack",
+				// Region omitted initially
+			}
+			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			// Attempt to set region after creation
+			cluster.Spec.IdentityRef.Region = "RegionOne"
+			Expect(k8sClient.Update(ctx, cluster)).NotTo(Succeed(), "Setting identityRef.region post-creation should fail")
+		})
+
+		It("should accept identityRef.type=ClusterIdentity with required fields", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Type:      "ClusterIdentity",
+				Name:      "prod-id",
+				CloudName: "openstack",
+			}
+			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed for ClusterIdentity type")
+		})
+
+		// Edge case tests
+
+		It("should reject when identityRef is completely missing", func() {
+			// Explicitly clear identityRef to simulate missing values
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
+			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail when identityRef is missing")
+		})
+
+		It("should reject when identityRef.name is empty string", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Name:      "", // Empty string
+				CloudName: "openstack",
+			}
+			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail when identityRef.name is empty")
+		})
+
+		It("should reject when identityRef.cloudName is empty string", func() {
+			cluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+				Name:      "creds",
+				CloudName: "", // Empty string
+			}
+			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should fail when identityRef.cloudName is empty")
+		})
+
+		It("should reject invalid identityRef.type value", func() {
+			// Need to use unstructured since Go types won't allow invalid enum
+			obj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(cluster)
+			Expect(err).NotTo(HaveOccurred(), "converting cluster to unstructured")
+
+			u := &unstructured.Unstructured{}
+			u.Object = obj
+			u.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   infrav1.SchemeGroupVersion.Group,
+				Version: infrav1.SchemeGroupVersion.Version,
+				Kind:    "OpenStackCluster",
+			})
+
+			// Set invalid type
+			spec := obj["spec"].(map[string]any)
+			spec["identityRef"] = map[string]any{
+				"type":      "InvalidType",
+				"name":      "creds",
+				"cloudName": "openstack",
+			}
+
+			Expect(createObj(u)).NotTo(Succeed(), "OpenStackCluster creation should fail with invalid identityRef.type")
 		})
 	})
 })
