@@ -64,6 +64,61 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 	}
+	openStackClusterWithSubnet := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			Subnets: []infrav1.SubnetParam{
+				{
+					ID: ptr.To(subnetUUID),
+				},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				ID: workerSecurityGroupUUID,
+			},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: networkUUID,
+				},
+			},
+		},
+	}
+	openStackClusterNoNetwork := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			Subnets: []infrav1.SubnetParam{
+				{
+					ID: ptr.To(subnetUUID),
+				},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				ID: workerSecurityGroupUUID,
+			},
+		},
+	}
+	openStackClusterNetworkWithoutID := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			Subnets: []infrav1.SubnetParam{
+				{
+					ID: ptr.To(subnetUUID),
+				},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				ID: workerSecurityGroupUUID,
+			},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: "",
+				},
+			},
+		},
+	}
 	portOpts := []infrav1.PortOpts{
 		{
 			Network: &infrav1.NetworkParam{
@@ -91,24 +146,43 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 	}
+	portOptsWithAdditionalSubnet := []infrav1.PortOpts{
+		{
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(openStackCluster.Status.Network.ID),
+			},
+			SecurityGroups: []infrav1.SecurityGroupParam{
+				{
+					ID: ptr.To(openStackCluster.Status.WorkerSecurityGroup.ID),
+				},
+			},
+			FixedIPs: []infrav1.FixedIP{
+				{
+					Subnet: &infrav1.SubnetParam{
+						ID: ptr.To(subnetUUID),
+					},
+				},
+			},
+		},
+	}
 	image := infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("my-image")}}
 	tags := []string{"tag1", "tag2"}
 	userData := &corev1.LocalObjectReference{Name: "server-data-secret"}
 	tests := []struct {
-		name           string
-		spec           *infrav1.OpenStackMachineSpec
-		clusterNetwork *infrav1.NetworkStatusWithSubnets
-		want           *infrav1alpha1.OpenStackServerSpec
-		wantErr        bool
+		name    string
+		cluster *infrav1.OpenStackCluster
+		spec    *infrav1.OpenStackMachineSpec
+		want    *infrav1alpha1.OpenStackServerSpec
+		wantErr bool
 	}{
 		{
-			name: "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
+			name:    "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
+			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
 				Flavor:     ptr.To(flavorName),
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
-			clusterNetwork: openStackCluster.Status.Network,
 			want: &infrav1alpha1.OpenStackServerSpec{
 				Flavor:      ptr.To(flavorName),
 				IdentityRef: identityRef,
@@ -120,7 +194,8 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
+			name:    "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
+			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
 				Flavor:     ptr.To(flavorName),
 				Image:      image,
@@ -131,7 +206,6 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 					},
 				},
 			},
-			clusterNetwork: openStackCluster.Status.Network,
 			want: &infrav1alpha1.OpenStackServerSpec{
 				Flavor:      ptr.To(flavorName),
 				IdentityRef: identityRef,
@@ -143,14 +217,32 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavor and flavorID specified",
+			name:    "Test a OpenStackMachineSpec to OpenStackServerSpec conversion with a specified subnet",
+			cluster: openStackClusterWithSubnet,
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor:     ptr.To(flavorName),
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports:       portOptsWithAdditionalSubnet,
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name:    "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavor and flavorID specified",
+			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
 				Flavor:     ptr.To(flavorName),
 				FlavorID:   ptr.To(flavorUUID),
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
-			clusterNetwork: openStackCluster.Status.Network,
 			want: &infrav1alpha1.OpenStackServerSpec{
 				Flavor:      ptr.To(flavorName),
 				FlavorID:    ptr.To(flavorUUID),
@@ -163,13 +255,13 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 		{
-			name: "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavorID specified but not flavor",
+			name:    "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavorID specified but not flavor",
+			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
 				FlavorID:   ptr.To(flavorUUID),
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
-			clusterNetwork: openStackCluster.Status.Network,
 			want: &infrav1alpha1.OpenStackServerSpec{
 				FlavorID:    ptr.To(flavorUUID),
 				IdentityRef: identityRef,
@@ -188,7 +280,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				}},
 				SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(extraSecurityGroupUUID)}},
 			},
-			clusterNetwork: nil,
+			cluster: openStackClusterNoNetwork,
 			want: &infrav1alpha1.OpenStackServerSpec{
 				IdentityRef: identityRef,
 				Ports: []infrav1.PortOpts{{
@@ -209,7 +301,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
 				}},
 			},
-			clusterNetwork: nil,
+			cluster: openStackClusterNoNetwork,
 			want: &infrav1alpha1.OpenStackServerSpec{
 				IdentityRef: identityRef,
 				Ports: []infrav1.PortOpts{{
@@ -228,9 +320,9 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				SSHKeyName: sshKeyName,
 				// No ports defined
 			},
-			clusterNetwork: nil,
-			want:           nil,
-			wantErr:        true,
+			cluster: openStackClusterNoNetwork,
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			name: "Empty cluster network ID, machine defines explicit ports",
@@ -241,7 +333,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
 				}},
 			},
-			clusterNetwork: &infrav1.NetworkStatusWithSubnets{NetworkStatus: infrav1.NetworkStatus{ID: ""}},
+			cluster: openStackClusterNetworkWithoutID,
 			want: &infrav1alpha1.OpenStackServerSpec{
 				Flavor:      ptr.To(flavorName),
 				IdentityRef: identityRef,
@@ -258,7 +350,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			spec, err := openStackMachineSpecToOpenStackServerSpec(tt.spec, identityRef, tags, "", userData, &openStackCluster.Status.WorkerSecurityGroup.ID, tt.clusterNetwork)
+			spec, err := openStackMachineSpecToOpenStackServerSpec(tt.spec, identityRef, tags, "", userData, &openStackCluster.Status.WorkerSecurityGroup.ID, tt.cluster)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("openStackMachineSpecToOpenStackServerSpec() error = %v, wantErr %v", err, tt.wantErr)
 				return
