@@ -56,6 +56,8 @@ import (
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/internal/util/ssa"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
@@ -1006,6 +1008,56 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Expect(additionalVolume.AvailabilityZone).To(Equal(failureDomain))
 				Expect(additionalVolume.VolumeType).To(Equal(volumeTypeAlt))
 			}
+
+			// This last block tests a scenario where an external agent deletes a server (e.g. a user via Horizon).
+			// We want to ensure that the OpenStackMachine conditions are updated to reflect the server deletion.
+			// Context: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2474
+			shared.Logf("Deleting a server")
+			serverToDelete := allServers[controlPlaneMachines[0].Spec.InfrastructureRef.Name]
+			err = shared.DeleteOpenStackServer(ctx, e2eCtx, serverToDelete.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			shared.Logf("Waiting for the OpenStackMachine to have a condition that the server has been unexpectedly deleted")
+			retries := 0
+			Eventually(func() (clusterv1.Condition, error) {
+				k8sClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
+
+				openStackMachine := &infrav1.OpenStackMachine{}
+				err := k8sClient.Get(ctx, crclient.ObjectKey{Name: controlPlaneMachines[0].Name, Namespace: controlPlaneMachines[0].Namespace}, openStackMachine)
+				if err != nil {
+					return clusterv1.Condition{}, err
+				}
+				for _, condition := range openStackMachine.Status.Conditions {
+					if condition.Type == infrav1.InstanceReadyCondition {
+						return condition, nil
+					}
+				}
+
+				// Make some non-functional change to the object which will
+				// cause CAPO to reconcile it, otherwise we won't notice the
+				// server is gone until the configured controller-runtime
+				// resync.
+				retries++
+				applyConfig := v1beta1.OpenStackMachine(openStackMachine.Name, openStackMachine.Namespace).
+					WithAnnotations(map[string]string{
+						"e2e-test-retries": fmt.Sprintf("%d", retries),
+					})
+				err = k8sClient.Patch(ctx, openStackMachine, ssa.ApplyConfigPatch(applyConfig), crclient.ForceOwnership, crclient.FieldOwner("capo-e2e"))
+				if err != nil {
+					return clusterv1.Condition{}, err
+				}
+
+				return clusterv1.Condition{}, errors.New("condition InstanceReadyCondition not found")
+			}, time.Minute*3, time.Second*10).Should(MatchFields(
+				IgnoreExtras,
+				Fields{
+					"Type":     Equal(infrav1.InstanceReadyCondition),
+					"Status":   Equal(corev1.ConditionFalse),
+					"Reason":   Equal(infrav1.InstanceDeletedReason),
+					"Message":  Equal(infrav1.ServerUnexpectedDeletedMessage),
+					"Severity": Equal(clusterv1.ConditionSeverityError),
+				},
+			), "OpenStackMachine should be marked not ready with InstanceDeletedReason")
 		})
 	})
 })
