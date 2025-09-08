@@ -11,6 +11,7 @@ Tasks for a new release `vX.Y.Z` of the Cluster API Provider OpenStack.
 For details, see [RELEASE.md](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/RELEASE.md).
 
 - [ ] [When bumping `X` or `Y`] Create a new release branch called `release-X.Y`.
+- [ ] [When bumping `X` or `Y`] Add a new entry of new release branch to [depandabot.yml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/.github/dependabot.yml).
 - [ ] [When bumping `X` or `Y`] Add a new entry to [metadata.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/metadata.yaml)
   as [described in the CAPI book](https://cluster-api.sigs.k8s.io/clusterctl/provider-contract.html#metadata-yaml)
   on the release branch prior to release.

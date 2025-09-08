@@ -44,16 +44,59 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - dependency-name: "sigs.k8s.io/controller-tools"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
-  # We will need k8s v0.31.3 to bump structured-merge-diff to v4.4.2 (check git history for details).
-  - dependency-name: "sigs.k8s.io/structured-merge-diff/*"
-  # For now we deploy CAPI from an unreleased commit
-  - dependency-name: "sigs.k8s.io/cluster-api*"
-  # These dependencies are skipped because they require a newer version of go:
-  - dependency-name: "github.com/a8m/envsubst"
   labels:
     - "area/dependency"
     - "ok-to-test"
 ## main branch config ends here
+## release-0.13 branch config starts here
+# github-actions
+- directory: "/"
+  package-ecosystem: "github-actions"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+  target-branch: release-0.13
+  groups:
+    all-github-actions:
+      patterns: [ "*" ]
+  commit-message:
+    prefix: ":seedling:"
+    include: scope
+  labels:
+  - "area/dependency"
+  - "ok-to-test"
+# Go directories
+- directories:
+  - "/"
+  - "/hack/tools"
+  package-ecosystem: "gomod"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+  target-branch: release-0.13
+  groups:
+    all-go-mod-patch-and-minor:
+      patterns: [ "*" ]
+      update-types: [ "patch", "minor" ]
+  commit-message:
+    prefix: ":seedling:"
+    include: scope
+  ignore:
+  # Ignore CAPI major and minor bumps
+  - dependency-name: "sigs.k8s.io/cluster-api*"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore controller-runtime major and minor bumps as its upgraded manually.
+  - dependency-name: "sigs.k8s.io/controller-runtime"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore k8s major and minor bumps and its transitives modules
+  - dependency-name: "k8s.io/*"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  - dependency-name: "sigs.k8s.io/controller-tools"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  labels:
+    - "area/dependency"
+    - "ok-to-test"
+## release-0.13 branch config ends here
 ## release-0.12 branch config starts here
 # github-actions
 - directory: "/"
