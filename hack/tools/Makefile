@@ -81,7 +81,7 @@ $(SETUP_ENVTEST): go.mod go.sum | $(BIN_DIR)
 
 GOTESTSUM := $(BIN_DIR)/gotestsum
 $(GOTESTSUM): | $(BIN_DIR)
-	curl -L https://github.com/gotestyourself/gotestsum/releases/download/v$(GOTESTSUM_VERSION)/gotestsum_$(GOTESTSUM_VERSION)_linux_$(ARCH).tar.gz | \
+	curl -L https://github.com/gotestyourself/gotestsum/releases/download/v$(GOTESTSUM_VERSION)/gotestsum_$(GOTESTSUM_VERSION)_$(OS)_$(ARCH).tar.gz | \
 		tar -C $(BIN_DIR) -zxvf - gotestsum
 
 GH_SHARE := $(SHARE_DIR)/gh
