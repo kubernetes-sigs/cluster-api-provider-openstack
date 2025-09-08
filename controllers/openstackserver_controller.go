@@ -451,7 +451,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 				msg = infrav1.ServerUnexpectedDeletedMessage
 				reason = infrav1.InstanceNotFoundReason
 			}
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, reason, clusterv1.ConditionSeverityError, msg)
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, reason, clusterv1.ConditionSeverityError, "%s", msg)
 			return nil, err
 		}
 	}
