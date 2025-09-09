@@ -379,7 +379,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	if instanceStatus == nil {
 		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, infrav1.ServerUnexpectedDeletedMessage)
-		openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, errors.New(infrav1.ServerUnexpectedDeletedMessage)) //nolint:stylecheck // This error is not used as an error
+		openStackMachine.SetFailure(capierrors.UpdateMachineError, errors.New(infrav1.ServerUnexpectedDeletedMessage)) //nolint:stylecheck // This error is not used as an error
 		return ctrl.Result{}, nil
 	}
 
