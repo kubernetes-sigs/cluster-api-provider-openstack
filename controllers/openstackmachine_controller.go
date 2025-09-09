@@ -480,13 +480,15 @@ func (r *OpenStackMachineReconciler) getMachineServer(ctx context.Context, openS
 
 // openStackMachineSpecToOpenStackServerSpec converts an OpenStackMachineSpec to an OpenStackServerSpec.
 // It returns the OpenStackServerSpec object and an error if there is any.
-func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, clusterNetwork *infrav1.NetworkStatusWithSubnets) (*infrav1alpha1.OpenStackServerSpec, error) {
+func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, openStackCluster *infrav1.OpenStackCluster) (*infrav1alpha1.OpenStackServerSpec, error) {
 	// Determine default network ID if the cluster status exposes one.
 	var defaultNetworkID string
-	if clusterNetwork != nil {
-		defaultNetworkID = clusterNetwork.ID
+	if openStackCluster != nil {
+		clusterNetwork := openStackCluster.Status.Network
+		if clusterNetwork != nil {
+			defaultNetworkID = clusterNetwork.ID
+		}
 	}
-
 	// If no cluster network is available AND the machine spec did not define any ports with a network, we cannot choose a network.
 	if defaultNetworkID == "" && len(openStackMachineSpec.Ports) == 0 {
 		return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, "no network configured: cluster network is missing and machine spec does not define ports with a network")
@@ -532,22 +534,35 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	if len(openStackMachineSpec.Ports) == 0 {
 		serverPorts = make([]infrav1.PortOpts, 1)
 	}
-	for i := range serverPorts {
-		// Only inject the default network when we actually have an ID.
-		if serverPorts[i].Network == nil && defaultNetworkID != "" {
-			serverPorts[i].Network = &infrav1.NetworkParam{
-				ID: &defaultNetworkID,
+
+	var clusterSubnets []infrav1.FixedIP
+	if len(openStackCluster.Spec.Subnets) > 0 {
+		clusterSubnets = make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
+		for idx, sn := range openStackCluster.Spec.Subnets {
+			clusterSubnets[idx] = infrav1.FixedIP{
+				Subnet: &sn,
 			}
 		}
-		if len(serverPorts[i].SecurityGroups) == 0 && defaultSecGroup != nil {
-			serverPorts[i].SecurityGroups = []infrav1.SecurityGroupParam{
+	}
+
+	for i := range serverPorts {
+		serverPort := &serverPorts[i]
+		// Only inject the default network when we actually have an ID.
+		if serverPort.Network == nil && defaultNetworkID != "" {
+			serverPort.Network = &infrav1.NetworkParam{
+				ID: &openStackCluster.Status.Network.ID,
+			}
+			serverPort.FixedIPs = clusterSubnets
+		}
+		if len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
+			serverPort.SecurityGroups = []infrav1.SecurityGroupParam{
 				{
 					ID: defaultSecGroup,
 				},
 			}
 		}
 		if len(openStackMachineSpec.SecurityGroups) > 0 {
-			serverPorts[i].SecurityGroups = append(serverPorts[i].SecurityGroups, openStackMachineSpec.SecurityGroups...)
+			serverPort.SecurityGroups = append(serverPort.SecurityGroups, openStackMachineSpec.SecurityGroups...)
 		}
 	}
 	openStackServerSpec.Ports = serverPorts
@@ -601,7 +616,7 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 			}
 			return openStackCluster.Spec.IdentityRef
 		}()
-		machineServerSpec, err := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster.Status.Network)
+		machineServerSpec, err := openStackMachineSpecToOpenStackServerSpec(&openStackMachine.Spec, identityRef, compute.InstanceTags(&openStackMachine.Spec, openStackCluster), failureDomain, userDataRef, getManagedSecurityGroup(openStackCluster, machine), openStackCluster)
 		if err != nil {
 			return nil, err
 		}
