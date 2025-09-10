@@ -85,6 +85,38 @@ var schemaYAML = typed.YAMLObject(`types:
         elementType:
           namedType: __untyped_deduced_
         elementRelationship: separable
+- name: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+  map:
+    fields:
+    - name: matchExpressions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement
+          elementRelationship: atomic
+    - name: matchLabels
+      type:
+        map:
+          elementType:
+            scalar: string
+    elementRelationship: atomic
+- name: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement
+  map:
+    fields:
+    - name: key
+      type:
+        scalar: string
+      default: ""
+    - name: operator
+      type:
+        scalar: string
+      default: ""
+    - name: values
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.ManagedFieldsEntry
   map:
     fields:
@@ -200,6 +232,44 @@ var schemaYAML = typed.YAMLObject(`types:
     elementRelationship: atomic
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.Time
   scalar: untyped
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackClusterIdentity
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+      default: {}
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackClusterIdentitySpec
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackClusterIdentitySpec
+  map:
+    fields:
+    - name: namespaceSelector
+      type:
+        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+    - name: secretRef
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackCredentialSecretReference
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackCredentialSecretReference
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: namespace
+      type:
+        scalar: string
+      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackServer
   map:
     fields:
@@ -918,6 +988,9 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
       default: ""
     - name: region
+      type:
+        scalar: string
+    - name: type
       type:
         scalar: string
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.OpenStackMachine
