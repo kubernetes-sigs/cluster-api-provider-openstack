@@ -477,7 +477,9 @@ generate-release-notes: $(RELEASE_NOTES_DIR) $(RELEASE_NOTES)
 	if [ -n "${PRE_RELEASE}" ]; then \
 	echo -e ":rotating_light: This is a RELEASE CANDIDATE. Use it only for testing purposes. If you find any bugs, file an [issue](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/new/choose).\n" >> $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md; \
 	fi
-	"$(RELEASE_NOTES)" --from=$(PREVIOUS_TAG) >> $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md
+	"$(RELEASE_NOTES)" --repository=kubernetes-sigs/cluster-api-provider-openstack \
+	  --prefix-area-label=false --add-kubernetes-version-support=false \
+	  --from=$(PREVIOUS_TAG) --release=$(RELEASE_TAG) >> $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md
 
 .PHONY: templates
 templates: ## Generate cluster templates
