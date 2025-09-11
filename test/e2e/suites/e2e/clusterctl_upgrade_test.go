@@ -63,7 +63,7 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.11=>current) and
 			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease110},
 			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease110},
 			MgmtFlavor:                        shared.FlavorDefault,
-			WorkloadFlavor:                    shared.FlavorDefault,
+			WorkloadFlavor:                    shared.FlavorCapiV1Beta1,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
 			InitWithRuntimeExtensionProviders: []string{"openstack-resource-controller:v1.0.2"},
 		}
@@ -97,7 +97,7 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease110},
 			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease110},
 			MgmtFlavor:                        shared.FlavorDefault,
-			WorkloadFlavor:                    shared.FlavorDefault,
+			WorkloadFlavor:                    shared.FlavorCapiV1Beta1,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersion),
 			InitWithRuntimeExtensionProviders: []string{"openstack-resource-controller:v1.0.2"},
 		}

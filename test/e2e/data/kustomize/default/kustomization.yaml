@@ -5,9 +5,6 @@ resources:
 - ../../../../../kustomize/v1beta1/default
 
 components:
-- ../common-patches/cluster
-- ../common-patches/cni
-- ../upgrade-patches
-- ../common-patches/ccm
-- ../common-patches/externalNetworkByName
-- ../common-patches/images
+- ../components/cluster-resource-sets
+- ../components/common
+- ../components/upgrade-patches

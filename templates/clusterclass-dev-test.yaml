@@ -1,37 +1,36 @@
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: ClusterClass
 metadata:
   name: dev-test
 spec:
   controlPlane:
-    ref:
+    templateRef:
       apiVersion: controlplane.cluster.x-k8s.io/v1beta1
       kind: KubeadmControlPlaneTemplate
       name: dev-test-control-plane
     machineInfrastructure:
-      ref:
+      templateRef:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
         name: dev-test-control-plane-machine
   infrastructure:
-    ref:
+    templateRef:
       apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
       kind: OpenStackClusterTemplate
       name: dev-test-openstackcluster
   workers:
     machineDeployments:
     - class: default-worker
-      template:
-        bootstrap:
-          ref:
-            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-            kind: KubeadmConfigTemplate
-            name: dev-test-default-worker-bootstraptemplate
-        infrastructure:
-          ref:
-            apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-            kind: OpenStackMachineTemplate
-            name: dev-test-default-worker-machine
+      bootstrap:
+        templateRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: dev-test-default-worker-bootstraptemplate
+      infrastructure:
+        templateRef:
+          apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+          kind: OpenStackMachineTemplate
+          name: dev-test-default-worker-machine
   variables:
   - name: identityRef
     required: false
@@ -284,7 +283,7 @@ spec:
                               [Service]
                               EnvironmentFile=/run/metadata/flatcar
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
 kind: KubeadmConfigTemplate
 metadata:
   name: dev-test-default-worker-bootstraptemplate
@@ -295,11 +294,13 @@ spec:
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
-            cloud-provider: external
-            provider-id: "openstack:///{{ v1.instance_id }}"
+          - name: cloud-provider
+            value: external
+          - name: provider-id
+            value: "openstack:///{{ v1.instance_id }}"
           name: "{{ v1.local_hostname }}"
 ---
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlaneTemplate
 metadata:
   name: dev-test-control-plane
@@ -310,18 +311,23 @@ spec:
         clusterConfiguration:
           controllerManager:
             extraArgs:
-              cloud-provider: external
+            - name: cloud-provider
+              value: external
         initConfiguration:
           nodeRegistration:
             kubeletExtraArgs:
-              cloud-provider: external
-              provider-id: "openstack:///{{ v1.instance_id }}"
+            - name: cloud-provider
+              value: external
+            - name: provider-id
+              value: "openstack:///{{ v1.instance_id }}"
             name: "{{ v1.local_hostname }}"
         joinConfiguration:
           nodeRegistration:
             kubeletExtraArgs:
-              cloud-provider: external
-              provider-id: "openstack:///{{ v1.instance_id }}"
+            - name: cloud-provider
+              value: external
+            - name: provider-id
+              value: "openstack:///{{ v1.instance_id }}"
             name: "{{ v1.local_hostname }}"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
