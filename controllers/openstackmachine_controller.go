@@ -377,6 +377,12 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
+	if instanceStatus == nil {
+		conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1.ConditionSeverityError, infrav1.ServerUnexpectedDeletedMessage)
+		openStackMachine.SetFailure(capierrors.UpdateMachineError, errors.New(infrav1.ServerUnexpectedDeletedMessage)) //nolint:stylecheck // This error is not used as an error
+		return ctrl.Result{}, nil
+	}
+
 	instanceNS, err := instanceStatus.NetworkStatus()
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("get network status: %w", err)
@@ -393,22 +399,20 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 	})
 	openStackMachine.Status.Addresses = addresses
 
+	if util.IsControlPlaneMachine(machine) {
+		err = r.reconcileAPIServerLoadBalancer(scope, openStackCluster, openStackMachine, instanceStatus, instanceNS, clusterResourceName)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
+	}
+
 	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
 	if result != nil {
 		return *result, nil
 	}
 
-	if !util.IsControlPlaneMachine(machine) {
-		scope.Logger().Info("Not a Control plane machine, no floating ip reconcile needed, Reconciled Machine create successfully")
-		return ctrl.Result{}, nil
-	}
-
-	err = r.reconcileAPIServerLoadBalancer(scope, openStackCluster, openStackMachine, instanceStatus, instanceNS, clusterResourceName)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
 	scope.Logger().Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
 }

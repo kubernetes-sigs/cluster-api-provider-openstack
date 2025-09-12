@@ -841,6 +841,21 @@ func CreateOpenStackNetwork(e2eCtx *E2EContext, name, cidr string) (*networks.Ne
 	return net, nil
 }
 
+func DeleteOpenStackServer(ctx context.Context, e2eCtx *E2EContext, id string) error {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		_, _ = fmt.Fprintf(GinkgoWriter, "error creating provider client: %s\n", err)
+		return err
+	}
+
+	computeClient, err := openstack.NewComputeV2(providerClient, gophercloud.EndpointOpts{Region: clientOpts.RegionName})
+	if err != nil {
+		return fmt.Errorf("error creating compute client: %s", err)
+	}
+
+	return servers.Delete(ctx, computeClient, id).ExtractErr()
+}
+
 func DeleteOpenStackNetwork(ctx context.Context, e2eCtx *E2EContext, id string) error {
 	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
 	if err != nil {

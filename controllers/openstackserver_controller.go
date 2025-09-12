@@ -433,9 +433,18 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 
 	if openStackServer.Status.InstanceID != nil {
 		instanceStatus, err = computeService.GetInstanceStatus(*openStackServer.Status.InstanceID)
-		if err != nil {
-			logger.Info("Unable to get OpenStack instance", "name", openStackServer.Name)
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.OpenStackErrorReason, clusterv1.ConditionSeverityError, "%s", err.Error())
+		if err != nil || instanceStatus == nil {
+			logger.Info("Unable to get OpenStack instance", "name", openStackServer.Name, "id", *openStackServer.Status.InstanceID)
+			var msg string
+			var reason string
+			if err != nil {
+				msg = err.Error()
+				reason = infrav1.OpenStackErrorReason
+			} else {
+				msg = infrav1.ServerUnexpectedDeletedMessage
+				reason = infrav1.InstanceNotFoundReason
+			}
+			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, reason, clusterv1.ConditionSeverityError, msg)
 			return nil, err
 		}
 	}
@@ -450,11 +459,6 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 			logger.Info("Server already exists", "name", openStackServer.Name, "id", instanceStatus.ID())
 			return instanceStatus, nil
 		}
-		if openStackServer.Status.InstanceID != nil {
-			logger.Info("Not reconciling server in failed state. The previously existing OpenStack instance is no longer available")
-			conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceNotFoundReason, clusterv1.ConditionSeverityError, "virtual machine no longer exists")
-			return nil, nil
-		}
 
 		logger.Info("Server does not exist, creating Server", "name", openStackServer.Name)
 		instanceSpec, err := r.serverToInstanceSpec(ctx, openStackServer)
@@ -468,6 +472,8 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 			openStackServer.Status.InstanceState = &infrav1.InstanceStateError
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)
 		}
+		// We reached a point where a server was created with no error but we can't predict its state yet which is why we don't update conditions yet.
+		// The actual state of the server is checked in the next reconcile loops.
 		return instanceStatus, nil
 	}
 	return instanceStatus, nil
