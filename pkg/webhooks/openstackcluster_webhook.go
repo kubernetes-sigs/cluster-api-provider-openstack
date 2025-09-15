@@ -127,7 +127,7 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) { //nolint:gocyclo,cyclop
 	var allErrs field.ErrorList
 	oldObj, err := castToOpenStackCluster(oldObjRaw)
 	if err != nil {
@@ -191,6 +191,40 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 		// Allow change to the allowAllInClusterTraffic.
 		oldObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
 		newObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
+	}
+
+	// Allow changes only to DNSNameservers in ManagedSubnets spec
+	if newObj.Spec.ManagedSubnets != nil && oldObj.Spec.ManagedSubnets != nil {
+		// Check if any fields other than DNSNameservers have changed
+		if len(oldObj.Spec.ManagedSubnets) != len(newObj.Spec.ManagedSubnets) {
+			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "managedSubnets"), "cannot add or remove subnets"))
+		} else {
+			// Build maps of subnets by CIDR
+			oldSubnetMap := make(map[string]*infrav1.SubnetSpec)
+
+			for i := range oldObj.Spec.ManagedSubnets {
+				oldSubnet := &oldObj.Spec.ManagedSubnets[i]
+				oldSubnetMap[oldSubnet.CIDR] = oldSubnet
+			}
+
+			// Check if all new subnets have matching old subnets with the same CIDR
+			for i := range newObj.Spec.ManagedSubnets {
+				newSubnet := &newObj.Spec.ManagedSubnets[i]
+
+				oldSubnet, exists := oldSubnetMap[newSubnet.CIDR]
+				if !exists {
+					allErrs = append(allErrs, field.Forbidden(
+						field.NewPath("spec", "managedSubnets"),
+						fmt.Sprintf("cannot change subnet CIDR from existing value to %s", newSubnet.CIDR),
+					))
+					continue
+				}
+
+				// DNSNameservers is mutable
+				oldSubnet.DNSNameservers = nil
+				newSubnet.DNSNameservers = nil
+			}
+		}
 	}
 
 	// Allow changes on AllowedCIDRs
