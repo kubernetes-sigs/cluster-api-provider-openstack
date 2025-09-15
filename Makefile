@@ -27,7 +27,7 @@ unexport GOPATH
 TRACE ?= 0
 
 # Go
-GO_VERSION ?= 1.24.6
+GO_VERSION ?= 1.24.7
 
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
