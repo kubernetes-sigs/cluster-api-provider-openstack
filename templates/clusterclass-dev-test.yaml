@@ -73,6 +73,53 @@ spec:
           Use a sysext overlay to add the Kubernetes components to the image.
           This is for use with flatcar and similar images.
         default: false
+  - name: allowedCIDRs
+    required: false
+    schema:
+      openAPIV3Schema:
+        type: array
+        items:
+          type: string
+        description: |
+          List of CIDR ranges allowed to access the API server load balancer.
+          If not specified, all traffic will be allowed.
+        default: []
+  - name: bastion
+    required: false
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          enabled:
+            type: boolean
+            description: "Enable or disable the bastion host"
+            default: false
+          spec:
+            type: object
+            description: "OpenStackMachineSpec for the bastion host"
+            properties:
+              flavor:
+                type: string
+                description: "OpenStack flavor for the bastion"
+              image:
+                type: object
+                properties:
+                  filter:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: "Name of the image to use for bastion"
+              sshKeyName:
+                type: string
+                description: "SSH key pair name for bastion access"
+          floatingIP:
+            type: string
+            format: ipv4
+            description: "Floating IP address to assign to the bastion (optional)"
+          availabilityZone:
+            type: string
+            description: "Availability zone for the bastion host"
   patches:
   - name: image
     description: "Sets the OpenStack image that is used for creating the servers."
@@ -114,6 +161,34 @@ spec:
         path: /spec/template/spec/identityRef
         valueFrom:
           variable: identityRef
+  - name: allowedCIDRs
+    description: "Sets the allowed CIDRs for the API server load balancer."
+    enabledIf: "{{ if .allowedCIDRs }}{{ gt (len .allowedCIDRs) 0 }}{{ end }}"
+    definitions:
+    - selector:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: OpenStackClusterTemplate
+        matchResources:
+          infrastructureCluster: true
+      jsonPatches:
+      - op: add
+        path: /spec/template/spec/apiServerLoadBalancer/allowedCIDRs
+        valueFrom:
+          variable: allowedCIDRs
+  - name: bastion
+    description: "Sets the bastion host configuration."
+    enabledIf: "{{ if .bastion }}{{ .bastion.enabled }}{{ end }}"
+    definitions:
+    - selector:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: OpenStackClusterTemplate
+        matchResources:
+          infrastructureCluster: true
+      jsonPatches:
+      - op: add
+        path: /spec/template/spec/bastion
+        valueFrom:
+          variable: bastion
   - name: ignitionSysext
     description: "Add the necessary ignition configuration for kube components through sysext."
     enabledIf: "{{ .injectIgnitionSysext }}"
