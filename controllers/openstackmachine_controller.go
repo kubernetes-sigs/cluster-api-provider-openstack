@@ -361,8 +361,8 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	scope.Logger().Info("Reconciling Machine")
 
-	machineServer, waitingForServer, err := r.reconcileMachineServer(ctx, scope, openStackMachine, openStackCluster, machine)
-	if err != nil || waitingForServer {
+	machineServer, err := r.reconcileMachineServer(ctx, scope, openStackMachine, openStackCluster, machine)
+	if err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -572,7 +572,7 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 
 // reconcileMachineServer reconciles the OpenStackServer object for the OpenStackMachine.
 // It returns the OpenStackServer object and a boolean indicating if the OpenStackServer is ready.
-func (r *OpenStackMachineReconciler) reconcileMachineServer(ctx context.Context, scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine) (*infrav1alpha1.OpenStackServer, bool, error) {
+func (r *OpenStackMachineReconciler) reconcileMachineServer(ctx context.Context, scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine) (*infrav1alpha1.OpenStackServer, error) {
 	var server *infrav1alpha1.OpenStackServer
 	server, err := r.getOrCreateMachineServer(ctx, openStackCluster, openStackMachine, machine)
 	if err != nil {
@@ -580,13 +580,10 @@ func (r *OpenStackMachineReconciler) reconcileMachineServer(ctx context.Context,
 		// we won't requeue the request so reconcileNormal can add conditions to the OpenStackMachine
 		// and we can see the error in the logs.
 		scope.Logger().Error(err, "Failed to get or create OpenStackServer")
-		return server, false, err
+		return server, err
 	}
-	if !server.Status.Ready {
-		scope.Logger().Info("Waiting for OpenStackServer to be ready", "name", server.Name)
-		return server, true, nil
-	}
-	return server, false, nil
+
+	return server, nil
 }
 
 // getOrCreateMachineServer gets or creates the OpenStackServer object for the OpenStackMachine.
