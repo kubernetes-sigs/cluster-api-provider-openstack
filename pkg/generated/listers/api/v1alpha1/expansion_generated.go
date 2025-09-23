@@ -18,6 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
+// OpenStackClusterIdentityListerExpansion allows custom methods to be added to
+// OpenStackClusterIdentityLister.
+type OpenStackClusterIdentityListerExpansion interface{}
+
+// OpenStackClusterIdentityNamespaceListerExpansion allows custom methods to be added to
+// OpenStackClusterIdentityNamespaceLister.
+type OpenStackClusterIdentityNamespaceListerExpansion interface{}
+
 // OpenStackServerListerExpansion allows custom methods to be added to
 // OpenStackServerLister.
 type OpenStackServerListerExpansion interface{}

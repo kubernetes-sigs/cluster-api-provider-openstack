@@ -28,6 +28,10 @@ type FakeInfrastructureV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeInfrastructureV1alpha1) OpenStackClusterIdentities(namespace string) v1alpha1.OpenStackClusterIdentityInterface {
+	return newFakeOpenStackClusterIdentities(c, namespace)
+}
+
 func (c *FakeInfrastructureV1alpha1) OpenStackServers(namespace string) v1alpha1.OpenStackServerInterface {
 	return newFakeOpenStackServers(c, namespace)
 }

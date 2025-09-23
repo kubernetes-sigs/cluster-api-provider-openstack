@@ -34,6 +34,12 @@ import (
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
 	// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackClusterIdentity"):
+		return &apiv1alpha1.OpenStackClusterIdentityApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackClusterIdentitySpec"):
+		return &apiv1alpha1.OpenStackClusterIdentitySpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackCredentialSecretReference"):
+		return &apiv1alpha1.OpenStackCredentialSecretReferenceApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackServer"):
 		return &apiv1alpha1.OpenStackServerApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackServerSpec"):
