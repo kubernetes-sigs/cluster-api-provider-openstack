@@ -24,3 +24,14 @@ spec:
       value: ${ADD_IMAGE_VERSION:=false}
     - name: injectIgnitionSysext
       value: ${INJECT_IGNITION_SYSEXT:=true}
+    - name: allowedCIDRs
+      value: ${OPENSTACK_API_SERVER_ALLOWED_CIDRS:=[]}
+    - name: bastion
+      value:
+        enabled: ${OPENSTACK_BASTION_ENABLED:=false}
+        spec:
+          flavor: ${OPENSTACK_BASTION_FLAVOR:=m1.small}
+          image:
+            filter:
+              name: ${OPENSTACK_BASTION_IMAGE_NAME:=ubuntu-24.04}
+          sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
