@@ -27,6 +27,15 @@ providers:
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
+  - name: v1.11.0
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.11.0/core-components.yaml"
+    type: "url"
+    contract: v1beta2
+    replacements:
+    - old: --metrics-addr=127.0.0.1:8080
+      new: --metrics-addr=:8080
+    files:
+    - sourcePath: "../data/shared/capi/metadata.yaml"
   - name: "{go://sigs.k8s.io/cluster-api@v1.10}"
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.10}/core-components.yaml"
     type: url
@@ -51,6 +60,15 @@ providers:
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
+  - name: v1.11.0
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.11.0/bootstrap-components.yaml"
+    type: "url"
+    contract: v1beta2
+    replacements:
+    - old: --metrics-addr=127.0.0.1:8080
+      new: --metrics-addr=:8080
+    files:
+    - sourcePath: "../data/shared/capi/metadata.yaml"
   - name: "{go://sigs.k8s.io/cluster-api@v1.10}"
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.10}/bootstrap-components.yaml"
     type: url
@@ -75,6 +93,15 @@ providers:
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
+  - name: v1.11.0
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.11.0/control-plane-components.yaml"
+    type: "url"
+    contract: v1beta2
+    replacements:
+    - old: --metrics-addr=127.0.0.1:8080
+      new: --metrics-addr=:8080
+    files:
+    - sourcePath: "../data/shared/capi/metadata.yaml"
   - name: "{go://sigs.k8s.io/cluster-api@v1.10}"
     value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.10}/control-plane-components.yaml"
     type: url
@@ -109,6 +136,21 @@ providers:
     value: "https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/{go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.12}/infrastructure-components.yaml"
     type: url
     contract: v1beta1
+    files:
+    - sourcePath: "../data/shared/provider/metadata.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
+    replacements:
+    - old: "imagePullPolicy: Always"
+      new: "imagePullPolicy: IfNotPresent"
+    - old: "--v=2"
+      new: "--v=4"
+    - old: "--leader-elect"
+      new: "--leader-elect=false\n        - --sync-period=1m"
+  # This is only for clusterctl upgrade tests
+  - name: "{go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.13}"
+    value: "https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/{go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.13}/infrastructure-components.yaml"
+    type: url
+    contract: v1beta2
     files:
     - sourcePath: "../data/shared/provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
