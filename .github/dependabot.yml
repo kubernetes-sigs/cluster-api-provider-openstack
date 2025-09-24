@@ -12,7 +12,7 @@ updates:
   target-branch: main
   groups:
     all-github-actions:
-      patterns: [ "*" ]
+      patterns: ["*"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -30,8 +30,8 @@ updates:
   target-branch: main
   groups:
     all-go-mod-patch-and-minor:
-      patterns: [ "*" ]
-      update-types: [ "patch", "minor" ]
+      patterns: ["*"]
+      update-types: ["patch", "minor"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -45,8 +45,8 @@ updates:
   - dependency-name: "sigs.k8s.io/controller-tools"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   labels:
-    - "area/dependency"
-    - "ok-to-test"
+  - "area/dependency"
+  - "ok-to-test"
 ## main branch config ends here
 ## release-0.13 branch config starts here
 # github-actions
@@ -58,7 +58,7 @@ updates:
   target-branch: release-0.13
   groups:
     all-github-actions:
-      patterns: [ "*" ]
+      patterns: ["*"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -76,8 +76,8 @@ updates:
   target-branch: release-0.13
   groups:
     all-go-mod-patch-and-minor:
-      patterns: [ "*" ]
-      update-types: [ "patch", "minor" ]
+      patterns: ["*"]
+      update-types: ["patch", "minor"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -94,8 +94,8 @@ updates:
   - dependency-name: "sigs.k8s.io/controller-tools"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   labels:
-    - "area/dependency"
-    - "ok-to-test"
+  - "area/dependency"
+  - "ok-to-test"
 ## release-0.13 branch config ends here
 ## release-0.12 branch config starts here
 # github-actions
@@ -107,7 +107,7 @@ updates:
   target-branch: release-0.12
   groups:
     all-github-actions:
-      patterns: [ "*" ]
+      patterns: ["*"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -125,8 +125,8 @@ updates:
   target-branch: release-0.12
   groups:
     all-go-mod-patch-and-minor:
-      patterns: [ "*" ]
-      update-types: [ "patch", "minor" ]
+      patterns: ["*"]
+      update-types: ["patch", "minor"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -147,9 +147,10 @@ updates:
   # These dependencies are skipped because they require a newer version of go:
   - dependency-name: "github.com/a8m/envsubst"
   - dependency-name: "github.com/onsi/gomega"
+  - dependency-name: "golang.org/x/crypto"
   labels:
-    - "area/dependency"
-    - "ok-to-test"
+  - "area/dependency"
+  - "ok-to-test"
 ## release-0.12 branch config ends here
 ## release-0.11 branch config starts here
 # github-actions
@@ -161,7 +162,7 @@ updates:
   target-branch: release-0.11
   groups:
     all-github-actions:
-      patterns: [ "*" ]
+      patterns: ["*"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -180,8 +181,8 @@ updates:
   target-branch: release-0.11
   groups:
     all-go-mod-patch-and-minor:
-      patterns: [ "*" ]
-      update-types: [ "patch", "minor" ]
+      patterns: ["*"]
+      update-types: ["patch", "minor"]
   commit-message:
     prefix: ":seedling:"
     include: scope
@@ -208,6 +209,6 @@ updates:
   - dependency-name: "golang.org/x/crypto"
   - dependency-name: "golang.org/x/text"
   labels:
-    - "area/dependency"
-    - "ok-to-test"
+  - "area/dependency"
+  - "ok-to-test"
 ## release-0.11 branch config ends here
