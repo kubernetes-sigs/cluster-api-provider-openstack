@@ -1,4 +1,3 @@
----
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: OpenStackCluster
 metadata:
@@ -7,7 +6,7 @@ spec:
   apiServerLoadBalancer:
     $patch: delete
 ---
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane
 metadata:
   name: "${CLUSTER_NAME}-control-plane"
@@ -18,12 +17,18 @@ spec:
       nodeRegistration:
         name: $${COREOS_OPENSTACK_HOSTNAME}
         kubeletExtraArgs:
-          provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+        - name: cloud-provider
+          value: external
+        - name: provider-id
+          value: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
     initConfiguration:
       nodeRegistration:
         name: $${COREOS_OPENSTACK_HOSTNAME}
         kubeletExtraArgs:
-          provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+        - name: cloud-provider
+          value: external
+        - name: provider-id
+          value: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
     format: ignition
     ignition:
       containerLinuxConfig:
@@ -87,7 +92,7 @@ spec:
     - envsubst < /etc/kubeadm.yml > /etc/kubeadm.yml.tmp
     - mv /etc/kubeadm.yml.tmp /etc/kubeadm.yml
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
@@ -98,7 +103,10 @@ spec:
         nodeRegistration:
           name: $${COREOS_OPENSTACK_HOSTNAME}
           kubeletExtraArgs:
-            provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+          - name: cloud-provider
+            value: external
+          - name: provider-id
+            value: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
       preKubeadmCommands:
       - export COREOS_OPENSTACK_HOSTNAME=$${COREOS_OPENSTACK_HOSTNAME%.*}
       - export COREOS_OPENSTACK_INSTANCE_UUID=$${COREOS_OPENSTACK_INSTANCE_UUID}

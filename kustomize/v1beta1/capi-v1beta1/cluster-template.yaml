@@ -1,4 +1,4 @@
-apiVersion: cluster.x-k8s.io/v1beta2
+apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -8,12 +8,12 @@ spec:
       cidrBlocks: ["192.168.0.0/16"] # CIDR block used by Calico.
     serviceDomain: "cluster.local"
   infrastructureRef:
-    apiGroup: infrastructure.cluster.x-k8s.io
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
     kind: OpenStackCluster
     name: ${CLUSTER_NAME}
   controlPlaneRef:
-    apiGroup: controlplane.cluster.x-k8s.io
     kind: KubeadmControlPlane
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
     name: ${CLUSTER_NAME}-control-plane
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -53,40 +53,35 @@ spec:
   externalNetwork:
     id: ${OPENSTACK_EXTERNAL_NETWORK_ID}
 ---
-apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 metadata:
   name: "${CLUSTER_NAME}-control-plane"
 spec:
   replicas: ${CONTROL_PLANE_MACHINE_COUNT}
   machineTemplate:
-    spec:
-      infrastructureRef:
-        kind: OpenStackMachineTemplate
-        apiGroup: infrastructure.cluster.x-k8s.io
-        name: "${CLUSTER_NAME}-control-plane"
+    infrastructureRef:
+      kind: OpenStackMachineTemplate
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      name: "${CLUSTER_NAME}-control-plane"
   kubeadmConfigSpec:
     initConfiguration:
       nodeRegistration:
         name: '{{ local_hostname }}'
         kubeletExtraArgs:
-        - name: cloud-provider
-          value: external
-        - name: provider-id
-          value: "openstack:///'{{ instance_id }}'"
+          cloud-provider: external
+          provider-id: "openstack:///'{{ instance_id }}'"
     clusterConfiguration:
       controllerManager:
         extraArgs:
-        - name: cloud-provider
-          value: external
+          cloud-provider: external
     joinConfiguration:
       nodeRegistration:
         name: '{{ local_hostname }}'
         kubeletExtraArgs:
-        - name: cloud-provider
-          value: external
-        - name: provider-id
-          value: "openstack:///'{{ instance_id }}'"
+          cloud-provider: external
+          provider-id: "openstack:///'{{ instance_id }}'"
+    files: []
   version: "${KUBERNETES_VERSION}"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -102,7 +97,7 @@ spec:
           name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
-apiVersion: cluster.x-k8s.io/v1beta2
+apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
 metadata:
   name: "${CLUSTER_NAME}-md-0"
@@ -119,11 +114,11 @@ spec:
       bootstrap:
         configRef:
           name: "${CLUSTER_NAME}-md-0"
-          apiGroup: bootstrap.cluster.x-k8s.io
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
           kind: KubeadmConfigTemplate
       infrastructureRef:
         name: "${CLUSTER_NAME}-md-0"
-        apiGroup: infrastructure.cluster.x-k8s.io
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -139,21 +134,20 @@ spec:
           name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0
 spec:
   template:
     spec:
+      files: []
       joinConfiguration:
         nodeRegistration:
           name: '{{ local_hostname }}'
           kubeletExtraArgs:
-          - name: cloud-provider
-            value: external
-          - name: provider-id
-            value: "openstack:///'{{ instance_id }}'"
+            cloud-provider: external
+            provider-id: "openstack:///'{{ instance_id }}'"
 ---
 apiVersion: v1
 kind: Secret

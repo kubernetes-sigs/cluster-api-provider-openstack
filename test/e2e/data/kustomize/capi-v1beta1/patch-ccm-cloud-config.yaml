@@ -1,4 +1,7 @@
 - op: add
+  path: /spec/kubeadmConfigSpec/files
+  value: []
+- op: add
   path: /spec/kubeadmConfigSpec/files/-
   value:
     content: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}

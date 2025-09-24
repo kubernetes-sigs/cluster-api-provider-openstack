@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../../../../kustomize/v1beta1/capi-v1beta1
+- ccm.yaml
+- cni.yaml
+# We cannot use the common cluster-resource-sets here since they are v1beta2.
+components:
+- ../components/common
+
+patches:
+- target:
+    kind: KubeadmControlPlane
+    name: \${CLUSTER_NAME}-control-plane
+  path: patch-ccm-cloud-config.yaml
+- path: patch-ccm.yaml
+- path: patch-cni.yaml

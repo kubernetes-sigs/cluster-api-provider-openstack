@@ -5,11 +5,8 @@ resources:
 - ../../../../../kustomize/v1beta1/flatcar
 
 components:
-- ../common-patches/cluster
-- ../common-patches/cni
-- ../common-patches/ccm
-- ../common-patches/externalNetworkByName
-- ../common-patches/images
+- ../components/cluster-resource-sets
+- ../components/common
 
 patches:
 - target:
