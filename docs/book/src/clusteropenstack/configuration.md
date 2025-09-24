@@ -132,7 +132,7 @@ or [configure custom security groups](#security-groups) with rules allowing ingr
 
 ## ORC
 
-ORC ([OpenStack Resource Controller](https://github.com/k-orc/openstack-resource-controller)) provides a set of Kubernetes controllers and is required by CAPO to 
+ORC ([OpenStack Resource Controller](https://github.com/k-orc/openstack-resource-controller)) provides a set of Kubernetes controllers and is required by CAPO to
 manage some OpenStack resources. ORC is a separate project and is not part of CAPO, therefore it needs to be installed separately.
 
 To install ORC, run the following command:
@@ -150,6 +150,13 @@ kubectl apply --server-side -k "https://github.com/k-orc/openstack-resource-cont
 
 In most cases, the default configuration should be sufficient.
 Check the [ORC documentation](https://k-orc.cloud) for more information.
+
+**Note:** You need to add the `clusterctl.cluster.x-k8s.io/move` label to the ORC CRDs in order to successfully move objects from bootstrap cluster to target cluster during clusterctl move operations:
+
+```bash
+kubectl label crd servers.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd images.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+```
 
 ## OpenStack credential
 
