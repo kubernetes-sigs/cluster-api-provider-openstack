@@ -148,6 +148,7 @@ updates:
   - dependency-name: "github.com/a8m/envsubst"
   - dependency-name: "github.com/onsi/gomega"
   - dependency-name: "golang.org/x/crypto"
+  - dependency-name: "golang.org/x/text"
   labels:
   - "area/dependency"
   - "ok-to-test"
