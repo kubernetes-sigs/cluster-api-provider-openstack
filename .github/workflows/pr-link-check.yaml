@@ -1,0 +1,72 @@
+name: Check Links In Pull Requests
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-links-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+
+      - name: Add upstream remote
+        run: |
+          upstreamurl="https://github.com/kubernetes-sigs/cluster-api-provider-openstack.git"
+          git remote add upstream "${upstreamurl}"
+          git fetch upstream
+
+      - name: Checkout base branch
+        run: git checkout "upstream/${{ github.event.pull_request.base.ref }}"
+
+      - name: Get list of changed Markdown files
+        id: changed-files
+        run: |
+          git diff --name-only "upstream/${{ github.event.pull_request.base.ref }}...${{ github.head_ref }}" -- "*.md" > changed-files.txt
+          cat changed-files.txt
+          if [[ -s "changed-files.txt" ]]; then
+            echo "Changed md files found"
+            echo "foundFiles=true" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Switch to PR branch
+        run: git checkout ${{ github.head_ref }}
+
+      - name: Check links in changed files
+        if: env.foundFiles == 'true'
+        uses: lycheeverse/lychee-action@82202e5e9c2f4ef1a55a3d02563e1cb6041e5332 # v2.4.1
+        with:
+          failIfEmpty: false
+          args: |
+            --user-agent "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"
+            --root-dir "$(pwd)/"
+            --fallback-extensions "md"
+            --github-token "${GITHUB_TOKEN}"
+            $(cat changed-files.txt | tr '\n' ' ')
+
+      - name: Provide helpful failure message
+        if: failure()
+        run: |
+          echo "::error::Link check failed! Please review the broken links reported above."
+          echo ""
+          echo "If certain links are valid but fail due to:"
+          echo "- CAPTCHA challenges"
+          echo "- IP blocking"
+          echo "- Authentication requirements"
+          echo "- Rate limiting"
+          echo ""
+          echo "Consider adding them to .lycheeignore to bypass future checks."
+          echo "Format: Add one URL pattern per line"
+          exit 1
