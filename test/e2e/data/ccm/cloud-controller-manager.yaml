@@ -1,5 +1,4 @@
 # From: https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -25,208 +24,216 @@ spec:
         k8s-app: openstack-cloud-controller-manager
     spec:
       nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
-      # we need user root to read the cloud.conf from the host
+        node-role.kubernetes.io/control-plane: "true"
       securityContext:
-        runAsUser: 0
+        runAsUser: 1001
       tolerations:
-        - key: node.cloudprovider.kubernetes.io/uninitialized
-          value: "true"
-          effect: NoSchedule
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
-        - key: node-role.kubernetes.io/control-plane
-          effect: NoSchedule
+      - key: "CriticalAddonsOnly"
+        operator: "Equal"
+        value: "true"
+        effect: "NoExecute"
+      - key: node.cloudprovider.kubernetes.io/uninitialized
+        value: "true"
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
       serviceAccountName: cloud-controller-manager
       containers:
-        - name: openstack-cloud-controller-manager
-          image: >-
-            registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.32.0
-          args:
-            - /bin/openstack-cloud-controller-manager
-            - --v=1
-            - --cluster-name=$(CLUSTER_NAME)
-            - --cloud-config=$(CLOUD_CONFIG)
-            - --cloud-provider=openstack
-            - --use-service-account-credentials=false
-            - --bind-address=127.0.0.1
-          volumeMounts:
-            - mountPath: /etc/kubernetes
-              name: k8s
-              readOnly: true
-            - mountPath: /etc/kubernetes/pki
-              name: k8s-certs
-              readOnly: true
-            - mountPath: /etc/ssl/certs
-              name: ca-certs
-              readOnly: true
-          resources:
-            requests:
-              cpu: 200m
-          env:
-            - name: CLOUD_CONFIG
-              value: /etc/kubernetes/cloud.conf
-            - name: CLUSTER_NAME
-              value: kubernetes
+      - name: openstack-cloud-controller-manager
+        image: registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.33.0
+        args:
+        - /bin/openstack-cloud-controller-manager
+        - --v=1
+        - --cluster-name=$(CLUSTER_NAME)
+        - --cloud-config=$(CLOUD_CONFIG)
+        - --cloud-provider=openstack
+        - --use-service-account-credentials=false
+        - --bind-address=127.0.0.1
+        volumeMounts:
+        - mountPath: /etc/kubernetes/pki
+          name: k8s-certs
+          readOnly: true
+        - mountPath: /etc/ssl/certs
+          name: ca-certs
+          readOnly: true
+        - mountPath: /etc/config
+          name: cloud-config-volume
+          readOnly: true
+        resources:
+          requests:
+            cpu: 200m
+        env:
+        - name: CLOUD_CONFIG
+          value: /etc/config/cloud.conf
+        - name: CLUSTER_NAME
+          value: kubernetes
+      dnsPolicy: ClusterFirst
       hostNetwork: true
       volumes:
-        - hostPath:
-            path: /etc/kubernetes
-            type: DirectoryOrCreate
-          name: k8s
-        - hostPath:
-            path: /etc/kubernetes/pki
-            type: DirectoryOrCreate
-          name: k8s-certs
-        - hostPath:
-            path: /etc/ssl/certs
-            type: DirectoryOrCreate
-          name: ca-certs
+      - hostPath:
+          path: /etc/kubernetes/pki
+          type: DirectoryOrCreate
+        name: k8s-certs
+      - hostPath:
+          path: /etc/ssl/certs
+          type: DirectoryOrCreate
+        name: ca-certs
+      - name: cloud-config-volume
+        secret:
+          secretName: cloud-config
 ---
 # https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/heads/master/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: system:cloud-node-controller
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:cloud-node-controller
-subjects:
-- kind: ServiceAccount
-  name: cloud-node-controller
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: system:cloud-controller-manager
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:cloud-controller-manager
-subjects:
-- kind: ServiceAccount
-  name: cloud-controller-manager
-  namespace: kube-system
+apiVersion: v1
+items:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: system:cloud-node-controller
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: system:cloud-node-controller
+  subjects:
+  - kind: ServiceAccount
+    name: cloud-node-controller
+    namespace: kube-system
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: system:cloud-controller-manager
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: system:cloud-controller-manager
+  subjects:
+  - kind: ServiceAccount
+    name: cloud-controller-manager
+    namespace: kube-system
+kind: List
+metadata: {}
 ---
 # https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/heads/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: system:cloud-controller-manager
-rules:
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - get
-  - create
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - nodes/status
-  verbs:
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - services/status
-  verbs:
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  verbs:
-  - create
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts/token
-  verbs:
-  - create
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumes
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - endpoints
-  verbs:
-  - create
-  - get
-  - list
-  - watch
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - list
-  - get
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: system:cloud-node-controller
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - nodes/status
-  verbs:
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-  - update
+apiVersion: v1
+items:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: system:cloud-controller-manager
+  rules:
+  - apiGroups:
+    - coordination.k8s.io
+    resources:
+    - leases
+    verbs:
+    - get
+    - create
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - nodes
+    verbs:
+    - '*'
+  - apiGroups:
+    - ""
+    resources:
+    - nodes/status
+    verbs:
+    - patch
+  - apiGroups:
+    - ""
+    resources:
+    - services
+    verbs:
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - services/status
+    verbs:
+    - patch
+  - apiGroups:
+    - ""
+    resources:
+    - serviceaccounts
+    verbs:
+    - create
+    - get
+  - apiGroups:
+    - ""
+    resources:
+    - serviceaccounts/token
+    verbs:
+    - create
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumes
+    verbs:
+    - '*'
+  - apiGroups:
+    - ""
+    resources:
+    - endpoints
+    verbs:
+    - create
+    - get
+    - list
+    - watch
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - secrets
+    verbs:
+    - list
+    - get
+    - watch
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: system:cloud-node-controller
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - nodes
+    verbs:
+    - '*'
+  - apiGroups:
+    - ""
+    resources:
+    - nodes/status
+    verbs:
+    - patch
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+    - update
+kind: List
+metadata: {}
