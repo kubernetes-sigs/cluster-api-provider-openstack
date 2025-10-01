@@ -69,6 +69,11 @@ GOLANGCI_LINT := $(TOOLS_BIN_DIR)/golangci-lint
 GOTESTSUM := $(TOOLS_BIN_DIR)/gotestsum
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
+OPENAPI_GEN := $(TOOLS_BIN_DIR)/openapi-gen
+APPLYCONFIGURATION_GEN := $(TOOLS_BIN_DIR)/applyconfiguration-gen
+CLIENT_GEN := $(TOOLS_BIN_DIR)/client-gen
+LISTER_GEN := $(TOOLS_BIN_DIR)/lister-gen
+INFORMER_GEN := $(TOOLS_BIN_DIR)/informer-gen
 RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 SETUP_ENVTEST := $(TOOLS_BIN_DIR)/setup-envtest
 GEN_CRD_API_REFERENCE_DOCS := $(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
@@ -304,8 +309,66 @@ generate-controller-gen: $(CONTROLLER_GEN)
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt
 
 .PHONY: generate-codegen
-generate-codegen: generate-controller-gen
-	./hack/update-codegen.sh
+generate-codegen: generate-controller-gen $(OPENAPI_GEN) $(APPLYCONFIGURATION_GEN) $(CLIENT_GEN) $(LISTER_GEN) $(INFORMER_GEN)
+	@echo "** Generating OpenAPI definitions **"
+	# The package list includes:
+	# - CAPO's own API packages (v1alpha1, v1alpha7, v1beta1) that have // +k8s:openapi-gen= markers
+	# - Dependency packages from CAPI and k8s.io that are referenced by CAPO's APIs
+	# - Base k8s.io/apimachinery packages
+	$(OPENAPI_GEN) \
+		--go-header-file=./hack/boilerplate.go.txt \
+		--output-file=zz_generated.openapi.go \
+		--output-dir=./cmd/models-schema \
+		--output-pkg=main \
+		--report-filename=./api_violations.report \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1 \
+		sigs.k8s.io/cluster-api/api/v1beta1 \
+		k8s.io/api/core/v1 \
+		k8s.io/apimachinery/pkg/apis/meta/v1 \
+		k8s.io/apimachinery/pkg/runtime \
+		k8s.io/apimachinery/pkg/version
+	@echo "** Generating openapi.json **"
+	go run ./cmd/models-schema | jq > ./openapi.json
+	@echo "** Generating applyconfiguration code **"
+	$(APPLYCONFIGURATION_GEN) \
+		--go-header-file=./hack/boilerplate.go.txt \
+		--output-dir=./pkg/generated/applyconfiguration \
+		--output-pkg=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration \
+		--openapi-schema=./openapi.json \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+	@echo "** Generating clientset code **"
+	$(CLIENT_GEN) \
+		--go-header-file=./hack/boilerplate.go.txt \
+		--output-dir=./pkg/generated/clientset \
+		--output-pkg=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset \
+		--clientset-name=clientset \
+		--input-base=sigs.k8s.io/cluster-api-provider-openstack \
+		--apply-configuration-package=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration \
+		--input=api/v1alpha1 \
+		--input=api/v1alpha7 \
+		--input=api/v1beta1
+	@echo "** Generating lister code **"
+	$(LISTER_GEN) \
+		--go-header-file=./hack/boilerplate.go.txt \
+		--output-dir=./pkg/generated/listers \
+		--output-pkg=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+	@echo "** Generating informer code **"
+	$(INFORMER_GEN) \
+		--go-header-file=./hack/boilerplate.go.txt \
+		--output-dir=./pkg/generated/informers \
+		--output-pkg=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/informers \
+		--versioned-clientset-package=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset \
+		--listers-package=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha7 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
 
 .PHONY: generate-conversion-gen
 generate-conversion-gen: $(CONVERSION_GEN)

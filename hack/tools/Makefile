@@ -71,6 +71,26 @@ CONVERSION_GEN := $(BIN_DIR)/conversion-gen
 $(CONVERSION_GEN): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $@ k8s.io/code-generator/cmd/conversion-gen
 
+OPENAPI_GEN := $(BIN_DIR)/openapi-gen
+$(OPENAPI_GEN): go.mod go.sum | $(BIN_DIR)
+	go build -tags=tools -o $@ k8s.io/kube-openapi/cmd/openapi-gen
+
+APPLYCONFIGURATION_GEN := $(BIN_DIR)/applyconfiguration-gen
+$(APPLYCONFIGURATION_GEN): go.mod go.sum | $(BIN_DIR)
+	go build -tags=tools -o $@ k8s.io/code-generator/cmd/applyconfiguration-gen
+
+CLIENT_GEN := $(BIN_DIR)/client-gen
+$(CLIENT_GEN): go.mod go.sum | $(BIN_DIR)
+	go build -tags=tools -o $@ k8s.io/code-generator/cmd/client-gen
+
+LISTER_GEN := $(BIN_DIR)/lister-gen
+$(LISTER_GEN): go.mod go.sum | $(BIN_DIR)
+	go build -tags=tools -o $@ k8s.io/code-generator/cmd/lister-gen
+
+INFORMER_GEN := $(BIN_DIR)/informer-gen
+$(INFORMER_GEN): go.mod go.sum | $(BIN_DIR)
+	go build -tags=tools -o $@ k8s.io/code-generator/cmd/informer-gen
+
 ENVSUBST := $(BIN_DIR)/envsubst
 $(ENVSUBST): go.mod go.sum | $(BIN_DIR) # Build envsubst from tools folder.
 	go build -tags=tools -o $@ github.com/a8m/envsubst/cmd/envsubst
