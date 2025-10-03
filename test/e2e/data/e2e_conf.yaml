@@ -170,6 +170,7 @@ providers:
     - sourcePath: "../data/shared/provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-cluster-identity.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
       new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
