@@ -48,9 +48,14 @@ type openStackMachineWebhook struct{}
 var _ webhook.CustomValidator = &openStackMachineWebhook{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	newObj, err := castToOpenStackMachine(objRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	err = webhook.validate(newObj)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +78,7 @@ func (*openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
 	newObj, err := castToOpenStackMachine(newObjRaw)
 	if err != nil {
 		return nil, err
@@ -121,7 +126,7 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+func (webhook *openStackMachineWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	return nil, nil
 }
 
@@ -131,4 +136,15 @@ func castToOpenStackMachine(obj runtime.Object) (*infrav1.OpenStackMachine, erro
 		return nil, fmt.Errorf("expected an OpenStackMachine but got a %T", obj)
 	}
 	return cast, nil
+}
+
+func (webhook *openStackMachineWebhook) validate(newObj *infrav1.OpenStackMachine) error {
+	var allErrs field.ErrorList
+
+	allErrs = append(allErrs, newObj.Spec.Image.Validate(*field.NewPath("Spec", "Image"))...)
+
+	if len(allErrs) == 0 {
+		return nil
+	}
+	return apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, allErrs)
 }
