@@ -241,14 +241,14 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 
 func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDeviceVolume) (az, volType string) {
 	if volumeOpts == nil {
-		return
+		return az, volType
 	}
 
 	volType = volumeOpts.Type
 
 	volumeAZ := volumeOpts.AvailabilityZone
 	if volumeAZ == nil {
-		return
+		return az, volType
 	}
 
 	switch volumeAZ.From {
@@ -260,7 +260,7 @@ func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDevi
 	case infrav1.VolumeAZFromMachine:
 		az = instanceSpec.FailureDomain
 	}
-	return
+	return az, volType
 }
 
 // getBlockDevices returns a list of block devices that were created and attached to the instance. It returns an error
