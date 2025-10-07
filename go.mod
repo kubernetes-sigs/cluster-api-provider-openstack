@@ -12,7 +12,7 @@ require (
 	github.com/gophercloud/utils/v2 v2.0.0-20241220104409-2e0af06694a1
 	github.com/hashicorp/go-version v1.7.0
 	github.com/k-orc/openstack-resource-controller/v2 v2.2.0
-	github.com/onsi/ginkgo/v2 v2.25.3
+	github.com/onsi/ginkgo/v2 v2.26.0
 	github.com/onsi/gomega v1.38.2
 	github.com/prometheus/client_golang v1.23.2
 	github.com/spf13/pflag v1.0.10
