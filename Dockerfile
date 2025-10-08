@@ -14,7 +14,7 @@
 
 # Build the manager binary
 ARG GO_VERSION
-FROM golang:${GO_VERSION:-1.24.7} AS builder
+FROM golang:${GO_VERSION:-1.24.8} AS builder
 WORKDIR /workspace
 
 # Run this with docker build --build_arg goproxy=$(go env GOPROXY) to override the goproxy
