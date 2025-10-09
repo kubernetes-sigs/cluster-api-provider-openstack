@@ -4,6 +4,22 @@ metadata:
   name: ccm-${CLUSTER_NAME}-crs-1
 data: ${CCM_RESOURCES}
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ccm-${CLUSTER_NAME}-crs-1
+type: addons.cluster.x-k8s.io/resource-set
+stringData:
+  cloud-config-secret.yaml: |
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      # This name is referenced in the CCM deployment manifest
+      name: cloud-config
+      namespace: kube-system
+    data:
+      cloud.conf: ${OPENSTACK_CLOUD_PROVIDER_CONF_B64}
+---
 apiVersion: addons.cluster.x-k8s.io/v1beta1
 kind: ClusterResourceSet
 metadata:
@@ -14,5 +30,7 @@ spec:
       ccm: ${CLUSTER_NAME}-crs-1
   resources:
   - kind: ConfigMap
+    name: ccm-${CLUSTER_NAME}-crs-1
+  - kind: Secret
     name: ccm-${CLUSTER_NAME}-crs-1
   strategy: ApplyOnce
