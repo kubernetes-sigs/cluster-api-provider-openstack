@@ -149,6 +149,8 @@ updates:
   - dependency-name: "github.com/onsi/gomega"
   - dependency-name: "golang.org/x/crypto"
   - dependency-name: "golang.org/x/text"
+  # Newer kustomize requires a bump to kube-openapi, which has some incompatibility with gengo.
+  - dependency-name: "sigs.k8s.io/kustomize/kustomize/*"
   labels:
   - "area/dependency"
   - "ok-to-test"
