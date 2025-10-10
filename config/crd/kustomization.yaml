@@ -8,6 +8,7 @@ labels:
 # It should be run by config/
 resources:
 - bases/infrastructure.cluster.x-k8s.io_openstackclusters.yaml
+- bases/infrastructure.cluster.x-k8s.io_openstackclusteridentities.yaml
 - bases/infrastructure.cluster.x-k8s.io_openstackmachines.yaml
 - bases/infrastructure.cluster.x-k8s.io_openstackmachinetemplates.yaml
 - bases/infrastructure.cluster.x-k8s.io_openstackclustertemplates.yaml

@@ -54,6 +54,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("openstackclusteridentities"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha1().OpenStackClusterIdentities().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("openstackservers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha1().OpenStackServers().Informer()}, nil
 

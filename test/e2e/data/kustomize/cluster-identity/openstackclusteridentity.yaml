@@ -1,0 +1,9 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: OpenStackClusterIdentity
+metadata:
+  name: ${CLUSTER_NAME}-cluster-identity
+spec:
+  secretRef:
+    name: ${CLUSTER_NAME}-cloud-config
+    namespace: ${NAMESPACE}
+

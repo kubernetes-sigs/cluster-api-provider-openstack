@@ -3277,15 +3277,27 @@ provider identity to be used to provision cluster resources.</p>
 <tbody>
 <tr>
 <td>
+<code>type</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Type specifies the identity reference type. Defaults to Secret for backward compatibility.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>name</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
-<p>Name is the name of a secret in the same namespace as the resource being provisioned.
-The secret must contain a key named <code>clouds.yaml</code> which contains an OpenStack clouds.yaml file.
-The secret may optionally contain a key named <code>cacert</code> containing a PEM-encoded CA certificate.</p>
+<p>Name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned,
+or the name of an OpenStackClusterIdentity (type=ClusterIdentity).
+The Secret must contain a key named <code>clouds.yaml</code> which contains an OpenStack clouds.yaml file.
+The Secret may optionally contain a key named <code>cacert</code> containing a PEM-encoded CA certificate.</p>
 </td>
 </tr>
 <tr>
