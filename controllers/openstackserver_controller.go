@@ -325,7 +325,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	// that in the delete path we can be sure that if there are no resolved
 	// resources then no resources were created.
 	if changed {
-		scope.Logger().V(6).Info("Server resources updated, requeuing")
+		scope.Logger().V(5).Info("Server resources updated, requeuing")
 		return ctrl.Result{}, nil
 	}
 
@@ -716,10 +716,10 @@ func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
 			log = log.WithValues("OpenStackServer", klog.KObj(server))
 
 			if server.Status.Ready || IsServerTerminalError(server) {
-				log.V(6).Info("OpenStackServer finished reconciling, allowing further processing")
+				log.V(5).Info("OpenStackServer finished reconciling, allowing further processing")
 				return true
 			}
-			log.V(6).Info("OpenStackServer is still reconciling, blocking further processing")
+			log.V(5).Info("OpenStackServer is still reconciling, blocking further processing")
 			return false
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
@@ -741,7 +741,7 @@ func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
 			oldFinished := oldServer.Status.Ready || IsServerTerminalError(oldServer)
 			newFinished := newServer.Status.Ready || IsServerTerminalError(newServer)
 			if !oldFinished && newFinished {
-				log.V(6).Info("OpenStackServer finished reconciling, allowing further processing")
+				log.V(5).Info("OpenStackServer finished reconciling, allowing further processing")
 				return true
 			}
 

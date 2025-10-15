@@ -171,7 +171,7 @@ func NewCachedProviderScope(cache *cache.LRUExpireCache, cloud clientconfig.Clou
 	}
 
 	if scope, found := cache.Get(key); found {
-		logger.V(6).Info("Using scope from cache")
+		logger.V(5).Info("Using scope from cache")
 		return scope.(Scope), nil
 	}
 
@@ -272,7 +272,7 @@ func NewProviderClient(cloud clientconfig.Cloud, regionName string, caCert []byt
 	}
 
 	provider.HTTPClient.Transport = &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
-	if klog.V(6).Enabled() {
+	if klog.V(5).Enabled() {
 		provider.HTTPClient.Transport = &osclient.RoundTripper{
 			Rt:     provider.HTTPClient.Transport,
 			Logger: &gophercloudLogger{logger},
