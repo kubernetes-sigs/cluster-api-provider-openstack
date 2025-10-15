@@ -556,7 +556,10 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 			}
 			serverPort.FixedIPs = clusterSubnets
 		}
-		if len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
+		// Only inject the default SG when portSecurity is not disabled,
+		// there are no SGs passed by user and defaultSecGroup is set
+		portSecurityDisabled := serverPort.DisablePortSecurity != nil && *serverPort.DisablePortSecurity
+		if !portSecurityDisabled && len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
 			serverPort.SecurityGroups = []infrav1.SecurityGroupParam{
 				{
 					ID: defaultSecGroup,
