@@ -346,6 +346,34 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				UserDataRef: userData,
 			},
 		},
+		{
+			name: "Explicit port with disablePortSecurity",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: ptr.To(flavorName),
+				Image:  image,
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+						DisablePortSecurity: ptr.To(true),
+					},
+				}},
+			},
+			cluster: openStackClusterNetworkWithoutID,
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				Ports: []infrav1.PortOpts{{
+					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: nil,
+					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+						DisablePortSecurity: ptr.To(true),
+					},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
 	}
 	for i := range tests {
 		tt := tests[i]
