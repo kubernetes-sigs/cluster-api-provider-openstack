@@ -448,14 +448,13 @@ staging-manifests:
 ## --------------------------------------
 ##@ Release
 ## --------------------------------------
-
 ifneq (,$(findstring -,$(RELEASE_TAG)))
     PRE_RELEASE=true
 endif
 PREVIOUS_TAG ?= $(shell git tag -l | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$$" | sort -V | grep -B1 $(RELEASE_TAG) | head -n 1 2>/dev/null)
 ## set by Prow, ref name of the base branch, e.g., main
 RELEASE_DIR := out
-RELEASE_NOTES_DIR := _releasenotes
+RELEASE_NOTES_DIR := releasenotes
 
 .PHONY: $(RELEASE_DIR)
 $(RELEASE_DIR):
@@ -478,7 +477,7 @@ list-image:
 	gcloud container images list-tags $(STAGING_REGISTRY)/$(IMAGE) --filter="tags=('$(RELEASE_TAG)')" --format=json
 
 .PHONY: release
-release: $(RELEASE_NOTES) clean-release $(RELEASE_DIR)  ## Builds and push container images using the latest git tag for the commit.
+release: $(RELEASE_NOTES) $(RELEASE_DIR)  ## Builds and push container images using the latest git tag for the commit.
 	@if [ -z "${RELEASE_TAG}" ]; then echo "RELEASE_TAG is not set"; exit 1; fi
 	@if ! [ -z "$$(git status --porcelain)" ]; then echo "Your local git repository contains uncommitted changes, use git clean before proceeding."; fi
 	git checkout "${RELEASE_TAG}"
@@ -486,6 +485,7 @@ release: $(RELEASE_NOTES) clean-release $(RELEASE_DIR)  ## Builds and push conta
 	$(MAKE) manifest-modification REGISTRY=$(PROD_REGISTRY)
 	$(MAKE) release-manifests
 	$(MAKE) release-templates
+	$(MAKE) generate-release-notes
 
 .PHONY: manifest-modification
 manifest-modification: # Set the manifest images to the staging/production bucket.
