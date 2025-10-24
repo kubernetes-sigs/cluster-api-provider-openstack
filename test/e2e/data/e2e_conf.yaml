@@ -171,6 +171,7 @@ providers:
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-cluster-identity.yaml"
+    - sourcePath: "../../../templates/clusterclass-dev-test.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
       new: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:e2e
@@ -247,6 +248,7 @@ variables:
   E2E_IMAGE_URL: "http://10.0.3.15/capo-e2e-image.tar"
   # The default user for SSH connections from bastion to machines
   SSH_USER_MACHINE: "ubuntu"
+  CLUSTER_TOPOLOGY: "true"
   EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION: "true"
   # The Flatcar image produced by the image-builder
   OPENSTACK_FLATCAR_IMAGE_NAME: "flatcar-stable-4152.2.3-kube-v1.33.1"

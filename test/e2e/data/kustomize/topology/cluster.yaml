@@ -1,10 +1,13 @@
-apiVersion: cluster.x-k8s.io/v1beta1
+# Rather than editing the cluster-template, which include already variables,
+# we simply create a new cluster-template with the correct variables for e2e.
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
 spec:
   topology:
-    class: dev-test
+    classRef:
+      name: dev-test
     version: ${KUBERNETES_VERSION}
     controlPlane:
       replicas: ${CONTROL_PLANE_MACHINE_COUNT}
@@ -16,14 +19,14 @@ spec:
     variables:
     - name: identityRef
       value:
-        name: ${CLOUD_CONFIG_SECRET:=dev-test-cloud-config}
-        cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
-    - name: imageName
-      value: ${IMAGE_NAME:=flatcar_production}
+        name: ${CLUSTER_NAME}-cloud-config
+        cloudName: ${OPENSTACK_CLOUD}
+    - name: imageRef
+      value: node-image
     - name: addImageVersion
-      value: ${ADD_IMAGE_VERSION:=false}
+      value: false
     - name: injectIgnitionSysext
-      value: ${INJECT_IGNITION_SYSEXT:=true}
+      value: true
     - name: allowedCIDRs
       value: ${OPENSTACK_API_SERVER_ALLOWED_CIDRS:=[]}
     - name: bastion
@@ -32,6 +35,6 @@ spec:
         spec:
           flavor: ${OPENSTACK_BASTION_FLAVOR:=m1.small}
           image:
-            filter:
-              name: ${OPENSTACK_BASTION_IMAGE_NAME:=ubuntu-24.04}
+            imageRef:
+              name: bastion-image
           sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}

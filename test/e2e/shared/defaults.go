@@ -52,6 +52,7 @@ const (
 	OpenStackNodeMachineFlavor = "OPENSTACK_NODE_MACHINE_FLAVOR"
 	SSHUserMachine             = "SSH_USER_MACHINE"
 	FlavorDefault              = ""
+	FlavorTopology             = "topology"
 	FlavorNoBastion            = "no-bastion"
 	FlavorWithoutLB            = "without-lb"
 	FlavorMultiNetwork         = "multi-network"

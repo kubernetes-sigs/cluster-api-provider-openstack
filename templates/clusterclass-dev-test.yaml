@@ -5,7 +5,7 @@ metadata:
 spec:
   controlPlane:
     templateRef:
-      apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+      apiVersion: controlplane.cluster.x-k8s.io/v1beta2
       kind: KubeadmControlPlaneTemplate
       name: dev-test-control-plane
     machineInfrastructure:
@@ -23,7 +23,7 @@ spec:
     - class: default-worker
       bootstrap:
         templateRef:
-          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
           kind: KubeadmConfigTemplate
           name: dev-test-default-worker-bootstraptemplate
       infrastructure:
@@ -53,16 +53,22 @@ spec:
         type: string
         description: |
           The base name of the OpenStack image that is used for creating the servers.
-          This will be combined with the k8s version to create the full name. E.g. imageName-v1.31.2.
-        default: "ubuntu-2404-kube"
   - name: addImageVersion
     required: false
     schema:
       openAPIV3Schema:
         type: boolean
         description: |
-          Add a suffix with the Kubernetes version to the imageName. E.g. imageName-v1.32.2.
+          Add a suffix with the Kubernetes version to the imageName or imageRef. E.g. imageName-v1.32.2.
         default: true
+  - name: imageRef
+    required: false
+    schema:
+      openAPIV3Schema:
+        type: string
+        description: |
+          The name of the ORC Image object that is used for creating the servers.
+        default: "node-image"
   - name: injectIgnitionSysext
     required: false
     schema:
@@ -109,6 +115,12 @@ spec:
                       name:
                         type: string
                         description: "Name of the image to use for bastion"
+                  imageRef:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: "Name of the ORC Image to use for bastion"
               sshKeyName:
                 type: string
                 description: "SSH key pair name for bastion access"
@@ -120,8 +132,9 @@ spec:
             type: string
             description: "Availability zone for the bastion host"
   patches:
-  - name: image
-    description: "Sets the OpenStack image that is used for creating the servers."
+  - name: imageName
+    description: "Sets the OpenStack image that is used for creating the servers using a name filter."
+    enabledIf: "{{ if .imageName }}true{{ end }}"
     definitions:
     - selector:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -129,11 +142,13 @@ spec:
         matchResources:
           controlPlane: true
       jsonPatches:
+      - op: remove
+        path: /spec/template/spec/image/imageRef
       - op: add
-        path: /spec/template/spec/image/filter/name
+        path: /spec/template/spec/image/filter
         valueFrom:
           template: |
-            {{ .imageName }}{{ if .addImageVersion }}-{{ .builtin.controlPlane.version }}{{ end }}
+            name: {{ .imageName }}{{ if .addImageVersion }}-{{ .builtin.controlPlane.version }}{{ end }}
     - selector:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: OpenStackMachineTemplate
@@ -142,11 +157,41 @@ spec:
             names:
             - default-worker
       jsonPatches:
+      - op: remove
+        path: /spec/template/spec/image/imageRef
       - op: add
-        path: /spec/template/spec/image/filter/name
+        path: /spec/template/spec/image/filter
         valueFrom:
           template: |
-            {{ .imageName }}{{ if .addImageVersion }}-{{ .builtin.machineDeployment.version }}{{ end }}
+            name: {{ .imageName }}{{ if .addImageVersion }}-{{ .builtin.machineDeployment.version }}{{ end }}
+  - name: imageRef
+    description: "Sets the OpenStack image that is used for creating the servers using an ORC Image reference."
+    enabledIf: "{{ if .imageRef }}true{{ end }}"
+    definitions:
+    - selector:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: OpenStackMachineTemplate
+        matchResources:
+          controlPlane: true
+      jsonPatches:
+      - op: replace
+        path: /spec/template/spec/image/imageRef/name
+        valueFrom:
+          template: |
+            {{ .imageRef }}{{ if .addImageVersion }}-{{ .builtin.controlPlane.version }}{{ end }}
+    - selector:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: OpenStackMachineTemplate
+        matchResources:
+          machineDeploymentClass:
+            names:
+            - default-worker
+      jsonPatches:
+      - op: replace
+        path: /spec/template/spec/image/imageRef/name
+        valueFrom:
+          template: |
+            {{ .imageRef }}{{ if .addImageVersion }}-{{ .builtin.controlPlane.version }}{{ end }}
   - name: identityRef
     description: "Sets the OpenStack identity reference."
     definitions:
@@ -193,7 +238,7 @@ spec:
     enabledIf: "{{ .injectIgnitionSysext }}"
     definitions:
     - selector:
-        apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+        apiVersion: controlplane.cluster.x-k8s.io/v1beta2
         kind: KubeadmControlPlaneTemplate
         matchResources:
           controlPlane: true
@@ -211,12 +256,18 @@ spec:
               nodeRegistration:
                 name: $${COREOS_OPENSTACK_HOSTNAME}
                 kubeletExtraArgs:
-                  provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+                - name: cloud-provider
+                  value: external
+                - name: provider-id
+                  value: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
             joinConfiguration:
               nodeRegistration:
                 name: $${COREOS_OPENSTACK_HOSTNAME}
                 kubeletExtraArgs:
-                  provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+                - name: cloud-provider
+                  value: external
+                - name: provider-id
+                  value: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
             format: ignition
             ignition:
               containerLinuxConfig:
@@ -233,16 +284,16 @@ spec:
                         mode: 0644
                         contents:
                           remote:
-                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ $minor }}.conf
+                            url: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-{{ $minor }}.conf
                       - path: /etc/sysupdate.d/noop.conf
                         mode: 0644
                         contents:
                           remote:
-                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+                            url: https://extensions.flatcar.org/extensions/noop.conf
                       - path: /opt/extensions/kubernetes/kubernetes-{{ .builtin.controlPlane.version }}-x86-64.raw
                         contents:
                           remote:
-                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ .builtin.controlPlane.version }}-x86-64.raw
+                            url: https://extensions.flatcar.org/extensions/kubernetes-{{ .builtin.controlPlane.version }}-x86-64.raw
                   systemd:
                     units:
                       - name: systemd-sysupdate.service
@@ -277,7 +328,7 @@ spec:
                               [Service]
                               EnvironmentFile=/run/metadata/flatcar
     - selector:
-        apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+        apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
         kind: KubeadmConfigTemplate
         matchResources:
           machineDeploymentClass:
@@ -297,7 +348,10 @@ spec:
               nodeRegistration:
                 name: $${COREOS_OPENSTACK_HOSTNAME}
                 kubeletExtraArgs:
-                  provider-id: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
+                - name: cloud-provider
+                  value: external
+                - name: provider-id
+                  value: openstack:///$${COREOS_OPENSTACK_INSTANCE_UUID}
             format: ignition
             ignition:
               containerLinuxConfig:
@@ -314,16 +368,16 @@ spec:
                         mode: 0644
                         contents:
                           remote:
-                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ $minor }}.conf
+                            url: https://extensions.flatcar.org/extensions/kubernetes/kubernetes-{{ $minor }}.conf
                       - path: /etc/sysupdate.d/noop.conf
                         mode: 0644
                         contents:
                           remote:
-                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+                            url: https://extensions.flatcar.org/extensions/noop.conf
                       - path: /opt/extensions/kubernetes/kubernetes-{{ .builtin.machineDeployment.version }}-x86-64.raw
                         contents:
                           remote:
-                            url: https://github.com/flatcar/sysext-bakery/releases/download/latest/kubernetes-{{ .builtin.machineDeployment.version }}-x86-64.raw
+                            url: https://extensions.flatcar.org/extensions/kubernetes-{{ .builtin.machineDeployment.version }}-x86-64.raw
                   systemd:
                     units:
                       - name: systemd-sysupdate.service
@@ -365,7 +419,6 @@ metadata:
 spec:
   template:
     spec:
-      files: []
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
@@ -382,6 +435,11 @@ metadata:
 spec:
   template:
     spec:
+      rollout:
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
       kubeadmConfigSpec:
         clusterConfiguration:
           controllerManager:
@@ -454,8 +512,8 @@ spec:
     spec:
       flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:=m1.medium}
       image:
-        filter:
-          name: overridden-by-patch
+        imageRef:
+          name: node-image
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -467,6 +525,6 @@ spec:
     spec:
       flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR:=m1.small}
       image:
-        filter:
-          name: overridden-by-patch
+        imageRef:
+          name: node-image
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}

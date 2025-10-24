@@ -188,6 +188,7 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-multi-network.yaml \
 		 cluster-template-without-lb.yaml \
 		 cluster-template.yaml \
+		 cluster-template-topology.yaml \
 		 cluster-template-flatcar.yaml \
 		 cluster-template-k8s-upgrade.yaml \
 		 cluster-template-flatcar-sysext.yaml \
