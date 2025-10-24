@@ -498,6 +498,34 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 				}
 			}
 		}
+
+		// Resolve subports if trunk is enabled
+		if ptr.Deref(normalizedPort.Trunk, false) && len(port.Subports) > 0 {
+			normalizedPort.Subports = make([]infrav1.ResolvedSubportSpec, len(port.Subports))
+			// Get all ports associated with trunk and normalize them first
+			trunkSubPorts := make([]infrav1.PortOpts, len(port.Subports))
+			for j, p := range port.Subports {
+				// Trunk port must have network
+				if p.Network == nil && len(p.FixedIPs) == 0 {
+					return nil, fmt.Errorf("subport %d of port must specify a network", j)
+				}
+				trunkSubPorts[j] = infrav1.PortOpts{CommonPortOpts: p.CommonPortOpts}
+			}
+			subportBaseName := fmt.Sprintf("%s-subport", baseName)
+			normalizedTrunkPorts, err := s.normalizePorts(trunkSubPorts, clusterResourceName, subportBaseName, false, defaultSecurityGroupIDs, nil, baseTags)
+			if err != nil {
+				return nil, err
+			}
+
+			// Normalise tunk port itself
+			for j, subport := range port.Subports {
+				normalizedPort.Subports[j] = infrav1.ResolvedSubportSpec{
+					SegmentationID:         subport.SegmentationID,
+					SegmentationType:       subport.SegmentationType,
+					CommonResolvedPortSpec: normalizedTrunkPorts[j].CommonResolvedPortSpec,
+				}
+			}
+		}
 	}
 	return normalizedPorts, nil
 }

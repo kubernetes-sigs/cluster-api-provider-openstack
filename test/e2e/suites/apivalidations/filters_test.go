@@ -119,23 +119,39 @@ var _ = Describe("Filter API validations", func() {
 			{
 				machine := machine.DeepCopy()
 				machine.Spec.Ports = []infrav1.PortOpts{
-					{Network: &infrav1.NetworkParam{Filter: &infrav1.NetworkFilter{FilterByNeutronTags: tags[i]}}},
+					{
+						CommonPortOpts: infrav1.CommonPortOpts{
+							Network: &infrav1.NetworkParam{Filter: &infrav1.NetworkFilter{FilterByNeutronTags: tags[i]}},
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail with invalid port network neutron tags")
 			}
 			{
 				machine := machine.DeepCopy()
 				machine.Spec.Ports = []infrav1.PortOpts{
-					{FixedIPs: []infrav1.FixedIP{{Subnet: &infrav1.SubnetParam{
-						Filter: &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]},
-					}}}},
+					{
+						CommonPortOpts: infrav1.CommonPortOpts{
+							FixedIPs: []infrav1.FixedIP{
+								{
+									Subnet: &infrav1.SubnetParam{
+										Filter: &infrav1.SubnetFilter{FilterByNeutronTags: tags[i]},
+									},
+								},
+							},
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail with invalid port subnet neutron tags")
 			}
 			{
 				machine := machine.DeepCopy()
 				machine.Spec.Ports = []infrav1.PortOpts{
-					{SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{FilterByNeutronTags: tags[i]}}}},
+					{
+						CommonPortOpts: infrav1.CommonPortOpts{
+							SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{FilterByNeutronTags: tags[i]}}},
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail with invalid port security group neutron tags")
 			}

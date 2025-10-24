@@ -21,14 +21,9 @@ package v1beta1
 // PortOptsApplyConfiguration represents a declarative configuration of the PortOpts type for use
 // with apply.
 type PortOptsApplyConfiguration struct {
-	Network                                  *NetworkParamApplyConfiguration        `json:"network,omitempty"`
-	Description                              *string                                `json:"description,omitempty"`
-	NameSuffix                               *string                                `json:"nameSuffix,omitempty"`
-	FixedIPs                                 []FixedIPApplyConfiguration            `json:"fixedIPs,omitempty"`
-	SecurityGroups                           []SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
-	Tags                                     []string                               `json:"tags,omitempty"`
-	Trunk                                    *bool                                  `json:"trunk,omitempty"`
-	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
+	Trunk                            *bool                           `json:"trunk,omitempty"`
+	Subports                         []SubportOptsApplyConfiguration `json:"subports,omitempty"`
+	CommonPortOptsApplyConfiguration `json:",inline"`
 }
 
 // PortOptsApplyConfiguration constructs a declarative configuration of the PortOpts type for use with
@@ -37,11 +32,32 @@ func PortOpts() *PortOptsApplyConfiguration {
 	return &PortOptsApplyConfiguration{}
 }
 
+// WithTrunk sets the Trunk field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Trunk field is set to the value of the last call.
+func (b *PortOptsApplyConfiguration) WithTrunk(value bool) *PortOptsApplyConfiguration {
+	b.Trunk = &value
+	return b
+}
+
+// WithSubports adds the given value to the Subports field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Subports field.
+func (b *PortOptsApplyConfiguration) WithSubports(values ...*SubportOptsApplyConfiguration) *PortOptsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithSubports")
+		}
+		b.Subports = append(b.Subports, *values[i])
+	}
+	return b
+}
+
 // WithNetwork sets the Network field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Network field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithNetwork(value *NetworkParamApplyConfiguration) *PortOptsApplyConfiguration {
-	b.Network = value
+	b.CommonPortOptsApplyConfiguration.Network = value
 	return b
 }
 
@@ -49,7 +65,7 @@ func (b *PortOptsApplyConfiguration) WithNetwork(value *NetworkParamApplyConfigu
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Description field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithDescription(value string) *PortOptsApplyConfiguration {
-	b.Description = &value
+	b.CommonPortOptsApplyConfiguration.Description = &value
 	return b
 }
 
@@ -57,7 +73,7 @@ func (b *PortOptsApplyConfiguration) WithDescription(value string) *PortOptsAppl
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NameSuffix field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithNameSuffix(value string) *PortOptsApplyConfiguration {
-	b.NameSuffix = &value
+	b.CommonPortOptsApplyConfiguration.NameSuffix = &value
 	return b
 }
 
@@ -69,7 +85,7 @@ func (b *PortOptsApplyConfiguration) WithFixedIPs(values ...*FixedIPApplyConfigu
 		if values[i] == nil {
 			panic("nil value passed to WithFixedIPs")
 		}
-		b.FixedIPs = append(b.FixedIPs, *values[i])
+		b.CommonPortOptsApplyConfiguration.FixedIPs = append(b.CommonPortOptsApplyConfiguration.FixedIPs, *values[i])
 	}
 	return b
 }
@@ -82,7 +98,7 @@ func (b *PortOptsApplyConfiguration) WithSecurityGroups(values ...*SecurityGroup
 		if values[i] == nil {
 			panic("nil value passed to WithSecurityGroups")
 		}
-		b.SecurityGroups = append(b.SecurityGroups, *values[i])
+		b.CommonPortOptsApplyConfiguration.SecurityGroups = append(b.CommonPortOptsApplyConfiguration.SecurityGroups, *values[i])
 	}
 	return b
 }
@@ -92,16 +108,8 @@ func (b *PortOptsApplyConfiguration) WithSecurityGroups(values ...*SecurityGroup
 // If called multiple times, values provided by each call will be appended to the Tags field.
 func (b *PortOptsApplyConfiguration) WithTags(values ...string) *PortOptsApplyConfiguration {
 	for i := range values {
-		b.Tags = append(b.Tags, values[i])
+		b.CommonPortOptsApplyConfiguration.Tags = append(b.CommonPortOptsApplyConfiguration.Tags, values[i])
 	}
-	return b
-}
-
-// WithTrunk sets the Trunk field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Trunk field is set to the value of the last call.
-func (b *PortOptsApplyConfiguration) WithTrunk(value bool) *PortOptsApplyConfiguration {
-	b.Trunk = &value
 	return b
 }
 

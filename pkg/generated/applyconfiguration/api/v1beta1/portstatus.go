@@ -21,7 +21,8 @@ package v1beta1
 // PortStatusApplyConfiguration represents a declarative configuration of the PortStatus type for use
 // with apply.
 type PortStatusApplyConfiguration struct {
-	ID *string `json:"id,omitempty"`
+	ID       *string                           `json:"id,omitempty"`
+	Subports []SubPortStatusApplyConfiguration `json:"subports,omitempty"`
 }
 
 // PortStatusApplyConfiguration constructs a declarative configuration of the PortStatus type for use with
@@ -35,5 +36,18 @@ func PortStatus() *PortStatusApplyConfiguration {
 // If called multiple times, the ID field is set to the value of the last call.
 func (b *PortStatusApplyConfiguration) WithID(value string) *PortStatusApplyConfiguration {
 	b.ID = &value
+	return b
+}
+
+// WithSubports adds the given value to the Subports field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Subports field.
+func (b *PortStatusApplyConfiguration) WithSubports(values ...*SubPortStatusApplyConfiguration) *PortStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithSubports")
+		}
+		b.Subports = append(b.Subports, *values[i])
+	}
 	return b
 }

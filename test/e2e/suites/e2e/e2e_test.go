@@ -520,14 +520,20 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			customPortOptions := &[]infrav1.PortOpts{
 				{
-					Description: ptr.To("primary"),
+					CommonPortOpts: infrav1.CommonPortOpts{
+						Description: ptr.To("primary"),
+					},
 				},
 				{
-					Description: ptr.To("trunked"),
-					Trunk:       ptr.To(true),
+					CommonPortOpts: infrav1.CommonPortOpts{
+						Description: ptr.To("trunked"),
+					},
+					Trunk: ptr.To(true),
 				},
 				{
-					SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{Name: testSecurityGroupName}}},
+					CommonPortOpts: infrav1.CommonPortOpts{
+						SecurityGroups: []infrav1.SecurityGroupParam{{Filter: &infrav1.SecurityGroupFilter{Name: testSecurityGroupName}}},
+					},
 				},
 			}
 
@@ -686,7 +692,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			configCluster clusterctl.ConfigClusterInput
 			md            []*clusterv1.MachineDeployment
 
-			extraNet1, extraNet2 *networks.Network
+			extraNet1, extraNet2, trunkNet, subportNet *networks.Network
 		)
 
 		BeforeEach(func(ctx context.Context) {
@@ -714,8 +720,26 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
+			trunkNet, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-trunk", namespace.Name), "10.14.2.0/24")
+			Expect(err).NotTo(HaveOccurred())
+			postClusterCleanup = append(postClusterCleanup, func(ctx context.Context) {
+				shared.Logf("Deleting trunk network %s", trunkNet.Name)
+				err := shared.DeleteOpenStackNetwork(ctx, e2eCtx, trunkNet.ID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			subportNet, err = shared.CreateOpenStackNetwork(e2eCtx, fmt.Sprintf("%s-trunk", namespace.Name), "10.14.3.0/24")
+			Expect(err).NotTo(HaveOccurred())
+			postClusterCleanup = append(postClusterCleanup, func(ctx context.Context) {
+				shared.Logf("Deleting subport network %s", subportNet.Name)
+				err := shared.DeleteOpenStackNetwork(ctx, e2eCtx, subportNet.ID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
 			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
 			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
+			os.Setenv("CLUSTER_TRUNK_NET", trunkNet.ID)
+			os.Setenv("CLUSTER_SUBPORT_NET", subportNet.ID)
 
 			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
@@ -754,7 +778,15 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				openStackCluster.Status.Network.ID: "primary",
 				extraNet1.ID:                       "Extra Network 1",
 				extraNet2.ID:                       "Extra Network 2",
+				trunkNet.ID:                        "Trunk Network",
 			}
+
+			providerClient, clientOpts, _, err := shared.GetTenantProviderClient(e2eCtx)
+			Expect(err).To(BeNil(), "Cannot create providerClient")
+			networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+				Region: clientOpts.RegionName,
+			})
+			Expect(err).To(BeNil(), "Cannot create network client")
 
 			for i := range allMachines {
 				machine := &allMachines[i]
@@ -762,16 +794,16 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				instanceID := getInstanceIDForMachine(machine)
 
 				shared.Logf("Fetching ports for instance %s", instanceID)
-				ports, err := shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{
+				osPorts, err := shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{
 					DeviceID: instanceID,
 				})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ports).To(HaveLen(len(expectedPorts)))
+				Expect(osPorts).To(HaveLen(len(expectedPorts)))
 
 				var seenNetworks []string
 				var seenAddresses clusterv1.MachineAddresses
-				for j := range ports {
-					port := &ports[j]
+				for j := range osPorts {
+					port := &osPorts[j]
 
 					// Check that the port has an expected network ID and description
 					Expect(expectedPorts).To(HaveKeyWithValue(port.NetworkID, port.Description))
@@ -785,6 +817,24 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 							Type:    clusterv1.MachineInternalIP,
 							Address: port.FixedIPs[k].IPAddress,
 						})
+					}
+					if port.NetworkID == trunkNet.ID {
+						var trunk *trunks.Trunk
+						Eventually(func() int {
+							trunk, err = shared.DumpOpenStackTrunks(e2eCtx, port.ID)
+							Expect(err).To(BeNil())
+							Expect(trunk).NotTo(BeNil())
+							return 1
+						}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
+						Expect(trunk.PortID).To(Equal(port.ID))
+
+						trunkSubports, err := trunks.GetSubports(ctx, networkClient, trunk.ID).Extract()
+						Expect(trunkSubports).To(HaveLen(1))
+
+						portInfo, err := shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{ID: trunkSubports[0].PortID})
+						Expect(err).To(BeNil())
+						Expect(portInfo).To(HaveLen(1))
+						Expect(portInfo[0].NetworkID).To(Equal(subportNet.ID))
 					}
 				}
 

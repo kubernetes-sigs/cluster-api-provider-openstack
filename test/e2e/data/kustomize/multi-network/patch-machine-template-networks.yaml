@@ -9,3 +9,13 @@
   - description: "Extra Network 2"
     network:
       id: "${CLUSTER_EXTRA_NET_2}"
+  - description: "Trunk Network"
+    network:
+      id: "${CLUSTER_TRUNK_NET}"
+    trunk: true
+    subports:
+      - description: "Subport network"
+        segmentationID: 300
+        segmentationType: vlan
+        network:
+          id: "${CLUSTER_SUBPORT_NET}"
