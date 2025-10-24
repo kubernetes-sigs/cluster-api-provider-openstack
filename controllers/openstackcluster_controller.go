@@ -672,9 +672,13 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 					return fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets)
 				}
 			}
-
-			openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+		} else {
+			lbNetStatus.ID = openStackCluster.Status.Network.ID
+			lbNetStatus.Name = openStackCluster.Status.Network.Name
+			lbNetStatus.Subnets = openStackCluster.Status.Network.Subnets
 		}
+
+		openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
 	}
 
 	return nil
