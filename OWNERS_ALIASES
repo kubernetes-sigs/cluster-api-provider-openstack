@@ -22,4 +22,5 @@ aliases:
     - emilienm
     - lentzi90
   cluster-api-openstack-reviewers:
+    - bnallapeta
     - smoshiur1237
