@@ -32,6 +32,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/providers"
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 
@@ -922,6 +923,255 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			} else {
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(lb).To(Equal(tt.want))
+			}
+		})
+	}
+}
+
+func Test_ReconcileLoadBalancerMember(t *testing.T) {
+	g := NewWithT(t)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	const (
+		clusterName         = "AAAAA"
+		clusterResourceName = "k8s-clusterapi-cluster-AAAAA"
+		memberIP            = "10.0.0.1"
+		wrongMemberIP       = "10.0.0.20"
+		port                = 6443
+		machineName         = "machine-1"
+
+		clusterNetID = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
+		subnetID     = "aaaaaaaa-bbbb-cccc-dddd-222222222222"
+		lbID         = "aaaaaaaa-bbbb-cccc-dddd-333333333333"
+		listenerID   = "aaaaaaaa-bbbb-cccc-dddd-444444444444"
+		poolID       = "aaaaaaaa-bbbb-cccc-dddd-555555555555"
+		memberID     = "aaaaaaaa-bbbb-cccc-dddd-666666666666"
+		lbNetOtherID = "aaaaaaaa-bbbb-cccc-dddd-999999999999"
+	)
+
+	makeCluster := func(provider *string, lbNetworkID string) *infrav1.OpenStackCluster {
+		return &infrav1.OpenStackCluster{
+			Spec: infrav1.OpenStackClusterSpec{
+				APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
+					Enabled:  ptr.To(true),
+					Provider: provider,
+					Network: &infrav1.NetworkParam{
+						ID: &lbNetworkID,
+					},
+				},
+				DisableAPIServerFloatingIP: ptr.To(true),
+				ControlPlaneEndpoint: &clusterv1beta1.APIEndpoint{
+					Host: apiHostname,
+					Port: port,
+				},
+				Tags: []string{"k8s", "clusterapi"},
+			},
+			Status: infrav1.OpenStackClusterStatus{
+				APIServerLoadBalancer: &infrav1.LoadBalancer{
+					ID: lbID,
+					LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: lbNetworkID,
+						},
+					},
+				},
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: clusterNetID,
+					},
+					Subnets: []infrav1.Subnet{
+						{ID: subnetID},
+					},
+				},
+			},
+		}
+	}
+
+	openStackMachine := &infrav1.OpenStackMachine{
+		ObjectMeta: metav1.ObjectMeta{Name: machineName},
+	}
+
+	lbtests := []struct {
+		name               string
+		clusterSpec        *infrav1.OpenStackCluster
+		expectNetwork      func(m *mock.MockNetworkClientMockRecorder)
+		expectLoadBalancer func(m *mock.MockLbClientMockRecorder)
+		wantError          error
+	}{
+		{
+			name:          "LB member exists, dont create",
+			clusterSpec:   makeCluster(nil, clusterNetID),
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 lbID,
+					Name:               clusterResourceName + "-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+
+				pool := pools.Pool{
+					ID:   poolID,
+					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
+				}
+				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+
+				member := pools.Member{
+					Name:    fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName),
+					Address: memberIP,
+				}
+				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: member.Name}).Return([]pools.Member{member}, nil)
+			},
+			wantError: nil,
+		},
+		{
+			name:          "No LB member, create",
+			clusterSpec:   makeCluster(nil, clusterNetID),
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 lbID,
+					Name:               clusterResourceName + "-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+
+				pool := pools.Pool{
+					ID:   poolID,
+					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
+				}
+				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+
+				poolMemberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
+				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: poolMemberName}).Return([]pools.Member{}, nil)
+
+				m.CreatePoolMember(
+					poolID,
+					gomock.AssignableToTypeOf(pools.CreateMemberOpts{}),
+				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
+					// SubnetID must be empty here
+					g.Expect(got.SubnetID).To(Equal(""))
+					return &pools.Member{ID: "member-2"}, nil
+				})
+			},
+			wantError: nil,
+		},
+		{
+			name:          "No pool found, return error",
+			clusterSpec:   makeCluster(nil, clusterNetID),
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 lbID,
+					Name:               clusterResourceName + "-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+
+				poolName := fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port)
+				m.ListPools(pools.ListOpts{Name: poolName}).Return([]pools.Pool{}, nil)
+			},
+			wantError: errors.New("load balancer pool does not exist yet"),
+		},
+		{
+			name:          "LB member with wrong address, re-create",
+			clusterSpec:   makeCluster(nil, clusterNetID),
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 lbID,
+					Name:               clusterResourceName + "-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+
+				pool := pools.Pool{
+					ID:   poolID,
+					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
+				}
+				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+
+				member := pools.Member{
+					Name:    fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName),
+					Address: wrongMemberIP,
+					ID:      memberID,
+				}
+				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: member.Name}).Return([]pools.Member{member}, nil)
+
+				m.DeletePoolMember(poolID, memberID).Return(nil)
+
+				m.CreatePoolMember(
+					poolID,
+					gomock.AssignableToTypeOf(pools.CreateMemberOpts{}),
+				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
+					// SubnetID must be empty here
+					g.Expect(got.SubnetID).To(Equal(""))
+					return &pools.Member{ID: "member-2"}, nil
+				})
+			},
+			wantError: nil,
+		},
+		{
+			name:        "different LB and cluster networks, set SubnetID on member create",
+			clusterSpec: makeCluster(nil, lbNetOtherID),
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {
+				// not used by this path
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				// LB initially ACTIVE whenever we wait
+				activeLB := loadbalancers.LoadBalancer{
+					ID:                 lbID,
+					Name:               clusterResourceName + "-kubeapi",
+					ProvisioningStatus: "ACTIVE",
+				}
+				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+
+				pool := pools.Pool{
+					ID:   poolID,
+					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
+				}
+				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+
+				memberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
+				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: memberName}).Return([]pools.Member{}, nil)
+
+				// Expect CreatePoolMember; capture opts to assert SubnetID is set
+				m.CreatePoolMember(
+					poolID,
+					gomock.AssignableToTypeOf(pools.CreateMemberOpts{}),
+				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
+					g.Expect(got.Address).To(Equal(memberIP))
+					g.Expect(got.ProtocolPort).To(Equal(port))
+					expName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
+					g.Expect(got.Name).To(Equal(expName))
+					g.Expect(got.SubnetID).To(Equal(subnetID))
+					// Tags should pass through
+					g.Expect(got.Tags).To(ConsistOf("k8s", "clusterapi"))
+					return &pools.Member{ID: "member-1", Address: memberIP, ProtocolPort: port}, nil
+				})
+			},
+			wantError: nil,
+		},
+	}
+
+	for _, tt := range lbtests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			log := testr.New(t)
+
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+			g.Expect(err).NotTo(HaveOccurred())
+
+			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
+			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
+
+			err = lbs.ReconcileLoadBalancerMember(tt.clusterSpec, openStackMachine, clusterName, memberIP)
+			if tt.wantError != nil {
+				g.Expect(err).To(MatchError(tt.wantError))
+			} else {
+				g.Expect(err).NotTo(HaveOccurred())
 			}
 		})
 	}

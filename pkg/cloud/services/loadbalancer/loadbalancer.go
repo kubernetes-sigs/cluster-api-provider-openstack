@@ -710,6 +710,10 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			Tags:         openStackCluster.Spec.Tags,
 		}
 
+		if openStackCluster.Status.Network.ID != openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.ID {
+			lbMemberOpts.SubnetID = openStackCluster.Status.Network.Subnets[0].ID
+		}
+
 		if _, err := s.waitForLoadBalancerActive(lbID); err != nil {
 			return err
 		}
