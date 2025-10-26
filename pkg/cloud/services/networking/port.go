@@ -27,6 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -238,6 +239,15 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 			PortSecurityEnabled: &portSecurity,
 		}
 		builder = portSecurityOpts
+	}
+
+	if portSpec.QoSPolicyID != nil {
+		qosPolicyID := *portSpec.QoSPolicyID
+		portQosOpts := policies.PortCreateOptsExt{
+			CreateOptsBuilder: builder,
+			QoSPolicyID:       qosPolicyID,
+		}
+		builder = portQosOpts
 	}
 
 	portsBindingOpts := portsbinding.CreateOptsExt{
@@ -485,6 +495,15 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 		normalizedPort.NetworkID, normalizedPort.FixedIPs, err = s.normalizePortTarget(port, defaultNetwork, i)
 		if err != nil {
 			return nil, err
+		}
+
+		// Resolve QoS Policy ID
+		if port.QoSPolicy != nil {
+			policyID, err := s.GetQoSPolicyIDByParam(port.QoSPolicy)
+			if err != nil {
+				return nil, err
+			}
+			normalizedPort.QoSPolicyID = &policyID
 		}
 
 		// Resolve security groups when port security is not disabled

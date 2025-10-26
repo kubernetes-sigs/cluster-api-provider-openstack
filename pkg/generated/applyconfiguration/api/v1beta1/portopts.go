@@ -28,6 +28,7 @@ type PortOptsApplyConfiguration struct {
 	SecurityGroups                           []SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
 	Tags                                     []string                               `json:"tags,omitempty"`
 	Trunk                                    *bool                                  `json:"trunk,omitempty"`
+	QoSPolicy                                *QoSPolicyParamApplyConfiguration      `json:"qosPolicy,omitempty"`
 	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
 }
 
@@ -102,6 +103,14 @@ func (b *PortOptsApplyConfiguration) WithTags(values ...string) *PortOptsApplyCo
 // If called multiple times, the Trunk field is set to the value of the last call.
 func (b *PortOptsApplyConfiguration) WithTrunk(value bool) *PortOptsApplyConfiguration {
 	b.Trunk = &value
+	return b
+}
+
+// WithQoSPolicy sets the QoSPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the QoSPolicy field is set to the value of the last call.
+func (b *PortOptsApplyConfiguration) WithQoSPolicy(value *QoSPolicyParamApplyConfiguration) *PortOptsApplyConfiguration {
+	b.QoSPolicy = value
 	return b
 }
 

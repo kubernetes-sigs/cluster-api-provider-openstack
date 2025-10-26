@@ -370,6 +370,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts":                                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.QoSPolicyFilter":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_QoSPolicyFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.QoSPolicyParam":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_QoSPolicyParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedFixedIP(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachineSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpec":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpec(ref),
@@ -19924,6 +19926,12 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref co
 							Format:      "",
 						},
 					},
+					"qosPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "QoSPolicy is a query for an openstack QoS policy that the port will use. This will fail if the query returns more than one qos policy.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.QoSPolicyParam"),
+						},
+					},
 					"adminStateUp": {
 						SchemaProps: spec.SchemaProps{
 							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
@@ -20012,7 +20020,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref co
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.QoSPolicyParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
 	}
 }
 
@@ -20034,6 +20042,157 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref 
 				Required: []string{"id"},
 			},
 		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_QoSPolicyFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "QoSPolicyFilter specifies a query to select an OpenStack router. At least one property must be set.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"projectID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"shared": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"isDefault": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"tagsAny": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"notTags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"notTagsAny": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_QoSPolicyParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "QoSPolicyParam specifies an OpenStack QoS Policy to use. It requires the neutron qos extension to be enabled. It may be specified by either ID or filter, but not both.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID is the ID of the QoS policy to use. If ID is provided, filter cannot be provided. Must be in UUID format.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"filter": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Filter specifies a filter to select an OpenStack QoS policy. If provided, cannot be empty.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.QoSPolicyFilter"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.QoSPolicyFilter"},
 	}
 }
 
@@ -20209,6 +20368,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpe
 									},
 								},
 							},
+						},
+					},
+					"qosPolicyID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "QoSPolicyID is the ID of the qos policy the port will use.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"adminStateUp": {
