@@ -126,6 +126,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.PortOptsApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("PortStatus"):
 		return &apiv1beta1.PortStatusApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("QoSPolicyFilter"):
+		return &apiv1beta1.QoSPolicyFilterApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("QoSPolicyParam"):
+		return &apiv1beta1.QoSPolicyParamApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("ResolvedFixedIP"):
 		return &apiv1beta1.ResolvedFixedIPApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("ResolvedMachineSpec"):

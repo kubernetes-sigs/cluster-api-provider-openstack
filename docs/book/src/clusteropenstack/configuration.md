@@ -32,6 +32,7 @@
     - [Port network and IP addresses](#port-network-and-ip-addresses)
       - [Examples](#examples)
     - [Port Security](#port-security)
+    - [Port QoS Policy](#port-qos-policy)
   - [Security groups](#security-groups)
   - [Tagging](#tagging)
   - [Metadata](#metadata)
@@ -568,6 +569,52 @@ spec:
           id: <your-network-id>
         ...
         disablePortSecurity: true
+        ...
+```
+
+### Port QoS Policy
+
+Asigning a QoS Policy to a port can be done by specifying the id or a filter. More details about the filter can be found in [QoSPolicyParam](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/api/v1beta1/types.go). When using filters to look up a QoS policy, please note that exactly one policy must be returned
+
+Example defining QoS policy id: 
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackMachineTemplate
+metadata:
+  name: <cluster-name>-controlplane
+  namespace: <cluster-name>
+spec:
+  template:
+    spec:
+      ports:
+      - network:
+          id: <your-network-id>
+        ...
+        qosPolicy:
+          id: <your-qos-policy-id>
+        ...
+```
+
+Example defining QoS policy filter: 
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: OpenStackMachineTemplate
+metadata:
+  name: <cluster-name>-controlplane
+  namespace: <cluster-name>
+spec:
+  template:
+    spec:
+      ports:
+      - network:
+          id: <your-network-id>
+        ...
+        qosPolicy:
+          filter:
+            name: <your-qos-name>
+            shared: true
         ...
 ```
 

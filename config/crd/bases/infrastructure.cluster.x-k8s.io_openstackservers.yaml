@@ -531,6 +531,89 @@ spec:
                       description: PropageteUplinkStatus enables or disables the propagate
                         uplink status on the port.
                       type: boolean
+                    qosPolicy:
+                      description: |-
+                        QoSPolicy is a query for an openstack QoS policy that the port will use.
+                        This will fail if the query returns more than one qos policy.
+                      maxProperties: 1
+                      minProperties: 1
+                      properties:
+                        filter:
+                          description: Filter specifies a filter to select an OpenStack
+                            QoS policy. If provided, cannot be empty.
+                          minProperties: 1
+                          properties:
+                            description:
+                              type: string
+                            isDefault:
+                              type: boolean
+                            name:
+                              type: string
+                            notTags:
+                              description: |-
+                                NotTags is a list of tags to filter by. If specified, resources which
+                                contain all of the given tags will be excluded from the result.
+                              items:
+                                description: |-
+                                  NeutronTag represents a tag on a Neutron resource.
+                                  It may not be empty and may not contain commas.
+                                minLength: 1
+                                pattern: ^[^,]+$
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: set
+                            notTagsAny:
+                              description: |-
+                                NotTagsAny is a list of tags to filter by. If specified, resources
+                                which contain any of the given tags will be excluded from the result.
+                              items:
+                                description: |-
+                                  NeutronTag represents a tag on a Neutron resource.
+                                  It may not be empty and may not contain commas.
+                                minLength: 1
+                                pattern: ^[^,]+$
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: set
+                            projectID:
+                              type: string
+                            shared:
+                              type: boolean
+                            tags:
+                              description: |-
+                                Tags is a list of tags to filter by. If specified, the resource must
+                                have all of the tags specified to be included in the result.
+                              items:
+                                description: |-
+                                  NeutronTag represents a tag on a Neutron resource.
+                                  It may not be empty and may not contain commas.
+                                minLength: 1
+                                pattern: ^[^,]+$
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: set
+                            tagsAny:
+                              description: |-
+                                TagsAny is a list of tags to filter by. If specified, the resource
+                                must have at least one of the tags specified to be included in the
+                                result.
+                              items:
+                                description: |-
+                                  NeutronTag represents a tag on a Neutron resource.
+                                  It may not be empty and may not contain commas.
+                                minLength: 1
+                                pattern: ^[^,]+$
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: set
+                          type: object
+                        id:
+                          description: ID is the ID of the QoS policy to use. If ID
+                            is provided, filter cannot be provided. Must be in UUID
+                            format.
+                          format: uuid
+                          type: string
+                      type: object
                     securityGroups:
                       description: SecurityGroups is a list of the names, uuids, filters
                         or any combination these of the security groups to assign
@@ -1158,6 +1241,10 @@ spec:
                           description: PropageteUplinkStatus enables or disables the
                             propagate uplink status on the port.
                           type: boolean
+                        qosPolicyID:
+                          description: QoSPolicyID is the ID of the qos policy the
+                            port will use.
+                          type: string
                         securityGroups:
                           description: SecurityGroups is a list of security group
                             IDs to assign to the port.

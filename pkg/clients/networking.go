@@ -26,6 +26,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
@@ -87,6 +88,8 @@ type NetworkClient interface {
 	DeleteSubnet(id string) error
 	GetSubnet(id string) (*subnets.Subnet, error)
 	UpdateSubnet(id string, opts subnets.UpdateOptsBuilder) (*subnets.Subnet, error)
+
+	ListQoSPolicy(opts policies.ListOpts) ([]policies.Policy, error)
 
 	ListExtensions() ([]extensions.Extension, error)
 
@@ -454,6 +457,15 @@ func (c networkClient) UpdateSubnet(id string, opts subnets.UpdateOptsBuilder) (
 		return nil, err
 	}
 	return subnet, nil
+}
+
+func (c networkClient) ListQoSPolicy(opts policies.ListOpts) ([]policies.Policy, error) {
+	mc := metrics.NewMetricPrometheusContext("qos_policy", "list")
+	allPages, err := policies.List(c.serviceClient, opts).AllPages(context.TODO())
+	if mc.ObserveRequest(err) != nil {
+		return nil, err
+	}
+	return policies.ExtractPolicies(allPages)
 }
 
 func (c networkClient) ListExtensions() ([]extensions.Extension, error) {

@@ -1203,6 +1203,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: propagateUplinkStatus
       type:
         scalar: boolean
+    - name: qosPolicy
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.QoSPolicyParam
     - name: securityGroups
       type:
         list:
@@ -1236,6 +1239,57 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.QoSPolicyFilter
+  map:
+    fields:
+    - name: description
+      type:
+        scalar: string
+    - name: isDefault
+      type:
+        scalar: boolean
+    - name: name
+      type:
+        scalar: string
+    - name: notTags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: notTagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: projectID
+      type:
+        scalar: string
+    - name: shared
+      type:
+        scalar: boolean
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: tagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.QoSPolicyParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.QoSPolicyFilter
+    - name: id
+      type:
+        scalar: string
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResolvedFixedIP
   map:
     fields:
@@ -1308,6 +1362,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: propagateUplinkStatus
       type:
         scalar: boolean
+    - name: qosPolicyID
+      type:
+        scalar: string
     - name: securityGroups
       type:
         list:

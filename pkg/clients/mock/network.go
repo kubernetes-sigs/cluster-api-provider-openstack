@@ -31,6 +31,7 @@ import (
 	attributestags "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
 	floatingips "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	routers "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	policies "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	groups "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	rules "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
 	trunks "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
@@ -474,6 +475,21 @@ func (m *MockNetworkClient) ListPort(opts ports.ListOptsBuilder) ([]ports.Port, 
 func (mr *MockNetworkClientMockRecorder) ListPort(opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPort", reflect.TypeOf((*MockNetworkClient)(nil).ListPort), opts)
+}
+
+// ListQoSPolicy mocks base method.
+func (m *MockNetworkClient) ListQoSPolicy(opts policies.ListOpts) ([]policies.Policy, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListQoSPolicy", opts)
+	ret0, _ := ret[0].([]policies.Policy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListQoSPolicy indicates an expected call of ListQoSPolicy.
+func (mr *MockNetworkClientMockRecorder) ListQoSPolicy(opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQoSPolicy", reflect.TypeOf((*MockNetworkClient)(nil).ListQoSPolicy), opts)
 }
 
 // ListRouter mocks base method.

@@ -19,6 +19,7 @@ package filterconvert
 import (
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	securitygroups "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
@@ -88,6 +89,23 @@ func RouterFilterToListOpts(routerFilter *infrav1.RouterFilter) routers.ListOpts
 		TagsAny:     infrav1.JoinTags(routerFilter.TagsAny),
 		NotTags:     infrav1.JoinTags(routerFilter.NotTags),
 		NotTagsAny:  infrav1.JoinTags(routerFilter.NotTagsAny),
+	}
+}
+
+func QoSPolicyFilterToListOpts(policyFilter *infrav1.QoSPolicyFilter) policies.ListOpts {
+	if policyFilter == nil {
+		return policies.ListOpts{}
+	}
+	return policies.ListOpts{
+		Name:        policyFilter.Name,
+		Description: policyFilter.Description,
+		IsDefault:   policyFilter.IsDefault,
+		Shared:      policyFilter.Shared,
+		ProjectID:   policyFilter.ProjectID,
+		Tags:        infrav1.JoinTags(policyFilter.Tags),
+		TagsAny:     infrav1.JoinTags(policyFilter.TagsAny),
+		NotTags:     infrav1.JoinTags(policyFilter.NotTags),
+		NotTagsAny:  infrav1.JoinTags(policyFilter.NotTagsAny),
 	}
 }
 

@@ -82,7 +82,9 @@ API rule violation: names_match,k8s.io/apimachinery/pkg/apis/meta/v1,StatusCause
 API rule violation: names_match,k8s.io/apimachinery/pkg/apis/meta/v1,Time,Time
 API rule violation: names_match,k8s.io/apimachinery/pkg/runtime,Unknown,ContentEncoding
 API rule violation: names_match,k8s.io/apimachinery/pkg/runtime,Unknown,ContentType
+API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,PortOpts,QoSPolicy
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,ResolvedFixedIP,SubnetID
+API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,ResolvedPortSpec,QoSPolicyID
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,Router,IPs
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,SubnetFilter,IPv6AddressMode
 API rule violation: names_match,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1,SubnetFilter,IPv6RAMode

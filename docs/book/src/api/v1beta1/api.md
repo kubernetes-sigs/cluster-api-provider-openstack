@@ -1612,6 +1612,7 @@ SubnetParam
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.NetworkFilter">NetworkFilter</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.QoSPolicyFilter">QoSPolicyFilter</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.RouterFilter">RouterFilter</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.SecurityGroupFilter">SecurityGroupFilter</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.SubnetFilter">SubnetFilter</a>)
@@ -4115,6 +4116,21 @@ bastion host.</p>
 </tr>
 <tr>
 <td>
+<code>qosPolicy</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.QoSPolicyParam">
+QoSPolicyParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>QoSPolicy is a query for an openstack QoS policy that the port will use.
+This will fail if the query returns more than one qos policy.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ResolvedPortSpecFields</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.ResolvedPortSpecFields">
@@ -4155,6 +4171,135 @@ string
 </td>
 <td>
 <p>ID is the unique identifier of the port.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.QoSPolicyFilter">QoSPolicyFilter
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.QoSPolicyParam">QoSPolicyParam</a>)
+</p>
+<p>
+<p>QoSPolicyFilter specifies a query to select an OpenStack router. At least one property must be set.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>projectID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>shared</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>isDefault</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>FilterByNeutronTags</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.FilterByNeutronTags">
+FilterByNeutronTags
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>FilterByNeutronTags</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.QoSPolicyParam">QoSPolicyParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts</a>)
+</p>
+<p>
+<p>QoSPolicyParam specifies an OpenStack QoS Policy to use. It requires the neutron qos extension to be enabled.
+It may be specified by either ID or filter, but not both.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the ID of the QoS policy to use. If ID is provided, filter cannot be provided. Must be in UUID format.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.QoSPolicyFilter">
+QoSPolicyFilter
+</a>
+</em>
+</td>
+<td>
+<p>Filter specifies a filter to select an OpenStack QoS policy. If provided, cannot be empty.</p>
 </td>
 </tr>
 </tbody>
@@ -4373,6 +4518,18 @@ bool
 <td>
 <em>(Optional)</em>
 <p>SecurityGroups is a list of security group IDs to assign to the port.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>qosPolicyID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>QoSPolicyID is the ID of the qos policy the port will use.</p>
 </td>
 </tr>
 <tr>

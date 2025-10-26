@@ -28,6 +28,7 @@ type ResolvedPortSpecApplyConfiguration struct {
 	Trunk                                    *bool                               `json:"trunk,omitempty"`
 	FixedIPs                                 []ResolvedFixedIPApplyConfiguration `json:"fixedIPs,omitempty"`
 	SecurityGroups                           []string                            `json:"securityGroups,omitempty"`
+	QoSPolicyID                              *string                             `json:"qosPolicyID,omitempty"`
 	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
 }
 
@@ -99,6 +100,14 @@ func (b *ResolvedPortSpecApplyConfiguration) WithSecurityGroups(values ...string
 	for i := range values {
 		b.SecurityGroups = append(b.SecurityGroups, values[i])
 	}
+	return b
+}
+
+// WithQoSPolicyID sets the QoSPolicyID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the QoSPolicyID field is set to the value of the last call.
+func (b *ResolvedPortSpecApplyConfiguration) WithQoSPolicyID(value string) *ResolvedPortSpecApplyConfiguration {
+	b.QoSPolicyID = &value
 	return b
 }
 
