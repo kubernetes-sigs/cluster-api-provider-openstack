@@ -31,7 +31,7 @@ source "${scriptdir}/${RESOURCE_TYPE}.sh"
 
 CLUSTER_NAME=${CLUSTER_NAME:-"capo-e2e"}
 
-OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"2024.2"}
+OPENSTACK_RELEASE=${OPENSTACK_RELEASE:-"2025.2"}
 OPENSTACK_ENABLE_HORIZON=${OPENSTACK_ENABLE_HORIZON:-"false"}
 
 # Devstack will create a provider network using this range
