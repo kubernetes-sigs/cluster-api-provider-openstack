@@ -208,6 +208,14 @@
 
     ensure_kvm
 
+    # WORKAROUND: Pin pip to < 25.3 to avoid breaking changes
+    # pip 25.3 removed --no-use-pep517 and forces PEP 517 builds which breaks
+    # some OpenStack dependencies that don't have proper pyproject.toml files.
+    # See: https://pip.pypa.io/en/stable/news/#v25-3
+    # See: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2801
+    # This can be removed once all OpenStack dependencies are PEP 517 compliant.
+    python3 -m pip install --upgrade 'pip<25.3'
+
     # from https://raw.githubusercontent.com/openstack/octavia/master/devstack/contrib/new-octavia-devstack.sh
     git clone -b stable/${OPENSTACK_RELEASE} https://github.com/openstack/devstack.git /tmp/devstack
     cp /tmp/local.conf /tmp/devstack/
