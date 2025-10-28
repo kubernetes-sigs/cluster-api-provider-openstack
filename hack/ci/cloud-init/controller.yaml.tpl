@@ -10,7 +10,7 @@
     # Enable Logging
     LOGFILE=/opt/stack/logs/stack.sh.log
     VERBOSE=True
-    LOG_COLOR=True
+    LOG_COLOR=False
 
     # Host tuning
     ENABLE_SYSCTL_MEM_TUNING="True"
