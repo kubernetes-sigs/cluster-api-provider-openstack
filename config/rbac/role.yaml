@@ -25,6 +25,17 @@ rules:
   - list
   - watch
 - apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  - customresourcedefinitions/status
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - authentication.k8s.io
   resources:
   - tokenreviews
@@ -51,10 +62,28 @@ rules:
   - infrastructure.cluster.x-k8s.io
   resources:
   - openstackclusteridentities
+  - openstackclustertemplates
+  - openstackmachinetemplates
   verbs:
   - get
   - list
+  - patch
+  - update
   - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - openstackclusteridentities/status
+  - openstackclusters/status
+  - openstackclustertemplates/status
+  - openstackfloatingippools/status
+  - openstackmachines/status
+  - openstackmachinetemplates/status
+  - openstackservers/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
   resources:
@@ -70,17 +99,6 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - infrastructure.cluster.x-k8s.io
-  resources:
-  - openstackclusters/status
-  - openstackfloatingippools/status
-  - openstackmachines/status
-  - openstackservers/status
-  verbs:
-  - get
-  - patch
-  - update
 - apiGroups:
   - ipam.cluster.x-k8s.io
   resources:
