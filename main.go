@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	cliflag "k8s.io/component-base/cli/flag"
@@ -35,6 +36,7 @@ import (
 	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
+	"sigs.k8s.io/cluster-api/controllers/crdmigrator"
 	"sigs.k8s.io/cluster-api/util/flags"
 	ctrl "sigs.k8s.io/controller-runtime"
 	cache "sigs.k8s.io/controller-runtime/pkg/cache"
@@ -92,10 +94,12 @@ var (
 	caCertsPath                 string
 	showVersion                 bool
 	scopeCacheMaxSize           int
+	skipCRDMigrationPhases      []string
 	logOptions                  = logs.NewOptions()
 )
 
 func init() {
+	_ = apiextensionsv1.AddToScheme(scheme)
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
 	_ = ipamv1.AddToScheme(scheme)
@@ -166,12 +170,19 @@ func InitFlags(fs *pflag.FlagSet) {
 
 	fs.IntVar(&scopeCacheMaxSize, "scope-cache-max-size", 10, "The maximum credentials count the operator should keep in cache. Setting this value to 0 means no cache.")
 
+	fs.StringArrayVar(&skipCRDMigrationPhases, "skip-crd-migration-phases", []string{},
+		"List of CRD migration phases to skip. Valid values are: StorageVersionMigration, CleanupManagedFields.")
 	fs.BoolVar(&showVersion, "version", false, "Show current version and exit.")
 }
 
 // Add RBAC for the authorized diagnostics endpoint.
 // +kubebuilder:rbac:groups=authentication.k8s.io,resources=tokenreviews,verbs=create
 // +kubebuilder:rbac:groups=authorization.k8s.io,resources=subjectaccessreviews,verbs=create
+// Setup CRD migrator
+// +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions/status,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters;openstackmachines;openstackmachinetemplates;openstackclustertemplates;openstackfloatingippools;openstackservers;openstackclusteridentities,verbs=get;list;watch;patch;update
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters/status;openstackmachines/status;openstackmachinetemplates/status;openstackclustertemplates/status;openstackfloatingippools/status;openstackservers/status;openstackclusteridentities/status,verbs=get;patch;update
 
 func main() {
 	InitFlags(pflag.CommandLine)
@@ -295,6 +306,43 @@ func setupChecks(mgr ctrl.Manager) {
 
 func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 	scopeFactory := scope.NewFactory(scopeCacheMaxSize)
+
+	crdMigratorConfig := map[client.Object]crdmigrator.ByObjectConfig{
+		&infrav1.OpenStackCluster{}: {
+			UseCache: true,
+		},
+		&infrav1.OpenStackMachine{}: {
+			UseCache: true,
+		},
+		&infrav1.OpenStackMachineTemplate{}: {
+			UseCache: true,
+		},
+		&infrav1.OpenStackClusterTemplate{}: {
+			UseCache: true,
+		},
+		&infrav1alpha1.OpenStackFloatingIPPool{}: {
+			UseCache: true,
+		},
+		&infrav1alpha1.OpenStackServer{}: {
+			UseCache: true,
+		},
+		&infrav1alpha1.OpenStackClusterIdentity{}: {
+			UseCache: true,
+		},
+	}
+	crdMigratorSkipPhases := []crdmigrator.Phase{}
+	for _, p := range skipCRDMigrationPhases {
+		crdMigratorSkipPhases = append(crdMigratorSkipPhases, crdmigrator.Phase(p))
+	}
+	if err := (&crdmigrator.CRDMigrator{
+		Client:                 mgr.GetClient(),
+		APIReader:              mgr.GetAPIReader(),
+		SkipCRDMigrationPhases: crdMigratorSkipPhases,
+		Config:                 crdMigratorConfig,
+	}).SetupWithManager(ctx, mgr, concurrency(1)); err != nil {
+		setupLog.Error(err, "unable to setup CRD migrator")
+		os.Exit(1)
+	}
 
 	if err := (&controllers.OpenStackClusterReconciler{
 		Client:           mgr.GetClient(),
