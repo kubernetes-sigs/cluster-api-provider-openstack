@@ -9,7 +9,7 @@
     # Enable Logging
     LOGFILE=/opt/stack/logs/stack.sh.log
     VERBOSE=True
-    LOG_COLOR=True
+    LOG_COLOR=False
 
     # Host tuning
     ENABLE_SYSCTL_MEM_TUNING="True"
@@ -41,7 +41,7 @@
     PUBLIC_BRIDGE_MTU=${MTU}
     ENABLE_CHASSIS_AS_GW="False"
     OVN_DBS_LOG_LEVEL="dbg"
-    Q_ML2_PLUGIN_MECHANISM_DRIVERS="ovn,logger"
+    Q_ML2_PLUGIN_MECHANISM_DRIVERS="ovn"
     Q_AGENT="ovn"
 
     # WORKAROUND:
