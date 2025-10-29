@@ -43,9 +43,11 @@ var _ = Describe("OpenStackServer API validations", func() {
 				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkParam{
-							Filter: &infrav1.NetworkFilter{
-								Name: "test-network",
+						CommonPortOpts: infrav1.CommonPortOpts{
+							Network: &infrav1.NetworkParam{
+								Filter: &infrav1.NetworkFilter{
+									Name: "test-network",
+								},
 							},
 						},
 					},
@@ -168,11 +170,13 @@ var _ = Describe("OpenStackServer API validations", func() {
 			server := defaultServer()
 			server.Spec.Ports = []infrav1.PortOpts{
 				{
-					SecurityGroups: []infrav1.SecurityGroupParam{{
-						Filter: &infrav1.SecurityGroupFilter{Name: "test-security-group"},
-					}},
-					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-						DisablePortSecurity: ptr.To(true),
+					CommonPortOpts: infrav1.CommonPortOpts{
+						SecurityGroups: []infrav1.SecurityGroupParam{{
+							Filter: &infrav1.SecurityGroupFilter{Name: "test-security-group"},
+						}},
+						ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+							DisablePortSecurity: ptr.To(true),
+						},
 					},
 				},
 			}

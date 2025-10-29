@@ -52,16 +52,20 @@ func Test_ResolveServerSpec(t *testing.T) {
 
 	defaultPortSpec := []infrav1.ResolvedPortSpec{
 		{
-			Name:        "test-instance-0",
-			Description: "Created by cluster-api-provider-openstack cluster test-cluster",
-			NetworkID:   networkID1,
+			CommonResolvedPortSpec: infrav1.CommonResolvedPortSpec{
+				Name:        "test-instance-0",
+				Description: "Created by cluster-api-provider-openstack cluster test-cluster",
+				NetworkID:   networkID1,
+			},
 		},
 	}
 
 	defaultPortOpts := []infrav1.PortOpts{
 		{
-			Network: &infrav1.NetworkParam{
-				ID: ptr.To(networkID1),
+			CommonPortOpts: infrav1.CommonPortOpts{
+				Network: &infrav1.NetworkParam{
+					ID: ptr.To(networkID1),
+				},
 			},
 		},
 	}
