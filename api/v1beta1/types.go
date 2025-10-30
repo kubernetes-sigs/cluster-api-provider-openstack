@@ -290,6 +290,32 @@ type AllocationPool struct {
 	End string `json:"end"`
 }
 
+// QoSPolicyParam specifies an OpenStack QoS Policy to use. It requires the neutron qos extension to be enabled.
+// It may be specified by either ID or filter, but not both.
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type QoSPolicyParam struct {
+	// ID is the ID of the QoS policy to use. If ID is provided, filter cannot be provided. Must be in UUID format.
+	// +kubebuilder:validation:Format:=uuid
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter specifies a filter to select an OpenStack QoS policy. If provided, cannot be empty.
+	Filter *QoSPolicyFilter `json:"filter,omitempty"`
+}
+
+// QoSPolicyFilter specifies a query to select an OpenStack router. At least one property must be set.
+// +kubebuilder:validation:MinProperties:=1
+type QoSPolicyFilter struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	ProjectID   string `json:"projectID,omitempty"`
+	Shared      *bool  `json:"shared,omitempty"`
+	IsDefault   *bool  `json:"isDefault,omitempty"`
+
+	FilterByNeutronTags `json:",inline"`
+}
+
 type PortOpts struct {
 	// Network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
@@ -325,6 +351,11 @@ type PortOpts struct {
 	// bastion host.
 	// +optional
 	Trunk *bool `json:"trunk,omitempty"`
+
+	// QoSPolicy is a query for an openstack QoS policy that the port will use.
+	// This will fail if the query returns more than one qos policy.
+	// +optional
+	QoSPolicy *QoSPolicyParam `json:"qosPolicy,omitempty"`
 
 	ResolvedPortSpecFields `json:",inline"`
 }
@@ -421,6 +452,10 @@ type ResolvedPortSpec struct {
 	// +optional
 	// +listType=atomic
 	SecurityGroups []string `json:"securityGroups,omitempty"`
+
+	// QoSPolicyID is the ID of the qos policy the port will use.
+	// +optional
+	QoSPolicyID *string `json:"qosPolicyID"`
 
 	ResolvedPortSpecFields `json:",inline"`
 }
