@@ -623,59 +623,67 @@ func getBastionSecurityGroupID(openStackCluster *infrav1.OpenStackCluster) *stri
 
 func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
 	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
-	if lbSpec.IsEnabled() {
-		lbStatus := openStackCluster.Status.APIServerLoadBalancer
-		if lbStatus == nil {
-			lbStatus = &infrav1.LoadBalancer{}
-			openStackCluster.Status.APIServerLoadBalancer = lbStatus
-		}
 
-		lbNetStatus := lbStatus.LoadBalancerNetwork
-		if lbNetStatus == nil {
-			lbNetStatus = &infrav1.NetworkStatusWithSubnets{
-				NetworkStatus: infrav1.NetworkStatus{},
-			}
-		}
+	// if lb is not enabled, return early
+	if !lbSpec.IsEnabled() {
+		return nil
+	}
 
-		if lbSpec.Network != nil {
-			lbNet, err := networkingService.GetNetworkByParam(lbSpec.Network)
-			if err != nil {
-				if errors.Is(err, capoerrors.ErrFilterMatch) {
-					handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err), true)
-				}
-				return fmt.Errorf("failed to find network: %w", err)
-			}
+	lbStatus := openStackCluster.Status.APIServerLoadBalancer
+	if lbStatus == nil {
+		lbStatus = &infrav1.LoadBalancer{}
+		openStackCluster.Status.APIServerLoadBalancer = lbStatus
+	}
 
-			lbNetStatus.Name = lbNet.Name
-			lbNetStatus.ID = lbNet.ID
-			lbNetStatus.Tags = lbNet.Tags
-
-			// Filter out only relevant subnets specified by the spec
-			lbNetStatus.Subnets = []infrav1.Subnet{}
-			for _, s := range lbSpec.Subnets {
-				matchFound := false
-				for _, subnetID := range lbNet.Subnets {
-					subnet, err := networkingService.GetSubnetByParam(&s)
-					if s.ID != nil && subnetID == *s.ID && err == nil {
-						matchFound = true
-						lbNetStatus.Subnets = append(
-							lbNetStatus.Subnets, infrav1.Subnet{
-								ID:   subnet.ID,
-								Name: subnet.Name,
-								CIDR: subnet.CIDR,
-								Tags: subnet.Tags,
-							})
-					}
-				}
-				if !matchFound {
-					handleUpdateOSCError(openStackCluster, fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets), false)
-					return fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets)
-				}
-			}
-
-			openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+	lbNetStatus := lbStatus.LoadBalancerNetwork
+	if lbNetStatus == nil {
+		lbNetStatus = &infrav1.NetworkStatusWithSubnets{
+			NetworkStatus: infrav1.NetworkStatus{},
 		}
 	}
+
+	if lbSpec.Network != nil {
+		lbNet, err := networkingService.GetNetworkByParam(lbSpec.Network)
+		if err != nil {
+			if errors.Is(err, capoerrors.ErrFilterMatch) {
+				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err), true)
+			}
+			return fmt.Errorf("failed to find network: %w", err)
+		}
+
+		lbNetStatus.Name = lbNet.Name
+		lbNetStatus.ID = lbNet.ID
+		lbNetStatus.Tags = lbNet.Tags
+
+		// Filter out only relevant subnets specified by the spec
+		lbNetStatus.Subnets = []infrav1.Subnet{}
+		for _, s := range lbSpec.Subnets {
+			matchFound := false
+			for _, subnetID := range lbNet.Subnets {
+				subnet, err := networkingService.GetSubnetByParam(&s)
+				if s.ID != nil && subnetID == *s.ID && err == nil {
+					matchFound = true
+					lbNetStatus.Subnets = append(
+						lbNetStatus.Subnets, infrav1.Subnet{
+							ID:   subnet.ID,
+							Name: subnet.Name,
+							CIDR: subnet.CIDR,
+							Tags: subnet.Tags,
+						})
+				}
+			}
+			if !matchFound {
+				handleUpdateOSCError(openStackCluster, fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets), false)
+				return fmt.Errorf("no subnet match was found in the specified network (specified subnet: %v, available subnets: %v)", s, lbNet.Subnets)
+			}
+		}
+	} else {
+		lbNetStatus.ID = openStackCluster.Status.Network.ID
+		lbNetStatus.Name = openStackCluster.Status.Network.Name
+		lbNetStatus.Subnets = openStackCluster.Status.Network.Subnets
+	}
+
+	openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
 
 	return nil
 }
