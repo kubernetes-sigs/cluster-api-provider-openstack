@@ -136,6 +136,21 @@ func (mr *MockLbClientMockRecorder) CreatePoolMember(poolID, opts any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePoolMember", reflect.TypeOf((*MockLbClient)(nil).CreatePoolMember), poolID, opts)
 }
 
+// GetPoolMember mocks base method.
+func (m *MockLbClient) GetPoolMember(poolID, memberID string) (*pools.Member, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPoolMember", poolID, memberID)
+	ret0, _ := ret[0].(*pools.Member)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPoolMember indicates an expected call of GetPoolMember.
+func (mr *MockLbClientMockRecorder) GetPoolMember(poolID, memberID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolMember", reflect.TypeOf((*MockLbClient)(nil).GetPoolMember), poolID, memberID)
+}
+
 // DeleteListener mocks base method.
 func (m *MockLbClient) DeleteListener(id string) error {
 	m.ctrl.T.Helper()
