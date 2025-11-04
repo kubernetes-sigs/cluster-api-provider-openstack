@@ -14,12 +14,12 @@ For details, see [RELEASE.md](https://github.com/kubernetes-sigs/cluster-api-pro
 - [ ] [When bumping `X` or `Y`] Add a new entry of new release branch to [depandabot.yml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/.github/dependabot.yml).
 - [ ] [When bumping `X` or `Y`] Add a new entry of new release branch to [security-scan.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/.github/workflows/security-scan.yaml).
 - [ ] [When bumping `X` or `Y`] Add a new entry to [metadata.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/metadata.yaml)
-  as [described in the CAPI book](https://cluster-api.sigs.k8s.io/clusterctl/provider-contract.html#metadata-yaml)
+  as [described in the CAPI book](https://cluster-api.sigs.k8s.io/developer/providers/contracts/clusterctl#metadata-yaml)
   on the release branch prior to release.
-- [ ] Push tag to the repository.
+- [ ] Create the PR after generating release notes according to [RELEASE.md](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/RELEASE.md). Verify that the release PR looks good and make changes if necessary. When this PR is merged, release automation will push the tag to upstream and create a draft release notes.
 - [ ] Promote the [staging image](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack) by
   adding the new sha=>tag mapping to [images.yaml](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/images/k8s-staging-capi-openstack/images.yaml).
-- [ ] Verify that the new draft release looks good and make changes if necessary.
+- [ ] Verify that the new draft release looks good.
 - [ ] Verify that the image was promoted sucessfully.
 - [ ] Publish the release.
   Mark the release as "latest" if it is the most recent minor release.
