@@ -33,13 +33,15 @@ import (
 	logsv1 "k8s.io/component-base/logs/api/v1"
 	_ "k8s.io/component-base/logs/json/register"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
 	"sigs.k8s.io/cluster-api/util/flags"
 	ctrl "sigs.k8s.io/controller-runtime"
 	cache "sigs.k8s.io/controller-runtime/pkg/cache"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	clientconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -48,6 +50,7 @@ import (
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
+	"sigs.k8s.io/cluster-api-provider-openstack/feature"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -167,6 +170,8 @@ func InitFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&scopeCacheMaxSize, "scope-cache-max-size", 10, "The maximum credentials count the operator should keep in cache. Setting this value to 0 means no cache.")
 
 	fs.BoolVar(&showVersion, "version", false, "Show current version and exit.")
+
+	feature.MutableGates.AddFlag(fs)
 }
 
 // Add RBAC for the authorized diagnostics endpoint.
@@ -199,7 +204,7 @@ func main() {
 		}()
 	}
 
-	cfg, err := config.GetConfigWithContext(os.Getenv("KUBECONTEXT"))
+	cfg, err := clientconfig.GetConfigWithContext(os.Getenv("KUBECONTEXT"))
 	if err != nil {
 		setupLog.Error(err, "unable to get kubeconfig")
 		os.Exit(1)
@@ -228,6 +233,8 @@ func main() {
 			watchNamespace: {},
 		}
 	}
+
+	setupLog.Info(fmt.Sprintf("Feature gates: %+v\n", feature.Gates))
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme:           scheme,
@@ -258,6 +265,9 @@ func main() {
 		),
 		HealthProbeBindAddress:        healthAddr,
 		LeaderElectionReleaseOnCancel: true,
+		Controller: config.Controller{
+			UsePriorityQueue: ptr.To[bool](feature.Gates.Enabled(feature.PriorityQueue)),
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

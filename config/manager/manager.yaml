@@ -24,6 +24,7 @@ spec:
             - "--v=2"
             - "--diagnostics-address=127.0.0.1:8080"
             - "--insecure-diagnostics=true"
+            - "--feature-gates=PriorityQueue=${EXP_CAPO_PRIORITY_QUEUE:=false}"
           image: controller:latest
           imagePullPolicy: Always
           name: manager
