@@ -1052,8 +1052,19 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
 					// SubnetID must be empty here
 					g.Expect(got.SubnetID).To(Equal(""))
-					return &pools.Member{ID: "member-2"}, nil
+					return &pools.Member{ID: memberID}, nil
 				})
+
+				pendingMember := pools.Member{
+					ID:                 memberID,
+					Name:               poolMemberName,
+					ProvisioningStatus: "PENDING_CREATE",
+				}
+				m.GetPoolMember(poolID, memberID).Return(&pendingMember, nil)
+
+				activeMember := pendingMember
+				activeMember.ProvisioningStatus = "ACTIVE"
+				m.GetPoolMember(poolID, memberID).Return(&activeMember, nil)
 			},
 			wantError: nil,
 		},
@@ -1092,8 +1103,10 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 				}
 				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
 
+				poolMemberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
+
 				member := pools.Member{
-					Name:    fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName),
+					Name:    poolMemberName,
 					Address: wrongMemberIP,
 					ID:      memberID,
 				}
@@ -1107,8 +1120,15 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
 					// SubnetID must be empty here
 					g.Expect(got.SubnetID).To(Equal(""))
-					return &pools.Member{ID: "member-2"}, nil
+					return &pools.Member{ID: memberID}, nil
 				})
+
+				activeMember := pools.Member{
+					ID:                 memberID,
+					Name:               poolMemberName,
+					ProvisioningStatus: "ACTIVE",
+				}
+				m.GetPoolMember(poolID, memberID).Return(&activeMember, nil).AnyTimes()
 			},
 			wantError: nil,
 		},
@@ -1133,8 +1153,8 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 				}
 				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
 
-				memberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
-				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: memberName}).Return([]pools.Member{}, nil)
+				poolMemberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
+				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: poolMemberName}).Return([]pools.Member{}, nil)
 
 				// Expect CreatePoolMember; capture opts to assert SubnetID is set
 				m.CreatePoolMember(
@@ -1148,8 +1168,15 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					g.Expect(got.SubnetID).To(Equal(subnetID))
 					// Tags should pass through
 					g.Expect(got.Tags).To(ConsistOf("k8s", "clusterapi"))
-					return &pools.Member{ID: "member-1", Address: memberIP, ProtocolPort: port}, nil
+					return &pools.Member{ID: memberID, Address: memberIP, ProtocolPort: port}, nil
 				})
+
+				activeMember := pools.Member{
+					ID:                 memberID,
+					Name:               poolMemberName,
+					ProvisioningStatus: "ACTIVE",
+				}
+				m.GetPoolMember(poolID, memberID).Return(&activeMember, nil).AnyTimes()
 			},
 			wantError: nil,
 		},
