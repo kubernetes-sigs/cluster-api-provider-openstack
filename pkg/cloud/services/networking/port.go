@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/extensions"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -443,13 +444,33 @@ func (s *Service) ConstructPorts(instancePorts []infrav1.PortOpts, instanceSecur
 		return false
 	}
 	if portUsesTrunk() {
-		trunkSupported, err := s.IsTrunkExtSupported()
+		trunkSupported, err := s.IsExtensionSupported(extensions.TrunkExtensionName)
 		if err != nil {
 			return nil, err
 		}
 
 		if !trunkSupported {
 			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
+		}
+	}
+
+	// qos support is required if any port has QoSPolicy set
+	portUsesQoSPolicy := func() bool {
+		for _, port := range resolvedPorts {
+			if port.QoSPolicyID != nil {
+				return true
+			}
+		}
+		return false
+	}
+	if portUsesQoSPolicy() {
+		qosSupported, err := s.IsExtensionSupported(extensions.QoSExtensionName)
+		if err != nil {
+			return nil, err
+		}
+
+		if !qosSupported {
+			return nil, fmt.Errorf("there is no qos support. please ensure that the qos neutron extension is enabled in your OpenStack deployment")
 		}
 	}
 
@@ -612,18 +633,6 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 	}
 
 	return networkID, resolvedFixedIPs, nil
-}
-
-// IsTrunkExtSupported verifies trunk setup on the OpenStack deployment.
-func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
-	trunkSupport, err := s.GetTrunkSupport()
-	if err != nil {
-		return false, fmt.Errorf("there was an issue verifying whether trunk support is available, Please try again later: %v", err)
-	}
-	if !trunkSupport {
-		return false, nil
-	}
-	return true, nil
 }
 
 // AdoptPortsServer looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.

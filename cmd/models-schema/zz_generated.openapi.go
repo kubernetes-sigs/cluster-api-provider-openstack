@@ -20049,7 +20049,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_QoSPolicyFilter
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "QoSPolicyFilter specifies a query to select an OpenStack router. At least one property must be set.",
+				Description: "QoSPolicyFilter specifies a query to select an OpenStack QoS Policy. At least one property must be set.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {

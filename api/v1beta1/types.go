@@ -304,7 +304,7 @@ type QoSPolicyParam struct {
 	Filter *QoSPolicyFilter `json:"filter,omitempty"`
 }
 
-// QoSPolicyFilter specifies a query to select an OpenStack router. At least one property must be set.
+// QoSPolicyFilter specifies a query to select an OpenStack QoS Policy. At least one property must be set.
 // +kubebuilder:validation:MinProperties:=1
 type QoSPolicyFilter struct {
 	Name        string `json:"name,omitempty"`
@@ -455,7 +455,7 @@ type ResolvedPortSpec struct {
 
 	// QoSPolicyID is the ID of the qos policy the port will use.
 	// +optional
-	QoSPolicyID *string `json:"qosPolicyID"`
+	QoSPolicyID *string `json:"qosPolicyID,omitempty"`
 
 	ResolvedPortSpecFields `json:",inline"`
 }

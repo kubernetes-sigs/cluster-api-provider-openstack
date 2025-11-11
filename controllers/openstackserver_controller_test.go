@@ -42,6 +42,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	capoextensions "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/extensions"
 )
 
 const (
@@ -148,7 +149,7 @@ var listDefaultServerFound = func(r *recorders) {
 
 var deleteDefaultPorts = func(r *recorders) {
 	trunkExtension := extensions.Extension{}
-	trunkExtension.Alias = "trunk"
+	trunkExtension.Alias = capoextensions.TrunkExtensionName
 	r.network.ListExtensions().Return([]extensions.Extension{trunkExtension}, nil)
 	r.network.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{{ID: trunkUUID}}, nil)
 	r.network.ListTrunkSubports(trunkUUID).Return([]trunks.Subport{}, nil)

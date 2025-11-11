@@ -36,20 +36,6 @@ const (
 	retryIntervalSubportDelete = 30 * time.Second
 )
 
-func (s *Service) GetTrunkSupport() (bool, error) {
-	allExts, err := s.client.ListExtensions()
-	if err != nil {
-		return false, err
-	}
-
-	for _, ext := range allExts {
-		if ext.Alias == "trunk" {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
 func (s *Service) getOrCreateTrunkForPort(eventObject runtime.Object, port *ports.Port) (*trunks.Trunk, error) {
 	trunkList, err := s.client.ListTrunk(trunks.ListOpts{
 		Name:   port.Name,

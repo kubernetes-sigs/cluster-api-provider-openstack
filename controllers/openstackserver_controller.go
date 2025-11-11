@@ -58,6 +58,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/extensions"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -263,7 +264,7 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 		}
 	}
 
-	trunkSupported, err := networkingService.IsTrunkExtSupported()
+	trunkSupported, err := networkingService.IsExtensionSupported(extensions.TrunkExtensionName)
 	if err != nil {
 		return err
 	}

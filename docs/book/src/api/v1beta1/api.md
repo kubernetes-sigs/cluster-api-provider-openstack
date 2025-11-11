@@ -4182,7 +4182,7 @@ string
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.QoSPolicyParam">QoSPolicyParam</a>)
 </p>
 <p>
-<p>QoSPolicyFilter specifies a query to select an OpenStack router. At least one property must be set.</p>
+<p>QoSPolicyFilter specifies a query to select an OpenStack QoS Policy. At least one property must be set.</p>
 </p>
 <table>
 <thead>

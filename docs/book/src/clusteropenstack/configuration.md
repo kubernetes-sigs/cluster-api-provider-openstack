@@ -574,7 +574,7 @@ spec:
 
 ### Port QoS Policy
 
-Asigning a QoS Policy to a port can be done by specifying the id or a filter. More details about the filter can be found in [QoSPolicyParam](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/api/v1beta1/types.go). When using filters to look up a QoS policy, please note that exactly one policy must be returned
+Assigning a QoS Policy to a port can be done by specifying the id or a filter. More details about the filter can be found in [QoSPolicyParam](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/api/v1beta1/types.go). When using filters to look up a QoS policy, please note that exactly one policy must be returned. The neutron [qos](https://docs.openstack.org/neutron/latest/admin/config-qos.html) extension needs to be enabled on the OpenStack cloud when using this feature.
 
 Example defining QoS policy id: 
 
