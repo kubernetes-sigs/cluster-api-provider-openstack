@@ -39,6 +39,7 @@ import (
 	ports "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	subnets "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	gomock "go.uber.org/mock/gomock"
+	clients "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 )
 
 // MockNetworkClient is a mock of NetworkClient interface.
@@ -355,6 +356,21 @@ func (m *MockNetworkClient) GetPort(id string) (*ports.Port, error) {
 func (mr *MockNetworkClientMockRecorder) GetPort(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPort", reflect.TypeOf((*MockNetworkClient)(nil).GetPort), id)
+}
+
+// GetPortWithQoS mocks base method.
+func (m *MockNetworkClient) GetPortWithQoS(id string) (*clients.PortWithQoS, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPortWithQoS", id)
+	ret0, _ := ret[0].(*clients.PortWithQoS)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPortWithQoS indicates an expected call of GetPortWithQoS.
+func (mr *MockNetworkClientMockRecorder) GetPortWithQoS(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortWithQoS", reflect.TypeOf((*MockNetworkClient)(nil).GetPortWithQoS), id)
 }
 
 // GetRouter mocks base method.

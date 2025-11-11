@@ -49,6 +49,7 @@ type NetworkClient interface {
 	CreatePort(opts ports.CreateOptsBuilder) (*ports.Port, error)
 	DeletePort(id string) error
 	GetPort(id string) (*ports.Port, error)
+	GetPortWithQoS(id string) (*PortWithQoS, error)
 	UpdatePort(id string, opts ports.UpdateOptsBuilder) (*ports.Port, error)
 
 	ListTrunk(opts trunks.ListOptsBuilder) ([]trunks.Trunk, error)
@@ -94,6 +95,11 @@ type NetworkClient interface {
 	ListExtensions() ([]extensions.Extension, error)
 
 	ReplaceAllAttributesTags(resourceType string, resourceID string, opts attributestags.ReplaceAllOptsBuilder) ([]string, error)
+}
+
+type PortWithQoS struct {
+	ports.Port
+	policies.QoSPolicyExt
 }
 
 type networkClient struct {
@@ -220,6 +226,16 @@ func (c networkClient) GetPort(id string) (*ports.Port, error) {
 		return nil, err
 	}
 	return port, nil
+}
+
+func (c networkClient) GetPortWithQoS(id string) (*PortWithQoS, error) {
+	mc := metrics.NewMetricPrometheusContext("port", "get")
+	var port PortWithQoS
+	err := ports.Get(context.TODO(), c.serviceClient, id).ExtractInto(port)
+	if mc.ObserveRequestIgnoreNotFound(err) != nil {
+		return nil, err
+	}
+	return &port, nil
 }
 
 func (c networkClient) UpdatePort(id string, opts ports.UpdateOptsBuilder) (*ports.Port, error) {

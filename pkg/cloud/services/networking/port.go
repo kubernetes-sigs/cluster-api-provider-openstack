@@ -126,8 +126,8 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 	return nil, nil
 }
 
-// ensurePortTagsAndTrunk ensures that the provided port has the tags and trunk defined in portSpec.
-func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
+// ensurePortProperties ensures that the provided port has the tags and trunk defined in portSpec.
+func (s *Service) ensurePortProperties(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
 	wantedTags := uniqueSortedTags(portSpec.Tags)
 	actualTags := uniqueSortedTags(port.Tags)
 	// Only replace tags if there is a difference
@@ -149,6 +149,27 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 				record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
 				return err
 			}
+		}
+	}
+	if portSpec.QoSPolicyID != nil {
+		qosSupported, err := s.IsExtensionSupported(extensions.QoSExtensionName)
+		if err != nil {
+			return err
+		}
+
+		if !qosSupported {
+			return fmt.Errorf("there is no qos support. please ensure that the qos neutron extension is enabled in your OpenStack deployment")
+		}
+		portWithQoS, err := s.client.GetPortWithQoS(port.ID)
+		if err != nil {
+			return err
+		}
+		if *portSpec.QoSPolicyID != portWithQoS.QoSPolicyID {
+			if err = s.updatePortQoSPolicy(portWithQoS.ID, *portSpec.QoSPolicyID); err != nil {
+				record.Warnf(eventObject, "FailedReplaceQoSPolicy", "Failed to replace qos policy for port%s: %v", portWithQoS.Name, err)
+				return err
+			}
+			record.Eventf(eventObject, "SuccessfulReplaceQoSPolicy", "Replaced qos policy for port %s with %s", portWithQoS.Name, portSpec.QoSPolicyID)
 		}
 	}
 	return nil
@@ -176,7 +197,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 
 	if len(existingPorts) == 1 {
 		port := &existingPorts[0]
-		if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+		if err = s.ensurePortProperties(port, eventObject, portSpec); err != nil {
 			return nil, err
 		}
 		return port, nil
@@ -265,7 +286,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		return nil, err
 	}
 
-	if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+	if err = s.ensurePortProperties(port, eventObject, portSpec); err != nil {
 		return nil, err
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
@@ -681,6 +702,16 @@ func (s *Service) AdoptPortsServer(scope *scope.WithLogger, desiredPorts []infra
 	}
 
 	return nil
+}
+
+// updatePortQoSPolicy updates the QoSPolicy of a port.
+func (s *Service) updatePortQoSPolicy(portID string, qosPolicyID string) error {
+	updateOpts := policies.PortUpdateOptsExt{
+		UpdateOptsBuilder: ports.UpdateOpts{},
+		QoSPolicyID:       &qosPolicyID,
+	}
+	_, err := s.client.UpdatePort(portID, updateOpts)
+	return err
 }
 
 // uniqueSortedTags returns a new, sorted slice where any duplicates have been removed.

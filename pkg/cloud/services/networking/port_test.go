@@ -38,8 +38,10 @@ import (
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	capoextensions "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/extensions"
 )
 
 func Test_EnsurePort(t *testing.T) {
@@ -465,13 +467,68 @@ func Test_EnsurePort(t *testing.T) {
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
+
+				qosExtension := extensions.Extension{}
+				qosExtension.Alias = capoextensions.QoSExtensionName
+				m.ListExtensions().Return([]extensions.Extension{qosExtension}, nil)
 				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID}, nil
 				})
+				portWithQos := clients.PortWithQoS{
+					Port: ports.Port{
+						ID: portID,
+					},
+					QoSPolicyExt: policies.QoSPolicyExt{
+						QoSPolicyID: qosPolicyID,
+					},
+				}
+				m.GetPortWithQoS(portID).Return(&portWithQos, nil)
 			},
 			want: &ports.Port{ID: portID},
+		},
+		{
+			name: "Updates port with new QoSPolicyID",
+			port: infrav1.ResolvedPortSpec{
+				Name:        "test-port",
+				NetworkID:   netID,
+				QoSPolicyID: ptr.To(qosPolicyID),
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, g Gomega) {
+				expectedPort := ports.Port{
+					ID:        portID,
+					Name:      "test-port",
+					NetworkID: netID,
+				}
+
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return([]ports.Port{expectedPort}, nil)
+
+				qosExtension := extensions.Extension{}
+				qosExtension.Alias = capoextensions.QoSExtensionName
+				m.ListExtensions().Return([]extensions.Extension{qosExtension}, nil)
+
+				portWithQos := clients.PortWithQoS{
+					Port: expectedPort,
+					QoSPolicyExt: policies.QoSPolicyExt{
+						QoSPolicyID: netID,
+					},
+				}
+				m.GetPortWithQoS(portID).Return(&portWithQos, nil)
+				m.UpdatePort(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(id string, builder ports.UpdateOptsBuilder) (*ports.Port, error) {
+						g.Expect(id).To(Equal(portID))
+						got := builder.(policies.PortUpdateOptsExt)
+						g.Expect(got.UpdateOptsBuilder).To(Equal(ports.UpdateOpts{}))
+						g.Expect(got.QoSPolicyID).ToNot(BeNil())
+						g.Expect(*got.QoSPolicyID).To(Equal(qosPolicyID))
+						return &expectedPort, nil
+					})
+			},
+			want: &ports.Port{ID: portID, Name: "test-port", NetworkID: netID},
 		},
 	}
 
@@ -519,7 +576,7 @@ func TestService_ConstructPorts(t *testing.T) {
 
 	expectListExtensions := func(m *mock.MockNetworkClientMockRecorder) {
 		trunkExtension := extensions.Extension{}
-		trunkExtension.Alias = "trunk"
+		trunkExtension.Alias = capoextensions.TrunkExtensionName
 		m.ListExtensions().Return([]extensions.Extension{trunkExtension}, nil)
 	}
 
