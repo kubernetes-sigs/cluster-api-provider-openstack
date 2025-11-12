@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/collections"
+	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -356,6 +357,24 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 	openStackCluster.Status.Ready = true
 	openStackCluster.Status.FailureMessage = nil
 	openStackCluster.Status.FailureReason = nil
+
+	// Set initialization.provisioned to true when initial infrastructure provisioning is complete.
+	// This field should only be set once and never changed afterward, as per CAPI v1beta2 contract.
+	// We set it here after all core infrastructure (network, router, security groups, control plane endpoint)
+	// has been successfully provisioned.
+	if openStackCluster.Status.Initialization == nil {
+		openStackCluster.Status.Initialization = &infrav1.ClusterInitialization{}
+	}
+	if !openStackCluster.Status.Initialization.Provisioned {
+		openStackCluster.Status.Initialization.Provisioned = true
+		scope.Logger().Info("Initial cluster infrastructure provisioning completed")
+	}
+
+	// Set the Ready condition to True when infrastructure is ready.
+	// This condition surfaces into Cluster's status.conditions[InfrastructureReady].
+	// It reflects the current operational state of the cluster infrastructure.
+	v1beta1conditions.MarkTrue(openStackCluster, clusterv1beta1.ReadyCondition)
+
 	scope.Logger().Info("Reconciled Cluster created successfully")
 
 	result, err := r.reconcileBastion(ctx, scope, cluster, openStackCluster)
@@ -955,6 +974,12 @@ func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message er
 		err := capoerrors.DeprecatedCAPOUpdateClusterError
 		openstackCluster.Status.FailureReason = &err
 		openstackCluster.Status.FailureMessage = ptr.To(message.Error())
+		// Set the Ready condition to False for fatal errors
+		v1beta1conditions.MarkFalse(openstackCluster, clusterv1beta1.ReadyCondition, infrav1.OpenStackErrorReason, clusterv1beta1.ConditionSeverityError, "%v", message)
+	} else {
+		// For transient (non-fatal) errors, set Ready condition to False with Warning severity
+		// This indicates a temporary issue that may be resolved on retry
+		v1beta1conditions.MarkFalse(openstackCluster, clusterv1beta1.ReadyCondition, infrav1.OpenStackErrorReason, clusterv1beta1.ConditionSeverityWarning, "%v", message)
 	}
 }
 

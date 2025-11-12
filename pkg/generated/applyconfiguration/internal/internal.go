@@ -598,6 +598,12 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: type
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ClusterInitialization
+  map:
+    fields:
+    - name: provisioned
+      type:
+        scalar: boolean
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ExternalRouterIPParam
   map:
     fields:
@@ -915,6 +921,12 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: bastionSecurityGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupStatus
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api.api.core.v1beta1.Condition
+          elementRelationship: atomic
     - name: controlPlaneSecurityGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupStatus
@@ -932,6 +944,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: failureReason
       type:
         scalar: string
+    - name: initialization
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ClusterInitialization
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.NetworkStatusWithSubnets
