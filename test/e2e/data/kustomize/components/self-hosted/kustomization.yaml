@@ -1,0 +1,17 @@
+# Modifications to release templates for self-hosted scenarios.
+# This patch allows the nodes dowload the CAPO image from E2E_IMAGE_URL,
+# and load it. It is useful when testing unpublished images (e.g. a PR).
+# The image is downloaded only if DOWNLOAD_E2E_IMAGE is set to true
+# when rendering the cluster template.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+- path: ci-hack-kcp.yaml
+  target:
+    kind: KubeadmControlPlane
+    name: \${CLUSTER_NAME}-control-plane
+- path: ci-hack-kct.yaml
+  target:
+    kind: KubeadmConfigTemplate
+    name: \${CLUSTER_NAME}-md-0

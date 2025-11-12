@@ -7,4 +7,4 @@ resources:
 components:
 - ../components/cluster-resource-sets
 - ../components/common
-- ../components/upgrade-patches
+- ../components/self-hosted
