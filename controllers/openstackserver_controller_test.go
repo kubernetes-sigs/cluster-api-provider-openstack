@@ -69,16 +69,20 @@ var defaultImage = infrav1.ImageParam{
 
 var defaultPortOpts = []infrav1.PortOpts{
 	{
-		Network: &infrav1.NetworkParam{
-			ID: ptr.To(networkUUID),
+		CommonPortOpts: infrav1.CommonPortOpts{
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(networkUUID),
+			},
 		},
 	},
 }
 
 var defaultResolvedPorts = []infrav1.ResolvedPortSpec{
 	{
-		Name:      openStackServerName + "-0",
-		NetworkID: networkUUID,
+		CommonResolvedPortSpec: infrav1.CommonResolvedPortSpec{
+			Name:      openStackServerName + "-0",
+			NetworkID: networkUUID,
+		},
 	},
 }
 

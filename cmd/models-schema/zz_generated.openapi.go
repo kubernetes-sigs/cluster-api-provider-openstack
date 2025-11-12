@@ -339,6 +339,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BindingProfile(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceStorage":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceStorage(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceVolume":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolume(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.CommonPortOpts":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_CommonPortOpts(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.CommonResolvedPortSpec":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_CommonResolvedPortSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FilterByNeutronTags":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP":                                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FixedIP(ref),
@@ -374,6 +376,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedMachineSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpec":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedPortSpecFields":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpecFields(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedSubportSpec":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedSubportSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResourceReference":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResourceReference(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RootVolume":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RootVolume(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router":                                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Router(ref),
@@ -388,10 +391,12 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupFilter":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerGroupParam":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerGroupParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ServerMetadata":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerMetadata(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubPortStatus":                              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubPortStatus(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Subnet":                                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam":                                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubportOpts":                                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubportOpts(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec":                                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ValueSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabilityZone(ref),
 		"sigs.k8s.io/cluster-api/api/core/v1beta1.APIEndpoint":                                              schema_cluster_api_api_core_v1beta1_APIEndpoint(ref),
@@ -18054,6 +18059,365 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolu
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_CommonPortOpts(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"network": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam"),
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description for the port.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"nameSuffix": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"fixedIPs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP"),
+									},
+								},
+							},
+						},
+					},
+					"securityGroups": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam"),
+									},
+								},
+							},
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.) These tags are applied in addition to the instance's tags, which will also be applied to the port.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"adminStateUp": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"macAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"allowedAddressPairs": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AllowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair"),
+									},
+								},
+							},
+						},
+					},
+					"hostID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HostID specifies the ID of the host where the port resides.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"vnicType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "VNICType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"profile": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile"),
+						},
+					},
+					"disablePortSecurity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"propagateUplinkStatus": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"valueSpecs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_CommonResolvedPortSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ResolvedPortSpec is a PortOpts with all contained references fully resolved.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the port.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description for the port.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"networkID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NetworkID is the ID of the network the port will be created in.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.)",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"fixedIPs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP"),
+									},
+								},
+							},
+						},
+					},
+					"securityGroups": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SecurityGroups is a list of security group IDs to assign to the port.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"adminStateUp": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"macAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"allowedAddressPairs": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AllowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair"),
+									},
+								},
+							},
+						},
+					},
+					"hostID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HostID specifies the ID of the host where the port resides.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"vnicType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "VNICType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"profile": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile"),
+						},
+					},
+					"disablePortSecurity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"propagateUplinkStatus": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"valueSpecs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"name", "description", "networkID"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -19837,8 +20201,35 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref co
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "PortOpts defines port parameters.",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"trunk": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Trunk specifies whether trunking is enabled at the port level. If not provided the value is inherited from the machine, or false for a bastion host.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"subports": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Subports is a list of port specifications that will be created as subports of the trunk.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubportOpts"),
+									},
+								},
+							},
+						},
+					},
 					"network": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
@@ -19915,13 +20306,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref co
 									},
 								},
 							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Trunk specifies whether trunking is enabled at the port level. If not provided the value is inherited from the machine, or false for a bastion host.",
-							Type:        []string{"boolean"},
-							Format:      "",
 						},
 					},
 					"adminStateUp": {
@@ -20012,7 +20396,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref co
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubportOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
 	}
 }
 
@@ -20030,10 +20414,26 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref 
 							Format:      "",
 						},
 					},
+					"subports": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Subports is the list of port IDs which intended to be trunk sub-ports",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubPortStatus"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"id"},
 			},
 		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubPortStatus"},
 	}
 }
 
@@ -20118,9 +20518,34 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpe
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ResolvedPortSpec is a PortOpts with all contained references fully resolved.",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"trunk": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Trunk specifies whether trunking is enabled at the port level.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"subports": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Subports is a list of resolved port specifications that will be created as subports of the trunk.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedSubportSpec"),
+									},
+								},
+							},
+						},
+					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Name is the name of the port.",
@@ -20163,13 +20588,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpe
 									},
 								},
 							},
-						},
-					},
-					"trunk": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Trunk specifies whether trunking is enabled at the port level.",
-							Type:        []string{"boolean"},
-							Format:      "",
 						},
 					},
 					"fixedIPs": {
@@ -20300,7 +20718,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpe
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedSubportSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
 	}
 }
 
@@ -20400,6 +20818,205 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedPortSpe
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedSubportSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ResolvedSubportSpec is a SubportOpts with all contained references fully resolved.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"segmentationID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SegmentationID is the segmentation ID of the subport. E.g. VLAN ID.",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"segmentationType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SegmentationType is the segmentation type of the subport. E.g. \"vlan\".",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the port.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description for the port.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"networkID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NetworkID is the ID of the network the port will be created in.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.)",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"fixedIPs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP"),
+									},
+								},
+							},
+						},
+					},
+					"securityGroups": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SecurityGroups is a list of security group IDs to assign to the port.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"adminStateUp": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"macAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"allowedAddressPairs": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AllowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair"),
+									},
+								},
+							},
+						},
+					},
+					"hostID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HostID specifies the ID of the host where the port resides.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"vnicType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "VNICType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"profile": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile"),
+						},
+					},
+					"disablePortSecurity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"propagateUplinkStatus": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"valueSpecs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"segmentationID", "segmentationType", "name", "description", "networkID"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
 	}
 }
 
@@ -21069,6 +21686,27 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ServerMetadata(
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubPortStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID is the unique identifier of the trunk sub-port.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"id"},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -21336,6 +21974,200 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref 
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AllocationPool"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubportOpts(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "SubportOpts defines a trunk subport.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"segmentationID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SegmentationID is the segmentation ID of the subport. E.g. VLAN ID.",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"segmentationType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SegmentationType is the segmentation type of the subport. E.g. \"vlan\".",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"network": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam"),
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description for the port.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"nameSuffix": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"fixedIPs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP"),
+									},
+								},
+							},
+						},
+					},
+					"securityGroups": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam"),
+									},
+								},
+							},
+						},
+					},
+					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.) These tags are applied in addition to the instance's tags, which will also be applied to the port.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"adminStateUp": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"macAddress": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"allowedAddressPairs": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AllowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair"),
+									},
+								},
+							},
+						},
+					},
+					"hostID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "HostID specifies the ID of the host where the port resides.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"vnicType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "VNICType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"profile": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile"),
+						},
+					},
+					"disablePortSecurity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"propagateUplinkStatus": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"valueSpecs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"segmentationID", "segmentationType"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.AddressPair", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec"},
 	}
 }
 
