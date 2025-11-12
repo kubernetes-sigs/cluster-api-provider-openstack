@@ -219,6 +219,7 @@ variables:
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CLUSTER_RESOURCE_SET: "true"
+  EXP_CAPO_PRIORITY_QUEUE: "false"
   IP_FAMILY: "ipv4"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.6.1-x86_64-disk"
   OPENSTACK_BASTION_IMAGE_URL: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
