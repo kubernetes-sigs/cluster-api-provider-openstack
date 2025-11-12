@@ -339,6 +339,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BindingProfile":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BindingProfile(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceStorage":                         schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceStorage(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceVolume":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolume(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ClusterInitialization":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ClusterInitialization(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FilterByNeutronTags":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP":                                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FixedIP(ref),
@@ -18054,6 +18055,26 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolu
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ClusterInitialization(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterInitialization represents the initialization status of the cluster.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"provisioned": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Provisioned is set to true when the initial provisioning of the cluster infrastructure is completed. The value of this field is never updated after provisioning is completed.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -19040,10 +19061,16 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 				Properties: map[string]spec.Schema{
 					"ready": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ready is true when the cluster infrastructure is ready.",
+							Description: "Ready is true when the cluster infrastructure is ready.\n\nDeprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to determine the ready state of the cluster.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
+						},
+					},
+					"initialization": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Initialization contains information about the initialization status of the cluster.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ClusterInitialization"),
 						},
 					},
 					"network": {
@@ -19111,16 +19138,30 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 					},
 					"failureReason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureReason will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a succinct value suitable for machine interpretation.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
+							Description: "FailureReason will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a succinct value suitable for machine interpretation.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.\n\nDeprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to report failures.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"failureMessage": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.",
+							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the OpenStackCluster and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the OpenStackCluster's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of OpenStackClusters can be added as events to the OpenStackCluster object and/or logged in the controller's output.\n\nDeprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to report failures.",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions defines current service state of the OpenStackCluster. This field surfaces into Cluster's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster (both during initial provisioning and after the initial provisioning is completed).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/core/v1beta1.Condition"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -19128,7 +19169,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BastionStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupStatus", "sigs.k8s.io/cluster-api/api/core/v1beta1.FailureDomainSpec"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BastionStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ClusterInitialization", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Router", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SecurityGroupStatus", "sigs.k8s.io/cluster-api/api/core/v1beta1.Condition", "sigs.k8s.io/cluster-api/api/core/v1beta1.FailureDomainSpec"},
 	}
 }
 
