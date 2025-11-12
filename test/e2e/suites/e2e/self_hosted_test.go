@@ -30,6 +30,8 @@ import (
 
 var _ = Describe("When testing Cluster API provider Openstack working on [self-hosted] clusters", func() {
 	BeforeEach(func() {
+		// The self-hosted cluster does not have the CAPO image loaded like the kind cluster does,
+		// so we download it from E2E_IMAGE_URL.
 		setDownloadE2EImageEnvVar()
 	})
 

@@ -40,7 +40,6 @@ var (
 
 var _ = Describe("When testing clusterctl upgrades for CAPO (v0.11=>current) and ORC (v1.0.2=>current) [clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
-		setDownloadE2EImageEnvVar()
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
 		capoRelease011, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.11")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
@@ -75,7 +74,6 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.11=>current) and
 
 var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and ORC (v1.0.2=>current)[clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
-		setDownloadE2EImageEnvVar()
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
 		capoRelease012, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.12")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
@@ -110,7 +108,6 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 
 var _ = Describe("When testing clusterctl upgrades for CAPO (v0.13=>current) and ORC (v1.0.2=>current)[clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
-		setDownloadE2EImageEnvVar()
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
 		capoRelease013, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.13")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
