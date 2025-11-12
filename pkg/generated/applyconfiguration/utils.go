@@ -72,6 +72,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.BlockDeviceStorageApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("BlockDeviceVolume"):
 		return &apiv1beta1.BlockDeviceVolumeApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("ClusterInitialization"):
+		return &apiv1beta1.ClusterInitializationApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("ExternalRouterIPParam"):
 		return &apiv1beta1.ExternalRouterIPParamApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("FilterByNeutronTags"):
