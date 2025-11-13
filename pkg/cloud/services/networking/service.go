@@ -76,3 +76,19 @@ func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceT
 	record.Eventf(eventObject, "SuccessfulReplaceAllAttributeTags", "Replaced all attributestags for %s with tags %s", resourceID, tags)
 	return nil
 }
+
+// IsExtensionSupported checks whether a given extension is
+// supported on the openstack deployment.
+func (s *Service) IsExtensionSupported(extensionName string) (bool, error) {
+	allExts, err := s.client.ListExtensions()
+	if err != nil {
+		return false, fmt.Errorf("there was an issue verifying whether %s support is available, Please try again later: %v", extensionName, err)
+	}
+
+	for _, ext := range allExts {
+		if ext.Alias == extensionName {
+			return true, nil
+		}
+	}
+	return false, nil
+}

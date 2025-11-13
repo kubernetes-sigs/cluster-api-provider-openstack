@@ -3,9 +3,17 @@
   path: /spec/template/spec/ports
   value:
   - description: "primary"
+    qosPolicy:
+      id: "${QOS_POLICY_ID}"
   - description: "Extra Network 1"
     network:
       id: "${CLUSTER_EXTRA_NET_1}"
+    qosPolicy:
+      filter:
+        name: "${QOS_POLICY_NAME}"
   - description: "Extra Network 2"
     network:
       id: "${CLUSTER_EXTRA_NET_2}"
+    qosPolicy:
+      filter:
+        shared: true

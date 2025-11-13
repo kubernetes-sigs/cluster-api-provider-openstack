@@ -27,6 +27,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -37,6 +38,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/extensions"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
@@ -124,8 +126,8 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 	return nil, nil
 }
 
-// ensurePortTagsAndTrunk ensures that the provided port has the tags and trunk defined in portSpec.
-func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
+// ensurePortProperties ensures that the provided port has the tags and trunk defined in portSpec.
+func (s *Service) ensurePortProperties(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
 	wantedTags := uniqueSortedTags(portSpec.Tags)
 	actualTags := uniqueSortedTags(port.Tags)
 	// Only replace tags if there is a difference
@@ -147,6 +149,27 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 				record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
 				return err
 			}
+		}
+	}
+	if portSpec.QoSPolicyID != nil {
+		qosSupported, err := s.IsExtensionSupported(extensions.QoSExtensionName)
+		if err != nil {
+			return err
+		}
+
+		if !qosSupported {
+			return fmt.Errorf("there is no qos support. please ensure that the qos neutron extension is enabled in your OpenStack deployment")
+		}
+		portWithQoS, err := s.client.GetPortWithQoS(port.ID)
+		if err != nil {
+			return err
+		}
+		if *portSpec.QoSPolicyID != portWithQoS.QoSPolicyID {
+			if err = s.updatePortQoSPolicy(portWithQoS.ID, *portSpec.QoSPolicyID); err != nil {
+				record.Warnf(eventObject, "FailedReplaceQoSPolicy", "Failed to replace qos policy for port%s: %v", portWithQoS.Name, err)
+				return err
+			}
+			record.Eventf(eventObject, "SuccessfulReplaceQoSPolicy", "Replaced qos policy for port %s with %s", portWithQoS.Name, portSpec.QoSPolicyID)
 		}
 	}
 	return nil
@@ -174,7 +197,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 
 	if len(existingPorts) == 1 {
 		port := &existingPorts[0]
-		if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+		if err = s.ensurePortProperties(port, eventObject, portSpec); err != nil {
 			return nil, err
 		}
 		return port, nil
@@ -240,6 +263,15 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		builder = portSecurityOpts
 	}
 
+	if portSpec.QoSPolicyID != nil {
+		qosPolicyID := *portSpec.QoSPolicyID
+		portQosOpts := policies.PortCreateOptsExt{
+			CreateOptsBuilder: builder,
+			QoSPolicyID:       qosPolicyID,
+		}
+		builder = portQosOpts
+	}
+
 	portsBindingOpts := portsbinding.CreateOptsExt{
 		CreateOptsBuilder: builder,
 		HostID:            ptr.Deref(portSpec.HostID, ""),
@@ -254,7 +286,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		return nil, err
 	}
 
-	if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+	if err = s.ensurePortProperties(port, eventObject, portSpec); err != nil {
 		return nil, err
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
@@ -433,13 +465,33 @@ func (s *Service) ConstructPorts(instancePorts []infrav1.PortOpts, instanceSecur
 		return false
 	}
 	if portUsesTrunk() {
-		trunkSupported, err := s.IsTrunkExtSupported()
+		trunkSupported, err := s.IsExtensionSupported(extensions.TrunkExtensionName)
 		if err != nil {
 			return nil, err
 		}
 
 		if !trunkSupported {
 			return nil, fmt.Errorf("there is no trunk support. please ensure that the trunk extension is enabled in your OpenStack deployment")
+		}
+	}
+
+	// qos support is required if any port has QoSPolicy set
+	portUsesQoSPolicy := func() bool {
+		for _, port := range resolvedPorts {
+			if port.QoSPolicyID != nil {
+				return true
+			}
+		}
+		return false
+	}
+	if portUsesQoSPolicy() {
+		qosSupported, err := s.IsExtensionSupported(extensions.QoSExtensionName)
+		if err != nil {
+			return nil, err
+		}
+
+		if !qosSupported {
+			return nil, fmt.Errorf("there is no qos support. please ensure that the qos neutron extension is enabled in your OpenStack deployment")
 		}
 	}
 
@@ -485,6 +537,15 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 		normalizedPort.NetworkID, normalizedPort.FixedIPs, err = s.normalizePortTarget(port, defaultNetwork, i)
 		if err != nil {
 			return nil, err
+		}
+
+		// Resolve QoS Policy ID
+		if port.QoSPolicy != nil {
+			policyID, err := s.GetQoSPolicyIDByParam(port.QoSPolicy)
+			if err != nil {
+				return nil, err
+			}
+			normalizedPort.QoSPolicyID = &policyID
 		}
 
 		// Resolve security groups when port security is not disabled
@@ -595,18 +656,6 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 	return networkID, resolvedFixedIPs, nil
 }
 
-// IsTrunkExtSupported verifies trunk setup on the OpenStack deployment.
-func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
-	trunkSupport, err := s.GetTrunkSupport()
-	if err != nil {
-		return false, fmt.Errorf("there was an issue verifying whether trunk support is available, Please try again later: %v", err)
-	}
-	if !trunkSupport {
-		return false, nil
-	}
-	return true, nil
-}
-
 // AdoptPortsServer looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
 // A port matches if it has the same name and network ID as the desired port.
 // TODO(emilien): remove this function: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/2071
@@ -653,6 +702,16 @@ func (s *Service) AdoptPortsServer(scope *scope.WithLogger, desiredPorts []infra
 	}
 
 	return nil
+}
+
+// updatePortQoSPolicy updates the QoSPolicy of a port.
+func (s *Service) updatePortQoSPolicy(portID string, qosPolicyID string) error {
+	updateOpts := policies.PortUpdateOptsExt{
+		UpdateOptsBuilder: ports.UpdateOpts{},
+		QoSPolicyID:       &qosPolicyID,
+	}
+	_, err := s.client.UpdatePort(portID, updateOpts)
+	return err
 }
 
 // uniqueSortedTags returns a new, sorted slice where any duplicates have been removed.
