@@ -45,6 +45,7 @@ import (
 const (
 	retryIntervalInstanceStatus = 10 * time.Second
 	timeoutInstanceCreate       = 5
+	timeoutInstanceStop         = 5 * time.Minute
 	timeoutInstanceDelete       = 5 * time.Minute
 )
 
@@ -558,6 +559,37 @@ func (s *Service) deleteVolume(instanceName string, nameSuffix string) error {
 
 	s.scope.Logger().V(2).Info("Deleting dangling volume", "name", volume.Name, "ID", volume.ID)
 	return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
+}
+
+func (s *Service) StopInstance(eventObject runtime.Object, instanceStatus *InstanceStatus) error {
+	instance := instanceStatus.InstanceIdentifier()
+	err := s.getComputeClient().StopServer(instance.ID)
+	if err != nil {
+		if capoerrors.IsNotFound(err) {
+			record.Eventf(eventObject, "SuccessfulStopServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
+			return nil
+		}
+		record.Warnf(eventObject, "FailedStopServer", "Failed to stop server %s with id %s: %v", instance.Name, instance.ID, err)
+		return err
+	}
+	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalInstanceStatus, timeoutInstanceStop, true, func(_ context.Context) (bool, error) {
+		i, err := s.GetInstanceStatus(instance.ID)
+		if err != nil {
+			return false, err
+		}
+		// a little bit noisy, but since the code is new, I guess this is a little bit easier for debugging purposes
+		record.Eventf(eventObject, "Server State", "server %s with id %s has state %v", instance.Name, instance.ID, i.State())
+		if i.State() == infrav1.InstanceStateShutoff {
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		record.Warnf(eventObject, "FailedStopServer", "Failed to stop server %s with id %s: %v", instance.Name, instance.ID, err)
+		return err
+	}
+	record.Eventf(eventObject, "SuccessfulStopServer", "Stopped server %s with id %s", instance.Name, instance.ID)
+	return nil
 }
 
 func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus, err error) {
