@@ -491,10 +491,15 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 		if err != nil {
 			return false, err
 		}
-		if i != nil {
-			return false, nil
+		// Server not found means it has been permanently deleted
+		if i == nil {
+			return true, nil
 		}
-		return true, nil
+		// Server in SOFT_DELETED or DELETED state means deletion succeeded. This respects OpenStack's soft delete policy.
+		if i.State() == infrav1.InstanceStateSoftDeleted || i.State() == infrav1.InstanceStateDeleted {
+			return true, nil
+		}
+		return false, nil
 	})
 	if err != nil {
 		record.Warnf(eventObject, "FailedDeleteServer", "Failed to delete server %s with id %s: %v", instance.Name, instance.ID, err)
