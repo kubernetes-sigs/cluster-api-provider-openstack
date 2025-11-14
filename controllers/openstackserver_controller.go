@@ -257,6 +257,14 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 			return fmt.Errorf("delete volumes: %w", err)
 		}
 	} else {
+		// Try to stop the VM, if active before deletion
+		if instanceStatus.State() == infrav1.InstanceStateActive {
+			if err := computeService.StopInstance(openStackServer, instanceStatus); err != nil {
+				v1beta1conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceStopFailedReason, clusterv1beta1.ConditionSeverityError, "Stopping instance failed: %v", err)
+				return fmt.Errorf("stop instance: %w", err)
+			}
+		}
+
 		if err := computeService.DeleteInstance(openStackServer, instanceStatus); err != nil {
 			v1beta1conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceDeleteFailedReason, clusterv1beta1.ConditionSeverityError, "Deleting instance failed: %v", err)
 			return fmt.Errorf("delete instance: %w", err)
