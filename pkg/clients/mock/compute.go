@@ -118,6 +118,20 @@ func (mr *MockComputeClientMockRecorder) GetConsoleOutput(serverID any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConsoleOutput", reflect.TypeOf((*MockComputeClient)(nil).GetConsoleOutput), serverID)
 }
 
+// DeleteServer mocks base method.
+func (m *MockComputeClient) StopServer(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StopServer", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteServer indicates an expected call of DeleteServer.
+func (mr *MockComputeClientMockRecorder) StopServer(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), arg0)
+}
+
 // GetServer mocks base method.
 func (m *MockComputeClient) GetServer(serverID string) (*servers.Server, error) {
 	m.ctrl.T.Helper()

@@ -61,6 +61,7 @@ type ComputeClient interface {
 	ListFlavors() ([]flavors.Flavor, error)
 	CreateServer(createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error)
 	DeleteServer(serverID string) error
+	StopServer(serverID string) error
 	GetServer(serverID string) (*servers.Server, error)
 	ListServers(listOpts servers.ListOptsBuilder) ([]servers.Server, error)
 
@@ -138,6 +139,12 @@ func (c computeClient) CreateServer(createOpts servers.CreateOptsBuilder, schedu
 func (c computeClient) DeleteServer(serverID string) error {
 	mc := metrics.NewMetricPrometheusContext("server", "delete")
 	err := servers.Delete(context.TODO(), c.client, serverID).ExtractErr()
+	return mc.ObserveRequestIgnoreNotFound(err)
+}
+
+func (c computeClient) StopServer(serverID string) error {
+	mc := metrics.NewMetricPrometheusContext("server", "stop")
+	err := servers.Stop(context.TODO(), c.client, serverID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFound(err)
 }
 
@@ -227,6 +234,10 @@ func (e computeErrorClient) CreateServer(_ servers.CreateOptsBuilder, _ servers.
 }
 
 func (e computeErrorClient) DeleteServer(_ string) error {
+	return e.error
+}
+
+func (e computeErrorClient) StopServer(_ string) error {
 	return e.error
 }
 
