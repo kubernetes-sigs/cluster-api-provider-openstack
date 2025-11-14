@@ -26,6 +26,7 @@ import (
 
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
+	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
@@ -1016,6 +1017,104 @@ func TestService_ReconcileInstance(t *testing.T) {
 			_, err = s.createInstanceImpl(&infrav1.OpenStackMachine{}, tt.getInstanceSpec(), time.Nanosecond, portUUIDs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestService_DeleteInstance(t *testing.T) {
+	const (
+		serverID   = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
+		serverName = "test-server"
+	)
+
+	tests := []struct {
+		name    string
+		expect  func(m *mock.MockComputeClientMockRecorder)
+		wantErr bool
+	}{
+		{
+			name: "Server not found after delete",
+			expect: func(m *mock.MockComputeClientMockRecorder) {
+				m.DeleteServer(serverID).Return(nil)
+				m.GetServer(serverID).Return(nil, &gophercloud.ErrResourceNotFound{})
+			},
+			wantErr: false,
+		},
+		{
+			name: "Server in SOFT_DELETED state",
+			expect: func(m *mock.MockComputeClientMockRecorder) {
+				m.DeleteServer(serverID).Return(nil)
+				m.GetServer(serverID).Return(&servers.Server{
+					ID:     serverID,
+					Name:   serverName,
+					Status: "SOFT_DELETED",
+				}, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Server in DELETED state",
+			expect: func(m *mock.MockComputeClientMockRecorder) {
+				m.DeleteServer(serverID).Return(nil)
+				m.GetServer(serverID).Return(&servers.Server{
+					ID:     serverID,
+					Name:   serverName,
+					Status: "DELETED",
+				}, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "Delete API returns not found",
+			expect: func(m *mock.MockComputeClientMockRecorder) {
+				m.DeleteServer(serverID).Return(&gophercloud.ErrResourceNotFound{})
+			},
+			wantErr: false,
+		},
+		{
+			name: "Delete API returns error",
+			expect: func(m *mock.MockComputeClientMockRecorder) {
+				m.DeleteServer(serverID).Return(errors.New("API error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "GetServer returns error",
+			expect: func(m *mock.MockComputeClientMockRecorder) {
+				m.DeleteServer(serverID).Return(nil)
+				m.GetServer(serverID).Return(nil, errors.New("API error"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+			tt.expect(mockScopeFactory.ComputeClient.EXPECT())
+
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+			if err != nil {
+				t.Fatalf("Failed to create service: %v", err)
+			}
+
+			instanceStatus := &InstanceStatus{
+				server: &servers.Server{
+					ID:   serverID,
+					Name: serverName,
+				},
+				logger: log,
+			}
+
+			eventObject := &infrav1.OpenStackMachine{}
+			err = s.DeleteInstance(eventObject, instanceStatus)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 		})
