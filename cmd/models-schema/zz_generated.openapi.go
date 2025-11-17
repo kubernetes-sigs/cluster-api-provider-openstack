@@ -346,6 +346,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter":                                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageParam":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.LoadBalancer":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineInitialization":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineInitialization(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineResources(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ManagedSecurityGroups(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkFilter":                              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkFilter(ref),
@@ -18375,6 +18376,26 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_LoadBalancer(re
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineInitialization(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MachineInitialization contains information about the initialization status of the machine.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"provisioned": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Provisioned is set to true when the initial provisioning of the machine infrastructure is completed. The value of this field is never updated after provisioning is completed.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_MachineResources(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -19659,10 +19680,16 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 				Properties: map[string]spec.Schema{
 					"ready": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ready is true when the provider resource is ready.",
+							Description: "Ready is true when the provider resource is ready.\n\nDeprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to determine the ready state of the machine.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
+						},
+					},
+					"initialization": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Initialization contains information about the initialization status of the machine.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineInitialization"),
 						},
 					},
 					"instanceID": {
@@ -19707,20 +19734,22 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 					},
 					"failureReason": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "FailureReason explains the reson behind a failure.\n\nDeprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to report failures.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"failureMessage": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.",
+							Description: "FailureMessage will be set in the event that there is a terminal problem reconciling the Machine and will contain a more verbose string suitable for logging and human consumption.\n\nThis field should not be set for transitive errors that a controller faces that are expected to be fixed automatically over time (like service outages), but instead indicate that something is fundamentally wrong with the Machine's spec or the configuration of the controller, and that manual intervention is required. Examples of terminal errors would be invalid combinations of settings in the spec, values that are unsupported by the controller, or the responsible controller itself being critically misconfigured.\n\nAny transient errors that occur during the reconciliation of Machines can be added as events to the Machine object and/or logged in the controller's output.\n\nDeprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to report failures.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "Conditions defines current service state of the OpenStackMachine. This field surfaces into Machine's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine (both during initial provisioning and after the initial provisioning is completed).",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -19735,7 +19764,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec", "sigs.k8s.io/cluster-api/api/core/v1beta1.Condition"},
+			"k8s.io/api/core/v1.NodeAddress", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineInitialization", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.MachineResources", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedMachineSpec", "sigs.k8s.io/cluster-api/api/core/v1beta1.Condition"},
 	}
 }
 

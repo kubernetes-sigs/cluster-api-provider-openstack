@@ -86,6 +86,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.ImageParamApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("LoadBalancer"):
 		return &apiv1beta1.LoadBalancerApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MachineInitialization"):
+		return &apiv1beta1.MachineInitializationApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MachineResources"):
 		return &apiv1beta1.MachineResourcesApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("ManagedSecurityGroups"):

@@ -382,6 +382,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	if instanceStatus == nil {
 		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1beta1.ConditionSeverityError, infrav1.ServerUnexpectedDeletedMessage)
+		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceDeletedReason, clusterv1beta1.ConditionSeverityError, infrav1.ServerUnexpectedDeletedMessage)
 		openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, errors.New(infrav1.ServerUnexpectedDeletedMessage)) //nolint:staticcheck // This error is not used as an error
 		return ctrl.Result{}, nil
 	}
@@ -437,6 +438,22 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 		openStackMachine.Spec.ProviderID = ptr.To(fmt.Sprintf("openstack://%s/%s", region, *openStackServer.Status.InstanceID))
 		openStackMachine.Status.InstanceID = openStackServer.Status.InstanceID
 		openStackMachine.Status.Ready = true
+
+		// Set initialization.provisioned to true when initial infrastructure provisioning is complete.
+		// This field should only be set once and never changed afterward, as per CAPI v1beta2 contract.
+		// We set it here when the machine becomes ACTIVE for the first time.
+		if openStackMachine.Status.Initialization == nil {
+			openStackMachine.Status.Initialization = &infrav1.MachineInitialization{}
+		}
+		if !openStackMachine.Status.Initialization.Provisioned {
+			openStackMachine.Status.Initialization.Provisioned = true
+			scope.Logger().Info("Initial machine infrastructure provisioning completed")
+		}
+
+		// Set the Ready condition to True when infrastructure is ready.
+		// This condition surfaces into Machine's status.conditions[InfrastructureReady].
+		// It reflects the current operational state of the machine infrastructure.
+		v1beta1conditions.MarkTrue(openStackMachine, clusterv1beta1.ReadyCondition)
 	case infrav1.InstanceStateError:
 		// If the machine has a NodeRef then it must have been working at some point,
 		// so the error could be something temporary.
@@ -447,20 +464,24 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 			openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, err)
 		}
 		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "")
+		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "Instance is in ERROR state")
 		return &ctrl.Result{}
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
 		scope.Logger().Info("Machine instance state is DELETED, no actions")
 		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceDeletedReason, clusterv1beta1.ConditionSeverityError, "")
+		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceDeletedReason, clusterv1beta1.ConditionSeverityError, "Instance has been deleted")
 		return &ctrl.Result{}
 	case infrav1.InstanceStateBuild, infrav1.InstanceStateUndefined:
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", openStackServer.Status.InstanceID, "status", openStackServer.Status.InstanceState)
+		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceNotReadyReason, clusterv1beta1.ConditionSeverityInfo, "Instance is building")
 		return &ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}
 	default:
 		// The other state is normal (for example, migrating, shutoff) but we don't want to proceed until it's ACTIVE
 		// due to potential conflict or unexpected actions
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", openStackServer.Status.InstanceID, "status", openStackServer.Status.InstanceState)
 		v1beta1conditions.MarkUnknown(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is not handled: %v", ptr.Deref(openStackServer.Status.InstanceState, infrav1.InstanceStateUndefined))
+		v1beta1conditions.MarkUnknown(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceNotReadyReason, "Instance state is: %v", ptr.Deref(openStackServer.Status.InstanceState, infrav1.InstanceStateUndefined))
 
 		return &ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}
 	}

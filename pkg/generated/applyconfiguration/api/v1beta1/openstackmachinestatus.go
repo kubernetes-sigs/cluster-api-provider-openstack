@@ -29,6 +29,7 @@ import (
 // with apply.
 type OpenStackMachineStatusApplyConfiguration struct {
 	Ready          *bool                                    `json:"ready,omitempty"`
+	Initialization *MachineInitializationApplyConfiguration `json:"initialization,omitempty"`
 	InstanceID     *string                                  `json:"instanceID,omitempty"`
 	Addresses      []v1.NodeAddress                         `json:"addresses,omitempty"`
 	InstanceState  *apiv1beta1.InstanceState                `json:"instanceState,omitempty"`
@@ -50,6 +51,14 @@ func OpenStackMachineStatus() *OpenStackMachineStatusApplyConfiguration {
 // If called multiple times, the Ready field is set to the value of the last call.
 func (b *OpenStackMachineStatusApplyConfiguration) WithReady(value bool) *OpenStackMachineStatusApplyConfiguration {
 	b.Ready = &value
+	return b
+}
+
+// WithInitialization sets the Initialization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Initialization field is set to the value of the last call.
+func (b *OpenStackMachineStatusApplyConfiguration) WithInitialization(value *MachineInitializationApplyConfiguration) *OpenStackMachineStatusApplyConfiguration {
+	b.Initialization = value
 	return b
 }
 
