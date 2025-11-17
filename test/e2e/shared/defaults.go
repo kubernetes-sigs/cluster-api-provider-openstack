@@ -37,6 +37,7 @@ import (
 const (
 	DefaultSSHKeyPairName      = "cluster-api-provider-openstack-sigs-k8s-io"
 	KubeContext                = "KUBE_CONTEXT"
+	KubernetesKindVersion      = "KUBERNETES_KIND_VERSION"
 	KubernetesVersion          = "KUBERNETES_VERSION"
 	CCMPath                    = "CCM"
 	CCMResources               = "CCM_RESOURCES"
