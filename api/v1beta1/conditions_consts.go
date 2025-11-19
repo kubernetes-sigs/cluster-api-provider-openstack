@@ -68,6 +68,8 @@ const (
 	FloatingAddressFromPoolErrorReason = "FloatingIPError"
 	// UnableToFindFloatingIPNetworkReason is used when the floating ip network is not found.
 	UnableToFindFloatingIPNetworkReason = "UnableToFindFloatingIPNetwork"
+	// PortCreateFailedReason used when creating a port failed.
+	PortCreateFailedReason = "PortCreateFailed"
 )
 
 const (
