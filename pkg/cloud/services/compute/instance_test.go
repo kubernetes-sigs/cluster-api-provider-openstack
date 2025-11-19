@@ -1032,13 +1032,12 @@ func TestService_DeleteInstance(t *testing.T) {
 						Alias: "trunk",
 					},
 				}}, nil)
-				r.compute.DeleteAttachedInterface(instanceUUID, portUUID).Return(nil)
+				r.compute.DeleteServer(instanceUUID).Return(nil)
+				r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
+
 				// FIXME: Why we are looking for a trunk when we know the port is not trunked?
 				r.network.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{}, nil)
 				r.network.DeletePort(portUUID).Return(nil)
-
-				r.compute.DeleteServer(instanceUUID).Return(nil)
-				r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrDefault404{})
 			},
 			wantErr: false,
 		},
