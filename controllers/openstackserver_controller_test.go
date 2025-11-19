@@ -106,6 +106,17 @@ var createDefaultPort = func(r *recorders) {
 	}, nil)
 }
 
+var createDefaultPortFails = func(r *recorders) {
+	createOpts := ports.CreateOpts{
+		Name:      openStackServerName + "-0",
+		NetworkID: networkUUID,
+	}
+	portsBuilder := portsbinding.CreateOptsExt{
+		CreateOptsBuilder: createOpts,
+	}
+	r.network.CreatePort(portsBuilder).Return(nil, fmt.Errorf("Error creating port"))
+}
+
 var createDefaultServer = func(r *recorders) {
 	// Mock any server creation
 	r.compute.CreateServer(gomock.Any(), gomock.Any()).Return(&servers.Server{ID: instanceUUID}, nil)
@@ -659,9 +670,11 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 
 func Test_OpenStackServerReconcileCreate(t *testing.T) {
 	tests := []struct {
-		name     string
-		osServer infrav1alpha1.OpenStackServer
-		expect   func(r *recorders)
+		name          string
+		osServer      infrav1alpha1.OpenStackServer
+		expect        func(r *recorders)
+		wantErr       error
+		wantCondition *clusterv1beta1.Condition
 	}{
 		{
 			name: "Minimal server spec creating port and server",
@@ -709,6 +722,36 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 				listDefaultServerFound(r)
 			},
 		},
+		{
+			name: "Port created with error",
+			osServer: infrav1alpha1.OpenStackServer{
+				Spec: infrav1alpha1.OpenStackServerSpec{
+					Flavor: ptr.To(defaultFlavor),
+					Image:  defaultImage,
+					Ports:  defaultPortOpts,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
+					},
+				},
+			},
+			expect: func(r *recorders) {
+				listDefaultPortsNotFound(r)
+				listDefaultPortsNotFound(r)
+				createDefaultPortFails(r)
+			},
+			wantErr: fmt.Errorf("creating ports: %w", fmt.Errorf("Error creating port")),
+			wantCondition: &clusterv1beta1.Condition{
+				Type:     infrav1.InstanceReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityError,
+				Reason:   infrav1.PortCreateFailedReason,
+				Message:  "Error creating port",
+			},
+		},
 	}
 	for i := range tests {
 		tt := &tests[i]
@@ -736,7 +779,29 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			osServer.Finalizers = []string{infrav1alpha1.OpenStackServerFinalizer}
 
 			_, err := reconciler.reconcileNormal(ctx, scopeWithLogger, &tt.osServer)
-			g.Expect(err).ToNot(HaveOccurred())
+
+			// Check error result
+			if tt.wantErr != nil {
+				g.Expect(err).To(Equal(tt.wantErr))
+			} else {
+				g.Expect(err).NotTo(HaveOccurred())
+			}
+
+			// Check the condition is set correctly
+			if tt.wantCondition != nil {
+				// print openstackServer conditions
+				for _, condition := range tt.osServer.Status.Conditions {
+					t.Logf("Condition: %s, Status: %s, Reason: %s", condition.Type, condition.Status, condition.Reason)
+				}
+				unstructuredServer, err := tt.osServer.ToUnstructured()
+				g.Expect(err).ToNot(HaveOccurred())
+				conditionType, err := conditions.UnstructuredGet(unstructuredServer, string(tt.wantCondition.Type))
+				g.Expect(err).ToNot(HaveOccurred())
+				g.Expect(conditionType).ToNot(BeNil())
+				g.Expect(string(conditionType.Status)).To(Equal(string(tt.wantCondition.Status)))
+				g.Expect(conditionType.Reason).To(Equal(tt.wantCondition.Reason))
+				g.Expect(conditionType.Message).To(Equal(tt.wantCondition.Message))
+			}
 		})
 	}
 }
