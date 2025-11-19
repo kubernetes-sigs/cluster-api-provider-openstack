@@ -65,8 +65,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		})
 	}
 
-	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate)
-	instanceCreateTimeout *= time.Minute
+	instanceCreateTimeout := getTimeout("CLUSTER_API_OPENSTACK_INSTANCE_CREATE_TIMEOUT", timeoutInstanceCreate, time.Minute)
 
 	// Don't set ImageRef on the server if we're booting from volume
 	var serverImageRef string
@@ -606,14 +605,14 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 	return nil, nil
 }
 
-func getTimeout(name string, timeout int) time.Duration {
+func getTimeout(name string, timeout int, unit time.Duration) time.Duration {
 	if v := os.Getenv(name); v != "" {
 		timeout, err := strconv.Atoi(v)
 		if err == nil {
-			return time.Duration(timeout)
+			return time.Duration(timeout) * unit
 		}
 	}
-	return time.Duration(timeout)
+	return time.Duration(timeout) * unit
 }
 
 // requiresTagging checks if the instanceSpec requires tagging,
