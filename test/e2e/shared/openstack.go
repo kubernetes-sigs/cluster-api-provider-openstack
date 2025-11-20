@@ -41,6 +41,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
@@ -64,6 +65,11 @@ import (
 type ServerExtWithIP struct {
 	servers.Server
 	ip string
+}
+
+type PortWithQoS struct {
+	ports.Port
+	policies.QoSPolicyExt
 }
 
 // ensureSSHKeyPair ensures A SSH key is present under the name.
@@ -1025,4 +1031,77 @@ func GetOpenStackServerConsoleLog(e2eCtx *E2EContext, id string) (string, error)
 		return "", fmt.Errorf("unable to create compute client: %w", err)
 	}
 	return computeClient.GetConsoleOutput(id)
+}
+
+// CreateOpenStackQoSPolicy creates a qos policy to be consumed by a nodes.
+func CreateOpenStackQoSPolicy(ctx context.Context, e2eCtx *E2EContext, policyName string) (*policies.Policy, error) {
+	providerClient, clientOpts, _, err := GetAdminProviderClient(e2eCtx)
+	if err != nil {
+		return nil, fmt.Errorf("error creating provider client: %s", err)
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating network client: %s", err)
+	}
+
+	createOpts := policies.CreateOpts{
+		Name:      policyName,
+		Shared:    true,
+		IsDefault: false,
+	}
+
+	policy, err := policies.Create(ctx, networkClient, createOpts).Extract()
+	if err != nil {
+		return nil, err
+	}
+
+	return policy, nil
+}
+
+// DeleteOpenStackQoSPolicy deletes a qos policy.
+func DeleteOpenStackQoSPolicy(ctx context.Context, e2eCtx *E2EContext, policyID string) error {
+	providerClient, clientOpts, _, err := GetAdminProviderClient(e2eCtx)
+	if err != nil {
+		return fmt.Errorf("error creating provider client: %s", err)
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return fmt.Errorf("error creating network client: %s", err)
+	}
+
+	err = policies.Delete(ctx, networkClient, policyID).ExtractErr()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetOpenStackPortWithQoSPolicy gets a neutron port with info about the qos policy.
+func GetOpenStackPortWithQoSPolicy(ctx context.Context, e2eCtx *E2EContext, portID string) (*PortWithQoS, error) {
+	providerClient, clientOpts, _, err := GetTenantProviderClient(e2eCtx)
+	if err != nil {
+		return nil, fmt.Errorf("error creating provider client: %s", err)
+	}
+
+	networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+		Region: clientOpts.RegionName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating network client: %s", err)
+	}
+
+	var port PortWithQoS
+	err = ports.Get(ctx, networkClient, portID).ExtractInto(&port)
+	if err != nil {
+		return nil, err
+	}
+
+	return &port, nil
 }

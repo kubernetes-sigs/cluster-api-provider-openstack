@@ -38,7 +38,7 @@
 
     # Neutron
     enable_plugin neutron https://github.com/openstack/neutron stable/${OPENSTACK_RELEASE}
-    ENABLED_SERVICES+=,q-svc,neutron-trunk,ovn-controller,ovs-vswitchd,ovn-northd,ovsdb-server,q-ovn-metadata-agent
+    ENABLED_SERVICES+=,q-svc,neutron-trunk,ovn-controller,ovs-vswitchd,ovn-northd,ovsdb-server,q-ovn-metadata-agent,q-qos
 
     DISABLED_SERVICES=q-agt,q-dhcp,q-l3,q-meta,q-metering
     PUBLIC_BRIDGE_MTU=${MTU}
@@ -197,6 +197,9 @@
     openstack quota set --secgroup-rules 1000 demo
     openstack quota set --secgroups 100 admin
     openstack quota set --secgroup-rules 1000 admin
+
+    # Validate qos extension is set
+    openstack extension list --network | grep qos
 - path: /root/devstack.sh
   permissions: "0755"
   content: |

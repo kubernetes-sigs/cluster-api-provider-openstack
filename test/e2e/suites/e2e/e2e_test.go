@@ -34,6 +34,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/loadbalancers"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
@@ -679,13 +680,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 		})
 	})
 
-	Describe("Workload cluster (multiple attached networks)", func() {
+	Describe("Workload cluster (multiple attached networks and qos policies)", func() {
 		var (
 			clusterName   string
 			configCluster clusterctl.ConfigClusterInput
 			md            []*clusterv1.MachineDeployment
 
 			extraNet1, extraNet2 *networks.Network
+			qosPolicy            *policies.Policy
 		)
 
 		BeforeEach(func(ctx context.Context) {
@@ -716,6 +718,19 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			os.Setenv("CLUSTER_EXTRA_NET_1", extraNet1.ID)
 			os.Setenv("CLUSTER_EXTRA_NET_2", extraNet2.ID)
 
+			shared.Logf("Creating qos policy")
+
+			qosPolicy, err = shared.CreateOpenStackQoSPolicy(ctx, e2eCtx, fmt.Sprintf("%s-qos-policy", namespace.Name))
+			Expect(err).NotTo(HaveOccurred())
+			postClusterCleanup = append(postClusterCleanup, func(ctx context.Context) {
+				shared.Logf("Deleting qos policy %s", qosPolicy.ID)
+				err := shared.DeleteOpenStackQoSPolicy(ctx, e2eCtx, qosPolicy.ID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			os.Setenv("QOS_POLICY_ID", qosPolicy.ID)
+			os.Setenv("QOS_POLICY_NAME", qosPolicy.Name)
+
 			shared.Logf("Creating a cluster")
 			clusterName = fmt.Sprintf("cluster-%s", namespace.Name)
 			configCluster = defaultConfigCluster(clusterName, namespace.Name)
@@ -726,7 +741,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			md = clusterResources.MachineDeployments
 		})
 
-		It("should attach all machines to multiple networks", func(ctx context.Context) {
+		It("should attach all machines to multiple networks and qos policy", func(ctx context.Context) {
 			workerMachines := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
 				Lister:            e2eCtx.Environment.BootstrapClusterProxy.GetClient(),
 				ClusterName:       clusterName,
@@ -754,6 +769,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				extraNet1.ID:                       "Extra Network 1",
 				extraNet2.ID:                       "Extra Network 2",
 			}
+
+			expectedPolicyID := qosPolicy.ID
 
 			for i := range allMachines {
 				machine := &allMachines[i]
@@ -785,6 +802,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 							Address: port.FixedIPs[k].IPAddress,
 						})
 					}
+				}
+
+				// all ports should have the same qos policy id
+				for j := range ports {
+					port := &ports[j]
+					qosPort, err := shared.GetOpenStackPortWithQoSPolicy(ctx, e2eCtx, port.ID)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(qosPort.QoSPolicyID).To(Equal(expectedPolicyID))
 				}
 
 				// All IP addresses on all ports should be reported in Addresses
