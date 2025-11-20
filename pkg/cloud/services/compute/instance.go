@@ -657,12 +657,13 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 		return err
 	}
 
-	// get and delete trunks
-	for _, port := range instanceInterfaces {
-		if err = s.deleteAttachInterface(eventObject, instanceStatus.InstanceIdentifier(), port.PortID); err != nil {
-			return err
-		}
+	// Delete the instance before ports, since openstack likely prevents the deletion of the primary NIC.
+	// Deleting the instance also automatically detach the interfaces.
+	if err := s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier()); err != nil {
+		return err
+	}
 
+	for _, port := range instanceInterfaces {
 		if trunkSupported {
 			if err = networkingService.DeleteTrunk(eventObject, port.PortID); err != nil {
 				return err
@@ -685,7 +686,7 @@ func (s *Service) DeleteInstance(openStackCluster *infrav1.OpenStackCluster, eve
 		}
 	}
 
-	return s.deleteInstance(eventObject, instanceStatus.InstanceIdentifier())
+	return nil
 }
 
 func (s *Service) deleteVolumes(instanceSpec *InstanceSpec) error {
@@ -737,26 +738,6 @@ func (s *Service) deletePorts(eventObject runtime.Object, nets []servers.Network
 			return err
 		}
 	}
-	return nil
-}
-
-func (s *Service) deleteAttachInterface(eventObject runtime.Object, instance *InstanceIdentifier, portID string) error {
-	err := s.getComputeClient().DeleteAttachedInterface(instance.ID, portID)
-	if err != nil {
-		if capoerrors.IsNotFound(err) {
-			record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Attach interface did not exist: instance %s, port %s", instance.ID, portID)
-			return nil
-		}
-		if capoerrors.IsConflict(err) {
-			// we don't want to block deletion because of Conflict
-			// due to instance must be paused/active/shutoff in order to detach interface
-			return nil
-		}
-		record.Warnf(eventObject, "FailedDeleteAttachInterface", "Failed to delete attach interface: instance %s, port %s: %v", instance.ID, portID, err)
-		return err
-	}
-
-	record.Eventf(eventObject, "SuccessfulDeleteAttachInterface", "Deleted attach interface: instance %s, port %s", instance.ID, portID)
 	return nil
 }
 
