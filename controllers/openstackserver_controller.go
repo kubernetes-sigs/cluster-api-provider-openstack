@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/annotations"
 	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,7 +51,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/v2/api/v1alpha1"
-	"github.com/k-orc/openstack-resource-controller/v2/pkg/predicates"
+	orcpredicates "github.com/k-orc/openstack-resource-controller/v2/pkg/predicates"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -78,6 +79,7 @@ type OpenStackServerReconciler struct {
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackservers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackservers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
 // +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddressclaims;ipaddressclaims/status,verbs=get;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddresses;ipaddresses/status,verbs=get;list;watch
 // +kubebuilder:rbac:groups=openstack.k-orc.cloud,resources=images,verbs=get;list;watch
@@ -218,7 +220,12 @@ func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ct
 				}
 				return requests
 			}),
-			builder.WithPredicates(predicates.NewBecameAvailable(mgr.GetLogger(), &orcv1alpha1.Image{})),
+			builder.WithPredicates(orcpredicates.NewBecameAvailable(mgr.GetLogger(), &orcv1alpha1.Image{})),
+		).
+		Watches(
+			&clusterv1.Cluster{},
+			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackServersForCluster(ctx)),
+			builder.WithPredicates(predicates.ClusterPausedTransitionsOrInfrastructureProvisioned(mgr.GetScheme(), log)),
 		).
 		Watches(
 			&ipamv1.IPAddressClaim{},
@@ -750,5 +757,52 @@ func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
 		},
 		DeleteFunc:  func(event.DeleteEvent) bool { return false },
 		GenericFunc: func(event.GenericEvent) bool { return false },
+	}
+}
+
+// requeueOpenStackServersForCluster returns a handler.MapFunc that watches for
+// Cluster changes and triggers reconciliation of all OpenStackServers in that cluster.
+func (r *OpenStackServerReconciler) requeueOpenStackServersForCluster(ctx context.Context) handler.MapFunc {
+	log := ctrl.LoggerFrom(ctx)
+	return func(ctx context.Context, o client.Object) []ctrl.Request {
+		c, ok := o.(*clusterv1.Cluster)
+		if !ok {
+			panic(fmt.Sprintf("Expected a Cluster but got a %T", o))
+		}
+
+		log := log.WithValues("objectMapper", "clusterToOpenStackServer", "namespace", c.Namespace, "cluster", c.Name)
+
+		// Don't handle deleted clusters
+		if !c.DeletionTimestamp.IsZero() {
+			log.V(4).Info("Cluster has a deletion timestamp, skipping mapping.")
+			return nil
+		}
+
+		// List all OpenStackServers in the cluster
+		serverList := &infrav1alpha1.OpenStackServerList{}
+		if err := r.Client.List(
+			ctx,
+			serverList,
+			client.InNamespace(c.Namespace),
+			client.MatchingLabels{clusterv1.ClusterNameLabel: c.Name},
+		); err != nil {
+			log.Error(err, "Failed to list OpenStackServers for cluster")
+			return nil
+		}
+
+		// Create reconcile requests for all servers
+		requests := make([]ctrl.Request, 0, len(serverList.Items))
+		for i := range serverList.Items {
+			server := &serverList.Items[i]
+			requests = append(requests, ctrl.Request{
+				NamespacedName: client.ObjectKey{
+					Namespace: server.Namespace,
+					Name:      server.Name,
+				},
+			})
+			log.V(5).Info("Queueing OpenStackServer for reconciliation", "server", server.Name)
+		}
+
+		return requests
 	}
 }
