@@ -215,11 +215,13 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			machine := defaultMachine()
 			machine.Spec.Ports = []infrav1.PortOpts{
 				{
-					SecurityGroups: []infrav1.SecurityGroupParam{{
-						Filter: &infrav1.SecurityGroupFilter{Name: "test-security-group"},
-					}},
-					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-						DisablePortSecurity: ptr.To(true),
+					CommonPortOpts: infrav1.CommonPortOpts{
+						SecurityGroups: []infrav1.SecurityGroupParam{{
+							Filter: &infrav1.SecurityGroupFilter{Name: "test-security-group"},
+						}},
+						ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+							DisablePortSecurity: ptr.To(true),
+						},
 					},
 				},
 			}

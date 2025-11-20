@@ -63,9 +63,30 @@ func (*openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime
 		}
 	}
 
-	for _, port := range newObj.Spec.Ports {
+	for i, port := range newObj.Spec.Ports {
+		portPath := field.NewPath("spec", "ports").Index(i)
+
 		if ptr.Deref(port.DisablePortSecurity, false) && len(port.SecurityGroups) > 0 {
-			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "ports"), "cannot have security groups when DisablePortSecurity is set to true"))
+			allErrs = append(allErrs, field.Forbidden(portPath, "cannot have security groups when DisablePortSecurity is set to true"))
+		}
+
+		// Validate subports
+		if len(port.Subports) > 0 {
+			if !ptr.Deref(port.Trunk, false) {
+				allErrs = append(allErrs, field.Forbidden(portPath.Child("subports"), "subports can only be specified when trunk is enabled"))
+			}
+
+			for j, subport := range port.Subports {
+				subportPath := portPath.Child("subports").Index(j)
+
+				if subport.SegmentationID == 0 {
+					allErrs = append(allErrs, field.Invalid(subportPath.Child("segmentationID"), subport.SegmentationID, "segmentationID must be greater than 0"))
+				}
+
+				if subport.SegmentationType == "" {
+					allErrs = append(allErrs, field.Required(subportPath.Child("segmentationType"), "segmentationType must be specified"))
+				}
+			}
 		}
 	}
 
