@@ -552,7 +552,7 @@ generate-release-notes: $(RELEASE_NOTES_DIR) $(RELEASE_NOTES)
 	fi
 	"$(RELEASE_NOTES)" --repository=kubernetes-sigs/cluster-api-provider-openstack \
 	  --prefix-area-label=false --add-kubernetes-version-support=false \
-	  --from=$(PREVIOUS_TAG) --release=$(RELEASE_TAG) >> $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md
+	  --from=tags/$(PREVIOUS_TAG) --release=$(RELEASE_TAG) >> $(RELEASE_NOTES_DIR)/$(RELEASE_TAG).md
 
 .PHONY: templates
 templates: ## Generate cluster templates
