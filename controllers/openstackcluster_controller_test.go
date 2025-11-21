@@ -22,7 +22,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	. "github.com/onsi/ginkgo/v2" //nolint:revive
@@ -35,6 +37,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util/annotations"
+	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -446,6 +449,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
+
+		// Verify conditions are set correctly
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("should allow two subnets for the cluster network", func() {
@@ -528,6 +536,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 		Expect(len(testCluster.Status.Network.Subnets)).To(Equal(2))
+
+		// Verify conditions are set correctly
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("should allow fetch network by subnet", func() {
@@ -574,6 +587,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
+
+		// Verify conditions are set correctly
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("reconcile pre-existing network components by id", func() {
@@ -634,6 +652,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
 		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(clusterSubnetID))
 		Expect(testCluster.Status.Router.ID).To(Equal(clusterRouterID))
+
+		// Verify conditions are set correctly
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
 	})
 
 	It("reconcile pre-existing network components by name", func() {
@@ -716,6 +738,462 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
 		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(clusterSubnetID))
 		Expect(testCluster.Status.Router.ID).To(Equal(clusterRouterID))
+
+		// Verify conditions are set correctly
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
+	})
+
+	It("should reconcile API endpoint with floating IP and set condition", func() {
+		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+		const floatingIP = "203.0.113.10"
+
+		testCluster.SetName("api-endpoint-floating-ip")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			ExternalNetwork: &infrav1.NetworkParam{
+				ID: ptr.To(externalNetworkID),
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			// When DisableAPIServerFloatingIP is not set and external network is configured,
+			// a floating IP should be created for the API server
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Fetch external network
+		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+			ID:   externalNetworkID,
+			Name: "external-network",
+		}, nil)
+
+		// Fetch cluster network
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
+		}, nil)
+
+		// Fetching cluster subnets
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:   clusterSubnetID,
+				Name: "cluster-subnet",
+				CIDR: "192.168.0.0/24",
+			},
+		}, nil)
+
+		// Mock floating IP creation for API server
+		// When no specific IP is requested, it will just create a new floating IP
+		networkClientRecorder.CreateFloatingIP(gomock.Any()).Return(&floatingips.FloatingIP{
+			FloatingIP: floatingIP,
+			ID:         "floating-ip-id",
+		}, nil)
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).To(BeNil())
+
+		// Verify API endpoint was set
+		Expect(testCluster.Spec.ControlPlaneEndpoint).ToNot(BeNil())
+		Expect(testCluster.Spec.ControlPlaneEndpoint.Host).To(Equal(floatingIP))
+		Expect(testCluster.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(6443)))
+
+		// Verify conditions are set correctly
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+	})
+
+	It("should reconcile API endpoint with fixed IP and set condition", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+		const fixedIP = "192.168.0.10"
+
+		testCluster.SetName("api-endpoint-fixed-ip")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			DisableExternalNetwork:     ptr.To(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To(fixedIP),
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Fetch cluster network
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
+		}, nil)
+
+		// Fetching cluster subnets
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:   clusterSubnetID,
+				Name: "cluster-subnet",
+				CIDR: "192.168.0.0/24",
+			},
+		}, nil)
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).To(BeNil())
+
+		// Verify API endpoint was set with fixed IP
+		Expect(testCluster.Spec.ControlPlaneEndpoint).ToNot(BeNil())
+		Expect(testCluster.Spec.ControlPlaneEndpoint.Host).To(Equal(fixedIP))
+		Expect(testCluster.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(6443)))
+
+		// Verify conditions are set correctly
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+	})
+
+	It("should set NetworkReadyCondition to False when network lookup fails", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+
+		testCluster.SetName("network-lookup-failure")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			DisableExternalNetwork:     ptr.To(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To("192.168.0.10"),
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Simulate network lookup failure
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(nil, fmt.Errorf("unable to get network"))
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+		Expect(err.Error()).To(ContainSubstring("error fetching cluster network"))
+
+		// Verify NetworkReadyCondition is set to False
+		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		condition := v1beta1conditions.Get(testCluster, infrav1.NetworkReadyCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackErrorReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to find network"))
+	})
+
+	It("should set NetworkReadyCondition to False when subnet lookup fails", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+
+		testCluster.SetName("subnet-lookup-failure")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			DisableExternalNetwork:     ptr.To(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To("192.168.0.10"),
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Network lookup succeeds
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
+		}, nil)
+
+		// Subnet list lookup fails
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return(nil, fmt.Errorf("failed to list subnets"))
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+
+		// Verify NetworkReadyCondition is set to False
+		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		condition := v1beta1conditions.Get(testCluster, infrav1.NetworkReadyCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackErrorReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+	})
+
+	It("should set RouterReadyCondition to False when router lookup fails", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+		const clusterRouterID = "a0e2b0a5-4d2f-4e8d-9a1c-6b3e7f8c9d0e"
+
+		testCluster.SetName("router-lookup-failure")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			Router: &infrav1.RouterParam{
+				ID: ptr.To(clusterRouterID),
+			},
+			DisableExternalNetwork:     ptr.To(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To("192.168.0.10"),
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Network lookup succeeds
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
+		}, nil)
+
+		// Subnet lookup succeeds
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:   clusterSubnetID,
+				Name: "cluster-subnet",
+				CIDR: "192.168.0.0/24",
+			},
+		}, nil)
+
+		// Router lookup fails
+		networkClientRecorder.GetRouter(clusterRouterID).Return(nil, fmt.Errorf("unable to get router"))
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+		Expect(err.Error()).To(ContainSubstring("error fetching cluster router"))
+
+		// Verify RouterReadyCondition is set to False
+		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
+		condition := v1beta1conditions.Get(testCluster, infrav1.RouterReadyCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackErrorReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to find router"))
+
+		// NetworkReadyCondition should still be True since network succeeded
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+	})
+
+	It("should set SecurityGroupsReadyCondition to False when security group reconciliation fails", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+
+		testCluster.SetName("security-group-failure")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			DisableExternalNetwork:     ptr.To(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To("192.168.0.10"),
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+					{
+						Direction: "ingress",
+						Protocol:  ptr.To("tcp"),
+						RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
+							"worker",
+						},
+					},
+				},
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Network lookup succeeds
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
+		}, nil)
+
+		// Subnet lookup succeeds
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:   clusterSubnetID,
+				Name: "cluster-subnet",
+				CIDR: "192.168.0.0/24",
+			},
+		}, nil)
+
+		// Security group creation fails - this will trigger an error in getOrCreateSecurityGroup
+		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil).AnyTimes()
+		networkClientRecorder.CreateSecGroup(gomock.Any()).Return(nil, fmt.Errorf("quota exceeded")).AnyTimes()
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+		Expect(err.Error()).To(ContainSubstring("failed to reconcile security groups"))
+
+		// Verify SecurityGroupsReadyCondition is set to False
+		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		condition := v1beta1conditions.Get(testCluster, infrav1.SecurityGroupsReadyCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.SecurityGroupReconcileFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to reconcile security groups"))
+
+		// NetworkReadyCondition should still be True since network succeeded
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+	})
+
+	It("should set APIEndpointReadyCondition to False when floating IP creation fails", func() {
+		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+
+		testCluster.SetName("floating-ip-failure")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			ExternalNetwork: &infrav1.NetworkParam{
+				ID: ptr.To(externalNetworkID),
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			// When DisableAPIServerFloatingIP is not set and external network is configured,
+			// a floating IP should be created for the API server
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Fetch external network
+		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+			ID:   externalNetworkID,
+			Name: "external-network",
+		}, nil)
+
+		// Fetch cluster network
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
+		}, nil)
+
+		// Fetching cluster subnets
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:   clusterSubnetID,
+				Name: "cluster-subnet",
+				CIDR: "192.168.0.0/24",
+			},
+		}, nil)
+
+		// Mock floating IP creation failure
+		networkClientRecorder.CreateFloatingIP(gomock.Any()).Return(nil, fmt.Errorf("quota exceeded"))
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+
+		// Verify APIEndpointReadyCondition is set to False
+		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+		condition := v1beta1conditions.Get(testCluster, infrav1.APIEndpointReadyCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.APIEndpointConfigFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to reconcile control plane endpoint"))
+
+		// NetworkReadyCondition and SecurityGroupsReadyCondition should still be True
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
 	})
 })
 

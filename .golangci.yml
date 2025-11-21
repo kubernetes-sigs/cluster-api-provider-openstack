@@ -186,6 +186,15 @@ linters:
       - linters:
           - staticcheck
         text: 'SA1019: "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions" is deprecated: This package is deprecated and is going to be removed when support for v1beta1 will be dropped. Please see https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20240916-improve-status-in-CAPI-resources.md for more details.'
+      - linters:
+          - staticcheck
+        text: 'SA1019: .*.Status.Ready is deprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to determine the ready state of the cluster.'
+      - linters:
+          - staticcheck
+        text: 'SA1019: .*.Status.FailureReason is deprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to report failures.'
+      - linters:
+          - staticcheck
+        text: 'SA1019: .*.Status.FailureMessage is deprecated: This field is deprecated and will be removed in a future API version. Use status.conditions to report failures.'
     paths:
       - zz_generated.*\.go$
       - third_party$
