@@ -27,6 +27,7 @@ import (
 // with apply.
 type OpenStackClusterStatusApplyConfiguration struct {
 	Ready                     *bool                                       `json:"ready,omitempty"`
+	Initialization            *ClusterInitializationApplyConfiguration    `json:"initialization,omitempty"`
 	Network                   *NetworkStatusWithSubnetsApplyConfiguration `json:"network,omitempty"`
 	ExternalNetwork           *NetworkStatusApplyConfiguration            `json:"externalNetwork,omitempty"`
 	Router                    *RouterApplyConfiguration                   `json:"router,omitempty"`
@@ -38,6 +39,7 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	Bastion                   *BastionStatusApplyConfiguration            `json:"bastion,omitempty"`
 	FailureReason             *errors.DeprecatedCAPIClusterStatusError    `json:"failureReason,omitempty"`
 	FailureMessage            *string                                     `json:"failureMessage,omitempty"`
+	Conditions                *corev1beta1.Conditions                     `json:"conditions,omitempty"`
 }
 
 // OpenStackClusterStatusApplyConfiguration constructs a declarative configuration of the OpenStackClusterStatus type for use with
@@ -51,6 +53,14 @@ func OpenStackClusterStatus() *OpenStackClusterStatusApplyConfiguration {
 // If called multiple times, the Ready field is set to the value of the last call.
 func (b *OpenStackClusterStatusApplyConfiguration) WithReady(value bool) *OpenStackClusterStatusApplyConfiguration {
 	b.Ready = &value
+	return b
+}
+
+// WithInitialization sets the Initialization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Initialization field is set to the value of the last call.
+func (b *OpenStackClusterStatusApplyConfiguration) WithInitialization(value *ClusterInitializationApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
+	b.Initialization = value
 	return b
 }
 
@@ -139,5 +149,13 @@ func (b *OpenStackClusterStatusApplyConfiguration) WithFailureReason(value error
 // If called multiple times, the FailureMessage field is set to the value of the last call.
 func (b *OpenStackClusterStatusApplyConfiguration) WithFailureMessage(value string) *OpenStackClusterStatusApplyConfiguration {
 	b.FailureMessage = &value
+	return b
+}
+
+// WithConditions sets the Conditions field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Conditions field is set to the value of the last call.
+func (b *OpenStackClusterStatusApplyConfiguration) WithConditions(value corev1beta1.Conditions) *OpenStackClusterStatusApplyConfiguration {
+	b.Conditions = &value
 	return b
 }
