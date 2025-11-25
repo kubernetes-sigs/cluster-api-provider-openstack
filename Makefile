@@ -452,7 +452,8 @@ staging-manifests:
 ifneq (,$(findstring -,$(RELEASE_TAG)))
     PRE_RELEASE=true
 endif
-PREVIOUS_TAG ?= $(shell git tag -l | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$$" | sort -V | grep -B1 $(RELEASE_TAG) | head -n 1 2>/dev/null)
+# List all tags, add the new tag to the list, sort and pick the previous one.
+PREVIOUS_TAG ?= $(shell (git tag -l | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$$"; echo "$(RELEASE_TAG)") | sort -V | grep -B1 "^$(RELEASE_TAG)$$" | grep -v "^$(RELEASE_TAG)$$" | head -n 1 2>/dev/null)
 ## set by Prow, ref name of the base branch, e.g., main
 RELEASE_DIR := out
 RELEASE_NOTES_DIR := releasenotes
