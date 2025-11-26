@@ -3,51 +3,51 @@ permissions: {}
 
 on:
   pull_request_target:
-    types: [opened, edited, reopened, synchronize, ready_for_review]
+    types: [ opened, edited, reopened, synchronize, ready_for_review ]
 
 jobs:
   check-title:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+    - name: Check out repository
+      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
 
-      - name: Validate PR Title
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          WIP_REGEX='^\W?WIP\W'
-          TAG_REGEX='^\[[[:alnum:]\._-]*\]'
+    - name: Validate PR Title
+      env:
+        PR_TITLE: ${{ github.event.pull_request.title }}
+      run: |
+        WIP_REGEX='^\W?WIP\W'
+        TAG_REGEX='^\[[[:alnum:]\._-]*\]'
 
-          # Trim WIP and tags from title
-          trimmed_title=$(echo "${PR_TITLE}" | sed -E "s/${WIP_REGEX}//" | sed -E "s/${TAG_REGEX}//" | xargs)
+        # Trim WIP and tags from title
+        trimmed_title=$(echo "${PR_TITLE}" | sed -E "s/${WIP_REGEX}//" | sed -E "s/${TAG_REGEX}//" | xargs)
 
-          # Normalize common emojis in text form to actual emojis
-          trimmed_title=$(echo "$trimmed_title" | sed -E "s/:warning:/⚠/g")
-          trimmed_title=$(echo "$trimmed_title" | sed -E "s/:sparkles:/✨/g")
-          trimmed_title=$(echo "$trimmed_title" | sed -E "s/:bug:/🐛/g")
-          trimmed_title=$(echo "$trimmed_title" | sed -E "s/:book:/📖/g")
-          trimmed_title=$(echo "$trimmed_title" | sed -E "s/:rocket:/🚀/g")
-          trimmed_title=$(echo "$trimmed_title" | sed -E "s/:seedling:/🌱/g")
+        # Normalize common emojis in text form to actual emojis
+        trimmed_title=$(echo "$trimmed_title" | sed -E "s/:warning:/⚠/g")
+        trimmed_title=$(echo "$trimmed_title" | sed -E "s/:sparkles:/✨/g")
+        trimmed_title=$(echo "$trimmed_title" | sed -E "s/:bug:/🐛/g")
+        trimmed_title=$(echo "$trimmed_title" | sed -E "s/:book:/📖/g")
+        trimmed_title=$(echo "$trimmed_title" | sed -E "s/:rocket:/🚀/g")
+        trimmed_title=$(echo "$trimmed_title" | sed -E "s/:seedling:/🌱/g")
 
-          # Check PR type prefix
-          if [[ "${trimmed_title}" =~ ^(⚠|✨|🐛|📖|🚀|🌱) ]]; then
-              echo "PR title is valid: $trimmed_title"
-          else
-              echo "Error: No matching PR type indicator found in title."
-              echo "You need to have one of these as the prefix of your PR title:"
-              echo "- Breaking change: ⚠ (:warning:)"
-              echo "- Non-breaking feature: ✨ (:sparkles:)"
-              echo "- Patch fix: 🐛 (:bug:)"
-              echo "- Docs: 📖 (:book:)"
-              echo "- Release: 🚀 (:rocket:)"
-              echo "- Infra/Tests/Other: 🌱 (:seedling:)"
-              exit 1
-          fi
+        # Check PR type prefix
+        if [[ "${trimmed_title}" =~ ^(⚠|✨|🐛|📖|🚀|🌱) ]]; then
+            echo "PR title is valid: $trimmed_title"
+        else
+            echo "Error: No matching PR type indicator found in title."
+            echo "You need to have one of these as the prefix of your PR title:"
+            echo "- Breaking change: ⚠ (:warning:)"
+            echo "- Non-breaking feature: ✨ (:sparkles:)"
+            echo "- Patch fix: 🐛 (:bug:)"
+            echo "- Docs: 📖 (:book:)"
+            echo "- Release: 🚀 (:rocket:)"
+            echo "- Infra/Tests/Other: 🌱 (:seedling:)"
+            exit 1
+        fi
 
-          # Check that PR title does not contain Issue or PR number
-          if [[ "${trimmed_title}" =~ \#[0-9]+ ]]; then
-              echo "Error: PR title should not contain issue or PR number."
-              echo "Issue numbers belong in the PR body as either \"Fixes #XYZ\" (if it closes the issue or PR), or something like \"Related to #XYZ\" (if it's just related)."
-              exit 1
-          fi
+        # Check that PR title does not contain Issue or PR number
+        if [[ "${trimmed_title}" =~ \#[0-9]+ ]]; then
+            echo "Error: PR title should not contain issue or PR number."
+            echo "Issue numbers belong in the PR body as either \"Fixes #XYZ\" (if it closes the issue or PR), or something like \"Related to #XYZ\" (if it's just related)."
+            exit 1
+        fi

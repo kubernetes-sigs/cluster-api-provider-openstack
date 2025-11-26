@@ -16,7 +16,7 @@
       volume:
         type: ${OPENSTACK_VOLUME_TYPE_ALT}
         availabilityZone:
-            name: ${OPENSTACK_FAILURE_DOMAIN}
+          name: ${OPENSTACK_FAILURE_DOMAIN}
   - name: etcd
     sizeGiB: 1
     storage:

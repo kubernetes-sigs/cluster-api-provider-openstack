@@ -17,6 +17,4 @@ jobs:
     - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
     - name: yaml-lint
-      uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c # v3.1.1
-      with:
-        config_file: .yamllint.yaml
+      run: yamllint -c .yamllint.yaml .
