@@ -4,11 +4,12 @@ name: PR dependabot code generation and go modules fix
 on:
   pull_request:
     branches:
-      - dependabot/**
+    - dependabot/**
   push:
     branches:
-      - dependabot/**
+    - dependabot/**
   workflow_dispatch:
+
 
 permissions:
   contents: write # Allow to update the PR.

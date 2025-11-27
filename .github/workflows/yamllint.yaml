@@ -1,0 +1,20 @@
+---
+name: yamllint
+on:
+  pull_request:
+    types: [ opened, edited, synchronize, reopened ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install yamllint
+      run: sudo apt-get update && sudo apt-get install -y yamllint
+
+    - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+    - name: yaml-lint
+      run: yamllint -c .yamllint.yaml .

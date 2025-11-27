@@ -17,38 +17,38 @@ spec:
         control-plane: capo-controller-manager
     spec:
       containers:
-        - command:
-            - /manager
-          args:
-            - "--leader-elect"
-            - "--v=2"
-            - "--diagnostics-address=127.0.0.1:8080"
-            - "--insecure-diagnostics=true"
-            - "--feature-gates=PriorityQueue=${EXP_CAPO_PRIORITY_QUEUE:=false}"
-          image: controller:latest
-          imagePullPolicy: Always
-          name: manager
-          ports:
-            - containerPort: 9440
-              name: healthz
-              protocol: TCP
-          readinessProbe:
-            httpGet:
-              path: /readyz
-              port: healthz
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: healthz
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            privileged: false
-            runAsUser: 65532
-            runAsGroup: 65532
-          terminationMessagePolicy: FallbackToLogsOnError
+      - command:
+        - /manager
+        args:
+        - "--leader-elect"
+        - "--v=2"
+        - "--diagnostics-address=127.0.0.1:8080"
+        - "--insecure-diagnostics=true"
+        - "--feature-gates=PriorityQueue=${EXP_CAPO_PRIORITY_QUEUE:=false}"
+        image: controller:latest
+        imagePullPolicy: Always
+        name: manager
+        ports:
+        - containerPort: 9440
+          name: healthz
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: healthz
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: healthz
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          runAsUser: 65532
+          runAsGroup: 65532
+        terminationMessagePolicy: FallbackToLogsOnError
       terminationGracePeriodSeconds: 10
       securityContext:
         runAsNonRoot: true
@@ -56,7 +56,7 @@ spec:
           type: RuntimeDefault
       serviceAccountName: manager
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
