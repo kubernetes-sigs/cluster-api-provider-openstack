@@ -40,6 +40,8 @@ type OpenStackMachineTemplatesGetter interface {
 type OpenStackMachineTemplateInterface interface {
 	Create(ctx context.Context, openStackMachineTemplate *apiv1beta1.OpenStackMachineTemplate, opts v1.CreateOptions) (*apiv1beta1.OpenStackMachineTemplate, error)
 	Update(ctx context.Context, openStackMachineTemplate *apiv1beta1.OpenStackMachineTemplate, opts v1.UpdateOptions) (*apiv1beta1.OpenStackMachineTemplate, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, openStackMachineTemplate *apiv1beta1.OpenStackMachineTemplate, opts v1.UpdateOptions) (*apiv1beta1.OpenStackMachineTemplate, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*apiv1beta1.OpenStackMachineTemplate, error)
@@ -47,6 +49,8 @@ type OpenStackMachineTemplateInterface interface {
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apiv1beta1.OpenStackMachineTemplate, err error)
 	Apply(ctx context.Context, openStackMachineTemplate *applyconfigurationapiv1beta1.OpenStackMachineTemplateApplyConfiguration, opts v1.ApplyOptions) (result *apiv1beta1.OpenStackMachineTemplate, err error)
+	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
+	ApplyStatus(ctx context.Context, openStackMachineTemplate *applyconfigurationapiv1beta1.OpenStackMachineTemplateApplyConfiguration, opts v1.ApplyOptions) (result *apiv1beta1.OpenStackMachineTemplate, err error)
 	OpenStackMachineTemplateExpansion
 }
 
