@@ -54,6 +54,9 @@ jobs:
           --root-dir "$(pwd)/"
           --fallback-extensions "md"
           --github-token "${GITHUB_TOKEN}"
+          --insecure
+          --exclude-all-private
+          --no-progress
           $(cat changed-files.txt | tr '\n' ' ')
 
     - name: Provide helpful failure message
