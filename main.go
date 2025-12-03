@@ -77,28 +77,29 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 
 	// flags.
-	managerOptions              = flags.ManagerOptions{}
-	enableLeaderElection        bool
-	leaderElectionLeaseDuration time.Duration
-	leaderElectionRenewDeadline time.Duration
-	leaderElectionRetryPeriod   time.Duration
-	watchNamespace              string
-	watchFilterValue            string
-	profilerAddress             string
-	openStackClusterConcurrency int
-	openStackMachineConcurrency int
-	syncPeriod                  time.Duration
-	restConfigQPS               float32
-	restConfigBurst             int
-	webhookPort                 int
-	webhookCertDir              string
-	healthAddr                  string
-	lbProvider                  string
-	caCertsPath                 string
-	showVersion                 bool
-	scopeCacheMaxSize           int
-	skipCRDMigrationPhases      []string
-	logOptions                  = logs.NewOptions()
+	managerOptions                      = flags.ManagerOptions{}
+	enableLeaderElection                bool
+	leaderElectionLeaseDuration         time.Duration
+	leaderElectionRenewDeadline         time.Duration
+	leaderElectionRetryPeriod           time.Duration
+	watchNamespace                      string
+	watchFilterValue                    string
+	profilerAddress                     string
+	openStackClusterConcurrency         int
+	openStackMachineConcurrency         int
+	openStackMachineTemplateConcurrency int
+	syncPeriod                          time.Duration
+	restConfigQPS                       float32
+	restConfigBurst                     int
+	webhookPort                         int
+	webhookCertDir                      string
+	healthAddr                          string
+	lbProvider                          string
+	caCertsPath                         string
+	showVersion                         bool
+	scopeCacheMaxSize                   int
+	skipCRDMigrationPhases              []string
+	logOptions                          = logs.NewOptions()
 )
 
 func init() {
@@ -147,6 +148,9 @@ func InitFlags(fs *pflag.FlagSet) {
 
 	fs.IntVar(&openStackMachineConcurrency, "openstackmachine-concurrency", 10,
 		"Number of OpenStackMachines to process simultaneously")
+
+	fs.IntVar(&openStackMachineTemplateConcurrency, "openstackmachinetemplate-concurrency", 10,
+		"Number of OpenStackMachineTemplates to process simultaneously")
 
 	fs.DurationVar(&syncPeriod, "sync-period", 10*time.Minute,
 		"The minimum interval at which watched resources are reconciled (e.g. 15m)")
@@ -395,6 +399,20 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServer")
 		os.Exit(1)
 	}
+
+	if feature.Gates.Enabled(feature.AutoScaleFromZero) {
+		if err := (&controllers.OpenStackMachineTemplateReconciler{
+			Client:           mgr.GetClient(),
+			Recorder:         mgr.GetEventRecorderFor("openstackmachinetemplate-controller"),
+			WatchFilterValue: watchFilterValue,
+			ScopeFactory:     scopeFactory,
+			CaCertificates:   caCerts,
+		}).SetupWithManager(ctx, mgr, concurrency(openStackMachineTemplateConcurrency)); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "OpenStackMachineTemplate")
+			os.Exit(1)
+		}
+	}
+
 }
 
 func setupWebhooks(mgr ctrl.Manager) {
