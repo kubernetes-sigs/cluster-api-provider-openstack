@@ -208,6 +208,20 @@ func (mr *MockComputeClientMockRecorder) ListServers(listOpts any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockComputeClient)(nil).ListServers), listOpts)
 }
 
+// StopServer mocks base method.
+func (m *MockComputeClient) StopServer(serverID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StopServer", serverID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StopServer indicates an expected call of StopServer.
+func (mr *MockComputeClientMockRecorder) StopServer(serverID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopServer", reflect.TypeOf((*MockComputeClient)(nil).StopServer), serverID)
+}
+
 // WithMicroversion mocks base method.
 func (m *MockComputeClient) WithMicroversion(required string) (clients.ComputeClient, error) {
 	m.ctrl.T.Helper()
