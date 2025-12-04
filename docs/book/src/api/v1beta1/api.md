@@ -1988,6 +1988,38 @@ subnet in the list is taken into account.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.MachineInitialization">MachineInitialization
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineStatus">OpenStackMachineStatus</a>)
+</p>
+<p>
+<p>MachineInitialization contains information about the initialization status of the machine.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>provisioned</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Provisioned is set to true when the initial provisioning of the machine infrastructure is completed.
+The value of this field is never updated after provisioning is completed.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.MachineResources">MachineResources
 </h3>
 <p>
@@ -3664,6 +3696,22 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Ready is true when the provider resource is ready.</p>
+<p>Deprecated: This field is deprecated and will be removed in a future API version.
+Use status.conditions to determine the ready state of the machine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>initialization</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.MachineInitialization">
+MachineInitialization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Initialization contains information about the initialization status of the machine.</p>
 </td>
 </tr>
 <tr>
@@ -3742,6 +3790,10 @@ sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors.DeprecatedCAPIMachin
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>FailureReason explains the reson behind a failure.</p>
+<p>Deprecated: This field is deprecated and will be removed in a future API version.
+Use status.conditions to report failures.</p>
 </td>
 </tr>
 <tr>
@@ -3767,6 +3819,8 @@ responsible controller itself being critically misconfigured.</p>
 <p>Any transient errors that occur during the reconciliation of Machines
 can be added as events to the Machine object and/or logged in the
 controller&rsquo;s output.</p>
+<p>Deprecated: This field is deprecated and will be removed in a future API version.
+Use status.conditions to report failures.</p>
 </td>
 </tr>
 <tr>
@@ -3777,6 +3831,11 @@ sigs.k8s.io/cluster-api/api/core/v1beta1.Conditions
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Conditions defines current service state of the OpenStackMachine.
+This field surfaces into Machine&rsquo;s status.conditions[InfrastructureReady] condition.
+The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
+(both during initial provisioning and after the initial provisioning is completed).</p>
 </td>
 </tr>
 </tbody>

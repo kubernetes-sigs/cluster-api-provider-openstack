@@ -681,6 +681,12 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.MachineInitialization
+  map:
+    fields:
+    - name: provisioned
+      type:
+        scalar: boolean
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.MachineResources
   map:
     fields:
@@ -1129,6 +1135,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: failureReason
       type:
         scalar: string
+    - name: initialization
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.MachineInitialization
     - name: instanceID
       type:
         scalar: string
