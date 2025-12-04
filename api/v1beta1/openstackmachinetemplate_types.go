@@ -50,6 +50,7 @@ type NodeInfo struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:storageversion
 // +kubebuilder:resource:path=openstackmachinetemplates,scope=Namespaced,categories=cluster-api,shortName=osmt
+// +kubebuilder:subresource:status
 
 // OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.
 type OpenStackMachineTemplate struct {
@@ -71,4 +72,12 @@ type OpenStackMachineTemplateList struct {
 
 func init() {
 	objectTypes = append(objectTypes, &OpenStackMachineTemplate{}, &OpenStackMachineTemplateList{})
+}
+
+// GetIdentifyRef returns the object's namespace and IdentityRef if it has an IdentityRef, or nulls if it does not.
+func (r *OpenStackMachineTemplate) GetIdentityRef() (*string, *OpenStackIdentityReference) {
+	if r.Spec.Template.Spec.IdentityRef != nil {
+		return &r.Namespace, r.Spec.Template.Spec.IdentityRef
+	}
+	return nil, nil
 }
