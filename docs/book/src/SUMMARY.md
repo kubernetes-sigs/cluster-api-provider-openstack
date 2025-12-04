@@ -5,6 +5,7 @@
 - [Configuration](clusteropenstack/configuration.md)
 - [Experimental Features](./experimental-features/experimental-features.md)
     - [PriorityQueue](./experimental-features/priority-queue.md)
+    - [AutoScaleFromZero](./experimental-features/autoscale-from-zero.md)
 - [Topics](./topics/index.md)
     - [external cloud provider](./topics/external-cloud-provider.md)
     - [hosted control plane](./topics/hosted-control-plane.md)
