@@ -412,7 +412,6 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 			os.Exit(1)
 		}
 	}
-
 }
 
 func setupWebhooks(mgr ctrl.Manager) {
