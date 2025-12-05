@@ -25,8 +25,10 @@ import (
 	"time"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -447,6 +449,14 @@ func (s *Service) GetFlavorID(flavorID, flavorName *string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no flavors were found: name=%v", *flavorName)
+}
+
+func (s *Service) GetFlavor(flavorID string) (*flavors.Flavor, error) {
+	return s.getComputeClient().GetFlavor(flavorID)
+}
+
+func (s *Service) GetImageDetails(imageID string) (*images.Image, error) {
+	return s.getImageClient().GetImage(imageID)
 }
 
 // GetManagementPort returns the port which is used for management and external
