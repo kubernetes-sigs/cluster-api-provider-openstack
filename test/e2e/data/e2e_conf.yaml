@@ -23,7 +23,7 @@ providers:
     contract: v1beta2
     replacements:
     - old: --metrics-addr=127.0.0.1:8080
-      new: --metrics-addr=:8080
+      new: "--metrics-addr=:8080\n        - --v=4"
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
@@ -56,7 +56,7 @@ providers:
     contract: v1beta2
     replacements:
     - old: --metrics-addr=127.0.0.1:8080
-      new: --metrics-addr=:8080
+      new: "--metrics-addr=:8080\n        - --v=4"
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
@@ -89,7 +89,7 @@ providers:
     contract: v1beta2
     replacements:
     - old: --metrics-addr=127.0.0.1:8080
-      new: --metrics-addr=:8080
+      new: "--metrics-addr=:8080\n        - --v=4"
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
