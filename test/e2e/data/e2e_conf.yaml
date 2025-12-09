@@ -150,9 +150,10 @@ providers:
   - name: "{go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.13}"
     value: "https://github.com/kubernetes-sigs/cluster-api-provider-openstack/releases/download/{go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.13}/infrastructure-components.yaml"
     type: url
+    # NOTE: v0.13.0 and v0.13.1 were mistakenly released with contract v1beta2.
     contract: v1beta2
     files:
-    - sourcePath: "../data/shared/provider/metadata.yaml"
+    - sourcePath: "../data/shared/provider/errata/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
@@ -164,8 +165,7 @@ providers:
   - name: v0.13.99
     value: ../../../config/default
     # This is the upcoming version.
-    # Specify no contract so that upgrade tests that start from a specific contract won't pick it up.
-    # contract: v1beta2
+    contract: v1beta1
     files:
     - sourcePath: "../data/shared/provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
