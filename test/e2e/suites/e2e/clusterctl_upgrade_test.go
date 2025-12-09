@@ -26,7 +26,7 @@ import (
 	capi_e2e "sigs.k8s.io/cluster-api/test/e2e"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
+	shared "sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
 var (
