@@ -23,7 +23,7 @@ package v1beta1
 import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
+	errors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	corev1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
