@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework/kubernetesversions"
 	"sigs.k8s.io/cluster-api/test/framework/kubetest"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
+	shared "sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
 var _ = Describe("conformance tests", func() {

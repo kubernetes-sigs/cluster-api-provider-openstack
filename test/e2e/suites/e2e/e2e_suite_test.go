@@ -34,7 +34,7 @@ import (
 	. "github.com/onsi/gomega"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
+	shared "sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
 var (
