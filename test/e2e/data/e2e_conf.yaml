@@ -122,8 +122,7 @@ providers:
   - name: v0.13.99
     value: ../../../config/default
     # This is the upcoming version.
-    # Specify no contract so that upgrade tests that start from a specific contract won't pick it up.
-    # contract: v1beta2
+    contract: v1beta1
     files:
     - sourcePath: "../data/shared/provider/metadata.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
