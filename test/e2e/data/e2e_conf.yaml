@@ -220,7 +220,6 @@ variables:
   WORKERS_MACHINE_TEMPLATE_UPGRADE_TO: "upgrade-to-md-0"
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
-  EXP_CLUSTER_RESOURCE_SET: "true"
   EXP_CAPO_PRIORITY_QUEUE: "false"
   IP_FAMILY: "ipv4"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.6.1-x86_64-disk"
