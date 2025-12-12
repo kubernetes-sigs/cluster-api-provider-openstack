@@ -37,7 +37,7 @@ jobs:
           sed -i "s/GOLANGCI_LINT_VERSION ?= .*/GOLANGCI_LINT_VERSION ?= ${{ steps.get_version.outputs.latest_version }}/" hack/tools/Makefile
       - name: Create Pull Request
         if: ${{ steps.check_version.outputs.current_version != steps.get_version.outputs.latest_version }}
-        uses: peter-evans/create-pull-request@84ae59a2cdc2258d6fa0732dd66352dddae2a412 # tag=v7.0.9
+        uses: peter-evans/create-pull-request@98357b18bf14b5342f975ff684046ec3b2a07725 # tag=v8.0.0
         with:
           commit-message: "This commit updates golangci-lint to version v${{ steps.get_version.outputs.latest_version }}."
           title: ":seedling: chore: bump golangci-lint to v${{ steps.get_version.outputs.latest_version }}"
