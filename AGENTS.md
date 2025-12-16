@@ -34,17 +34,23 @@ All code PRs MUST be labeled with one of:
 
 ### Code Quality & Verification
 
+> **⚠️ IMPORTANT**: The `make verify` targets compare the working tree against `HEAD` (the last commit). This means:
+> - `make verify` will **always fail** if you have uncommitted changes, even if those changes are correct
+> - You should **commit your changes first**, then run `make verify` to confirm everything is in order
+> - The typical workflow is: make changes → `make generate` → `make modules` → `make test` → **commit** → `make verify`
+
 ```bash
 # Run all verification checks (should pass before submitting PR)
+# NOTE: This compares against HEAD, so commit your changes first!
 make verify
 
 # Verify boilerplate headers
 make verify-boilerplate
 
-# Verify go modules are up to date
+# Verify go modules are up to date (runs `go mod tidy` and diffs against HEAD)
 make verify-modules
 
-# Verify generated code is up to date
+# Verify generated code is up to date (runs `make generate` and diffs against HEAD)
 make verify-gen
 
 # Verify container images for vulnerabilities
@@ -221,15 +227,17 @@ Before submitting a PR, ensure:
 3. Update modules if needed: `make modules`
 4. Run tests: `make test`
 5. Lint the code: `make lint`
-6. Verify everything: `make verify`
-7. Commit changes with descriptive message
+6. **Commit changes** with descriptive message
+7. Verify everything: `make verify` (this compares against HEAD, so must be done after commit)
 
 ### Updating Dependencies
 
-1. Update `go.mod` or `hack/tools/go.mod` as needed
-2. Run: `make modules`
-3. Run: `make verify-modules`
-4. Test that everything still works: `make test`
+1. Update `go.mod` or `hack/tools/go.mod` as needed (e.g., `go get sigs.k8s.io/cluster-api@v1.x.x`)
+2. Run: `make modules` to tidy dependencies
+3. Run: `make generate` to regenerate code (dependency updates often change generated code)
+4. Run: `make test` to ensure everything still works
+5. **Commit all changes** (go.mod, go.sum, and any regenerated files)
+6. Run: `make verify` to confirm everything is in order
 
 ## Common Issues
 
@@ -250,9 +258,19 @@ The project uses golangci-lint. If you get lint errors:
 
 If `make verify` fails with generated file drift:
 1. Run `make generate` to regenerate all files
-2. Review the changes to ensure they're expected
-3. Commit the generated files
-4. Never manually edit generated files
+2. Run `make modules` to ensure go.mod/go.sum are tidy
+3. Review the changes to ensure they're expected
+4. **Commit the generated files** - verify targets compare against HEAD!
+5. Run `make verify` again - it should pass now
+6. Never manually edit generated files
+
+### Verify Fails Even After Running Generate/Modules
+
+If `make verify-gen` or `make verify-modules` fails even after running `make generate` or `make modules`:
+- Remember that these targets compare against `HEAD` (the last commit)
+- If you have uncommitted changes, they will show as "drift" even if correct
+- **Solution**: Commit your changes first, then run `make verify`
+- This is by design - it ensures the committed code is complete and self-consistent
 
 ## Documentation
 
