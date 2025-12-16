@@ -8,7 +8,7 @@ require (
 	github.com/itchyny/gojq v0.12.18
 	github.com/onsi/ginkgo/v2 v2.27.3
 	go.uber.org/mock v0.6.0
-	k8s.io/code-generator v0.33.6
+	k8s.io/code-generator v0.33.7
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20250620151452-b9a9ca01fd37
@@ -87,7 +87,7 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481 // indirect
-	github.com/onsi/gomega v1.38.2 // indirect
+	github.com/onsi/gomega v1.38.3 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -120,17 +120,17 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67 // indirect
-	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 // indirect
@@ -141,13 +141,13 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.33.6 // indirect
-	k8s.io/apiextensions-apiserver v0.33.6 // indirect
-	k8s.io/apimachinery v0.34.2 // indirect
-	k8s.io/apiserver v0.33.6 // indirect
-	k8s.io/client-go v0.33.6 // indirect
+	k8s.io/api v0.33.7 // indirect
+	k8s.io/apiextensions-apiserver v0.33.7 // indirect
+	k8s.io/apimachinery v0.34.3 // indirect
+	k8s.io/apiserver v0.33.7 // indirect
+	k8s.io/client-go v0.33.7 // indirect
 	k8s.io/cluster-bootstrap v0.33.3 // indirect
-	k8s.io/component-base v0.33.6 // indirect
+	k8s.io/component-base v0.33.7 // indirect
 	k8s.io/gengo v0.0.0-20201203183100-97869a43a9d9 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250604051438-85fd79dbfd9f // indirect
 	k8s.io/klog v0.2.0 // indirect
@@ -156,7 +156,7 @@ require (
 	k8s.io/release v0.16.9 // indirect
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 // indirect
-	sigs.k8s.io/cluster-api v1.11.3 // indirect
+	sigs.k8s.io/cluster-api v1.11.4 // indirect
 	sigs.k8s.io/controller-runtime v0.21.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20211028165026-57688c578b5d // indirect
