@@ -10,22 +10,41 @@ title: Tasks for v<release-tag> release cycle
 Tasks for a new release `vX.Y.Z` of the Cluster API Provider OpenStack.
 For details, see [RELEASE.md](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/RELEASE.md).
 
-- [ ] [When bumping `X` or `Y`] Create a new release branch called `release-X.Y`.
-- [ ] [When bumping `X` or `Y`] Add a new entry of new release branch to [depandabot.yml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/.github/dependabot.yml).
-- [ ] [When bumping `X` or `Y`] Add a new entry of new release branch to [security-scan.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/.github/workflows/security-scan.yaml).
+### Pre-release tasks
+
+These tasks must be completed for alpha/beta releases.
+
 - [ ] [When bumping `X` or `Y`] Add a new entry to [metadata.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/metadata.yaml)
   as [described in the CAPI book](https://cluster-api.sigs.k8s.io/developer/providers/contracts/clusterctl#metadata-yaml)
   on the release branch prior to release.
-- [ ] Create the PR after generating release notes according to [RELEASE.md](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/RELEASE.md). Verify that the release PR looks good and make changes if necessary. When this PR is merged, release automation will push the tag to upstream and create a draft release notes.
+
+### Release candidate and branch tasks
+
+The first release candidate (`-rc.0`) will trigger the creation of the release branch.
+Once this is done, complete the following tasks:
+
+- [ ] [When bumping `X` or `Y`] Add an entry for the new release branch to [depandabot.yml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/.github/dependabot.yml).
+- [ ] [When bumping `X` or `Y`] Add an entry for the new release branch to [security-scan.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/.github/workflows/security-scan.yaml).
+
+### Release process
+
+These tasks must be done for each release and pre-release.
+
+- [ ] Create the PR after generating release notes according to [RELEASE.md](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/RELEASE.md). Verify that the release PR looks good and make changes if necessary. When this PR is merged, release automation will push the tag to upstream and create a draft release.
 - [ ] Promote the [staging image](https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-capi-openstack) by
   adding the new sha=>tag mapping to [images.yaml](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/images/k8s-staging-capi-openstack/images.yaml).
 - [ ] Verify that the new draft release looks good.
 - [ ] Verify that the image was promoted sucessfully.
+  ```bash
+  docker run --rm registry.k8s.io/capi-openstack/capi-openstack-controller:vX.Y.Z --version
+  ```
 - [ ] Publish the release.
   Mark the release as "latest" if it is the most recent minor release.
   E.g. if both v1.1 and v1.2 are supported with patch releases, then only v1.2.z should be marked as "latest".
 
 ## Post-release tasks
+
+These tasks can be completed after a release candidate (and branch) is done, or after the final release is out.
 
 - [ ] [When bumping `X` or `Y`] Update the [periodic jobs](https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/cluster-api-provider-openstack).
   Make sure there are periodic jobs for the new release branch, and clean up jobs for branches that are no longer supported.
