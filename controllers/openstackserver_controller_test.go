@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -33,9 +34,13 @@ import (
 	"go.uber.org/mock/gomock"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util/conditions"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -192,6 +197,191 @@ var deleteRootVolume = func(r *recorders) {
 
 	// Delete volume
 	r.volume.DeleteVolume(rootVolumeUUID, volumes.DeleteOpts{}).Return(nil)
+}
+
+func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.T) {
+	tests := []struct {
+		name            string
+		cluster         *clusterv1.Cluster
+		servers         []*infrav1alpha1.OpenStackServer
+		clusterDeleting bool
+		wantRequests    int
+		wantServerNames []string
+	}{
+		{
+			name: "returns reconcile requests for all servers in cluster",
+			cluster: &clusterv1.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-cluster",
+					Namespace: "test-ns",
+				},
+			},
+			servers: []*infrav1alpha1.OpenStackServer{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "server-1",
+						Namespace: "test-ns",
+						Labels: map[string]string{
+							clusterv1beta1.ClusterNameLabel: "test-cluster",
+						},
+					},
+					Spec: infrav1alpha1.OpenStackServerSpec{
+						Flavor: ptr.To("m1.small"),
+						Image: infrav1.ImageParam{
+							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "server-2",
+						Namespace: "test-ns",
+						Labels: map[string]string{
+							clusterv1beta1.ClusterNameLabel: "test-cluster",
+						},
+					},
+					Spec: infrav1alpha1.OpenStackServerSpec{
+						Flavor: ptr.To("m1.small"),
+						Image: infrav1.ImageParam{
+							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+						},
+					},
+				},
+			},
+			wantRequests:    2,
+			wantServerNames: []string{"server-1", "server-2"},
+		},
+		{
+			name: "returns empty for deleted cluster",
+			cluster: &clusterv1.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-cluster",
+					Namespace: "test-ns",
+				},
+			},
+			servers: []*infrav1alpha1.OpenStackServer{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "server-1",
+						Namespace: "test-ns",
+						Labels: map[string]string{
+							clusterv1beta1.ClusterNameLabel: "test-cluster",
+						},
+					},
+					Spec: infrav1alpha1.OpenStackServerSpec{
+						Flavor: ptr.To("m1.small"),
+						Image: infrav1.ImageParam{
+							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+						},
+					},
+				},
+			},
+			clusterDeleting: true,
+			wantRequests:    0,
+		},
+		{
+			name: "returns empty when no servers exist",
+			cluster: &clusterv1.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-cluster",
+					Namespace: "test-ns",
+				},
+			},
+			servers:      []*infrav1alpha1.OpenStackServer{},
+			wantRequests: 0,
+		},
+		{
+			name: "only returns servers from same cluster",
+			cluster: &clusterv1.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-cluster",
+					Namespace: "test-ns",
+				},
+			},
+			servers: []*infrav1alpha1.OpenStackServer{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "server-1",
+						Namespace: "test-ns",
+						Labels: map[string]string{
+							clusterv1beta1.ClusterNameLabel: "test-cluster",
+						},
+					},
+					Spec: infrav1alpha1.OpenStackServerSpec{
+						Flavor: ptr.To("m1.small"),
+						Image: infrav1.ImageParam{
+							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "server-2",
+						Namespace: "test-ns",
+						Labels: map[string]string{
+							clusterv1beta1.ClusterNameLabel: "other-cluster",
+						},
+					},
+					Spec: infrav1alpha1.OpenStackServerSpec{
+						Flavor: ptr.To("m1.small"),
+						Image: infrav1.ImageParam{
+							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+						},
+					},
+				},
+			},
+			wantRequests:    1,
+			wantServerNames: []string{"server-1"},
+		},
+	}
+
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+			ctx := context.TODO()
+
+			// Set deletion timestamp and finalizers if needed
+			if tt.clusterDeleting {
+				now := metav1.Now()
+				tt.cluster.DeletionTimestamp = &now
+				tt.cluster.Finalizers = []string{"test-finalizer"}
+			}
+
+			// Create a fake client with the test data
+			scheme := runtime.NewScheme()
+			g.Expect(clusterv1.AddToScheme(scheme)).To(Succeed())
+			g.Expect(infrav1alpha1.AddToScheme(scheme)).To(Succeed())
+
+			objs := []client.Object{tt.cluster}
+			for _, server := range tt.servers {
+				objs = append(objs, server)
+			}
+
+			fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objs...).Build()
+
+			// Create reconciler and call mapper function
+			reconciler := &OpenStackServerReconciler{
+				Client: fakeClient,
+			}
+			mapFunc := reconciler.requeueOpenStackServersForCluster(ctx)
+			requests := mapFunc(ctx, tt.cluster)
+
+			// Verify results
+			if tt.wantRequests == 0 {
+				g.Expect(requests).To(Or(BeNil(), BeEmpty()))
+			} else {
+				g.Expect(requests).To(HaveLen(tt.wantRequests))
+				if len(tt.wantServerNames) > 0 {
+					gotNames := make([]string, len(requests))
+					for i, req := range requests {
+						gotNames[i] = req.Name
+					}
+					g.Expect(gotNames).To(ConsistOf(tt.wantServerNames))
+				}
+			}
+		})
+	}
 }
 
 func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
