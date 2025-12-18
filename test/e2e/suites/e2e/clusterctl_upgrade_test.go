@@ -111,10 +111,10 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.13=>current) and
 		capoRelease013, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.13")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
 		capoRelease013 = "v" + capoRelease013
-		// We need CAPI v1.11 here for clusterctl init with the v1beta2 contract.
-		// This is hard-coded to the .0 release because the test will fail if there are no
-		// newer patch releases to upgrade to.
-		capiRelease111 = "v1.11.0"
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		capiRelease111, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.11")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
+		capiRelease111 = "v" + capiRelease111
 	})
 
 	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
