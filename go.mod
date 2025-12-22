@@ -11,7 +11,7 @@ require (
 	github.com/gophercloud/gophercloud/v2 v2.9.0
 	github.com/gophercloud/utils/v2 v2.0.0-20241220104409-2e0af06694a1
 	github.com/hashicorp/go-version v1.8.0
-	github.com/k-orc/openstack-resource-controller/v2 v2.3.0
+	github.com/k-orc/openstack-resource-controller/v2 v2.4.0
 	github.com/onsi/ginkgo/v2 v2.27.3
 	github.com/onsi/gomega v1.38.3
 	github.com/prometheus/client_golang v1.23.2
@@ -29,7 +29,7 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
-	sigs.k8s.io/cluster-api v1.12.0
+	sigs.k8s.io/cluster-api v1.12.1
 	sigs.k8s.io/cluster-api/test v1.12.0
 	sigs.k8s.io/controller-runtime v0.22.4
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.1
@@ -110,7 +110,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
