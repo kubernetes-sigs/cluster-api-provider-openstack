@@ -208,7 +208,7 @@ variables:
   OPENSTACK_FLATCAR_IMAGE_URL: "https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar-stable-4152.2.3-kube-v1.33.1"
   # A plain Flatcar from the Flatcar releases server
   FLATCAR_IMAGE_NAME: "flatcar_production_openstack_image"
-  FLATCAR_IMAGE_URL: https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img
+  FLATCAR_IMAGE_URL: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar_production_openstack_image-4459.2.2.img
 
 intervals:
   conformance/wait-control-plane: ["30m", "10s"]
