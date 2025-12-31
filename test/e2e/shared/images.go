@@ -60,6 +60,8 @@ type DownloadImage struct {
 	ArtifactPath string
 	// A hash used to verify the downloaded image
 	Hash, HashAlgorithm string
+	// GlanceName overrides the inferred Glance image name if set
+	GlanceName string
 }
 
 func CoreImages(e2eCtx *E2EContext) []DownloadImage {
@@ -128,13 +130,16 @@ func ApplyGlanceImages(ctx context.Context, e2eCtx *E2EContext, images []Downloa
 		Expect(err).NotTo(HaveOccurred(), "parsing "+url)
 		d := strings.Split(u.Path, "/")
 		Expect(len(d)).To(BeNumerically(">", 1), "Not enough path elements in "+url)
-		glanceName := d[len(d)-1]
+		glanceName := image.GlanceName
+		if glanceName == "" {
+			glanceName = d[len(d)-1]
 
-		// Remove the type suffix
-		for _, suffix := range []string{".img", ".qcow2"} {
-			if strings.HasSuffix(glanceName, suffix) {
-				glanceName = glanceName[:len(glanceName)-len(suffix)]
-				continue
+			// Remove the type suffix
+			for _, suffix := range []string{".img", ".qcow2"} {
+				if strings.HasSuffix(glanceName, suffix) {
+					glanceName = glanceName[:len(glanceName)-len(suffix)]
+					continue
+				}
 			}
 		}
 

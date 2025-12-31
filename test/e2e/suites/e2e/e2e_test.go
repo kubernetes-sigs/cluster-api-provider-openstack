@@ -72,8 +72,9 @@ func flatcarImages(e2eCtx *shared.E2EContext) []shared.DownloadImage {
 			ArtifactPath: "flatcar/" + e2eCtx.E2EConfig.GetVariable("OPENSTACK_FLATCAR_IMAGE_NAME") + ".img",
 		},
 		{
-			Name: "flatcar-openstack",
-			URL:  "https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img",
+			Name:       "flatcar-openstack",
+			URL:        "https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/flatcar/flatcar_production_openstack_image-4459.2.2.img",
+			GlanceName: "flatcar_production_openstack_image",
 		},
 	}
 }
