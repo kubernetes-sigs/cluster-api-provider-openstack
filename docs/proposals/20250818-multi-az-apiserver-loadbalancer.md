@@ -24,7 +24,6 @@ Add first-class Multi-AZ support for the Kubernetes control plane LoadBalancer i
 ## User Stories
 1) As a platform engineer, I want per-AZ LBs so a full AZ outage leaves the cluster reachable via DNS multi-A records that resolve to the remaining AZs.
 2) As an operator, I want a safe migration path from single-LB clusters to per-AZ LBs without downtime.
-3) As a security-conscious user, I want to restrict VIP access with allowed CIDRs when supported by my Octavia provider.
 
 ## Design Overview
 
