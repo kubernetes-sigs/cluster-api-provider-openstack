@@ -100,6 +100,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.NetworkStatusApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("NetworkStatusWithSubnets"):
 		return &apiv1beta1.NetworkStatusWithSubnetsApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("NodeInfo"):
+		return &apiv1beta1.NodeInfoApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpenStackCluster"):
 		return &apiv1beta1.OpenStackClusterApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpenStackClusterSpec"):
@@ -126,6 +128,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.OpenStackMachineTemplateResourceApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("OpenStackMachineTemplateSpec"):
 		return &apiv1beta1.OpenStackMachineTemplateSpecApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("OpenStackMachineTemplateStatus"):
+		return &apiv1beta1.OpenStackMachineTemplateStatusApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("PortOpts"):
 		return &apiv1beta1.PortOptsApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("PortStatus"):

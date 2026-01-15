@@ -195,7 +195,8 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-no-bastion.yaml \
 		 cluster-template-health-monitor.yaml \
 		 cluster-template-capi-v1beta1.yaml \
-		 cluster-template-cluster-identity.yaml)
+		 cluster-template-cluster-identity.yaml \
+		 cluster-template-topology-autoscaler.yaml)
 # Currently no templates that require CI artifacts
 # $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 
@@ -333,6 +334,7 @@ generate-codegen: generate-controller-gen $(OPENAPI_GEN) $(APPLYCONFIGURATION_GE
 		k8s.io/api/core/v1 \
 		k8s.io/apimachinery/pkg/apis/meta/v1 \
 		k8s.io/apimachinery/pkg/runtime \
+		k8s.io/apimachinery/pkg/api/resource \
 		k8s.io/apimachinery/pkg/version
 	@echo "** Generating openapi.json **"
 	go run ./cmd/models-schema | jq > ./openapi.json

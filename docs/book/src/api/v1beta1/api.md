@@ -857,6 +857,18 @@ OpenStackMachineTemplateResource
 </table>
 </td>
 </tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplateStatus">
+OpenStackMachineTemplateStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.APIServerLoadBalancer">APIServerLoadBalancer
@@ -2353,6 +2365,38 @@ NetworkStatus
 <p>NeutronTag represents a tag on a Neutron resource.
 It may not be empty and may not contain commas.</p>
 </p>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.NodeInfo">NodeInfo
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplateStatus">OpenStackMachineTemplateStatus</a>)
+</p>
+<p>
+<p>NodeInfo contains information about the node&rsquo;s architecture and operating system.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>operatingSystem</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>operatingSystem is a string representing the operating system of the node.
+This may be a string like &lsquo;linux&rsquo; or &lsquo;windows&rsquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackClusterSpec">OpenStackClusterSpec
 </h3>
 <p>
@@ -4125,6 +4169,52 @@ OpenStackMachineTemplateResource
 </em>
 </td>
 <td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplateStatus">OpenStackMachineTemplateStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.OpenStackMachineTemplate">OpenStackMachineTemplate</a>)
+</p>
+<p>
+<p>OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>capacity</code><br/>
+<em>
+Kubernetes core/v1.ResourceList
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Capacity defines the resource capacity for this machine.
+This value is used for autoscaling from zero operations as defined in:
+<a href="https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md">https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeInfo,omitempty,omitzero</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.NodeInfo">
+NodeInfo
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 </td>
 </tr>
 </tbody>

@@ -51,6 +51,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/loadbalancer"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	controllers "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
@@ -122,7 +123,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
-	infraCluster, err := r.getInfraCluster(ctx, cluster, openStackMachine)
+	infraCluster, err := controllers.GetInfraCluster(ctx, r.Client, cluster)
 	if err != nil {
 		return ctrl.Result{}, errors.New("error getting infra provider cluster")
 	}
@@ -824,16 +825,4 @@ func (r *OpenStackMachineReconciler) requestsForCluster(ctx context.Context, log
 		}
 	}
 	return result
-}
-
-func (r *OpenStackMachineReconciler) getInfraCluster(ctx context.Context, cluster *clusterv1.Cluster, openStackMachine *infrav1.OpenStackMachine) (*infrav1.OpenStackCluster, error) {
-	openStackCluster := &infrav1.OpenStackCluster{}
-	openStackClusterName := client.ObjectKey{
-		Namespace: openStackMachine.Namespace,
-		Name:      cluster.Spec.InfrastructureRef.Name,
-	}
-	if err := r.Client.Get(ctx, openStackClusterName, openStackCluster); err != nil {
-		return nil, err
-	}
-	return openStackCluster, nil
 }
