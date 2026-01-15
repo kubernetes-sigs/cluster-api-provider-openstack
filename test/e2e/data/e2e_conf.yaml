@@ -171,6 +171,7 @@ providers:
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-cluster-identity.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-topology-autoscaler.yaml"
     - sourcePath: "../../../templates/clusterclass-dev-test.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev
@@ -213,6 +214,8 @@ variables:
   KUBERNETES_VERSION: "v1.35.0"
   KUBERNETES_VERSION_UPGRADE_FROM: "v1.34.2"
   KUBERNETES_VERSION_UPGRADE_TO: "v1.35.0"
+  AUTOSCALER_VERSION: "v1.34.2"
+  AUTOSCALER_WORKLOAD: "../../data/autoscaler/autoscaler-to-workload-workload.yaml"
   # NOTE: To see default images run kubeadm config images list (optionally with --kubernetes-version=vX.Y.Z)
   ETCD_VERSION_UPGRADE_TO: "3.6.6-0"
   COREDNS_VERSION_UPGRADE_TO: "v1.13.1"
@@ -221,6 +224,7 @@ variables:
   CNI: "../../data/cni/calico.yaml"
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CAPO_PRIORITY_QUEUE: "false"
+  EXP_CAPO_AUTOSCALE_FROM_ZERO: "true"
   IP_FAMILY: "ipv4"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.6.1-x86_64-disk"
   OPENSTACK_BASTION_IMAGE_URL: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
@@ -275,3 +279,9 @@ intervals:
   default/wait-machine-remediation: ["10m", "10s"]
   default/wait-image-create: ["15m", "10s"]
   default/wait-image-delete: ["2m", "10s"]
+  default/wait-autoscaler: ["10m", "10s"]
+  autoscaler/wait-cluster: ["20m", "10s"]
+  autoscaler/wait-control-plane: ["30m", "10s"]
+  autoscaler/wait-worker-nodes: ["30m", "10s"]
+  autoscaler/wait-controllers: ["10m", "10s"]
+  autoscaler/wait-autoscaler: ["10m", "10s"]

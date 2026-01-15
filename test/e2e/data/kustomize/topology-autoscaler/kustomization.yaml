@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- cluster.yaml
+- secret.yaml
+
+components:
+- ../components/images
+- ../components/cluster-resource-sets
+
+patches:
+- target:
+    group: openstack.k-orc.cloud
+    version: v1alpha1
+    kind: Image
+    name: node-image
+  patch: |-
+    - op: replace
+      path: /spec/resource/name
+      value: ${FLATCAR_IMAGE_NAME}
+    - op: replace
+      path: /spec/resource/content/download/url
+      value: ${FLATCAR_IMAGE_URL}

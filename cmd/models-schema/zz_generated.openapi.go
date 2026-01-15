@@ -23,6 +23,7 @@ package main
 
 import (
 	v1 "k8s.io/api/core/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	common "k8s.io/kube-openapi/pkg/common"
 	spec "k8s.io/kube-openapi/pkg/validation/spec"
@@ -268,6 +269,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":                                                 schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
 		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                                                        schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
 		"k8s.io/api/core/v1.WindowsSecurityContextOptions":                                                  schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
+		"k8s.io/apimachinery/pkg/api/resource.Quantity":                                                     schema_apimachinery_pkg_api_resource_Quantity(ref),
+		"k8s.io/apimachinery/pkg/api/resource.int64Amount":                                                  schema_apimachinery_pkg_api_resource_int64Amount(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                                     schema_pkg_apis_meta_v1_APIGroup(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                                 schema_pkg_apis_meta_v1_APIGroupList(ref),
 		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                                  schema_pkg_apis_meta_v1_APIResource(ref),
@@ -359,6 +362,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatus":                              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatus(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkStatusWithSubnets":                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatusWithSubnets(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NodeInfo":                                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NodeInfo(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackCluster":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluster(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterList":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterList(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackClusterSpec":                       schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackClusterSpec(ref),
@@ -376,6 +380,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateList":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateList(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource":           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateResource(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateSpec(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateStatus":             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateStatus(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortOpts":                                   schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortOpts(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.PortStatus":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_PortStatus(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ResolvedFixedIP":                            schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ResolvedFixedIP(ref),
@@ -14484,6 +14489,54 @@ func schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref common.Reference
 	}
 }
 
+func schema_apimachinery_pkg_api_resource_Quantity(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.EmbedOpenAPIDefinitionIntoV2Extension(common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
+				OneOf:       common.GenerateOpenAPIV3OneOfSchema(resource.Quantity{}.OpenAPIV3OneOfTypes()),
+				Format:      resource.Quantity{}.OpenAPISchemaFormat(),
+			},
+		},
+	}, common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
+				Type:        resource.Quantity{}.OpenAPISchemaType(),
+				Format:      resource.Quantity{}.OpenAPISchemaFormat(),
+			},
+		},
+	})
+}
+
+func schema_apimachinery_pkg_api_resource_int64Amount(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "int64Amount represents a fixed precision numerator and arbitrary scale exponent. It is faster than operations on inf.Dec for values that can be represented as int64.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"value": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int64",
+						},
+					},
+					"scale": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+				},
+				Required: []string{"value", "scale"},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_meta_v1_APIGroup(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -19109,6 +19162,26 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NetworkStatusWi
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_NodeInfo(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "NodeInfo contains information about the node's architecture and operating system.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"operatingSystem": {
+						SchemaProps: spec.SchemaProps{
+							Description: "operatingSystem is a string representing the operating system of the node. This may be a string like 'linux' or 'windows'.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluster(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -20151,11 +20224,17 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec"),
 						},
 					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateStatus"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateSpec", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateStatus"},
 	}
 }
 
@@ -20250,6 +20329,41 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 		},
 		Dependencies: []string{
 			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackMachineTemplateResource"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachineTemplateStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"capacity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Capacity defines the resource capacity for this machine. This value is used for autoscaling from zero operations as defined in: https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+									},
+								},
+							},
+						},
+					},
+					"nodeInfo": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NodeInfo"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/api/resource.Quantity", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NodeInfo"},
 	}
 }
 

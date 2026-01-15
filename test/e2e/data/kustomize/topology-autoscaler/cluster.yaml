@@ -1,0 +1,44 @@
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  topology:
+    classRef:
+      name: dev-test
+    version: ${KUBERNETES_VERSION}
+    controlPlane:
+      replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+    workers:
+      machineDeployments:
+      - class: default-worker
+        name: md-0
+        deletion:
+          nodeDeletionTimeoutSeconds: 60
+        metadata:
+          annotations:
+            cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "2"
+            cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "1"
+    variables:
+    - name: identityRef
+      value:
+        name: ${CLUSTER_NAME}-cloud-config
+        cloudName: ${OPENSTACK_CLOUD}
+    - name: imageRef
+      value: node-image
+    - name: addImageVersion
+      value: false
+    - name: injectIgnitionSysext
+      value: true
+    - name: allowedCIDRs
+      value: ${OPENSTACK_API_SERVER_ALLOWED_CIDRS:=[]}
+    - name: bastion
+      value:
+        enabled: ${OPENSTACK_BASTION_ENABLED:=false}
+        spec:
+          flavor: ${OPENSTACK_BASTION_FLAVOR:=m1.small}
+          image:
+            imageRef:
+              name: bastion-image
+          sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
+

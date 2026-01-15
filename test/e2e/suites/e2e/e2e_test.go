@@ -188,6 +188,26 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			// from both the control plane and worker machines and vice versa, that makes 8 rules.
 			Expect(calicoSGRules).To(Equal(8))
 
+			infraRef := md[0].Spec.Template.Spec.InfrastructureRef
+			Expect(infraRef.Kind).To(Equal("OpenStackMachineTemplate"))
+
+			tmplKey := apimachinerytypes.NamespacedName{
+				Namespace: namespace.Name,
+				Name:      infraRef.Name,
+			}
+
+			// We expect OpenStackMachineTemplate.status.capacity to be set
+			// by the OpenStackMachineTemplate controller
+			shared.Logf("Check the OpenStackMachineTemplate.status")
+			Eventually(func(g Gomega) {
+				var tmpl infrav1.OpenStackMachineTemplate
+				err := e2eCtx.Environment.BootstrapClusterProxy.GetClient().Get(ctx, tmplKey, &tmpl)
+				g.Expect(err).NotTo(HaveOccurred())
+
+				g.Expect(tmpl.Status.Capacity).NotTo(BeNil(), "status.capacity should be initialized")
+				g.Expect(tmpl.Status.Capacity).NotTo(BeEmpty(), "status.capacity should not be empty")
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-machine-status")...).Should(Succeed())
+
 			shared.Logf("Check the bastion")
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
