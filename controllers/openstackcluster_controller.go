@@ -60,8 +60,7 @@ import (
 )
 
 const (
-	waitForBastionToReconcile  = 15 * time.Second
-	waitForOctaviaPortsCleanup = 15 * time.Second
+	waitForBastionToReconcile = 15 * time.Second
 )
 
 // OpenStackClusterReconciler reconciles a OpenStackCluster object.
