@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
@@ -73,6 +74,24 @@ func (f *ImageFilter) IsZero() bool {
 		return true
 	}
 	return f.Name == nil && len(f.Tags) == 0
+}
+
+// Validate performs validation on [ImageParam], returning a list of field errors using the provided base path.
+// It is intended to be used in the validation webhooks of resources containing [ImageParam].
+func (i *ImageParam) Validate(base field.Path) field.ErrorList {
+	var errors field.ErrorList
+	// Not possible to validate the image if it is missing
+	if i == nil {
+		errors = append(errors, field.Required(&base, "Image is required"))
+		return errors
+	}
+	if i.Filter.Name == nil || i.Filter.Tags == nil {
+		errors = append(errors, field.Required(base.Child("Image filter"), "Either Name or Tags of image are missing"))
+	}
+	if i.ImageRef.Name == "" {
+		errors = append(errors, field.Required(base.Child("ORC image Referecne"), "ORC image is missing"))
+	}
+	return errors
 }
 
 type ExternalRouterIPParam struct {
