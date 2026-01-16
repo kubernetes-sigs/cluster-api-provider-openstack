@@ -353,7 +353,8 @@ func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.
 			g.Expect(clusterv1.AddToScheme(scheme)).To(Succeed())
 			g.Expect(infrav1alpha1.AddToScheme(scheme)).To(Succeed())
 
-			objs := []client.Object{tt.cluster}
+			objs := make([]client.Object, 0, 1+len(tt.servers))
+			objs = append(objs, tt.cluster)
 			for _, server := range tt.servers {
 				objs = append(objs, server)
 			}

@@ -764,7 +764,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			openStackCluster, err := shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 
-			var allMachines []clusterv1.Machine
+			allMachines := make([]clusterv1.Machine, 0, len(controlPlaneMachines)+len(workerMachines))
 			allMachines = append(allMachines, controlPlaneMachines...)
 			allMachines = append(allMachines, workerMachines...)
 
@@ -787,7 +787,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ports).To(HaveLen(len(expectedPorts)))
 
-				var seenNetworks []string
+				seenNetworks := make([]string, 0, len(ports))
 				var seenAddresses clusterv1.MachineAddresses
 				for j := range ports {
 					port := &ports[j]
@@ -938,7 +938,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				fmt.Sprintf("Cluster %s: worker machines were not scheduled in the expected AZ", cluster.Name))
 
 			// Check that all machines were actually scheduled in the correct AZ
-			var allMachines []clusterv1.Machine
+			allMachines := make([]clusterv1.Machine, 0, len(controlPlaneMachines)+len(workerMachines))
 			allMachines = append(allMachines, controlPlaneMachines...)
 			allMachines = append(allMachines, workerMachines...)
 
