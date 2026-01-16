@@ -45,7 +45,6 @@ import (
 const (
 	networkPrefix           string = "k8s-clusterapi"
 	kubeapiLBSuffix         string = "kubeapi"
-	resolvedMsg             string = "ControlPlaneEndpoint.Host is not an IP address, using the first resolved IP address"
 	waitForOctaviaLBCleanup        = 15 * time.Second
 )
 
