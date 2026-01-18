@@ -146,7 +146,8 @@ func (is *InstanceStatus) NetworkStatus() (*InstanceNetworkStatus, error) {
 			return nil, fmt.Errorf("error unmarshalling addresses for instance %s: %w", is.ID(), err)
 		}
 
-		var IPv4addresses, IPv6addresses []corev1.NodeAddress
+		IPv4addresses := make([]corev1.NodeAddress, 0, len(interfaceList))
+		IPv6addresses := make([]corev1.NodeAddress, 0, len(interfaceList))
 		for i := range interfaceList {
 			address := &interfaceList[i]
 
@@ -194,7 +195,12 @@ func (ns *InstanceNetworkStatus) Addresses() []corev1.NodeAddress {
 	}
 	sort.Strings(networks)
 
-	var addresses []corev1.NodeAddress
+	// Calculate total number of addresses to preallocate
+	totalAddresses := 0
+	for _, addrs := range ns.addresses {
+		totalAddresses += len(addrs)
+	}
+	addresses := make([]corev1.NodeAddress, 0, totalAddresses)
 	for _, network := range networks {
 		addressList := ns.addresses[network]
 		addresses = append(addresses, addressList...)

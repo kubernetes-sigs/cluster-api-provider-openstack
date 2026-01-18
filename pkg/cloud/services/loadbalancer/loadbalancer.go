@@ -153,7 +153,8 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		lbStatus.AllowedCIDRs = nil
 	}
 
-	portList := []int{apiServerPort}
+	portList := make([]int, 0, 1+len(lbSpec.AdditionalPorts))
+	portList = append(portList, apiServerPort)
 	portList = append(portList, lbSpec.AdditionalPorts...)
 	for _, port := range portList {
 		if err := s.reconcileAPILoadBalancerListener(lb, openStackCluster, clusterResourceName, port); err != nil {
@@ -247,7 +248,7 @@ func getCanonicalAllowedCIDRs(openStackCluster *infrav1.OpenStackCluster) []stri
 	}
 
 	// Filter invalid CIDRs and convert any IPs into CIDRs.
-	validCIDRs := []string{}
+	validCIDRs := make([]string, 0, len(allowedCIDRs))
 	for _, v := range allowedCIDRs {
 		switch {
 		case utilsnet.IsIPv4String(v):
