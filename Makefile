@@ -61,6 +61,7 @@ TRIVY_VER := 0.49.1
 
 # Binaries.
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
+CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 GOJQ := $(TOOLS_BIN_DIR)/gojq
@@ -300,11 +301,18 @@ modules: ## Runs go mod to ensure proper vendoring.
 	cd $(TOOLS_DIR); go mod tidy
 
 .PHONY: generate
-generate: templates generate-controller-gen generate-codegen generate-go generate-manifests generate-api-docs ## Generate all generated code
+generate: templates generate-controller-gen generate-codegen generate-conversion-gen generate-go generate-manifests generate-api-docs ## Generate all generated code
 
 .PHONY: generate-go
 generate-go: $(MOCKGEN)
 	go generate ./...
+
+.PHONY: generate-conversion-gen
+generate-conversion-gen: $(CONVERSION_GEN)
+	$(CONVERSION_GEN) \
+		--output-file=zz_generated.conversion.go \
+		--go-header-file=./hack/boilerplate/boilerplate.generatego.txt \
+		./api/v1beta1
 
 .PHONY: generate-controller-gen
 generate-controller-gen: $(CONTROLLER_GEN)

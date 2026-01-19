@@ -41,6 +41,7 @@ import (
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/webhooks"
 )
 
@@ -69,6 +70,7 @@ var _ = BeforeSuite(func() {
 	for _, f := range []func(*runtime.Scheme) error{
 		infrav1alpha1.AddToScheme,
 		infrav1.AddToScheme,
+		infrav2.AddToScheme,
 	} {
 		Expect(f(testScheme)).To(Succeed())
 	}

@@ -20,11 +20,7 @@ import (
 	"fmt"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	"sigs.k8s.io/controller-runtime/pkg/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 )
 
 func RegisterAllWithManager(mgr manager.Manager) []error {
@@ -46,19 +42,9 @@ func RegisterAllWithManager(mgr manager.Manager) []error {
 		}
 	}
 
-	// Additionally register webhooks for other types so they get conversion webhooks.
-	for _, conversionOnlyType := range []conversion.Hub{
-		&infrav1.OpenStackClusterList{},
-		&infrav1.OpenStackClusterTemplateList{},
-		&infrav1.OpenStackMachineList{},
-		&infrav1.OpenStackMachineTemplateList{},
-	} {
-		if err := builder.WebhookManagedBy(mgr).
-			For(conversionOnlyType).
-			Complete(); err != nil {
-			errs = append(errs, fmt.Errorf("creating webhook for %T: %v", conversionOnlyType, err))
-		}
-	}
+	// Note: List types don't need conversion webhooks - they're handled automatically
+	// when the base types have conversion implemented and both versions are registered
+	// in the scheme.
 
 	return errs
 }

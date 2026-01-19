@@ -16,6 +16,26 @@ limitations under the License.
 
 package v1beta2
 
-// NOTE: v1beta2 will become the Hub in a future PR.
-// For now, v1beta1 remains the Hub to avoid breaking changes.
-// Conversion webhooks will be implemented in PR #2.
+// Hub marks OpenStackCluster as a conversion hub.
+func (*OpenStackCluster) Hub() {}
+
+// Hub marks OpenStackClusterList as a conversion hub.
+func (*OpenStackClusterList) Hub() {}
+
+// Hub marks OpenStackClusterTemplate as a conversion hub.
+func (*OpenStackClusterTemplate) Hub() {}
+
+// Hub marks OpenStackClusterTemplateList as a conversion hub.
+func (*OpenStackClusterTemplateList) Hub() {}
+
+// Hub marks OpenStackMachine as a conversion hub.
+func (*OpenStackMachine) Hub() {}
+
+// Hub marks OpenStackMachineList as a conversion hub.
+func (*OpenStackMachineList) Hub() {}
+
+// Hub marks OpenStackMachineTemplate as a conversion hub.
+func (*OpenStackMachineTemplate) Hub() {}
+
+// Hub marks OpenStackMachineTemplateList as a conversion hub.
+func (*OpenStackMachineTemplateList) Hub() {}
