@@ -36,7 +36,6 @@ const (
 	controlPlaneSuffix string = "controlplane"
 	workerSuffix       string = "worker"
 	bastionSuffix      string = "bastion"
-	allNodesSuffix     string = "allNodes"
 	remoteGroupIDSelf  string = "self"
 )
 
