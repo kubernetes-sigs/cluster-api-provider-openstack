@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,43 +29,51 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackcluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,versions=v1beta1,name=validation.openstackcluster.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
+// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackcluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,versions=v1beta2,name=validation.openstackcluster.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
-func SetupOpenStackClusterWebhook(mgr manager.Manager) error {
+func SetupOpenStackClusterWebhookV1Beta2(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackCluster{}).
-		WithValidator(&openStackClusterWebhook{}).
+		For(&infrav1beta2.OpenStackCluster{}).
+		WithValidator(&openStackClusterWebhookV1Beta2{}).
 		Complete()
 }
 
-type openStackClusterWebhook struct{}
+type openStackClusterWebhookV1Beta2 struct{}
 
-// Compile-time assertion that openStackClusterWebhook implements webhook.CustomValidator.
-var _ webhook.CustomValidator = &openStackClusterWebhook{}
+// Compile-time assertion that openStackClusterWebhookV1Beta2 implements webhook.CustomValidator.
+var _ webhook.CustomValidator = &openStackClusterWebhookV1Beta2{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+func (*openStackClusterWebhookV1Beta2) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
-	newObj, err := castToOpenStackCluster(objRaw)
+	newObj, err := castToOpenStackClusterV1Beta2(objRaw)
 	if err != nil {
 		return nil, err
 	}
 
 	if newObj.Spec.ManagedSecurityGroups != nil {
-		allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusionV1Beta1(
+		allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusionV1Beta2(
 			newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules,
 			field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"),
+		)...)
+		allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusionV1Beta2(
+			newObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules,
+			field.NewPath("spec", "managedSecurityGroups", "controlPlaneNodesSecurityGroupRules"),
+		)...)
+		allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusionV1Beta2(
+			newObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules,
+			field.NewPath("spec", "managedSecurityGroups", "workerNodesSecurityGroupRules"),
 		)...)
 	}
 
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// allowSubnetFilterToIDTransition checks if changes to OpenStackCluster.Spec.Subnets
+// allowSubnetFilterToIDTransitionV1Beta2 checks if changes to OpenStackCluster.Spec.Subnets
 // are transitioning from a Filter-based definition to an ID-based one, and whether
 // those transitions are valid based on the current status.network.subnets.
 //
@@ -73,7 +81,7 @@ func (*openStackClusterWebhook) ValidateCreate(_ context.Context, objRaw runtime
 // spec matches the subnet name in status, and the new ID matches the corresponding subnet ID.
 //
 // Returns true if all such transitions are valid; false otherwise.
-func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) bool {
+func allowSubnetFilterToIDTransitionV1Beta2(oldObj, newObj *infrav1beta2.OpenStackCluster) bool {
 	if newObj.Spec.Network == nil || oldObj.Spec.Network == nil || oldObj.Status.Network == nil {
 		return false
 	}
@@ -120,20 +128,20 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) { //nolint:gocyclo,cyclop
+func (*openStackClusterWebhookV1Beta2) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) { //nolint:gocyclo,cyclop
 	var allErrs field.ErrorList
-	oldObj, err := castToOpenStackCluster(oldObjRaw)
+	oldObj, err := castToOpenStackClusterV1Beta2(oldObjRaw)
 	if err != nil {
 		return nil, err
 	}
-	newObj, err := castToOpenStackCluster(newObjRaw)
+	newObj, err := castToOpenStackClusterV1Beta2(newObjRaw)
 	if err != nil {
 		return nil, err
 	}
 
 	// Allow changes to Spec.IdentityRef
-	oldObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
-	newObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
+	oldObj.Spec.IdentityRef = infrav1beta2.OpenStackIdentityReference{}
+	newObj.Spec.IdentityRef = infrav1beta2.OpenStackIdentityReference{}
 
 	// Allow changes to ControlPlaneEndpoint fields only if it was not
 	// previously set, or did not previously have a host.
@@ -163,23 +171,23 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	}
 
 	// Allow changes to the bastion spec.
-	oldObj.Spec.Bastion = &infrav1.Bastion{}
-	newObj.Spec.Bastion = &infrav1.Bastion{}
+	oldObj.Spec.Bastion = &infrav1beta2.Bastion{}
+	newObj.Spec.Bastion = &infrav1beta2.Bastion{}
 
 	// Allow changes to the managed securityGroupRules.
 	if newObj.Spec.ManagedSecurityGroups != nil {
 		if oldObj.Spec.ManagedSecurityGroups == nil {
-			oldObj.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+			oldObj.Spec.ManagedSecurityGroups = &infrav1beta2.ManagedSecurityGroups{}
 		}
 
-		oldObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
-		newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		oldObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
 
-		oldObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
-		newObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		oldObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
 
-		oldObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
-		newObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		oldObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
 
 		// Allow change to the allowAllInClusterTraffic.
 		oldObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
@@ -193,7 +201,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "managedSubnets"), "cannot add or remove subnets"))
 		} else {
 			// Build maps of subnets by CIDR
-			oldSubnetMap := make(map[string]*infrav1.SubnetSpec)
+			oldSubnetMap := make(map[string]*infrav1beta2.SubnetSpec)
 
 			for i := range oldObj.Spec.ManagedSubnets {
 				oldSubnet := &oldObj.Spec.ManagedSubnets[i]
@@ -228,8 +236,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	// Allow changes on APIServerLB monitors
 	if newObj.Spec.APIServerLoadBalancer != nil && oldObj.Spec.APIServerLoadBalancer != nil {
-		oldObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
-		newObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
+		oldObj.Spec.APIServerLoadBalancer.Monitor = &infrav1beta2.APIServerLoadBalancerMonitor{}
+		newObj.Spec.APIServerLoadBalancer.Monitor = &infrav1beta2.APIServerLoadBalancerMonitor{}
 	}
 
 	// Allow changes to the availability zones.
@@ -250,7 +258,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	// Allow changes from filter to id for spec.network and spec.subnets
 	if newObj.Spec.Network != nil && oldObj.Spec.Network != nil && oldObj.Status.Network != nil {
 		// Allow change from spec.network.subnets from filter to id if it matches the current subnets.
-		if allowSubnetFilterToIDTransition(oldObj, newObj) {
+		if allowSubnetFilterToIDTransitionV1Beta2(oldObj, newObj) {
 			oldObj.Spec.Subnets = nil
 			newObj.Spec.Subnets = nil
 		}
@@ -269,12 +277,12 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+func (*openStackClusterWebhookV1Beta2) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	return nil, nil
 }
 
-func castToOpenStackCluster(obj runtime.Object) (*infrav1.OpenStackCluster, error) {
-	cast, ok := obj.(*infrav1.OpenStackCluster)
+func castToOpenStackClusterV1Beta2(obj runtime.Object) (*infrav1beta2.OpenStackCluster, error) {
+	cast, ok := obj.(*infrav1beta2.OpenStackCluster)
 	if !ok {
 		return nil, fmt.Errorf("expected an OpenStackCluster but got a %T", obj)
 	}

@@ -51,6 +51,7 @@ import (
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/feature"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -108,6 +109,7 @@ func init() {
 	_ = clusterv1.AddToScheme(scheme)
 	_ = ipamv1.AddToScheme(scheme)
 	_ = infrav1.AddToScheme(scheme)
+	_ = infrav1beta2.AddToScheme(scheme)
 	_ = infrav1alpha1.AddToScheme(scheme)
 	_ = orcv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
