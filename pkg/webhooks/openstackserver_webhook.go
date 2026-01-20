@@ -59,7 +59,7 @@ func (*openStackServerWebhook) ValidateCreate(_ context.Context, objRaw runtime.
 
 	if newObj.Spec.RootVolume != nil && newObj.Spec.AdditionalBlockDevices != nil {
 		for _, device := range newObj.Spec.AdditionalBlockDevices {
-			if device.Name == "root" {
+			if device.Name == rootVolumeName {
 				allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "additionalBlockDevices"), "cannot contain a device named \"root\" when rootVolume is set"))
 			}
 		}

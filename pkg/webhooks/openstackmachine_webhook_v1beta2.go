@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,27 +30,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackmachine,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,versions=v1beta1,name=validation.openstackmachine.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
+// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackmachine,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,versions=v1beta2,name=validation.openstackmachine.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
-func SetupOpenStackMachineWebhook(mgr manager.Manager) error {
+func SetupOpenStackMachineWebhookV1Beta2(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackMachine{}).
-		WithValidator(&openStackMachineWebhook{}).
+		For(&infrav1beta2.OpenStackMachine{}).
+		WithValidator(&openStackMachineWebhookV1Beta2{}).
 		Complete()
 }
 
-type openStackMachineWebhook struct{}
+type openStackMachineWebhookV1Beta2 struct{}
 
-// Compile-time assertion that openStackMachineWebhook implements webhook.CustomValidator.
-var _ webhook.CustomValidator = &openStackMachineWebhook{}
+// Compile-time assertion that openStackMachineWebhookV1Beta2 implements webhook.CustomValidator.
+var _ webhook.CustomValidator = &openStackMachineWebhookV1Beta2{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+func (*openStackMachineWebhookV1Beta2) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
-	newObj, err := castToOpenStackMachine(objRaw)
+	newObj, err := castToOpenStackMachineV1Beta2(objRaw)
 	if err != nil {
 		return nil, err
 	}
@@ -73,21 +73,21 @@ func (*openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
-	newObj, err := castToOpenStackMachine(newObjRaw)
+func (*openStackMachineWebhookV1Beta2) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+	newObj, err := castToOpenStackMachineV1Beta2(newObjRaw)
 	if err != nil {
 		return nil, err
 	}
 
 	newOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(newObj)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert new OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
 	oldOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(oldObjRaw)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert old OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
@@ -121,12 +121,12 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+func (*openStackMachineWebhookV1Beta2) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	return nil, nil
 }
 
-func castToOpenStackMachine(obj runtime.Object) (*infrav1.OpenStackMachine, error) {
-	cast, ok := obj.(*infrav1.OpenStackMachine)
+func castToOpenStackMachineV1Beta2(obj runtime.Object) (*infrav1beta2.OpenStackMachine, error) {
+	cast, ok := obj.(*infrav1beta2.OpenStackMachine)
 	if !ok {
 		return nil, fmt.Errorf("expected an OpenStackMachine but got a %T", obj)
 	}
