@@ -30,46 +30,12 @@ import (
 )
 
 var (
-	capoRelease011 string
 	capoRelease012 string
 	capoRelease013 string
-	capiRelease110 string
+	capoRelease014 string
 	capiRelease111 string
+	capiRelease112 string
 )
-
-var _ = Describe("When testing clusterctl upgrades for CAPO (v0.11=>current) and ORC (v1.0.2=>current) [clusterctl-upgrade]", func() {
-	BeforeEach(func(ctx context.Context) {
-		// Note: This gives the version without the 'v' prefix, so we need to add it below.
-		capoRelease011, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.11")
-		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
-		capoRelease011 = "v" + capoRelease011
-		// Note: This gives the version without the 'v' prefix, so we need to add it below.
-		capiRelease110, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.10")
-		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
-		capiRelease110 = "v" + capiRelease110
-	})
-
-	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
-		return capi_e2e.ClusterctlUpgradeSpecInput{
-			E2EConfig:                         e2eCtx.E2EConfig,
-			ClusterctlConfigPath:              e2eCtx.Environment.ClusterctlConfigPath,
-			BootstrapClusterProxy:             e2eCtx.Environment.BootstrapClusterProxy,
-			ArtifactFolder:                    e2eCtx.Settings.ArtifactFolder,
-			SkipCleanup:                       false,
-			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease110 + "/clusterctl-{OS}-{ARCH}",
-			InitWithProvidersContract:         "v1beta1",
-			InitWithInfrastructureProviders:   []string{"openstack:" + capoRelease011},
-			InitWithCoreProvider:              "cluster-api:" + capiRelease110,
-			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease110},
-			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease110},
-			MgmtFlavor:                        shared.FlavorDefault,
-			WorkloadFlavor:                    shared.FlavorCapiV1Beta1,
-			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesKindVersion),
-			InitWithRuntimeExtensionProviders: []string{"openstack-resource-controller:v1.0.2"},
-			UseKindForManagementCluster:       true,
-		}
-	})
-})
 
 var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and ORC (v1.0.2=>current)[clusterctl-upgrade]", func() {
 	BeforeEach(func(ctx context.Context) {
@@ -78,9 +44,9 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
 		capoRelease012 = "v" + capoRelease012
 		// Note: This gives the version without the 'v' prefix, so we need to add it below.
-		capiRelease110, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.10")
+		capiRelease111, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.11")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
-		capiRelease110 = "v" + capiRelease110
+		capiRelease111 = "v" + capiRelease111
 	})
 
 	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
@@ -90,12 +56,12 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 			BootstrapClusterProxy:             e2eCtx.Environment.BootstrapClusterProxy,
 			ArtifactFolder:                    e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:                       false,
-			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease110 + "/clusterctl-{OS}-{ARCH}",
-			InitWithProvidersContract:         "v1beta1",
+			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease111 + "/clusterctl-{OS}-{ARCH}",
+			InitWithProvidersContract:         "v1beta2",
 			InitWithInfrastructureProviders:   []string{"openstack:" + capoRelease012},
-			InitWithCoreProvider:              "cluster-api:" + capiRelease110,
-			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease110},
-			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease110},
+			InitWithCoreProvider:              "cluster-api:" + capiRelease111,
+			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease111},
+			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease111},
 			MgmtFlavor:                        shared.FlavorDefault,
 			WorkloadFlavor:                    shared.FlavorCapiV1Beta1,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesKindVersion),
@@ -125,11 +91,45 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.13=>current) and
 			ArtifactFolder:                    e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:                       false,
 			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease111 + "/clusterctl-{OS}-{ARCH}",
-			InitWithProvidersContract:         "v1beta1",
+			InitWithProvidersContract:         "v1beta2",
 			InitWithInfrastructureProviders:   []string{"openstack:" + capoRelease013},
 			InitWithCoreProvider:              "cluster-api:" + capiRelease111,
 			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease111},
 			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease111},
+			MgmtFlavor:                        shared.FlavorDefault,
+			WorkloadFlavor:                    shared.FlavorDefault,
+			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesKindVersion),
+			InitWithRuntimeExtensionProviders: []string{"openstack-resource-controller:v1.0.2"},
+			UseKindForManagementCluster:       true,
+		}
+	})
+})
+
+var _ = Describe("When testing clusterctl upgrades for CAPO (v0.14=>current) and ORC (v1.0.2=>current)[clusterctl-upgrade]", func() {
+	BeforeEach(func(ctx context.Context) {
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		capoRelease014, err = clusterctl.ResolveRelease(ctx, "go://github.com/kubernetes-sigs/cluster-api-provider-openstack@v0.14")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPO")
+		capoRelease014 = "v" + capoRelease014
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		capiRelease112, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.12")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
+		capiRelease112 = "v" + capiRelease112
+	})
+
+	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
+		return capi_e2e.ClusterctlUpgradeSpecInput{
+			E2EConfig:                         e2eCtx.E2EConfig,
+			ClusterctlConfigPath:              e2eCtx.Environment.ClusterctlConfigPath,
+			BootstrapClusterProxy:             e2eCtx.Environment.BootstrapClusterProxy,
+			ArtifactFolder:                    e2eCtx.Settings.ArtifactFolder,
+			SkipCleanup:                       false,
+			InitWithBinary:                    "https://github.com/kubernetes-sigs/cluster-api/releases/download/" + capiRelease112 + "/clusterctl-{OS}-{ARCH}",
+			InitWithProvidersContract:         "v1beta2",
+			InitWithInfrastructureProviders:   []string{"openstack:" + capoRelease014},
+			InitWithCoreProvider:              "cluster-api:" + capiRelease112,
+			InitWithBootstrapProviders:        []string{"kubeadm:" + capiRelease112},
+			InitWithControlPlaneProviders:     []string{"kubeadm:" + capiRelease112},
 			MgmtFlavor:                        shared.FlavorDefault,
 			WorkloadFlavor:                    shared.FlavorDefault,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesKindVersion),
