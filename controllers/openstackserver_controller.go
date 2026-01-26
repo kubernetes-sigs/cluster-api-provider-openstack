@@ -439,6 +439,7 @@ func getOrCreateServerPorts(openStackServer *infrav1alpha1.OpenStackServer, netw
 	desiredPorts := resolved.Ports
 
 	if err := networkingService.EnsurePorts(openStackServer, desiredPorts, resources); err != nil {
+		v1beta1conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.PortCreateFailedReason, clusterv1beta1.ConditionSeverityError, "%s", err.Error())
 		return fmt.Errorf("creating ports: %w", err)
 	}
 
