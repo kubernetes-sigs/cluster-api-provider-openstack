@@ -224,7 +224,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(created.Spec.IdentityRef.Region).To(Equal("RegionOne"))
 	})
 
-	It("should fail when namespace is denied access to ClusterIdentity", func() {
+	It("should fail when namespace is denied access to ClusterIdentity and set OpenStackAuthenticationSucceededCondition to False", func() {
 		testCluster.SetName("identity-access-denied")
 		testCluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Type:      "ClusterIdentity",
@@ -248,6 +248,53 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		Expect(err).To(MatchError(identityAccessErr))
 		Expect(result).To(Equal(reconcile.Result{}))
+
+		// Fetch the updated OpenStackCluster to verify the condition was set
+		updatedCluster := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, updatedCluster)).To(Succeed())
+
+		// Verify OpenStackAuthenticationSucceededCondition is set to False
+		Expect(v1beta1conditions.IsFalse(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := v1beta1conditions.Get(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
+	})
+
+	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
+		testCluster.SetName("missing-credentials")
+		testCluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
+			Type:      "Secret",
+			Name:      "non-existent-secret",
+			CloudName: "openstack",
+		}
+
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		credentialsErr := fmt.Errorf("secret not found: non-existent-secret")
+		mockScopeFactory.SetClientScopeCreateError(credentialsErr)
+
+		req := createRequestFromOSCluster(testCluster)
+		result, err := reconciler.Reconcile(ctx, req)
+
+		Expect(err).To(MatchError(credentialsErr))
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		// Fetch the updated OpenStackCluster to verify the condition was set
+		updatedCluster := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, updatedCluster)).To(Succeed())
+
+		// Verify OpenStackAuthenticationSucceededCondition is set to False
+		Expect(v1beta1conditions.IsFalse(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := v1beta1conditions.Get(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
 	It("should reject updates that modify identityRef.region (immutable)", func() {

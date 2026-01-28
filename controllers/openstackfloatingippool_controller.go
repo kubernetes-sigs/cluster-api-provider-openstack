@@ -80,10 +80,25 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	patchHelper, err := patch.NewHelper(pool, r.Client)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	defer func() {
+		if err := patchHelper.Patch(ctx, pool); err != nil {
+			if reterr == nil {
+				reterr = fmt.Errorf("error patching OpenStackFloatingIPPool %s/%s: %w", pool.Namespace, pool.Name, err)
+			}
+		}
+	}()
+
 	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, pool)
 	if err != nil {
+		v1beta1conditions.MarkFalse(pool, infrav1.OpenStackAuthenticationSucceeded, infrav1.OpenStackAuthenticationFailedReason, clusterv1beta1.ConditionSeverityError, "Failed to create OpenStack client scope: %v", err)
 		return reconcile.Result{}, err
 	}
+	v1beta1conditions.MarkTrue(pool, infrav1.OpenStackAuthenticationSucceeded)
 	scope := scope.NewWithLogger(clientScope, log)
 
 	// This is done before deleting the pool, because we want to handle deleted IPs before we delete the pool
@@ -100,19 +115,6 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 		// Handle deletion
 		return ctrl.Result{}, r.reconcileDelete(ctx, scope, pool)
 	}
-
-	patchHelper, err := patch.NewHelper(pool, r.Client)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	defer func() {
-		if err := patchHelper.Patch(ctx, pool); err != nil {
-			if reterr == nil {
-				reterr = fmt.Errorf("error patching OpenStackFloatingIPPool %s/%s: %w", pool.Namespace, pool.Name, err)
-			}
-		}
-	}()
 
 	if err := r.reconcileFloatingIPNetwork(scope, pool); err != nil {
 		return ctrl.Result{}, err

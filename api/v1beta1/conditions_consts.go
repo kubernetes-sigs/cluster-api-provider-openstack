@@ -73,6 +73,14 @@ const (
 )
 
 const (
+	// OpenStackAuthenticationSucceeded reports on the current status of the OpenStack credentials.
+	OpenStackAuthenticationSucceeded clusterv1beta1.ConditionType = "OpenStackAuthenticationSucceeded"
+
+	// OpenStackAuthenticationFailedReason is used when the controller fails to authenticate with OpenStack.
+	OpenStackAuthenticationFailedReason = "OpenStackAuthenticationFailed"
+)
+
+const (
 	// NetworkReadyCondition reports on the current status of the cluster network infrastructure.
 	// Ready indicates that the network, subnets, and related resources have been successfully provisioned.
 	NetworkReadyCondition clusterv1beta1.ConditionType = "NetworkReady"
