@@ -1,5 +1,4 @@
-# From: https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml
-# NOTE! We modify the node-selector to have empty value (""). This matches what kubeadm does.
+# From: https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/tags/v1.35.0/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -24,8 +23,13 @@ spec:
       labels:
         k8s-app: openstack-cloud-controller-manager
     spec:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
       securityContext:
         runAsUser: 1001
       tolerations:
@@ -43,7 +47,7 @@ spec:
       serviceAccountName: cloud-controller-manager
       containers:
       - name: openstack-cloud-controller-manager
-        image: registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.33.0
+        image: registry.k8s.io/provider-os/openstack-cloud-controller-manager:v1.35.0
         args:
         - /bin/openstack-cloud-controller-manager
         - --v=1
@@ -85,7 +89,7 @@ spec:
         secret:
           secretName: cloud-config
 ---
-# https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/heads/master/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
+# https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/tags/v1.35.0/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml
 # NOTE! We need to "extract" the List or the CRS will fail to apply.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -113,7 +117,7 @@ subjects:
   name: cloud-controller-manager
   namespace: kube-system
 ---
-# https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/heads/master/manifests/controller-manager/cloud-controller-manager-roles.yaml
+# https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/refs/tags/v1.35.0/manifests/controller-manager/cloud-controller-manager-roles.yaml
 # NOTE! We need to "extract" the List or the CRS will fail to apply.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
