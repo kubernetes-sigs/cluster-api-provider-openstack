@@ -73,6 +73,15 @@ const (
 )
 
 const (
+	// OpenStackCredentialsAvailableCondition reports on the current status of the OpenStack credentials.
+	// Available indicates that the credentials exist, but does not guarantee they are valid or have proper permissions.
+	OpenStackCredentialsAvailableCondition clusterv1beta1.ConditionType = "OpenStackCredentialsAvailable" //nolint:gosec // Linter thinks these could be credentials
+
+	// OpenStackCredentialsFailedReason is used when the controller fails to authenticate with OpenStack.
+	OpenStackCredentialsFailedReason = "OpenStackCredentialsFailed" //nolint:gosec // Linter thinks these could be credentials
+)
+
+const (
 	// NetworkReadyCondition reports on the current status of the cluster network infrastructure.
 	// Ready indicates that the network, subnets, and related resources have been successfully provisioned.
 	NetworkReadyCondition clusterv1beta1.ConditionType = "NetworkReady"
