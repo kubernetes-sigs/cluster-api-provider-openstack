@@ -124,8 +124,10 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackCluster)
 	if err != nil {
+		v1beta1conditions.MarkFalse(openStackCluster, infrav1.OpenStackCredentialsAvailableCondition, infrav1.OpenStackCredentialsFailedReason, clusterv1beta1.ConditionSeverityError, "Failed to create OpenStack client scope: %v", err)
 		return reconcile.Result{}, err
 	}
+	v1beta1conditions.MarkTrue(openStackCluster, infrav1.OpenStackCredentialsAvailableCondition)
 	scope := scope.NewWithLogger(clientScope, log)
 
 	// Handle deleted clusters
