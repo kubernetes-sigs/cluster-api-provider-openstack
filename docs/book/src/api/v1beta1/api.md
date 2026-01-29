@@ -4217,6 +4217,20 @@ NodeInfo
 <em>(Optional)</em>
 </td>
 </tr>
+<tr>
+<td>
+<code>conditions</code><br/>
+<em>
+sigs.k8s.io/cluster-api/api/core/v1beta1.Conditions
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions defines current service state of the OpenStackMachineTemplate.
+The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
+(both during initial provisioning and after the initial provisioning is completed).</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.PortOpts">PortOpts

@@ -23,7 +23,8 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
-	. "github.com/onsi/gomega" //nolint:revive
+	. "github.com/onsi/ginkgo/v2" //nolint:revive
+	. "github.com/onsi/gomega"    //nolint:revive
 	"go.uber.org/mock/gomock"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -31,11 +32,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
+	"sigs.k8s.io/cluster-api/test/framework"
 	capiannotations "sigs.k8s.io/cluster-api/util/annotations"
+	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
+	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
@@ -432,3 +438,233 @@ func newOSCluster(name string) *infrav1.OpenStackCluster {
 		},
 	}
 }
+
+var _ = Describe("OpenStackMachineTemplate controller", func() {
+	var (
+		testOSMT        *infrav1.OpenStackMachineTemplate
+		testCluster     *clusterv1.Cluster
+		testOSCluster   *infrav1.OpenStackCluster
+		testNamespace   string
+		osmtReconciler  *OpenStackMachineTemplateReconciler
+		osmtMockCtrl    *gomock.Controller
+		osmtMockFactory *scope.MockScopeFactory
+		testNum         int
+	)
+
+	testOSClusterName := "test-oscluster"
+
+	BeforeEach(func() {
+		testNum++
+		testNamespace = fmt.Sprintf("osmt-test-%d", testNum)
+
+		testOSCluster = &infrav1.OpenStackCluster{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: infrav1.SchemeGroupVersion.Group + "/" + infrav1.SchemeGroupVersion.Version,
+				Kind:       "OpenStackCluster",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      testOSClusterName,
+				Namespace: testNamespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: clusterv1.GroupVersion.String(),
+						Kind:       "Cluster",
+						Name:       capiClusterName,
+						UID:        types.UID("cluster-uid"),
+					},
+				},
+			},
+			Spec: infrav1.OpenStackClusterSpec{
+				IdentityRef: infrav1.OpenStackIdentityReference{
+					Name:      "test-creds",
+					CloudName: "openstack",
+				},
+			},
+		}
+
+		testCluster = &clusterv1.Cluster{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: clusterv1.GroupVersion.String(),
+				Kind:       "Cluster",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      capiClusterName,
+				Namespace: testNamespace,
+			},
+			Spec: clusterv1.ClusterSpec{
+				InfrastructureRef: clusterv1.ContractVersionedObjectReference{
+					APIGroup: infrav1.GroupName,
+					Kind:     "OpenStackCluster",
+					Name:     testOSClusterName,
+				},
+			},
+		}
+
+		testOSMT = &infrav1.OpenStackMachineTemplate{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: infrav1.SchemeGroupVersion.Group + "/" + infrav1.SchemeGroupVersion.Version,
+				Kind:       "OpenStackMachineTemplate",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-osmt",
+				Namespace: testNamespace,
+				Labels: map[string]string{
+					clusterv1.ClusterNameLabel: capiClusterName,
+				},
+			},
+			Spec: infrav1.OpenStackMachineTemplateSpec{
+				Template: infrav1.OpenStackMachineTemplateResource{
+					Spec: infrav1.OpenStackMachineSpec{
+						FlavorID: ptr.To(flavorID),
+						Image: infrav1.ImageParam{
+							ID: &imageID,
+						},
+					},
+				},
+			},
+		}
+
+		input := framework.CreateNamespaceInput{
+			Creator: k8sClient,
+			Name:    testNamespace,
+		}
+		framework.CreateNamespace(ctx, input)
+
+		osmtMockCtrl = gomock.NewController(GinkgoT())
+		osmtMockFactory = scope.NewMockScopeFactory(osmtMockCtrl, "")
+		osmtReconciler = &OpenStackMachineTemplateReconciler{
+			Client:       k8sClient,
+			ScopeFactory: osmtMockFactory,
+		}
+	})
+
+	AfterEach(func() {
+		orphan := metav1.DeletePropagationOrphan
+		deleteOptions := client.DeleteOptions{
+			PropagationPolicy: &orphan,
+		}
+
+		// Remove finalizers and delete openstackmachinetemplate
+		patchHelper, err := patch.NewHelper(testOSMT, k8sClient)
+		Expect(err).To(BeNil())
+		testOSMT.SetFinalizers([]string{})
+		err = patchHelper.Patch(ctx, testOSMT)
+		Expect(err).To(BeNil())
+		err = k8sClient.Delete(ctx, testOSMT, &deleteOptions)
+		Expect(err).To(BeNil())
+
+		err = k8sClient.Delete(ctx, testCluster, &deleteOptions)
+		Expect(client.IgnoreNotFound(err)).To(BeNil())
+		err = k8sClient.Delete(ctx, testOSCluster, &deleteOptions)
+		Expect(client.IgnoreNotFound(err)).To(BeNil())
+	})
+
+	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
+		testOSMT.SetName("missing-osmt-credentials")
+
+		// Create cluster first to get the UID
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+
+		// Fetch the cluster to get the generated UID
+		createdCluster := &clusterv1.Cluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, createdCluster)).To(Succeed())
+
+		// Set owner reference on OSMT with correct UID
+		testOSMT.OwnerReferences = []metav1.OwnerReference{
+			{
+				APIVersion: clusterv1.GroupVersion.String(),
+				Kind:       "Cluster",
+				Name:       createdCluster.Name,
+				UID:        createdCluster.UID,
+			},
+		}
+
+		err = k8sClient.Create(ctx, testOSCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, testOSMT)
+		Expect(err).To(BeNil())
+
+		credentialsErr := fmt.Errorf("secret not found: non-existent-secret")
+		osmtMockFactory.SetClientScopeCreateError(credentialsErr)
+
+		req := reconcile.Request{
+			NamespacedName: client.ObjectKey{
+				Name:      testOSMT.Name,
+				Namespace: testOSMT.Namespace,
+			},
+		}
+		result, err := osmtReconciler.Reconcile(ctx, req)
+
+		Expect(err).To(MatchError(credentialsErr))
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		// Fetch the updated OpenStackMachineTemplate to verify the condition was set
+		updatedOSMT := &infrav1.OpenStackMachineTemplate{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testOSMT.Name, Namespace: testOSMT.Namespace}, updatedOSMT)).To(Succeed())
+
+		// Verify OpenStackAuthenticationSucceededCondition is set to False
+		Expect(v1beta1conditions.IsFalse(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := v1beta1conditions.Get(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
+	})
+
+	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func() {
+		testOSMT.SetName("identity-access-denied-osmt")
+
+		// Create cluster first to get the UID
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+
+		// Fetch the cluster to get the generated UID
+		createdCluster := &clusterv1.Cluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, createdCluster)).To(Succeed())
+
+		// Set owner reference on OSMT with correct UID
+		testOSMT.OwnerReferences = []metav1.OwnerReference{
+			{
+				APIVersion: clusterv1.GroupVersion.String(),
+				Kind:       "Cluster",
+				Name:       createdCluster.Name,
+				UID:        createdCluster.UID,
+			},
+		}
+
+		err = k8sClient.Create(ctx, testOSCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, testOSMT)
+		Expect(err).To(BeNil())
+
+		identityAccessErr := &scope.IdentityAccessDeniedError{
+			IdentityName:       "test-cluster-identity",
+			RequesterNamespace: testNamespace,
+		}
+		osmtMockFactory.SetClientScopeCreateError(identityAccessErr)
+
+		req := reconcile.Request{
+			NamespacedName: client.ObjectKey{
+				Name:      testOSMT.Name,
+				Namespace: testOSMT.Namespace,
+			},
+		}
+		result, err := osmtReconciler.Reconcile(ctx, req)
+
+		Expect(err).To(MatchError(identityAccessErr))
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		// Fetch the updated OpenStackMachineTemplate to verify the condition was set
+		updatedOSMT := &infrav1.OpenStackMachineTemplate{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testOSMT.Name, Namespace: testOSMT.Namespace}, updatedOSMT)).To(Succeed())
+
+		// Verify OpenStackAuthenticationSucceededCondition is set to False
+		Expect(v1beta1conditions.IsFalse(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := v1beta1conditions.Get(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
+	})
+})

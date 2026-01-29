@@ -24,8 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
+	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -106,12 +108,6 @@ func (r *OpenStackMachineTemplateReconciler) Reconcile(ctx context.Context, req 
 
 	log = log.WithValues("openStackCluster", infraCluster.Name)
 
-	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackMachineTemplate, infraCluster)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-	scope := scope.NewWithLogger(clientScope, log)
-
 	// Initialize the patch helper
 	patchHelper, err := patch.NewHelper(openStackMachineTemplate, r.Client)
 	if err != nil {
@@ -126,6 +122,14 @@ func (r *OpenStackMachineTemplateReconciler) Reconcile(ctx context.Context, req 
 			reterr = kerrors.NewAggregate([]error{reterr, err})
 		}
 	}()
+
+	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackMachineTemplate, infraCluster)
+	if err != nil {
+		v1beta1conditions.MarkFalse(openStackMachineTemplate, infrav1.OpenStackAuthenticationSucceeded, infrav1.OpenStackAuthenticationFailedReason, clusterv1beta1.ConditionSeverityError, "Failed to create OpenStack client scope: %v", err)
+		return ctrl.Result{}, err
+	}
+	v1beta1conditions.MarkTrue(openStackMachineTemplate, infrav1.OpenStackAuthenticationSucceeded)
+	scope := scope.NewWithLogger(clientScope, log)
 
 	// Handle non-deleted OpenStackMachineTemplates
 	if err := r.reconcileNormal(ctx, scope, openStackMachineTemplate); err != nil {
