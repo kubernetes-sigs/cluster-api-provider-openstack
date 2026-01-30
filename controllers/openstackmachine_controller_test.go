@@ -17,16 +17,26 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/go-logr/logr"
+	. "github.com/onsi/ginkgo/v2" //nolint:revive
+	. "github.com/onsi/gomega"    //nolint:revive
+	"go.uber.org/mock/gomock"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
+	"sigs.k8s.io/cluster-api/test/framework"
 	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
+	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
@@ -651,3 +661,262 @@ func TestReconcileMachineState(t *testing.T) {
 		})
 	}
 }
+
+var _ = Describe("OpenStackMachine controller", func() {
+	var (
+		testMachine        *infrav1.OpenStackMachine
+		capiMachine        *clusterv1.Machine
+		capiCluster        *clusterv1.Cluster
+		testCluster        *infrav1.OpenStackCluster
+		testNamespace      string
+		machineReconciler  *OpenStackMachineReconciler
+		machineMockCtrl    *gomock.Controller
+		machineMockFactory *scope.MockScopeFactory
+		testNum            int
+	)
+
+	capiClusterName := "capi-cluster"
+	testClusterName := "test-cluster"
+	testMachineName := "test-machine"
+	capiMachineName := "capi-machine"
+
+	BeforeEach(func() {
+		ctx = context.TODO()
+		testNum++
+		testNamespace = fmt.Sprintf("machine-test-%d", testNum)
+
+		testCluster = &infrav1.OpenStackCluster{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: infrav1.SchemeGroupVersion.Group + "/" + infrav1.SchemeGroupVersion.Version,
+				Kind:       "OpenStackCluster",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      testClusterName,
+				Namespace: testNamespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: clusterv1.GroupVersion.Group + "/" + clusterv1.GroupVersion.Version,
+						Kind:       "Cluster",
+						Name:       capiClusterName,
+						UID:        types.UID("cluster-uid"),
+					},
+				},
+			},
+			Spec: infrav1.OpenStackClusterSpec{
+				IdentityRef: infrav1.OpenStackIdentityReference{
+					Name:      "test-creds",
+					CloudName: "openstack",
+				},
+			},
+			Status: infrav1.OpenStackClusterStatus{
+				Ready: true,
+			},
+		}
+
+		capiCluster = &clusterv1.Cluster{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: clusterv1.GroupVersion.Group + "/" + clusterv1.GroupVersion.Version,
+				Kind:       "Cluster",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      capiClusterName,
+				Namespace: testNamespace,
+			},
+			Spec: clusterv1.ClusterSpec{
+				InfrastructureRef: clusterv1.ContractVersionedObjectReference{
+					APIGroup: infrav1.GroupName,
+					Kind:     "OpenStackCluster",
+					Name:     testClusterName,
+				},
+			},
+		}
+
+		capiMachine = &clusterv1.Machine{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: clusterv1.GroupVersion.Group + "/" + clusterv1.GroupVersion.Version,
+				Kind:       "Machine",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      capiMachineName,
+				Namespace: testNamespace,
+				Labels: map[string]string{
+					clusterv1.ClusterNameLabel: capiClusterName,
+				},
+			},
+		}
+
+		testMachine = &infrav1.OpenStackMachine{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: infrav1.SchemeGroupVersion.Group + "/" + infrav1.SchemeGroupVersion.Version,
+				Kind:       "OpenStackMachine",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      testMachineName,
+				Namespace: testNamespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: clusterv1.GroupVersion.Group + "/" + clusterv1.GroupVersion.Version,
+						Kind:       "Machine",
+						Name:       capiMachineName,
+						UID:        types.UID("machine-uid"),
+					},
+				},
+			},
+			Spec: infrav1.OpenStackMachineSpec{
+				Flavor: ptr.To(flavorName),
+				Image: infrav1.ImageParam{
+					Filter: &infrav1.ImageFilter{
+						Name: ptr.To("test-image"),
+					},
+				},
+			},
+		}
+
+		input := framework.CreateNamespaceInput{
+			Creator: k8sClient,
+			Name:    testNamespace,
+		}
+		framework.CreateNamespace(ctx, input)
+
+		machineMockCtrl = gomock.NewController(GinkgoT())
+		machineMockFactory = scope.NewMockScopeFactory(machineMockCtrl, "")
+		machineReconciler = &OpenStackMachineReconciler{
+			Client:       k8sClient,
+			ScopeFactory: machineMockFactory,
+		}
+	})
+
+	AfterEach(func() {
+		orphan := metav1.DeletePropagationOrphan
+		deleteOptions := client.DeleteOptions{
+			PropagationPolicy: &orphan,
+		}
+
+		// Remove finalizers and delete openstackmachine
+		patchHelper, err := patch.NewHelper(testMachine, k8sClient)
+		Expect(err).To(BeNil())
+		testMachine.SetFinalizers([]string{})
+		err = patchHelper.Patch(ctx, testMachine)
+		Expect(err).To(BeNil())
+		err = k8sClient.Delete(ctx, testMachine, &deleteOptions)
+		Expect(err).To(BeNil())
+
+		// Remove finalizers and delete openstackcluster
+		patchHelper, err = patch.NewHelper(testCluster, k8sClient)
+		Expect(err).To(BeNil())
+		testCluster.SetFinalizers([]string{})
+		err = patchHelper.Patch(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Delete(ctx, testCluster, &deleteOptions)
+		Expect(err).To(BeNil())
+
+		// Remove finalizers and delete cluster
+		patchHelper, err = patch.NewHelper(capiCluster, k8sClient)
+		Expect(err).To(BeNil())
+		capiCluster.SetFinalizers([]string{})
+		err = patchHelper.Patch(ctx, capiCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Delete(ctx, capiCluster, &deleteOptions)
+		Expect(err).To(BeNil())
+
+		// Remove finalizers and delete machine
+		patchHelper, err = patch.NewHelper(capiMachine, k8sClient)
+		Expect(err).To(BeNil())
+		capiMachine.SetFinalizers([]string{})
+		err = patchHelper.Patch(ctx, capiMachine)
+		Expect(err).To(BeNil())
+		err = k8sClient.Delete(ctx, capiMachine, &deleteOptions)
+		Expect(err).To(BeNil())
+	})
+
+	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
+		testMachine.SetName("missing-machine-credentials")
+		testMachine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+			Type:      "Secret",
+			Name:      "non-existent-secret",
+			CloudName: "openstack",
+		}
+
+		err := k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiMachine)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, testMachine)
+		Expect(err).To(BeNil())
+
+		credentialsErr := fmt.Errorf("secret not found: non-existent-secret")
+		machineMockFactory.SetClientScopeCreateError(credentialsErr)
+
+		req := reconcile.Request{
+			NamespacedName: client.ObjectKey{
+				Name:      testMachine.Name,
+				Namespace: testMachine.Namespace,
+			},
+		}
+		result, err := machineReconciler.Reconcile(ctx, req)
+
+		Expect(err).To(MatchError(credentialsErr))
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		// Fetch the updated OpenStackMachine to verify the condition was set
+		updatedMachine := &infrav1.OpenStackMachine{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testMachine.Name, Namespace: testMachine.Namespace}, updatedMachine)).To(Succeed())
+
+		// Verify OpenStackAuthenticationSucceededCondition is set to False
+		Expect(v1beta1conditions.IsFalse(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := v1beta1conditions.Get(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
+	})
+
+	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func() {
+		testMachine.SetName("identity-access-denied-machine")
+		testMachine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+			Type:      "ClusterIdentity",
+			Name:      "test-cluster-identity",
+			CloudName: "openstack",
+		}
+
+		err := k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiMachine)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, testMachine)
+		Expect(err).To(BeNil())
+
+		identityAccessErr := &scope.IdentityAccessDeniedError{
+			IdentityName:       "test-cluster-identity",
+			RequesterNamespace: testNamespace,
+		}
+		machineMockFactory.SetClientScopeCreateError(identityAccessErr)
+
+		req := reconcile.Request{
+			NamespacedName: client.ObjectKey{
+				Name:      testMachine.Name,
+				Namespace: testMachine.Namespace,
+			},
+		}
+		result, err := machineReconciler.Reconcile(ctx, req)
+
+		Expect(err).To(MatchError(identityAccessErr))
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		// Fetch the updated OpenStackMachine to verify the condition was set
+		updatedMachine := &infrav1.OpenStackMachine{}
+		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testMachine.Name, Namespace: testMachine.Namespace}, updatedMachine)).To(Succeed())
+
+		// Verify OpenStackAuthenticationSucceededCondition is set to False
+		Expect(v1beta1conditions.IsFalse(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := v1beta1conditions.Get(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
+		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
+		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
+	})
+})

@@ -99,14 +99,6 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return reconcile.Result{}, err
 	}
 
-	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackServer)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	scope := scope.NewWithLogger(clientScope, log)
-
-	scope.Logger().Info("Reconciling OpenStackServer")
-
 	patchHelper, err := patch.NewHelper(openStackServer, r.Client)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -124,6 +116,16 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			reterr = kerrors.NewAggregate([]error{reterr, err})
 		}
 	}()
+
+	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackServer)
+	if err != nil {
+		v1beta1conditions.MarkFalse(openStackServer, infrav1.OpenStackAuthenticationSucceeded, infrav1.OpenStackAuthenticationFailedReason, clusterv1beta1.ConditionSeverityError, "Failed to create OpenStack client scope: %v", err)
+		return reconcile.Result{}, err
+	}
+	v1beta1conditions.MarkTrue(openStackServer, infrav1.OpenStackAuthenticationSucceeded)
+	scope := scope.NewWithLogger(clientScope, log)
+
+	scope.Logger().Info("Reconciling OpenStackServer")
 
 	cluster, err := getClusterFromMetadata(ctx, r.Client, openStackServer.ObjectMeta)
 	if err != nil {

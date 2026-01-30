@@ -150,8 +150,10 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackMachine, infraCluster)
 	if err != nil {
+		v1beta1conditions.MarkFalse(openStackMachine, infrav1.OpenStackAuthenticationSucceeded, infrav1.OpenStackAuthenticationFailedReason, clusterv1beta1.ConditionSeverityError, "Failed to create OpenStack client scope: %v", err)
 		return reconcile.Result{}, err
 	}
+	v1beta1conditions.MarkTrue(openStackMachine, infrav1.OpenStackAuthenticationSucceeded)
 	scope := scope.NewWithLogger(clientScope, log)
 
 	clusterResourceName := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
