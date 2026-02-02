@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	v1beta2 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta2"
 )
 
 // ServerResourcesApplyConfiguration represents a declarative configuration of the ServerResources type for use
 // with apply.
 type ServerResourcesApplyConfiguration struct {
-	Ports []v1beta1.PortStatusApplyConfiguration `json:"ports,omitempty"`
+	Ports []v1beta2.PortStatusApplyConfiguration `json:"ports,omitempty"`
 }
 
 // ServerResourcesApplyConfiguration constructs a declarative configuration of the ServerResources type for use with
@@ -37,7 +37,7 @@ func ServerResources() *ServerResourcesApplyConfiguration {
 // WithPorts adds the given value to the Ports field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Ports field.
-func (b *ServerResourcesApplyConfiguration) WithPorts(values ...*v1beta1.PortStatusApplyConfiguration) *ServerResourcesApplyConfiguration {
+func (b *ServerResourcesApplyConfiguration) WithPorts(values ...*v1beta2.PortStatusApplyConfiguration) *ServerResourcesApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithPorts")

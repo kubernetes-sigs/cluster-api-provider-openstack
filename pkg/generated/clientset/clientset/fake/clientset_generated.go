@@ -31,6 +31,8 @@ import (
 	fakeinfrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha1/fake"
 	infrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1"
 	fakeinfrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1/fake"
+	infrastructurev1beta2 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta2"
+	fakeinfrastructurev1beta2 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta2/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -135,4 +137,9 @@ func (c *Clientset) InfrastructureV1alpha1() infrastructurev1alpha1.Infrastructu
 // InfrastructureV1beta1 retrieves the InfrastructureV1beta1Client
 func (c *Clientset) InfrastructureV1beta1() infrastructurev1beta1.InfrastructureV1beta1Interface {
 	return &fakeinfrastructurev1beta1.FakeInfrastructureV1beta1{Fake: &c.Fake}
+}
+
+// InfrastructureV1beta2 retrieves the InfrastructureV1beta2Client
+func (c *Clientset) InfrastructureV1beta2() infrastructurev1beta2.InfrastructureV1beta2Interface {
+	return &fakeinfrastructurev1beta2.FakeInfrastructureV1beta2{Fake: &c.Fake}
 }

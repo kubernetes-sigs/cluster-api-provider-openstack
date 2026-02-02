@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	v1beta2 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta2"
 )
 
 // ResolvedServerSpecApplyConfiguration represents a declarative configuration of the ResolvedServerSpec type for use
@@ -28,7 +28,7 @@ type ResolvedServerSpecApplyConfiguration struct {
 	ServerGroupID *string                                      `json:"serverGroupID,omitempty"`
 	ImageID       *string                                      `json:"imageID,omitempty"`
 	FlavorID      *string                                      `json:"flavorID,omitempty"`
-	Ports         []v1beta1.ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
+	Ports         []v1beta2.ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
 }
 
 // ResolvedServerSpecApplyConfiguration constructs a declarative configuration of the ResolvedServerSpec type for use with
@@ -64,7 +64,7 @@ func (b *ResolvedServerSpecApplyConfiguration) WithFlavorID(value string) *Resol
 // WithPorts adds the given value to the Ports field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Ports field.
-func (b *ResolvedServerSpecApplyConfiguration) WithPorts(values ...*v1beta1.ResolvedPortSpecApplyConfiguration) *ResolvedServerSpecApplyConfiguration {
+func (b *ResolvedServerSpecApplyConfiguration) WithPorts(values ...*v1beta2.ResolvedPortSpecApplyConfiguration) *ResolvedServerSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithPorts")
