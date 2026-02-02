@@ -19,7 +19,7 @@ package conversioncommon
 import (
 	"k8s.io/apimachinery/pkg/conversion"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 func Convert_string_To_Pointer_v1beta1_VolumeAvailabilityZone(in *string, out **infrav1.VolumeAvailabilityZone, _ conversion.Scope) error {
