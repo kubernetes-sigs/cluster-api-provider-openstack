@@ -22,14 +22,13 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
-	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -442,8 +441,8 @@ func TestReconcileMachineState(t *testing.T) {
 		instanceState                   infrav1.InstanceState
 		machineHasNodeRef               bool
 		expectRequeue                   bool
-		expectedInstanceReadyCondition  *clusterv1beta1.Condition
-		expectedReadyCondition          *clusterv1beta1.Condition
+		expectedInstanceReadyCondition  *metav1.Condition
+		expectedReadyCondition          *metav1.Condition
 		expectInitializationProvisioned bool
 		expectFailureSet                bool
 	}{
@@ -451,13 +450,13 @@ func TestReconcileMachineState(t *testing.T) {
 			name:          "Instance state ACTIVE sets conditions to True and initialization.provisioned",
 			instanceState: infrav1.InstanceStateActive,
 			expectRequeue: false,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
+			expectedInstanceReadyCondition: &metav1.Condition{
 				Type:   infrav1.InstanceReadyCondition,
-				Status: corev1.ConditionTrue,
+				Status: metav1.ConditionTrue,
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:   clusterv1beta1.ReadyCondition,
-				Status: corev1.ConditionTrue,
+			expectedReadyCondition: &metav1.Condition{
+				Type:   clusterv1.ReadyCondition,
+				Status: metav1.ConditionTrue,
 			},
 			expectInitializationProvisioned: true,
 		},
@@ -466,17 +465,15 @@ func TestReconcileMachineState(t *testing.T) {
 			instanceState:     infrav1.InstanceStateError,
 			machineHasNodeRef: false,
 			expectRequeue:     true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceStateErrorReason,
+			expectedInstanceReadyCondition: &metav1.Condition{
+				Type:   infrav1.InstanceReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceStateErrorReason,
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceStateErrorReason,
+			expectedReadyCondition: &metav1.Condition{
+				Type:   clusterv1.ReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceStateErrorReason,
 			},
 			expectFailureSet: true,
 		},
@@ -485,17 +482,15 @@ func TestReconcileMachineState(t *testing.T) {
 			instanceState:     infrav1.InstanceStateError,
 			machineHasNodeRef: true,
 			expectRequeue:     true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceStateErrorReason,
+			expectedInstanceReadyCondition: &metav1.Condition{
+				Type:   infrav1.InstanceReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceStateErrorReason,
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceStateErrorReason,
+			expectedReadyCondition: &metav1.Condition{
+				Type:   clusterv1.ReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceStateErrorReason,
 			},
 			expectFailureSet: false,
 		},
@@ -503,42 +498,39 @@ func TestReconcileMachineState(t *testing.T) {
 			name:          "Instance state DELETED sets conditions to False",
 			instanceState: infrav1.InstanceStateDeleted,
 			expectRequeue: true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceDeletedReason,
+			expectedInstanceReadyCondition: &metav1.Condition{
+				Type:   infrav1.InstanceReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceDeletedReason,
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceDeletedReason,
+			expectedReadyCondition: &metav1.Condition{
+				Type:   clusterv1.ReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceDeletedReason,
 			},
 		},
 		{
 			name:          "Instance state BUILD sets ReadyCondition to False",
 			instanceState: infrav1.InstanceStateBuild,
 			expectRequeue: true,
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityInfo,
-				Reason:   infrav1.InstanceNotReadyReason,
+			expectedReadyCondition: &metav1.Condition{
+				Type:   clusterv1.ReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceNotReadyReason,
 			},
 		},
 		{
 			name:          "Instance state SHUTOFF sets conditions to Unknown",
 			instanceState: infrav1.InstanceStateShutoff,
 			expectRequeue: true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
+			expectedInstanceReadyCondition: &metav1.Condition{
 				Type:   infrav1.InstanceReadyCondition,
-				Status: corev1.ConditionUnknown,
+				Status: metav1.ConditionUnknown,
 				Reason: infrav1.InstanceNotReadyReason,
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:   clusterv1beta1.ReadyCondition,
-				Status: corev1.ConditionUnknown,
+			expectedReadyCondition: &metav1.Condition{
+				Type:   clusterv1.ReadyCondition,
+				Status: metav1.ConditionUnknown,
 				Reason: infrav1.InstanceNotReadyReason,
 			},
 		},
@@ -597,7 +589,7 @@ func TestReconcileMachineState(t *testing.T) {
 
 			// Check InstanceReadyCondition
 			if tt.expectedInstanceReadyCondition != nil {
-				condition := v1beta1conditions.Get(openStackMachine, tt.expectedInstanceReadyCondition.Type)
+				condition := meta.FindStatusCondition(openStackMachine.Status.Conditions, tt.expectedInstanceReadyCondition.Type)
 				if condition == nil {
 					t.Errorf("expected %s condition to be set", tt.expectedInstanceReadyCondition.Type)
 				} else {
@@ -607,15 +599,12 @@ func TestReconcileMachineState(t *testing.T) {
 					if tt.expectedInstanceReadyCondition.Reason != "" && condition.Reason != tt.expectedInstanceReadyCondition.Reason {
 						t.Errorf("expected %s reason %s, got %s", tt.expectedInstanceReadyCondition.Type, tt.expectedInstanceReadyCondition.Reason, condition.Reason)
 					}
-					if tt.expectedInstanceReadyCondition.Severity != "" && condition.Severity != tt.expectedInstanceReadyCondition.Severity {
-						t.Errorf("expected %s severity %s, got %s", tt.expectedInstanceReadyCondition.Type, tt.expectedInstanceReadyCondition.Severity, condition.Severity)
-					}
 				}
 			}
 
 			// Check ReadyCondition
 			if tt.expectedReadyCondition != nil {
-				condition := v1beta1conditions.Get(openStackMachine, tt.expectedReadyCondition.Type)
+				condition := meta.FindStatusCondition(openStackMachine.Status.Conditions, tt.expectedReadyCondition.Type)
 				if condition == nil {
 					t.Errorf("expected %s condition to be set", tt.expectedReadyCondition.Type)
 				} else {
@@ -624,9 +613,6 @@ func TestReconcileMachineState(t *testing.T) {
 					}
 					if tt.expectedReadyCondition.Reason != "" && condition.Reason != tt.expectedReadyCondition.Reason {
 						t.Errorf("expected %s reason %s, got %s", tt.expectedReadyCondition.Type, tt.expectedReadyCondition.Reason, condition.Reason)
-					}
-					if tt.expectedReadyCondition.Severity != "" && condition.Severity != tt.expectedReadyCondition.Severity {
-						t.Errorf("expected %s severity %s, got %s", tt.expectedReadyCondition.Type, tt.expectedReadyCondition.Severity, condition.Severity)
 					}
 				}
 			}
@@ -638,16 +624,9 @@ func TestReconcileMachineState(t *testing.T) {
 				}
 			}
 
-			// Check failure is set
-			if tt.expectFailureSet {
-				if openStackMachine.Status.FailureReason == nil || openStackMachine.Status.FailureMessage == nil {
-					t.Errorf("expected FailureReason and FailureMessage to be set")
-				}
-			} else {
-				if openStackMachine.Status.FailureReason != nil || openStackMachine.Status.FailureMessage != nil {
-					t.Errorf("expected FailureReason and FailureMessage to not be set")
-				}
-			}
+			// Note: v1beta2 doesn't have FailureReason/FailureMessage fields
+			// Failures are now communicated via conditions only
+			// So we skip the failure field checks for v1beta2
 		})
 	}
 }

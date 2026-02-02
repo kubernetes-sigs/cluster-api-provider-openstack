@@ -20,8 +20,8 @@ package v1alpha1
 
 import (
 	v1 "k8s.io/api/core/v1"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	corev1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	v1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 // OpenStackServerStatusApplyConfiguration represents a declarative configuration of the OpenStackServerStatus type for use
@@ -29,11 +29,11 @@ import (
 type OpenStackServerStatusApplyConfiguration struct {
 	Ready         *bool                                 `json:"ready,omitempty"`
 	InstanceID    *string                               `json:"instanceID,omitempty"`
-	InstanceState *v1beta1.InstanceState                `json:"instanceState,omitempty"`
+	InstanceState *v1beta2.InstanceState                `json:"instanceState,omitempty"`
 	Addresses     []v1.NodeAddress                      `json:"addresses,omitempty"`
 	Resolved      *ResolvedServerSpecApplyConfiguration `json:"resolved,omitempty"`
 	Resources     *ServerResourcesApplyConfiguration    `json:"resources,omitempty"`
-	Conditions    *corev1beta1.Conditions               `json:"conditions,omitempty"`
+	Conditions    []metav1.ConditionApplyConfiguration  `json:"conditions,omitempty"`
 }
 
 // OpenStackServerStatusApplyConfiguration constructs a declarative configuration of the OpenStackServerStatus type for use with
@@ -61,7 +61,7 @@ func (b *OpenStackServerStatusApplyConfiguration) WithInstanceID(value string) *
 // WithInstanceState sets the InstanceState field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the InstanceState field is set to the value of the last call.
-func (b *OpenStackServerStatusApplyConfiguration) WithInstanceState(value v1beta1.InstanceState) *OpenStackServerStatusApplyConfiguration {
+func (b *OpenStackServerStatusApplyConfiguration) WithInstanceState(value v1beta2.InstanceState) *OpenStackServerStatusApplyConfiguration {
 	b.InstanceState = &value
 	return b
 }
@@ -92,10 +92,15 @@ func (b *OpenStackServerStatusApplyConfiguration) WithResources(value *ServerRes
 	return b
 }
 
-// WithConditions sets the Conditions field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Conditions field is set to the value of the last call.
-func (b *OpenStackServerStatusApplyConfiguration) WithConditions(value corev1beta1.Conditions) *OpenStackServerStatusApplyConfiguration {
-	b.Conditions = &value
+// WithConditions adds the given value to the Conditions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Conditions field.
+func (b *OpenStackServerStatusApplyConfiguration) WithConditions(values ...*metav1.ConditionApplyConfiguration) *OpenStackServerStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConditions")
+		}
+		b.Conditions = append(b.Conditions, *values[i])
+	}
 	return b
 }

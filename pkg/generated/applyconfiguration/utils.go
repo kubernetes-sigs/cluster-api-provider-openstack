@@ -24,8 +24,10 @@ import (
 	managedfields "k8s.io/apimachinery/pkg/util/managedfields"
 	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	v1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	apiv1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1alpha1"
 	apiv1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	apiv1beta2 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta2"
 	internal "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/internal"
 )
 
@@ -182,6 +184,138 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.ValueSpecApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("VolumeAvailabilityZone"):
 		return &apiv1beta1.VolumeAvailabilityZoneApplyConfiguration{}
+
+		// Group=infrastructure.cluster.x-k8s.io, Version=v1beta2
+	case v1beta2.SchemeGroupVersion.WithKind("AdditionalBlockDevice"):
+		return &apiv1beta2.AdditionalBlockDeviceApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("AddressPair"):
+		return &apiv1beta2.AddressPairApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("AllocationPool"):
+		return &apiv1beta2.AllocationPoolApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("APIServerLoadBalancer"):
+		return &apiv1beta2.APIServerLoadBalancerApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("APIServerLoadBalancerMonitor"):
+		return &apiv1beta2.APIServerLoadBalancerMonitorApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("Bastion"):
+		return &apiv1beta2.BastionApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("BastionStatus"):
+		return &apiv1beta2.BastionStatusApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("BindingProfile"):
+		return &apiv1beta2.BindingProfileApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("BlockDeviceStorage"):
+		return &apiv1beta2.BlockDeviceStorageApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("BlockDeviceVolume"):
+		return &apiv1beta2.BlockDeviceVolumeApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ClusterInitialization"):
+		return &apiv1beta2.ClusterInitializationApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ExternalRouterIPParam"):
+		return &apiv1beta2.ExternalRouterIPParamApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("FilterByNeutronTags"):
+		return &apiv1beta2.FilterByNeutronTagsApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("FixedIP"):
+		return &apiv1beta2.FixedIPApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ImageFilter"):
+		return &apiv1beta2.ImageFilterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ImageParam"):
+		return &apiv1beta2.ImageParamApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("LoadBalancer"):
+		return &apiv1beta2.LoadBalancerApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("MachineInitialization"):
+		return &apiv1beta2.MachineInitializationApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("MachineResources"):
+		return &apiv1beta2.MachineResourcesApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ManagedSecurityGroups"):
+		return &apiv1beta2.ManagedSecurityGroupsApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("NetworkFilter"):
+		return &apiv1beta2.NetworkFilterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("NetworkParam"):
+		return &apiv1beta2.NetworkParamApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("NetworkStatus"):
+		return &apiv1beta2.NetworkStatusApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("NetworkStatusWithSubnets"):
+		return &apiv1beta2.NetworkStatusWithSubnetsApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("NodeInfo"):
+		return &apiv1beta2.NodeInfoApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackCluster"):
+		return &apiv1beta2.OpenStackClusterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackClusterSpec"):
+		return &apiv1beta2.OpenStackClusterSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackClusterStatus"):
+		return &apiv1beta2.OpenStackClusterStatusApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackClusterTemplate"):
+		return &apiv1beta2.OpenStackClusterTemplateApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackClusterTemplateResource"):
+		return &apiv1beta2.OpenStackClusterTemplateResourceApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackClusterTemplateSpec"):
+		return &apiv1beta2.OpenStackClusterTemplateSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackIdentityReference"):
+		return &apiv1beta2.OpenStackIdentityReferenceApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackMachine"):
+		return &apiv1beta2.OpenStackMachineApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackMachineSpec"):
+		return &apiv1beta2.OpenStackMachineSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackMachineStatus"):
+		return &apiv1beta2.OpenStackMachineStatusApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackMachineTemplate"):
+		return &apiv1beta2.OpenStackMachineTemplateApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackMachineTemplateResource"):
+		return &apiv1beta2.OpenStackMachineTemplateResourceApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackMachineTemplateSpec"):
+		return &apiv1beta2.OpenStackMachineTemplateSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("OpenStackMachineTemplateStatus"):
+		return &apiv1beta2.OpenStackMachineTemplateStatusApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("PortOpts"):
+		return &apiv1beta2.PortOptsApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("PortStatus"):
+		return &apiv1beta2.PortStatusApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ResolvedFixedIP"):
+		return &apiv1beta2.ResolvedFixedIPApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ResolvedMachineSpec"):
+		return &apiv1beta2.ResolvedMachineSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ResolvedPortSpec"):
+		return &apiv1beta2.ResolvedPortSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ResolvedPortSpecFields"):
+		return &apiv1beta2.ResolvedPortSpecFieldsApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ResourceReference"):
+		return &apiv1beta2.ResourceReferenceApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("RootVolume"):
+		return &apiv1beta2.RootVolumeApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("Router"):
+		return &apiv1beta2.RouterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("RouterFilter"):
+		return &apiv1beta2.RouterFilterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("RouterParam"):
+		return &apiv1beta2.RouterParamApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SchedulerHintAdditionalProperty"):
+		return &apiv1beta2.SchedulerHintAdditionalPropertyApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SchedulerHintAdditionalValue"):
+		return &apiv1beta2.SchedulerHintAdditionalValueApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SecurityGroupFilter"):
+		return &apiv1beta2.SecurityGroupFilterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SecurityGroupParam"):
+		return &apiv1beta2.SecurityGroupParamApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SecurityGroupRuleSpec"):
+		return &apiv1beta2.SecurityGroupRuleSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SecurityGroupStatus"):
+		return &apiv1beta2.SecurityGroupStatusApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ServerGroupFilter"):
+		return &apiv1beta2.ServerGroupFilterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ServerGroupParam"):
+		return &apiv1beta2.ServerGroupParamApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ServerMetadata"):
+		return &apiv1beta2.ServerMetadataApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("Subnet"):
+		return &apiv1beta2.SubnetApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SubnetFilter"):
+		return &apiv1beta2.SubnetFilterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SubnetParam"):
+		return &apiv1beta2.SubnetParamApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("SubnetSpec"):
+		return &apiv1beta2.SubnetSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ValueSpec"):
+		return &apiv1beta2.ValueSpecApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("VolumeAvailabilityZone"):
+		return &apiv1beta2.VolumeAvailabilityZoneApplyConfiguration{}
 
 	}
 	return nil

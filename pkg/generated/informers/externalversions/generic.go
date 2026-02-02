@@ -25,6 +25,7 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	v1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -68,6 +69,16 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1beta1().OpenStackMachines().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("openstackmachinetemplates"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1beta1().OpenStackMachineTemplates().Informer()}, nil
+
+		// Group=infrastructure.cluster.x-k8s.io, Version=v1beta2
+	case v1beta2.SchemeGroupVersion.WithResource("openstackclusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1beta2().OpenStackClusters().Informer()}, nil
+	case v1beta2.SchemeGroupVersion.WithResource("openstackclustertemplates"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1beta2().OpenStackClusterTemplates().Informer()}, nil
+	case v1beta2.SchemeGroupVersion.WithResource("openstackmachines"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1beta2().OpenStackMachines().Informer()}, nil
+	case v1beta2.SchemeGroupVersion.WithResource("openstackmachinetemplates"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1beta2().OpenStackMachineTemplates().Informer()}, nil
 
 	}
 

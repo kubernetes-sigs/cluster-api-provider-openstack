@@ -27,12 +27,14 @@ import (
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	infrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1alpha1"
 	infrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta1"
+	infrastructurev1beta2 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset/typed/api/v1beta2"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface
 	InfrastructureV1beta1() infrastructurev1beta1.InfrastructureV1beta1Interface
+	InfrastructureV1beta2() infrastructurev1beta2.InfrastructureV1beta2Interface
 }
 
 // Clientset contains the clients for groups.
@@ -40,6 +42,7 @@ type Clientset struct {
 	*discovery.DiscoveryClient
 	infrastructureV1alpha1 *infrastructurev1alpha1.InfrastructureV1alpha1Client
 	infrastructureV1beta1  *infrastructurev1beta1.InfrastructureV1beta1Client
+	infrastructureV1beta2  *infrastructurev1beta2.InfrastructureV1beta2Client
 }
 
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client
@@ -50,6 +53,11 @@ func (c *Clientset) InfrastructureV1alpha1() infrastructurev1alpha1.Infrastructu
 // InfrastructureV1beta1 retrieves the InfrastructureV1beta1Client
 func (c *Clientset) InfrastructureV1beta1() infrastructurev1beta1.InfrastructureV1beta1Interface {
 	return c.infrastructureV1beta1
+}
+
+// InfrastructureV1beta2 retrieves the InfrastructureV1beta2Client
+func (c *Clientset) InfrastructureV1beta2() infrastructurev1beta2.InfrastructureV1beta2Interface {
+	return c.infrastructureV1beta2
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -104,6 +112,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.infrastructureV1beta2, err = infrastructurev1beta2.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
@@ -127,6 +139,7 @@ func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.infrastructureV1alpha1 = infrastructurev1alpha1.New(c)
 	cs.infrastructureV1beta1 = infrastructurev1beta1.New(c)
+	cs.infrastructureV1beta2 = infrastructurev1beta2.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

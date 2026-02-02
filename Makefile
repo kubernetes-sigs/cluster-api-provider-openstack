@@ -316,7 +316,7 @@ generate-controller-gen: $(CONTROLLER_GEN)
 generate-codegen: generate-controller-gen $(OPENAPI_GEN) $(APPLYCONFIGURATION_GEN) $(CLIENT_GEN) $(LISTER_GEN) $(INFORMER_GEN)
 	@echo "** Generating OpenAPI definitions **"
 	# The package list includes:
-	# - CAPO's own API packages (v1alpha1, v1beta1) that have // +k8s:openapi-gen= markers
+	# - CAPO's own API packages (v1alpha1, v1beta1, v1beta2) that have // +k8s:openapi-gen= markers
 	# - Dependency packages from CAPI and k8s.io that are referenced by CAPO's APIs
 	# - Base k8s.io/apimachinery packages
 	$(OPENAPI_GEN) \
@@ -327,6 +327,7 @@ generate-codegen: generate-controller-gen $(OPENAPI_GEN) $(APPLYCONFIGURATION_GE
 		--report-filename=./api_violations.report \
 		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
 		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2 \
 		sigs.k8s.io/cluster-api/api/core/v1beta2 \
 		sigs.k8s.io/cluster-api/api/ipam/v1beta2 \
 		sigs.k8s.io/cluster-api/api/core/v1beta1 \
@@ -345,7 +346,8 @@ generate-codegen: generate-controller-gen $(OPENAPI_GEN) $(APPLYCONFIGURATION_GE
 		--output-pkg=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration \
 		--openapi-schema=./openapi.json \
 		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
-		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2
 	@echo "** Generating clientset code **"
 	$(CLIENT_GEN) \
 		--go-header-file=./hack/boilerplate.go.txt \
@@ -355,14 +357,16 @@ generate-codegen: generate-controller-gen $(OPENAPI_GEN) $(APPLYCONFIGURATION_GE
 		--input-base=sigs.k8s.io/cluster-api-provider-openstack \
 		--apply-configuration-package=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration \
 		--input=api/v1alpha1 \
-		--input=api/v1beta1
+		--input=api/v1beta1 \
+		--input=api/v1beta2
 	@echo "** Generating lister code **"
 	$(LISTER_GEN) \
 		--go-header-file=./hack/boilerplate.go.txt \
 		--output-dir=./pkg/generated/listers \
 		--output-pkg=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers \
 		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
-		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2
 	@echo "** Generating informer code **"
 	$(INFORMER_GEN) \
 		--go-header-file=./hack/boilerplate.go.txt \
@@ -371,7 +375,8 @@ generate-codegen: generate-controller-gen $(OPENAPI_GEN) $(APPLYCONFIGURATION_GE
 		--versioned-clientset-package=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/clientset/clientset \
 		--listers-package=sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/listers \
 		sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1 \
-		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1 \
+		sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2
 
 .PHONY: generate-manifests
 generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.

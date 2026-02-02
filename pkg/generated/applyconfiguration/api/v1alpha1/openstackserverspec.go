@@ -20,30 +20,30 @@ package v1alpha1
 
 import (
 	v1 "k8s.io/api/core/v1"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
+	v1beta2 "sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta2"
 )
 
 // OpenStackServerSpecApplyConfiguration represents a declarative configuration of the OpenStackServerSpec type for use
 // with apply.
 type OpenStackServerSpecApplyConfiguration struct {
-	AdditionalBlockDevices            []v1beta1.AdditionalBlockDeviceApplyConfiguration           `json:"additionalBlockDevices,omitempty"`
+	AdditionalBlockDevices            []v1beta2.AdditionalBlockDeviceApplyConfiguration           `json:"additionalBlockDevices,omitempty"`
 	AvailabilityZone                  *string                                                     `json:"availabilityZone,omitempty"`
 	ConfigDrive                       *bool                                                       `json:"configDrive,omitempty"`
 	Flavor                            *string                                                     `json:"flavor,omitempty"`
 	FlavorID                          *string                                                     `json:"flavorID,omitempty"`
 	FloatingIPPoolRef                 *v1.TypedLocalObjectReference                               `json:"floatingIPPoolRef,omitempty"`
-	IdentityRef                       *v1beta1.OpenStackIdentityReferenceApplyConfiguration       `json:"identityRef,omitempty"`
-	Image                             *v1beta1.ImageParamApplyConfiguration                       `json:"image,omitempty"`
-	Ports                             []v1beta1.PortOptsApplyConfiguration                        `json:"ports,omitempty"`
-	RootVolume                        *v1beta1.RootVolumeApplyConfiguration                       `json:"rootVolume,omitempty"`
+	IdentityRef                       *v1beta2.OpenStackIdentityReferenceApplyConfiguration       `json:"identityRef,omitempty"`
+	Image                             *v1beta2.ImageParamApplyConfiguration                       `json:"image,omitempty"`
+	Ports                             []v1beta2.PortOptsApplyConfiguration                        `json:"ports,omitempty"`
+	RootVolume                        *v1beta2.RootVolumeApplyConfiguration                       `json:"rootVolume,omitempty"`
 	SSHKeyName                        *string                                                     `json:"sshKeyName,omitempty"`
-	SecurityGroups                    []v1beta1.SecurityGroupParamApplyConfiguration              `json:"securityGroups,omitempty"`
-	ServerGroup                       *v1beta1.ServerGroupParamApplyConfiguration                 `json:"serverGroup,omitempty"`
-	ServerMetadata                    []v1beta1.ServerMetadataApplyConfiguration                  `json:"serverMetadata,omitempty"`
+	SecurityGroups                    []v1beta2.SecurityGroupParamApplyConfiguration              `json:"securityGroups,omitempty"`
+	ServerGroup                       *v1beta2.ServerGroupParamApplyConfiguration                 `json:"serverGroup,omitempty"`
+	ServerMetadata                    []v1beta2.ServerMetadataApplyConfiguration                  `json:"serverMetadata,omitempty"`
 	Tags                              []string                                                    `json:"tags,omitempty"`
 	Trunk                             *bool                                                       `json:"trunk,omitempty"`
 	UserDataRef                       *v1.LocalObjectReference                                    `json:"userDataRef,omitempty"`
-	SchedulerHintAdditionalProperties []v1beta1.SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`
+	SchedulerHintAdditionalProperties []v1beta2.SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 
 // OpenStackServerSpecApplyConfiguration constructs a declarative configuration of the OpenStackServerSpec type for use with
@@ -55,7 +55,7 @@ func OpenStackServerSpec() *OpenStackServerSpecApplyConfiguration {
 // WithAdditionalBlockDevices adds the given value to the AdditionalBlockDevices field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the AdditionalBlockDevices field.
-func (b *OpenStackServerSpecApplyConfiguration) WithAdditionalBlockDevices(values ...*v1beta1.AdditionalBlockDeviceApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithAdditionalBlockDevices(values ...*v1beta2.AdditionalBlockDeviceApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithAdditionalBlockDevices")
@@ -108,7 +108,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithFloatingIPPoolRef(value v1.T
 // WithIdentityRef sets the IdentityRef field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the IdentityRef field is set to the value of the last call.
-func (b *OpenStackServerSpecApplyConfiguration) WithIdentityRef(value *v1beta1.OpenStackIdentityReferenceApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithIdentityRef(value *v1beta2.OpenStackIdentityReferenceApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	b.IdentityRef = value
 	return b
 }
@@ -116,7 +116,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithIdentityRef(value *v1beta1.O
 // WithImage sets the Image field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Image field is set to the value of the last call.
-func (b *OpenStackServerSpecApplyConfiguration) WithImage(value *v1beta1.ImageParamApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithImage(value *v1beta2.ImageParamApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	b.Image = value
 	return b
 }
@@ -124,7 +124,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithImage(value *v1beta1.ImagePa
 // WithPorts adds the given value to the Ports field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Ports field.
-func (b *OpenStackServerSpecApplyConfiguration) WithPorts(values ...*v1beta1.PortOptsApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithPorts(values ...*v1beta2.PortOptsApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithPorts")
@@ -137,7 +137,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithPorts(values ...*v1beta1.Por
 // WithRootVolume sets the RootVolume field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RootVolume field is set to the value of the last call.
-func (b *OpenStackServerSpecApplyConfiguration) WithRootVolume(value *v1beta1.RootVolumeApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithRootVolume(value *v1beta2.RootVolumeApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	b.RootVolume = value
 	return b
 }
@@ -153,7 +153,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithSSHKeyName(value string) *Op
 // WithSecurityGroups adds the given value to the SecurityGroups field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the SecurityGroups field.
-func (b *OpenStackServerSpecApplyConfiguration) WithSecurityGroups(values ...*v1beta1.SecurityGroupParamApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithSecurityGroups(values ...*v1beta2.SecurityGroupParamApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithSecurityGroups")
@@ -166,7 +166,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithSecurityGroups(values ...*v1
 // WithServerGroup sets the ServerGroup field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServerGroup field is set to the value of the last call.
-func (b *OpenStackServerSpecApplyConfiguration) WithServerGroup(value *v1beta1.ServerGroupParamApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithServerGroup(value *v1beta2.ServerGroupParamApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	b.ServerGroup = value
 	return b
 }
@@ -174,7 +174,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithServerGroup(value *v1beta1.S
 // WithServerMetadata adds the given value to the ServerMetadata field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the ServerMetadata field.
-func (b *OpenStackServerSpecApplyConfiguration) WithServerMetadata(values ...*v1beta1.ServerMetadataApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithServerMetadata(values ...*v1beta2.ServerMetadataApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithServerMetadata")
@@ -213,7 +213,7 @@ func (b *OpenStackServerSpecApplyConfiguration) WithUserDataRef(value v1.LocalOb
 // WithSchedulerHintAdditionalProperties adds the given value to the SchedulerHintAdditionalProperties field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the SchedulerHintAdditionalProperties field.
-func (b *OpenStackServerSpecApplyConfiguration) WithSchedulerHintAdditionalProperties(values ...*v1beta1.SchedulerHintAdditionalPropertyApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
+func (b *OpenStackServerSpecApplyConfiguration) WithSchedulerHintAdditionalProperties(values ...*v1beta2.SchedulerHintAdditionalPropertyApplyConfiguration) *OpenStackServerSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithSchedulerHintAdditionalProperties")
