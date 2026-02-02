@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta2
 
 import (
+	"strings"
+
 	"k8s.io/utils/ptr"
 
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
@@ -965,4 +967,16 @@ type ValueSpec struct {
 	// Value is the value in the key-value pair.
 	// +kubebuilder:validation:Required
 	Value string `json:"value"`
+}
+
+// JoinTags joins a slice of tags into a comma separated list of tags.
+func JoinTags(tags []NeutronTag) string {
+	var b strings.Builder
+	for i := range tags {
+		if i > 0 {
+			b.WriteString(",")
+		}
+		b.WriteString(string(tags[i]))
+	}
+	return b.String()
 }
