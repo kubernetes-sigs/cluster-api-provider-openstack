@@ -23,14 +23,13 @@ import (
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
-	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
-	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
@@ -196,7 +195,12 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 			scope.Logger().Info("Claimed IP", "ip", ipAddress.Spec.Address)
 		}
 	}
-	v1beta1conditions.MarkTrue(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition)
+	meta.SetStatusCondition(&pool.Status.Conditions, metav1.Condition{
+		Type:               infrav1alpha1.OpenstackFloatingIPPoolReadyCondition,
+		Status:             metav1.ConditionTrue,
+		Reason:             infrav1.ReadyConditionReason,
+		ObservedGeneration: pool.Generation,
+	})
 	return ctrl.Result{}, r.Client.Status().Update(ctx, pool)
 }
 
@@ -354,14 +358,26 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 	// If we have reached the maximum number of IPs, we should not create more IPs
 	if maxIPs != -1 && len(pool.Status.ClaimedIPs) >= maxIPs {
 		scope.Logger().Info("MaxIPs reached", "pool", pool.Name)
-		v1beta1conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.MaxIPsReachedReason, clusterv1beta1.ConditionSeverityError, "Maximum number of IPs reached, we will not allocate more IPs for this pool")
+		meta.SetStatusCondition(&pool.Status.Conditions, metav1.Condition{
+			Type:               infrav1alpha1.OpenstackFloatingIPPoolReadyCondition,
+			Status:             metav1.ConditionFalse,
+			Reason:             infrav1alpha1.MaxIPsReachedReason,
+			Message:            "Maximum number of IPs reached, we will not allocate more IPs for this pool",
+			ObservedGeneration: pool.Generation,
+		})
 		return "", errMaxIPsReached
 	}
 
 	fp, err := networkingService.CreateFloatingIPForPool(pool)
 	if err != nil {
 		scope.Logger().Error(err, "Failed to create floating IP", "pool", pool.Name)
-		v1beta1conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1.OpenStackErrorReason, clusterv1beta1.ConditionSeverityError, "Failed to create floating IP: %v", err)
+		meta.SetStatusCondition(&pool.Status.Conditions, metav1.Condition{
+			Type:               infrav1alpha1.OpenstackFloatingIPPoolReadyCondition,
+			Status:             metav1.ConditionFalse,
+			Reason:             infrav1.OpenStackErrorReason,
+			Message:            fmt.Sprintf("Failed to create floating IP: %v", err),
+			ObservedGeneration: pool.Generation,
+		})
 		return "", err
 	}
 	defer func() {
@@ -379,7 +395,12 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 		}
 	}()
 
-	v1beta1conditions.MarkTrue(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition)
+	meta.SetStatusCondition(&pool.Status.Conditions, metav1.Condition{
+		Type:               infrav1alpha1.OpenstackFloatingIPPoolReadyCondition,
+		Status:             metav1.ConditionTrue,
+		Reason:             infrav1.ReadyConditionReason,
+		ObservedGeneration: pool.Generation,
+	})
 	ip = fp.FloatingIP
 	pool.Status.ClaimedIPs = append(pool.Status.ClaimedIPs, ip)
 	return ip, nil
@@ -408,7 +429,13 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 
 	network, err := networkingService.GetNetworkByParam(networkParam, networking.ExternalNetworksOnly)
 	if err != nil {
-		v1beta1conditions.MarkFalse(pool, infrav1alpha1.OpenstackFloatingIPPoolReadyCondition, infrav1alpha1.UnableToFindNetwork, clusterv1beta1.ConditionSeverityError, "Failed to find network: %v", err)
+		meta.SetStatusCondition(&pool.Status.Conditions, metav1.Condition{
+			Type:               infrav1alpha1.OpenstackFloatingIPPoolReadyCondition,
+			Status:             metav1.ConditionFalse,
+			Reason:             infrav1alpha1.UnableToFindNetwork,
+			Message:            fmt.Sprintf("Failed to find network: %v", err),
+			ObservedGeneration: pool.Generation,
+		})
 		return fmt.Errorf("failed to find network: %w", err)
 	}
 
