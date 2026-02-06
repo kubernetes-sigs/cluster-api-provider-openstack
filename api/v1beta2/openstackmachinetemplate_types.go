@@ -35,6 +35,12 @@ type OpenStackMachineTemplateStatus struct {
 	Capacity corev1.ResourceList `json:"capacity,omitempty"`
 	// +optional
 	NodeInfo NodeInfo `json:"nodeInfo,omitempty,omitzero"`
+
+	// Conditions defines current service state of the OpenStackMachineTemplate.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
+	// (both during initial provisioning and after the initial provisioning is completed).
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // NodeInfo contains information about the node's architecture and operating system.
@@ -71,4 +77,14 @@ type OpenStackMachineTemplateList struct {
 
 func init() {
 	objectTypes = append(objectTypes, &OpenStackMachineTemplate{}, &OpenStackMachineTemplateList{})
+}
+
+// GetConditions returns the observations of the operational state of the OpenStackMachineTemplate resource.
+func (r *OpenStackMachineTemplate) GetConditions() []metav1.Condition {
+	return r.Status.Conditions
+}
+
+// SetConditions sets the underlying service state of the OpenStackMachineTemplate to the predescribed clusterv1.Conditions.
+func (r *OpenStackMachineTemplate) SetConditions(conditions []metav1.Condition) {
+	r.Status.Conditions = conditions
 }

@@ -20359,11 +20359,25 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackMachin
 							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NodeInfo"),
 						},
 					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions defines current service state of the OpenStackMachineTemplate. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate. (both during initial provisioning and after the initial provisioning is completed).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api/api/core/v1beta1.Condition"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/api/resource.Quantity", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NodeInfo"},
+			"k8s.io/apimachinery/pkg/api/resource.Quantity", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NodeInfo", "sigs.k8s.io/cluster-api/api/core/v1beta1.Condition"},
 	}
 }
 

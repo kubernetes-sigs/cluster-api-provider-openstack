@@ -59,7 +59,6 @@ var (
 )
 
 var _ = Describe("OpenStackCluster controller", func() {
-	capiClusterName := "capi-cluster"
 	testClusterName := "test-cluster"
 	testNum := 0
 	bastionSpec := infrav1.OpenStackMachineSpec{

@@ -20,13 +20,15 @@ package v1beta1
 
 import (
 	v1 "k8s.io/api/core/v1"
+	corev1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // OpenStackMachineTemplateStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineTemplateStatus type for use
 // with apply.
 type OpenStackMachineTemplateStatusApplyConfiguration struct {
-	Capacity *v1.ResourceList            `json:"capacity,omitempty"`
-	NodeInfo *NodeInfoApplyConfiguration `json:"nodeInfo,omitempty"`
+	Capacity   *v1.ResourceList            `json:"capacity,omitempty"`
+	NodeInfo   *NodeInfoApplyConfiguration `json:"nodeInfo,omitempty"`
+	Conditions *corev1beta1.Conditions     `json:"conditions,omitempty"`
 }
 
 // OpenStackMachineTemplateStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineTemplateStatus type for use with
@@ -48,5 +50,13 @@ func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithCapacity(value v1
 // If called multiple times, the NodeInfo field is set to the value of the last call.
 func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithNodeInfo(value *NodeInfoApplyConfiguration) *OpenStackMachineTemplateStatusApplyConfiguration {
 	b.NodeInfo = value
+	return b
+}
+
+// WithConditions sets the Conditions field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Conditions field is set to the value of the last call.
+func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithConditions(value corev1beta1.Conditions) *OpenStackMachineTemplateStatusApplyConfiguration {
+	b.Conditions = &value
 	return b
 }
