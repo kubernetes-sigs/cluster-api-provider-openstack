@@ -20,7 +20,7 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/onsi/gomega" //nolint:revive
+	. "github.com/onsi/gomega"
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"

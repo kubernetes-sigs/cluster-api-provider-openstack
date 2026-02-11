@@ -163,7 +163,8 @@ linters:
     - linters:
       - revive
       - staticcheck
-      path: (test)/.*.go
+      path: '.*_test\.go$'
+      source: '\. "github\.com/onsi/(ginkgo|gomega)'
       text: should not use dot imports
     - linters:
       - revive

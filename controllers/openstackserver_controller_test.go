@@ -30,8 +30,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
-	. "github.com/onsi/ginkgo/v2" //nolint:revive
-	. "github.com/onsi/gomega"    //nolint:revive
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
