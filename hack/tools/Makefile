@@ -15,7 +15,7 @@
 ROOT_DIR_RELATIVE := ../..
 include $(ROOT_DIR_RELATIVE)/common.mk
 
-GOLANGCI_LINT_VERSION ?= v2.8.0
+GOLANGCI_LINT_VERSION ?= v2.9.0
 
 # GOTESTSUM version without the leading 'v'
 GOTESTSUM_VERSION ?= 1.12.0
