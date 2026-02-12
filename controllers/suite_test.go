@@ -42,6 +42,10 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
+const (
+	capiClusterName = "capi-cluster"
+)
+
 var (
 	cfg       *rest.Config
 	k8sClient client.Client
