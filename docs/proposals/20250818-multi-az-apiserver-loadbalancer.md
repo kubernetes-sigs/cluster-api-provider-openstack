@@ -1,7 +1,7 @@
 # Multi-AZ API Server LoadBalancer for CAPO
 
 ## Summary
-Add first-class Multi-AZ support for the Kubernetes control plane LoadBalancer in Cluster API Provider OpenStack (CAPO). The feature reconciles one Octavia LoadBalancer per Availability Zone (AZ), places each VIP in the intended subnet for that AZ via an explicit AZ→Subnet mapping, and by default registers control plane nodes only with the LB in the same AZ. Operators expose the control plane endpoint via external DNS multi-value A records that point at the per-AZ LB IPs. This proposal is additive and backward compatible.
+Add first-class Multi-AZ support for the Kubernetes control plane LoadBalancer in Cluster API Provider OpenStack (CAPO). The feature reconciles one Octavia LoadBalancer per Availability Zone (AZ), places each VIP in the intended subnet for that AZ via an explicit AZ→Subnet mapping, and by default registers control plane nodes only with the LB in the same AZ. Operators expose the control plane endpoint via external DNS multi-value A records that point at the per-AZ LB IPs. This proposal is additive, preserves existing single-LB behavior, and requires an explicit DNS `spec.controlPlaneEndpoint.host` for multi-AZ mode.
 
 ## Motivation
 - Achieve true multi-AZ resilience for the control plane by avoiding a single VIP dependency.
@@ -12,6 +12,7 @@ Add first-class Multi-AZ support for the Kubernetes control plane LoadBalancer i
 - Create and manage one API server LoadBalancer per configured AZ.
 - Support explicit AZ→Subnet mapping only (no positional mapping).
 - Default to same-AZ LB membership for control plane nodes; allow opt-in cross-AZ registration.
+- Require explicit DNS `spec.controlPlaneEndpoint.host` when multi-AZ LB mapping is configured.
 - Keep the API additive with strong validation, clear events and documentation.
 - Preserve user-provided DNS endpoints; DNS record management remains out of scope.
 
@@ -31,8 +32,9 @@ Add first-class Multi-AZ support for the Kubernetes control plane LoadBalancer i
 ### High-level behavior
 - When enabled and configured with an explicit mapping, CAPO reconciles one LoadBalancer per Availability Zone (AZ).
 - VIP placement is controlled only by an explicit mapping list that binds each AZ to a specific subnet on the LB network.
-- Each per-AZ LB is named with an AZ suffix.
+- Operators must pre-create the LB network and mapped subnets before enabling multi-AZ LB.
 - Control plane nodes are registered as LB members only in their AZ by default; opt-in cross-AZ membership is supported.
+- Per-AZ LB VIP subnets may differ from control plane node subnets/networks. This is supported when routed reachability exists from the LB dataplane to control plane member IPs and security policy allows the traffic (creation of network, subnets and routing in between is out of scope).
 - Operators expose an external DNS name for the control plane endpoint with one A/AAAA record per AZ LB IP.
 
 ### Architecture diagram
@@ -76,12 +78,18 @@ Notes:
 - `apiServerLoadBalancers []LoadBalancer`
   - A list-map keyed by `availabilityZone` (kubebuilder `listMapKey=availabilityZone`).
   - Each entry includes: `name`, `id`, `ip`, `internalIP`, `tags`, `availabilityZone`, `loadBalancerNetwork`, `allowedCIDRs`.
+- Legacy compatibility during transition:
+  - `status.apiServerLoadBalancer` remains in v1beta1 as a compatibility mirror while `status.apiServerLoadBalancers` is introduced.
+  - In multi-AZ mode, the mirrored singleton value is derived deterministically from the first entry in `spec.apiServerLoadBalancer.availabilityZoneSubnets`.
+  - `status.apiServerLoadBalancer` is documented as deprecated for multi-AZ, with final removal timing defined in follow-up API work after base v1beta2 migration.
 
 ### Validation (CRD and controller)
 - No duplicate `availabilityZone` values in `availabilityZoneSubnets`.
 - Each `availabilityZoneSubnets.subnet` MUST resolve to a subnet that belongs to the specified LB network.
 - No duplicate subnets across mappings.
 - At least one mapping is required to enable multi-AZ; otherwise behavior is legacy single-LB.
+- When `availabilityZoneSubnets` is configured, `spec.controlPlaneEndpoint.host` is required.
+- In multi-AZ mode, `spec.controlPlaneEndpoint.host` MUST be a DNS name (not an IP literal).
 
 CRD updates in:
 - [config/crd/bases/](../../config/crd/bases/)
@@ -98,7 +106,7 @@ Changes span these components:
 - When `spec.apiServerLoadBalancer.network` is specified with `availabilityZoneSubnets`:
   - Resolve each `SubnetParam` in order; validate that each belongs to the given LB network.
   - Derive the AZ list directly from the mapping entries.
-  - Persist the LB network and the ordered subnets into `status.apiServerLoadBalancer.loadBalancerNetwork`.
+  - Persist the LB network and selected subnet information into each `status.apiServerLoadBalancers[*].loadBalancerNetwork` entry.
 - Legacy single-AZ behavior (no mapping provided):
   - If an LB network is specified but no mapping is provided, treat as single-LB and select a subnet per legacy rules (unchanged).
   - If no LB network is specified, default to the cluster network's subnets (unchanged single-LB behavior).
@@ -126,13 +134,27 @@ For each AZ in `availabilityZoneSubnets`:
 - When `allowCrossAZLoadBalancerMembers` is `true`: register the node with all per-AZ LBs.
 - Reconcile membership across the API port and any `additionalPorts`.
 
-### Control plane endpoint
-- Preserve a user-provided DNS in `spec.controlPlaneEndpoint` when set and valid.
-- Otherwise choose:
-  - The LB floating IP if present, else the VIP for an LB.
-  - If no LB host is available and floating IPs are allowed, allocate or adopt a floating IP for the cluster endpoint when applicable.
-  - If floating IPs are disabled and a fixed IP is provided, use it.
-- Operators are expected to configure DNS with one A/AAAA record per AZ LB IP for client-side failover. CAPO does not manage DNS.
+### Control plane endpoint and FIP behavior
+- Preserve a user-provided DNS endpoint in `spec.controlPlaneEndpoint` when set and valid.
+- Multi-AZ mode (`availabilityZoneSubnets` configured) requires `spec.controlPlaneEndpoint.host` to be explicitly set to a DNS name.
+- CAPO does not infer a single control plane endpoint from per-AZ LB IPs in multi-AZ mode.
+- If multi-AZ is configured without an explicit DNS endpoint, reconciliation is rejected with a validation error.
+
+- Scope of this proposal (#2660):
+  - Add multi-AZ API server load balancers (`availabilityZoneSubnets`) and member registration policy (`allowCrossAZLoadBalancerMembers`).
+  - Define endpoint requirement and behavior for multi-AZ LB deployments.
+  - Keep API additive in v1beta1.
+
+- Existing v1beta1 behavior retained (not changed by this proposal) when multi-AZ mapping is not configured:
+  - Managed LB enabled: endpoint is derived from LB floating IP (if present) or LB VIP.
+  - LB disabled + external network enabled + floating IP path: endpoint uses floating IP.
+  - LB disabled + floating IP disabled + fixed IP path: endpoint uses fixed IP.
+  - `apiServerFloatingIP` and `apiServerFixedIP` remain cluster-scoped fields.
+
+- Out of scope for this proposal; follow-up in #2899 (after #2895 base v1beta2 migration):
+  - Introducing per-AZ API server floating IP fields.
+  - Regrouping API server endpoint fields under a new v1beta2 API shape.
+  - Defining deprecation/removal schedule and migration details for legacy endpoint/status fields.
 
 ### Events and metrics
 - Emit events for create/update/delete of LBs, listeners, pools, monitors, and floating IPs.
@@ -149,6 +171,9 @@ metadata:
   name: my-cluster
   namespace: default
 spec:
+  controlPlaneEndpoint:
+    host: api.mycluster.example.com
+    port: 6443
   apiServerLoadBalancer:
     enabled: true
     network:
@@ -166,6 +191,9 @@ spec:
 ### Allow cross-AZ member registration
 ```yaml
 spec:
+  controlPlaneEndpoint:
+    host: api.mycluster.example.com
+    port: 6443
   apiServerLoadBalancer:
     enabled: true
     network:
@@ -185,16 +213,25 @@ spec:
 - Default behavior remains single-LB when no multi-AZ mapping is provided.
 - Enabling multi-AZ:
   - Operators add `availabilityZoneSubnets` (and optionally `additionalPorts`, `allowedCIDRs`, `allowCrossAZLoadBalancerMembers`) and must specify the LB network.
+  - Operators must set `spec.controlPlaneEndpoint.host` to a DNS name.
   - Controller renames or adopts legacy resources into AZ-specific naming.
-  - `status.apiServerLoadBalancers` is populated alongside legacy status until further cleanup.
+  - `status.apiServerLoadBalancers` is populated; `status.apiServerLoadBalancer` is also populated as a deterministic compatibility mirror.
+- Status/API migration sequencing:
+  1) #2660 (v1beta1): introduce and use `status.apiServerLoadBalancers` for multi-AZ logic; keep writing `status.apiServerLoadBalancer` as a compatibility mirror.
+  2) #2895 (base v1beta2 contract): carry equivalent behavior and fields with conversion parity; do not remove fields in this base step.
+  3) #2899 (follow-up): regroup API server endpoint fields and define deprecation/removal timing with explicit migration guidance.
+- Migration caveat:
+  - Existing clusters whose `spec.controlPlaneEndpoint.host` is an IP literal are not eligible for in-place transition to multi-AZ under this proposal's DNS requirement.
 - Disabling multi-AZ:
-  - Operators redirect all traffic to a single LB (e.g. update DNS records) and then remove the AZ mapping from the spec.
-  - The controller automatically deletes per-AZ LBs whose mappings have been removed and reverts to single-LB behavior.
+  - Operators should direct all traffic to a single endpoint (typically DNS update) and then remove the AZ mapping from the spec.
+  - The controller deletes per-AZ LBs whose mappings were removed and reverts to single-LB behavior.
 
 ## Testing strategy
 
 ### Unit tests
 - Validation: duplicate AZs, duplicate subnets in mapping, wrong network-subnet associations.
+- Validation: reject multi-AZ config when `spec.controlPlaneEndpoint.host` is missing.
+- Validation: reject multi-AZ config when `spec.controlPlaneEndpoint.host` is an IP literal.
 - LB reconciliation: AZ hint propagation, per-port resource creation and updates.
 - Migration/adoption: renaming legacy resources and adopting correctly-named resources.
 - Member registration: defaults and cross-AZ opt-in.
@@ -204,6 +241,7 @@ spec:
 - Multi-AZ suite to verify per-AZ LBs exist with expected names and ports.
 - `status.apiServerLoadBalancers` contains per-AZ entries including LB network and IPs.
 - Control plane nodes register to same-AZ LB (or to all LBs when cross-AZ is enabled).
+- Admission/validation checks reject multi-AZ clusters missing explicit DNS control plane endpoint.
 - DNS records remain out of scope for e2e.
 
 Test code locations:
@@ -213,9 +251,12 @@ Test code locations:
 
 ## Risks and mitigations
 - Mapping/network mismatches: reject with clear validation messages; enforce via CRD CEL where feasible and in-controller checks.
+- Cross-network topology failures: LB VIP subnets and control plane subnets may be different; deployment can fail if routing/ACLs/security groups do not allow LB-to-member traffic. Document prerequisites and surface clear events when members are unhealthy.
+- Multi-AZ bootstrap and migration friction: requiring explicit DNS endpoint may block in-place migration for clusters using IP-literal control plane endpoints. Mitigate with documented migration prerequisites and a runbook.
 - Providers ignoring AZ hints: VIP subnet mapping still ensures deterministic placement; document expected variance.
 - Increased resource usage: multiple LBs per cluster increase quota consumption; highlight in docs and operations guidance.
-- DNS misconfiguration: documented as operator responsibility.
+- DNS misconfiguration: documented as operator responsibility; recommend only publishing/keeping records for AZ LBs with healthy members where possible.
+- Status compatibility drift: maintain v1beta1 singleton status mirror during transition and deprecate with a phased v1beta2 plan.
 
 ## Rollout plan
 1) API and CRD changes:
@@ -230,6 +271,10 @@ Test code locations:
    - Unit tests across controller and services; e2e suite updates in [test/e2e/](../../test/e2e/).
 5) Optional metrics:
    - Add observability for per-AZ LB counts and reconciliation timings (non-breaking).
+6) Sequencing across related efforts:
+   - Deliver #2660 first (v1beta1 additive multi-AZ behavior), then #2895 (base v1beta2 contract parity), then #2899 (API regrouping/deprecation work).
 
-## Open questions
-- Should we add a future explicit field to declare the endpoint strategy (single VIP vs external DNS multi-A)? Current design preserves user-provided DNS and documents multi-A.
+## Open questions and follow-ups
+- Endpoint strategy documentation: keep strategy explicit in docs (external DNS multi-A with mandatory explicit endpoint in multi-AZ mode) and ensure validation behavior is specified.
+- v1beta2 API grouping follow-up (#2899): define how cluster-scoped API server endpoint fields evolve, including support for per-AZ pre-assigned floating IP workflows if adopted.
+- Alignment with control plane multi-subnet request (#2999): this proposal does not require control plane nodes to be on LB VIP subnets; future work should define optional AZ-key alignment between control plane subnet mapping and LB AZ mapping to provide an end-to-end multi-AZ topology model.
