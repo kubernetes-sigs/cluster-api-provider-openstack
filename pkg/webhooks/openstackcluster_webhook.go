@@ -29,21 +29,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackcluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,versions=v1beta1,name=validation.openstackcluster.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
+// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackcluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclusters,versions=v1beta2,name=validation.openstackcluster.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
+// SetupOpenStackClusterWebhook registers the validating webhook for OpenStackCluster with the manager.
 func SetupOpenStackClusterWebhook(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackCluster{}).
+		For(&infrav1beta2.OpenStackCluster{}).
 		WithValidator(&openStackClusterWebhook{}).
 		Complete()
 }
 
 type openStackClusterWebhook struct{}
 
-// Compile-time assertion that openStackClusterWebhook implements webhook.CustomValidator.
 var _ webhook.CustomValidator = &openStackClusterWebhook{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
@@ -56,10 +56,7 @@ func (*openStackClusterWebhook) ValidateCreate(_ context.Context, objRaw runtime
 	}
 
 	if newObj.Spec.ManagedSecurityGroups != nil {
-		allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusionV1Beta1(
-			newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules,
-			field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"),
-		)...)
+		allErrs = append(allErrs, validateManagedSecurityGroupRules(newObj.Spec.ManagedSecurityGroups)...)
 	}
 
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
@@ -73,7 +70,7 @@ func (*openStackClusterWebhook) ValidateCreate(_ context.Context, objRaw runtime
 // spec matches the subnet name in status, and the new ID matches the corresponding subnet ID.
 //
 // Returns true if all such transitions are valid; false otherwise.
-func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) bool {
+func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1beta2.OpenStackCluster) bool {
 	if newObj.Spec.Network == nil || oldObj.Spec.Network == nil || oldObj.Status.Network == nil {
 		return false
 	}
@@ -132,8 +129,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	}
 
 	// Allow changes to Spec.IdentityRef
-	oldObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
-	newObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
+	oldObj.Spec.IdentityRef = infrav1beta2.OpenStackIdentityReference{}
+	newObj.Spec.IdentityRef = infrav1beta2.OpenStackIdentityReference{}
 
 	// Allow changes to ControlPlaneEndpoint fields only if it was not
 	// previously set, or did not previously have a host.
@@ -144,7 +141,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 		newObj.Spec.ControlPlaneEndpoint = nil
 	}
 
-	// Allow change only for the first time.
+	// Allow APIServerFixedIP to be set for the first time when floating IP is disabled.
 	if ptr.Deref(oldObj.Spec.DisableAPIServerFloatingIP, false) && ptr.Deref(oldObj.Spec.APIServerFixedIP, "") == "" {
 		oldObj.Spec.APIServerFixedIP = nil
 		newObj.Spec.APIServerFixedIP = nil
@@ -163,47 +160,55 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	}
 
 	// Allow changes to the bastion spec.
-	oldObj.Spec.Bastion = &infrav1.Bastion{}
-	newObj.Spec.Bastion = &infrav1.Bastion{}
+	oldObj.Spec.Bastion = &infrav1beta2.Bastion{}
+	newObj.Spec.Bastion = &infrav1beta2.Bastion{}
+
+	// Validate new security group rules before zeroing them out for immutability comparison.
+	if newObj.Spec.ManagedSecurityGroups != nil {
+		allErrs = append(allErrs, validateManagedSecurityGroupRules(newObj.Spec.ManagedSecurityGroups)...)
+	}
 
 	// Allow changes to the managed securityGroupRules.
 	if newObj.Spec.ManagedSecurityGroups != nil {
 		if oldObj.Spec.ManagedSecurityGroups == nil {
-			oldObj.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
+			oldObj.Spec.ManagedSecurityGroups = &infrav1beta2.ManagedSecurityGroups{}
 		}
 
-		oldObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
-		newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		oldObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
 
-		oldObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
-		newObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		oldObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
 
-		oldObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
-		newObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		oldObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.WorkerNodesSecurityGroupRules = []infrav1beta2.SecurityGroupRuleSpec{}
 
 		// Allow change to the allowAllInClusterTraffic.
 		oldObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
 		newObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
 	}
 
-	// Allow changes only to DNSNameservers in ManagedSubnets spec
+	// Allow changes only to DNSNameservers in ManagedSubnets spec.
+	// Subnets are matched by CIDR: the CIDR itself and AllocationPools are
+	// immutable, but DNSNameservers can be updated. We zero out DNSNameservers
+	// on both copies so the final DeepEqual ignores those changes.
 	if newObj.Spec.ManagedSubnets != nil && oldObj.Spec.ManagedSubnets != nil {
-		// Check if any fields other than DNSNameservers have changed
+		// Check if any fields other than DNSNameservers have changed.
 		if len(oldObj.Spec.ManagedSubnets) != len(newObj.Spec.ManagedSubnets) {
 			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "managedSubnets"), "cannot add or remove subnets"))
 		} else {
-			// Build maps of subnets by CIDR
-			oldSubnetMap := make(map[string]*infrav1.SubnetSpec)
-
+			// Build maps of subnets by CIDR.
+			oldSubnetMap := make(map[string]*infrav1beta2.SubnetSpec)
 			for i := range oldObj.Spec.ManagedSubnets {
 				oldSubnet := &oldObj.Spec.ManagedSubnets[i]
 				oldSubnetMap[oldSubnet.CIDR] = oldSubnet
 			}
 
-			// Check if all new subnets have matching old subnets with the same CIDR
+			// Compare each new subnet against the old map by CIDR.
 			for i := range newObj.Spec.ManagedSubnets {
 				newSubnet := &newObj.Spec.ManagedSubnets[i]
 
+				// If the CIDR is not found in the old map, it's a new subnet.
 				oldSubnet, exists := oldSubnetMap[newSubnet.CIDR]
 				if !exists {
 					allErrs = append(allErrs, field.Forbidden(
@@ -213,7 +218,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 					continue
 				}
 
-				// DNSNameservers is mutable
+				// Zero out DNSNameservers on both copies so they are ignored by DeepEqual.
 				oldSubnet.DNSNameservers = nil
 				newSubnet.DNSNameservers = nil
 			}
@@ -228,8 +233,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	// Allow changes on APIServerLB monitors
 	if newObj.Spec.APIServerLoadBalancer != nil && oldObj.Spec.APIServerLoadBalancer != nil {
-		oldObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
-		newObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
+		oldObj.Spec.APIServerLoadBalancer.Monitor = &infrav1beta2.APIServerLoadBalancerMonitor{}
+		newObj.Spec.APIServerLoadBalancer.Monitor = &infrav1beta2.APIServerLoadBalancerMonitor{}
 	}
 
 	// Allow changes to the availability zones.
@@ -247,20 +252,21 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 		oldObj.Spec.APIServerFloatingIP = nil
 	}
 
-	// Allow changes from filter to id for spec.network and spec.subnets
+	// Allow transitioning spec.network from filter to id and spec.subnets from
+	// filter to id. This lets users pin to resolved IDs after initial creation.
 	if newObj.Spec.Network != nil && oldObj.Spec.Network != nil && oldObj.Status.Network != nil {
-		// Allow change from spec.network.subnets from filter to id if it matches the current subnets.
 		if allowSubnetFilterToIDTransition(oldObj, newObj) {
 			oldObj.Spec.Subnets = nil
 			newObj.Spec.Subnets = nil
 		}
-		// Allow change from spec.network.filter to spec.network.id only if it matches the current network.
 		if ptr.Deref(newObj.Spec.Network.ID, "") == oldObj.Status.Network.ID {
 			newObj.Spec.Network = nil
 			oldObj.Spec.Network = nil
 		}
 	}
 
+	// After zeroing out all mutable fields above, any remaining difference
+	// in spec is an immutability violation.
 	if !reflect.DeepEqual(oldObj.Spec, newObj.Spec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
@@ -273,8 +279,36 @@ func (*openStackClusterWebhook) ValidateDelete(_ context.Context, _ runtime.Obje
 	return nil, nil
 }
 
-func castToOpenStackCluster(obj runtime.Object) (*infrav1.OpenStackCluster, error) {
-	cast, ok := obj.(*infrav1.OpenStackCluster)
+// securityGroupRemoteFields returns whether each remote field is set on a SecurityGroupRuleSpec.
+func securityGroupRemoteFields(r *infrav1beta2.SecurityGroupRuleSpec) (bool, bool, bool) {
+	return r.RemoteManagedGroups != nil, r.RemoteGroupID != nil, r.RemoteIPPrefix != nil
+}
+
+// validateManagedSecurityGroupRules validates that remote* fields are mutually exclusive
+// across all security group rule lists in ManagedSecurityGroups.
+func validateManagedSecurityGroupRules(msg *infrav1beta2.ManagedSecurityGroups) field.ErrorList {
+	var allErrs field.ErrorList
+	allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusion(
+		msg.AllNodesSecurityGroupRules,
+		field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"),
+		securityGroupRemoteFields,
+	)...)
+	allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusion(
+		msg.ControlPlaneNodesSecurityGroupRules,
+		field.NewPath("spec", "managedSecurityGroups", "controlPlaneNodesSecurityGroupRules"),
+		securityGroupRemoteFields,
+	)...)
+	allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusion(
+		msg.WorkerNodesSecurityGroupRules,
+		field.NewPath("spec", "managedSecurityGroups", "workerNodesSecurityGroupRules"),
+		securityGroupRemoteFields,
+	)...)
+	return allErrs
+}
+
+// castToOpenStackCluster casts a runtime.Object to an OpenStackCluster.
+func castToOpenStackCluster(obj runtime.Object) (*infrav1beta2.OpenStackCluster, error) {
+	cast, ok := obj.(*infrav1beta2.OpenStackCluster)
 	if !ok {
 		return nil, fmt.Errorf("expected an OpenStackCluster but got a %T", obj)
 	}

@@ -30,21 +30,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta1-openstackmachinetemplate,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachinetemplates,versions=v1beta1,name=validation.openstackmachinetemplate.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
+// +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackmachinetemplate,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachinetemplates,versions=v1beta2,name=validation.openstackmachinetemplate.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
 func SetupOpenStackMachineTemplateWebhook(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackMachineTemplate{}).
+		For(&infrav1beta2.OpenStackMachineTemplate{}).
 		WithValidator(&openStackMachineTemplateWebhook{}).
 		Complete()
 }
 
 type openStackMachineTemplateWebhook struct{}
 
-// Compile-time assertion that openStackMachineTemplateWebhook implements webhook.CustomValidator.
 var _ webhook.CustomValidator = &openStackMachineTemplateWebhook{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
@@ -96,8 +95,8 @@ func (*openStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ runt
 	return nil, nil
 }
 
-func castToOpenStackMachineTemplate(obj runtime.Object) (*infrav1.OpenStackMachineTemplate, error) {
-	cast, ok := obj.(*infrav1.OpenStackMachineTemplate)
+func castToOpenStackMachineTemplate(obj runtime.Object) (*infrav1beta2.OpenStackMachineTemplate, error) {
+	cast, ok := obj.(*infrav1beta2.OpenStackMachineTemplate)
 	if !ok {
 		return nil, fmt.Errorf("expected an OpenStackMachineTemplate but got a %T", obj)
 	}

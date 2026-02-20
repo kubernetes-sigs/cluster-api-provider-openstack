@@ -18,54 +18,33 @@ package webhooks
 
 import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
-
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 const rootVolumeName = "root"
 
-// validateSecurityGroupRulesRemoteMutualExclusionV1Beta1 validates that remote* fields are mutually exclusive for v1beta1.
-func validateSecurityGroupRulesRemoteMutualExclusionV1Beta1(rules []infrav1.SecurityGroupRuleSpec, fldPath *field.Path) field.ErrorList {
+// validateSecurityGroupRulesRemoteMutualExclusion validates that remote* fields
+// are mutually exclusive in security group rules. The getRemoteFields function
+// extracts whether each remote field is set from a rule of any version.
+func validateSecurityGroupRulesRemoteMutualExclusion[T any](
+	rules []T,
+	fldPath *field.Path,
+	getRemoteFields func(*T) (hasRemoteManagedGroups, hasRemoteGroupID, hasRemoteIPPrefix bool),
+) field.ErrorList {
 	var allErrs field.ErrorList
 	for i := range rules {
-		rule := &rules[i]
-		rulePath := fldPath.Index(i)
+		hasRMG, hasRGID, hasRIP := getRemoteFields(&rules[i])
 		count := 0
-		if rule.RemoteManagedGroups != nil {
+		if hasRMG {
 			count++
 		}
-		if rule.RemoteGroupID != nil {
+		if hasRGID {
 			count++
 		}
-		if rule.RemoteIPPrefix != nil {
+		if hasRIP {
 			count++
 		}
 		if count > 1 {
-			allErrs = append(allErrs, field.Forbidden(rulePath, "only one of remoteManagedGroups, remoteGroupID, or remoteIPPrefix can be set"))
-		}
-	}
-	return allErrs
-}
-
-// validateSecurityGroupRulesRemoteMutualExclusionV1Beta2 validates that remote* fields are mutually exclusive for v1beta2.
-func validateSecurityGroupRulesRemoteMutualExclusionV1Beta2(rules []infrav1beta2.SecurityGroupRuleSpec, fldPath *field.Path) field.ErrorList {
-	var allErrs field.ErrorList
-	for i := range rules {
-		rule := &rules[i]
-		rulePath := fldPath.Index(i)
-		count := 0
-		if rule.RemoteManagedGroups != nil {
-			count++
-		}
-		if rule.RemoteGroupID != nil {
-			count++
-		}
-		if rule.RemoteIPPrefix != nil {
-			count++
-		}
-		if count > 1 {
-			allErrs = append(allErrs, field.Forbidden(rulePath, "only one of remoteManagedGroups, remoteGroupID, or remoteIPPrefix can be set"))
+			allErrs = append(allErrs, field.Forbidden(fldPath.Index(i), "only one of remoteManagedGroups, remoteGroupID, or remoteIPPrefix can be set"))
 		}
 	}
 	return allErrs
