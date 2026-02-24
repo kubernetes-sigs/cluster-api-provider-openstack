@@ -53,8 +53,8 @@ github.com/containerd/errdefs/pkg v0.3.0 h1:9IKJ06FvyNlexW690DXuQNx2KA2cUJXx151X
 github.com/containerd/errdefs/pkg v0.3.0/go.mod h1:NJw6s9HwNuRhnjJhM7pylWwMyAkmCQvQ4GpJHEqRLVk=
 github.com/coredns/caddy v1.1.1 h1:2eYKZT7i6yxIfGP3qLJoJ7HAsDJqYB+X68g4NYjSrE0=
 github.com/coredns/caddy v1.1.1/go.mod h1:A6ntJQlAWuQfFlsd9hvigKbo2WS0VUs2l1e2F+BawD4=
-github.com/coredns/corefile-migration v1.0.29 h1:g4cPYMXXDDs9uLE2gFYrJaPBuUAR07eEMGyh9JBE13w=
-github.com/coredns/corefile-migration v1.0.29/go.mod h1:56DPqONc3njpVPsdilEnfijCwNGC3/kTJLl7i7SPavY=
+github.com/coredns/corefile-migration v1.0.30 h1:ljZNPGgna+4yKv81gfkvkgLEWdtz0NjBR1glaiPI140=
+github.com/coredns/corefile-migration v1.0.30/go.mod h1:56DPqONc3njpVPsdilEnfijCwNGC3/kTJLl7i7SPavY=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/cyphar/filepath-securejoin v0.2.5 h1:6iR5tXJ/e6tJZzzdMc1km3Sa7RRIVBKAK32O2s7AYfo=
@@ -506,12 +506,12 @@ k8s.io/utils v0.0.0-20250604170112-4c0f3b243397 h1:hwvWFiBzdWw1FhfY1FooPn3kzWuJ8
 k8s.io/utils v0.0.0-20250604170112-4c0f3b243397/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 h1:jpcvIRr3GLoUoEKRkHKSmGjxb6lWwrBlJsXc+eUYQHM=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2/go.mod h1:Ve9uj1L+deCXFrPOk1LpFXqTg7LCFzFso6PA48q/XZw=
-sigs.k8s.io/cluster-api v1.12.2 h1:+b+M2IygfvFZJq7bsaloNakimMEVNf81zkGR1IiuxXs=
-sigs.k8s.io/cluster-api v1.12.2/go.mod h1:2XuF/dmN3c/1VITb6DB44N5+Ecvsvd5KOWqrY9Q53nU=
+sigs.k8s.io/cluster-api v1.12.3 h1:cuOl3fWXhlXFuQcyIH4C8i3ns8rLhtcnK+x00MVdKBs=
+sigs.k8s.io/cluster-api v1.12.3/go.mod h1:EAiTJtf/8M5eBetPwumi6t8DJJ55Ln6Fkvh2OAa7PD4=
 sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519 h1:WkOO6Fg3tmbuFXqTMFfs80mapaQyBbdIC5p86LIVlBI=
 sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519/go.mod h1:/Zjkh19AmjuI4piKJ1fAZW7k0cDZsSoAAcGHKGZJTZU=
-sigs.k8s.io/cluster-api/test v1.12.2 h1:gYApF1BJRt0fCxmgaTeqm+rreNhLHcwQw7Z6pFCtr60=
-sigs.k8s.io/cluster-api/test v1.12.2/go.mod h1:E6ID6xgLy6rkpm09yQW2DT8Cf2/7nLX1o3sDHv4pFsY=
+sigs.k8s.io/cluster-api/test v1.12.3 h1:SfHkgaOoMLcCXhPFjmflFtag2yil0I4d2/i2S66GlFU=
+sigs.k8s.io/cluster-api/test v1.12.3/go.mod h1:E6ID6xgLy6rkpm09yQW2DT8Cf2/7nLX1o3sDHv4pFsY=
 sigs.k8s.io/controller-runtime v0.22.5 h1:v3nfSUMowX/2WMp27J9slwGFyAt7IV0YwBxAkrUr0GE=
 sigs.k8s.io/controller-runtime v0.22.5/go.mod h1:pc5SoYWnWI6I+cBHYYdZ7B6YHZVY5xNfll88JB+vniI=
 sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20250620151452-b9a9ca01fd37 h1:NSnbH7C6/fYc5L3FxMQiSlFBqYi+32LnFsXwArzOlIM=
