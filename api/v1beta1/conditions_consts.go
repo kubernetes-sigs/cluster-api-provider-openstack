@@ -38,6 +38,8 @@ const (
 	InstanceDeletedReason = "InstanceDeleted"
 	// InstanceNotReadyReason used when the instance is in a pending state.
 	InstanceNotReadyReason = "InstanceNotReady"
+	// InstanceStopFailedReason used when stopping the instance failed.
+	InstanceStopFailedReason = "InstanceStopFailed"
 	// InstanceDeleteFailedReason used when deleting the instance failed.
 	InstanceDeleteFailedReason = "InstanceDeleteFailed"
 	// OpenstackErrorReason used when there is an error communicating with OpenStack.
