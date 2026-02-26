@@ -8,7 +8,7 @@ steps:
 # docker run --rm -it -v $(pwd):/workspace gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:${TAG}
 # make clean # make sure we have something to build
 # make staging-manifests
-- name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20250513-9264efb079'
+- name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud@sha256:8d6a3a5b895e6776dbe9115b75db1412fbe57299b8db329d45cb54680e462b0b' # v20251211-4c812d4cd8
   entrypoint: make
   env:
   - DOCKER_CLI_EXPERIMENTAL=enabled
