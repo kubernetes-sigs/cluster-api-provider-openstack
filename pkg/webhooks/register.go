@@ -26,7 +26,6 @@ import (
 func RegisterAllWithManager(mgr manager.Manager) []error {
 	var errs []error
 
-	// Register webhooks for all types with custom validators.
 	for _, webhook := range []struct {
 		name  string
 		setup func(ctrl.Manager) error
@@ -41,10 +40,6 @@ func RegisterAllWithManager(mgr manager.Manager) []error {
 			errs = append(errs, fmt.Errorf("creating webhook for %s: %v", webhook.name, err))
 		}
 	}
-
-	// Note: List types don't need conversion webhooks - they're handled automatically
-	// when the base types have conversion implemented and both versions are registered
-	// in the scheme.
 
 	return errs
 }
