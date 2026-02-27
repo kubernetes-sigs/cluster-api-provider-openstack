@@ -366,10 +366,20 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 
 	scope.Logger().Info("Reconciling Machine")
 
-	machineServer, waitingForServer, err := r.reconcileMachineServer(ctx, scope, openStackMachine, openStackCluster, machine)
-	if err != nil || waitingForServer {
+	machineServer, err := r.reconcileMachineServer(ctx, scope, openStackMachine, openStackCluster, machine)
+	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	// Reconcile machine state early to propagate any errors from the OpenStackServer
+	// (e.g., image not found, instance creation failed) to the OpenStackMachine.
+	// This must happen before checking server readiness to ensure error states are visible.
+	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
+	if result != nil {
+		return *result, nil
+	}
+
+	// At this point the instance is ACTIVE. We can proceed with the rest of the reconciliation.
 
 	computeService, err := compute.NewService(scope)
 	if err != nil {
@@ -415,19 +425,34 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		v1beta1conditions.MarkTrue(openStackMachine, infrav1.APIServerIngressReadyCondition)
 	}
 
-	result := r.reconcileMachineState(scope, openStackMachine, machine, machineServer)
-	if result != nil {
-		return *result, nil
-	}
-
 	scope.Logger().Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
 }
 
 // reconcileMachineState updates the conditions of the OpenStackMachine instance based on the instance state
 // and sets the ProviderID and Ready fields when the instance is active.
-// It returns a reconcile request if the instance is not yet active.
+// It returns a reconcile request if the instance is not yet active or in an error state.
 func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine, machine *clusterv1.Machine, openStackServer *infrav1alpha1.OpenStackServer) *ctrl.Result {
+	// Handle the case where the instance state is not yet available.
+	// This can happen when the server is still being created or when
+	// there was an error during resource resolution (e.g., image not found).
+	if openStackServer.Status.InstanceState == nil {
+		scope.Logger().Info("Waiting for OpenStackServer instance state", "name", openStackServer.Name)
+
+		// Check if there's a condition on the OpenStackServer that we should propagate.
+		// This helps surface errors like "image not found" or status like "waiting for dependencies" to the OpenStackMachine.
+		if condition := v1beta1conditions.Get(openStackServer, infrav1.InstanceReadyCondition); condition != nil && condition.Status == corev1.ConditionFalse {
+			// Propagate the condition from OpenStackServer with its severity
+			v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, condition.Reason, condition.Severity, "%s", condition.Message)
+			v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, condition.Reason, condition.Severity, "%s", condition.Message)
+			return &ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}
+		}
+
+		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, clusterv1beta1.ConditionSeverityInfo, "Waiting for instance to be created")
+		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceNotReadyReason, clusterv1beta1.ConditionSeverityInfo, "Waiting for instance to be created")
+		return &ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}
+	}
+
 	switch *openStackServer.Status.InstanceState {
 	case infrav1.InstanceStateActive:
 		scope.Logger().Info("Machine instance state is ACTIVE", "id", openStackServer.Status.InstanceID)
@@ -463,11 +488,19 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 		// If not, it is more likely a configuration error so we set failure and never retry.
 		scope.Logger().Info("Machine instance state is ERROR", "id", openStackServer.Status.InstanceID)
 		if !machine.Status.NodeRef.IsDefined() {
-			err := fmt.Errorf("instance state %v is unexpected", openStackServer.Status.InstanceState)
+			// Include the instance state in the error message for better debugging
+			err := fmt.Errorf("instance state is ERROR")
 			openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, err)
 		}
-		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "")
-		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "Instance is in ERROR state")
+		// Propagate the error message from the InstanceReady condition on the OpenStackServer if available
+		var errorMessage string
+		if condition := v1beta1conditions.Get(openStackServer, infrav1.InstanceReadyCondition); condition != nil && condition.Message != "" {
+			errorMessage = condition.Message
+		} else {
+			errorMessage = "Instance is in ERROR state"
+		}
+		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "%s", errorMessage)
+		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "%s", errorMessage)
 		return &ctrl.Result{}
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
@@ -600,22 +633,18 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 }
 
 // reconcileMachineServer reconciles the OpenStackServer object for the OpenStackMachine.
-// It returns the OpenStackServer object and a boolean indicating if the OpenStackServer is ready.
-func (r *OpenStackMachineReconciler) reconcileMachineServer(ctx context.Context, scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine) (*infrav1alpha1.OpenStackServer, bool, error) {
-	var server *infrav1alpha1.OpenStackServer
+// It returns the OpenStackServer object. The caller should check the server status
+// using reconcileMachineState to handle different server states appropriately.
+func (r *OpenStackMachineReconciler) reconcileMachineServer(ctx context.Context, scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine) (*infrav1alpha1.OpenStackServer, error) {
 	server, err := r.getOrCreateMachineServer(ctx, openStackCluster, openStackMachine, machine)
 	if err != nil {
 		// If an error occurs while getting or creating the OpenStackServer,
 		// we won't requeue the request so reconcileNormal can add conditions to the OpenStackMachine
 		// and we can see the error in the logs.
 		scope.Logger().Error(err, "Failed to get or create OpenStackServer")
-		return server, false, err
+		return server, err
 	}
-	if !server.Status.Ready {
-		scope.Logger().Info("Waiting for OpenStackServer to be ready", "name", server.Name)
-		return server, true, nil
-	}
-	return server, false, nil
+	return server, nil
 }
 
 // getOrCreateMachineServer gets or creates the OpenStackServer object for the OpenStackMachine.

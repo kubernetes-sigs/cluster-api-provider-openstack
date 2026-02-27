@@ -319,9 +319,19 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 		openStackServer.SetLabels(labels)
 	}
 
-	changed, resolveDone, err := compute.ResolveServerSpec(ctx, scope, r.Client, openStackServer)
-	if err != nil || !resolveDone {
+	changed, resolveDone, pendingDependencies, err := compute.ResolveServerSpec(ctx, scope, r.Client, openStackServer)
+	if err != nil {
+		// Set a condition to make the error visible on the OpenStackServer status.
+		// This helps users understand why the server is not being created.
+		v1beta1conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.DependencyFailedReason, clusterv1beta1.ConditionSeverityError, "Failed to resolve server spec: %v", err)
 		return ctrl.Result{}, err
+	}
+	if !resolveDone {
+		// Set a condition to indicate we're waiting for dependencies (e.g., ORC Image not ready yet).
+		// This helps users understand why the server is not being created.
+		// Include the list of pending dependencies to help with debugging.
+		v1beta1conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, clusterv1beta1.ConditionSeverityInfo, "Waiting for server dependencies to be resolved: %v", pendingDependencies)
+		return ctrl.Result{}, nil
 	}
 
 	// Also add the finalizer when writing resolved resources so we can start creating resources on the next reconcile.
