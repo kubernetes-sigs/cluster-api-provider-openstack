@@ -23,17 +23,21 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag=v6.0.2
       with:
         fetch-depth: 0
+        persist-credentials: false
     - name: Get changed files
       id: changed-files
       uses: tj-actions/changed-files@7dee1b0c1557f278e5c7dc244927139d78c0e22a # v47.0.4
     - name: Get release version
       id: release-version
+      env:
+        STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES_COUNT: ${{ steps.changed-files.outputs.all_changed_files_count }}
+        STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
       run: |
-        if [[ ${{ steps.changed-files.outputs.all_changed_files_count }} != 1 ]]; then
-          echo "1 release notes file should be changed to create a release tag, found ${{ steps.changed-files.outputs.all_changed_files_count }}"
+        if [[ "${STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES_COUNT}" != "1" ]]; then
+          echo "1 release notes file should be changed to create a release tag, found ${STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES_COUNT}"
           exit 1
         fi
-        for changed_file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+        for changed_file in ${STEPS_CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}; do
           export RELEASE_VERSION=$(echo "${changed_file}" | grep -oP '(?<=/)[^/]+(?=\.md)')
           echo "RELEASE_VERSION=${RELEASE_VERSION}" >> ${GITHUB_ENV}
           echo "RELEASE_VERSION=${RELEASE_VERSION}" >> ${GITHUB_OUTPUT}
@@ -94,6 +98,7 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ env.RELEASE_TAG }}
+        persist-credentials: false
     - name: Calculate go version
       run: echo "go_version=$(make go-version)" >> ${GITHUB_ENV}
     - name: Set up Go
@@ -107,8 +112,8 @@ jobs:
         GH_TOKEN: ${{ github.token }}
     - name: get release notes
       run: |
-        curl -L "https://raw.githubusercontent.com/${{ github.repository }}/main/releasenotes/${{ env.RELEASE_TAG }}.md" \
-        -o "${{ env.RELEASE_TAG }}.md"
+        curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/main/releasenotes/${RELEASE_TAG}.md" \
+        -o "${RELEASE_TAG}.md"
     - name: Release
       uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # tag=v2.5.0
       with:
