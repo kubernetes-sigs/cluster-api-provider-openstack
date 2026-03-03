@@ -142,12 +142,16 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 
 		// Add finalizer if it does not exist
 		if controllerutil.AddFinalizer(&claim, infrav1alpha1.OpenStackFloatingIPPoolFinalizer) {
-			return ctrl.Result{}, r.Client.Update(ctx, &claim)
+			if err := r.Client.Update(ctx, &claim); err != nil {
+				log.Error(err, "Failed to add finalizer to claim", "claim", claim.Name)
+				return ctrl.Result{}, err
+			}
+			continue
 		}
 
 		if annotations.IsPaused(cluster, &claim) {
 			log.V(4).Info("IPAddressClaim or linked Cluster is paused, skipping reconcile", "claim", claim.Name, "namespace", claim.Namespace)
-			return reconcile.Result{}, nil
+			continue
 		}
 
 		if !claim.DeletionTimestamp.IsZero() {
