@@ -146,16 +146,18 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 		}
 
 		if annotations.IsPaused(cluster, &claim) {
-			log.V(4).Info("IPAddressClaim or linked Cluster is paused, skipping mapping", "claim", claim.Name, "namespace", claim.Namespace)
+			log.V(4).Info("IPAddressClaim or linked Cluster is paused, skipping reconcile", "claim", claim.Name, "namespace", claim.Namespace)
 			return reconcile.Result{}, nil
 		}
 
 		if !claim.DeletionTimestamp.IsZero() {
-			if controllerutil.RemoveFinalizer(&claim, infrav1alpha1.OpenStackFloatingIPPoolFinalizer) {
-				log.Info("Removing finalizer from IPAddressClaim because it is being deleted")
-				return ctrl.Result{}, r.Client.Update(ctx, &claim)
+			controllerutil.RemoveFinalizer(&claim, infrav1alpha1.OpenStackFloatingIPPoolFinalizer)
+			if err := r.Client.Update(ctx, &claim); err != nil {
+				return ctrl.Result{}, err
 			}
+			continue
 		}
+
 		if claim.Status.AddressRef.Name == "" {
 			ipAddress := &ipamv1.IPAddress{}
 			err := r.Client.Get(ctx, client.ObjectKey{Name: claim.Name, Namespace: claim.Namespace}, ipAddress)
@@ -323,9 +325,8 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 		if err := r.Client.Get(ctx, client.ObjectKey{Name: ipAddress.Spec.ClaimRef.Name, Namespace: ipAddress.Namespace}, claim); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return fmt.Errorf("failed to get IPAddressClaim %q: %w", ipAddress.Spec.ClaimRef.Name, err)
-			} else {
-				claim = nil
 			}
+			claim = nil
 		} else {
 			cluster, err := util.GetClusterFromMetadata(ctx, r.Client, claim.ObjectMeta)
 			if err != nil {
