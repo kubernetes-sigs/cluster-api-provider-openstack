@@ -29,10 +29,15 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
+	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/annotations"
 	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -72,6 +77,7 @@ type OpenStackFloatingIPPoolReconciler struct {
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackfloatingippools/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddressclaims;ipaddressclaims/status,verbs=get;list;watch;update;create;delete
 // +kubebuilder:rbac:groups=ipam.cluster.x-k8s.io,resources=ipaddresses;ipaddresses/status,verbs=get;list;watch;create;update;delete
+// +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
 
 func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
 	log := ctrl.LoggerFrom(ctx)
@@ -127,10 +133,29 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 
 	for _, claim := range claims.Items {
 		log := log.WithValues("claim", claim.Name)
-		if !claim.DeletionTimestamp.IsZero() {
+
+		cluster, err := util.GetClusterFromMetadata(ctx, r.Client, claim.ObjectMeta)
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Error(err, "Failed to get owning cluster, skipping claim", "claim", claim.Name)
 			continue
 		}
 
+		// Add finalizer if it does not exist
+		if controllerutil.AddFinalizer(&claim, infrav1alpha1.OpenStackFloatingIPPoolFinalizer) {
+			return ctrl.Result{}, r.Client.Update(ctx, &claim)
+		}
+
+		if annotations.IsPaused(cluster, &claim) {
+			log.V(4).Info("IPAddressClaim or linked Cluster is paused, skipping mapping", "claim", claim.Name, "namespace", claim.Namespace)
+			return reconcile.Result{}, nil
+		}
+
+		if !claim.ObjectMeta.DeletionTimestamp.IsZero() {
+			if controllerutil.RemoveFinalizer(&claim, infrav1alpha1.OpenStackFloatingIPPoolFinalizer) {
+				log.Info("Removing finalizer from IPAddressClaim because it is being deleted")
+				return ctrl.Result{}, r.Client.Update(ctx, &claim)
+			}
+		}
 		if claim.Status.AddressRef.Name == "" {
 			ipAddress := &ipamv1.IPAddress{}
 			err := r.Client.Get(ctx, client.ObjectKey{Name: claim.Name, Namespace: claim.Namespace}, ipAddress)
@@ -289,6 +314,33 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 		}
 
 		if controllerutil.ContainsFinalizer(ipAddress, infrav1alpha1.DeleteFloatingIPFinalizer) {
+			// Check if the owning claim or its cluster is paused before processing deletion,
+			// and clear the claim's AddressRef so it can be re-reconciled once unpaused or re-created.
+			if ipAddress.Spec.ClaimRef.Name != "" {
+				claim := &ipamv1.IPAddressClaim{}
+				if err := r.Client.Get(ctx, client.ObjectKey{Name: ipAddress.Spec.ClaimRef.Name, Namespace: ipAddress.Namespace}, claim); err != nil {
+					if !apierrors.IsNotFound(err) {
+						return fmt.Errorf("failed to get IPAddressClaim %q: %w", ipAddress.Spec.ClaimRef.Name, err)
+					}
+					// Claim already gone, proceed with deletion.
+				} else {
+					cluster, err := util.GetClusterFromMetadata(ctx, r.Client, claim.ObjectMeta)
+					if err != nil && !apierrors.IsNotFound(err) {
+						return fmt.Errorf("failed to get owning cluster for claim %q: %w", claim.Name, err)
+					}
+					if annotations.IsPaused(cluster, claim) {
+						scope.Logger().V(4).Info("IPAddress owner IPAddressClaim or linked Cluster is paused, skipping deletion", "ipAddress", ipAddress.Name, "claim", claim.Name)
+						continue
+					}
+					// Clear AddressRef so the claim will be re-assigned an IP on the next reconcile.
+					if claim.Status.AddressRef.Name != "" {
+						claim.Status.AddressRef.Name = ""
+						if err := r.Client.Status().Update(ctx, claim); err != nil {
+							return fmt.Errorf("failed to clear AddressRef for claim %q: %w", claim.Name, err)
+						}
+					}
+				}
+			}
 			if pool.Spec.ReclaimPolicy == infrav1alpha1.ReclaimDelete && !contains(pool.Spec.PreAllocatedFloatingIPs, ipAddress.Spec.Address) {
 				if err = networkingService.DeleteFloatingIP(pool, ipAddress.Spec.Address); err != nil {
 					return fmt.Errorf("delete floating IP %q: %w", ipAddress.Spec.Address, err)
@@ -422,7 +474,8 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 	return nil
 }
 
-func (r *OpenStackFloatingIPPoolReconciler) ipAddressClaimToPoolMapper(_ context.Context, o client.Object) []ctrl.Request {
+func (r *OpenStackFloatingIPPoolReconciler) ipAddressClaimToPoolMapper(ctx context.Context, o client.Object) []ctrl.Request {
+	log := ctrl.LoggerFrom(ctx)
 	claim, ok := o.(*ipamv1.IPAddressClaim)
 	if !ok {
 		panic(fmt.Sprintf("Expected a IPAddressClaim but got a %T", o))
@@ -430,6 +483,18 @@ func (r *OpenStackFloatingIPPoolReconciler) ipAddressClaimToPoolMapper(_ context
 	if claim.Spec.PoolRef.Kind != openStackFloatingIPPool {
 		return nil
 	}
+
+	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, claim.ObjectMeta)
+	if err != nil && !apierrors.IsNotFound(err) {
+		log.Error(err, "Failed to get owning cluster, skipping mapping", "claim", claim.Name, "namespace", claim.Namespace)
+		return nil
+	}
+
+	if annotations.IsPaused(cluster, claim) {
+		log.V(4).Info("IPAddressClaim or linked Cluster is paused, skipping mapping", "claim", claim.Name, "namespace", claim.Namespace)
+		return nil
+	}
+
 	return []ctrl.Request{
 		{
 			NamespacedName: client.ObjectKey{
@@ -438,6 +503,39 @@ func (r *OpenStackFloatingIPPoolReconciler) ipAddressClaimToPoolMapper(_ context
 			},
 		},
 	}
+}
+
+func (r *OpenStackFloatingIPPoolReconciler) clusterToPoolMapper(ctx context.Context, o client.Object) []ctrl.Request {
+	log := ctrl.LoggerFrom(ctx)
+	cluster, ok := o.(*clusterv1.Cluster)
+	if !ok {
+		panic(fmt.Sprintf("Expected a Cluster but got a %T", o))
+	}
+
+	claims := &ipamv1.IPAddressClaimList{}
+	if err := r.Client.List(ctx, claims, client.InNamespace(cluster.Namespace), client.MatchingLabels{clusterv1.ClusterNameLabel: cluster.Name}); err != nil {
+		log.Error(err, "Failed to list IPAddressClaims for cluster, skipping mapping", "cluster", cluster.Name, "namespace", cluster.Namespace)
+		return nil
+	}
+
+	requestsByPool := make(map[client.ObjectKey]struct{})
+	for i := range claims.Items {
+		claim := &claims.Items[i]
+		if claim.Spec.PoolRef.Kind != openStackFloatingIPPool {
+			continue
+		}
+		if annotations.IsPaused(cluster, claim) {
+			continue
+		}
+		requestsByPool[client.ObjectKey{Name: claim.Spec.PoolRef.Name, Namespace: claim.Namespace}] = struct{}{}
+	}
+
+	requests := make([]ctrl.Request, 0, len(requestsByPool))
+	for key := range requestsByPool {
+		requests = append(requests, ctrl.Request{NamespacedName: key})
+	}
+
+	return requests
 }
 
 func (r *OpenStackFloatingIPPoolReconciler) ipAddressToPoolMapper(_ context.Context, o client.Object) []ctrl.Request {
@@ -484,6 +582,11 @@ func (r *OpenStackFloatingIPPoolReconciler) SetupWithManager(ctx context.Context
 		Watches(
 			&ipamv1.IPAddressClaim{},
 			handler.EnqueueRequestsFromMapFunc(r.ipAddressClaimToPoolMapper),
+		).
+		Watches(
+			&clusterv1.Cluster{},
+			handler.EnqueueRequestsFromMapFunc(r.clusterToPoolMapper),
+			builder.WithPredicates(predicates.ClusterUnpaused(mgr.GetScheme(), ctrl.LoggerFrom(ctx))),
 		).
 		Watches(
 			&ipamv1.IPAddress{},
