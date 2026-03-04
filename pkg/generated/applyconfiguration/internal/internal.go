@@ -2523,6 +2523,12 @@ var schemaYAML = typed.YAMLObject(`types:
         map:
           elementType:
             namedType: io.k8s.apimachinery.pkg.api.resource.Quantity
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
+          elementRelationship: atomic
     - name: nodeInfo
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NodeInfo
