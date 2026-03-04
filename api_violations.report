@@ -36,6 +36,7 @@ API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineSpec,SecurityGroups
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineStatus,Addresses
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineStatus,Conditions
+API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineTemplateStatus,Conditions
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,ResolvedMachineSpec,Ports
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,ResolvedPortSpecFields,AllowedAddressPairs
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,Router,IPs

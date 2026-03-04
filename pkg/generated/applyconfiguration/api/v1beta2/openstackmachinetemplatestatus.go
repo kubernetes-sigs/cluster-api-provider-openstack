@@ -20,13 +20,15 @@ package v1beta2
 
 import (
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // OpenStackMachineTemplateStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineTemplateStatus type for use
 // with apply.
 type OpenStackMachineTemplateStatusApplyConfiguration struct {
-	Capacity *v1.ResourceList            `json:"capacity,omitempty"`
-	NodeInfo *NodeInfoApplyConfiguration `json:"nodeInfo,omitempty"`
+	Capacity   *v1.ResourceList                     `json:"capacity,omitempty"`
+	NodeInfo   *NodeInfoApplyConfiguration          `json:"nodeInfo,omitempty"`
+	Conditions []metav1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // OpenStackMachineTemplateStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineTemplateStatus type for use with
@@ -48,5 +50,18 @@ func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithCapacity(value v1
 // If called multiple times, the NodeInfo field is set to the value of the last call.
 func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithNodeInfo(value *NodeInfoApplyConfiguration) *OpenStackMachineTemplateStatusApplyConfiguration {
 	b.NodeInfo = value
+	return b
+}
+
+// WithConditions adds the given value to the Conditions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Conditions field.
+func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithConditions(values ...*metav1.ConditionApplyConfiguration) *OpenStackMachineTemplateStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConditions")
+		}
+		b.Conditions = append(b.Conditions, *values[i])
+	}
 	return b
 }
