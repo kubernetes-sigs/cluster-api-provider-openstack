@@ -140,6 +140,11 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 			continue
 		}
 
+		if annotations.IsPaused(cluster, &claim) {
+			log.V(4).Info("IPAddressClaim or linked Cluster is paused, skipping reconcile", "claim", claim.Name, "namespace", claim.Namespace)
+			continue
+		}
+
 		// Add finalizer if it does not exist
 		if controllerutil.AddFinalizer(&claim, infrav1alpha1.OpenStackFloatingIPPoolFinalizer) {
 			if err := r.Client.Update(ctx, &claim); err != nil {
@@ -149,15 +154,23 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 			continue
 		}
 
-		if annotations.IsPaused(cluster, &claim) {
-			log.V(4).Info("IPAddressClaim or linked Cluster is paused, skipping reconcile", "claim", claim.Name, "namespace", claim.Namespace)
-			continue
-		}
-
 		if !claim.DeletionTimestamp.IsZero() {
+			ipaddressName := claim.Status.AddressRef.Name
+			if ipaddressName != "" {
+				ipAddress := &ipamv1.IPAddress{}
+				err := r.Client.Get(ctx, client.ObjectKey{Name: claim.Name, Namespace: claim.Namespace}, ipAddress)
+				if err != nil {
+					return ctrl.Result{}, err
+				}
+				err = r.deleteIPAddress(ctx, scope, pool, ipAddress)
+				if err != nil {
+					return ctrl.Result{}, fmt.Errorf("failed to delete IPAddress %q: %w", ipAddress.Name, err)
+				}
+			}
+
 			controllerutil.RemoveFinalizer(&claim, infrav1alpha1.OpenStackFloatingIPPoolFinalizer)
-			if err := r.Client.Update(ctx, &claim); err != nil {
-				return ctrl.Result{}, err
+			if err := r.Client.Update(ctx, &claim); err != nil && reterr == nil {
+				reterr = err
 			}
 			continue
 		}
@@ -303,10 +316,6 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 		return err
 	}
 
-	networkingService, err := networking.NewService(scope)
-	if err != nil {
-		return err
-	}
 	pool.Status.ClaimedIPs = []string{}
 	if pool.Status.AvailableIPs == nil {
 		pool.Status.AvailableIPs = []string{}
@@ -321,36 +330,32 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 
 		// Check if the owning claim or its cluster is paused before processing deletion,
 		// and clear the claim's AddressRef so it can be re-reconciled once unpaused or re-created.
-		if ipAddress.Spec.ClaimRef.Name == "" {
-			continue
-		}
-
 		claim := &ipamv1.IPAddressClaim{}
-		if err := r.Client.Get(ctx, client.ObjectKey{Name: ipAddress.Spec.ClaimRef.Name, Namespace: ipAddress.Namespace}, claim); err != nil {
-			if !apierrors.IsNotFound(err) {
-				return fmt.Errorf("failed to get IPAddressClaim %q: %w", ipAddress.Spec.ClaimRef.Name, err)
-			}
+		if ipAddress.Spec.ClaimRef.Name == "" {
 			claim = nil
 		} else {
-			cluster, err := util.GetClusterFromMetadata(ctx, r.Client, claim.ObjectMeta)
-			if err != nil {
-				return fmt.Errorf("failed to get owning cluster for claim %q: %w", claim.Name, err)
-			}
-			if annotations.IsPaused(cluster, claim) {
-				scope.Logger().V(4).Info("IPAddress owner IPAddressClaim or linked Cluster is paused, skipping deletion", "ipAddress", ipAddress.Name, "claim", claim.Name)
-				continue
+			if err := r.Client.Get(ctx, client.ObjectKey{Name: ipAddress.Spec.ClaimRef.Name, Namespace: ipAddress.Namespace}, claim); err != nil {
+				if !apierrors.IsNotFound(err) {
+					return fmt.Errorf("failed to get IPAddressClaim %q: %w", ipAddress.Spec.ClaimRef.Name, err)
+				}
+				claim = nil
+			} else {
+				cluster, err := util.GetClusterFromMetadata(ctx, r.Client, claim.ObjectMeta)
+				if err != nil && !apierrors.IsNotFound(err) {
+					return fmt.Errorf("failed to get owning cluster for claim %q: %w", claim.Name, err)
+				}
+				if cluster != nil && annotations.IsPaused(cluster, claim) {
+					scope.Logger().V(4).Info("IPAddress owner IPAddressClaim or linked Cluster is paused, skipping deletion", "ipAddress", ipAddress.Name, "claim", claim.Name)
+					continue
+				}
 			}
 		}
 
-		if controllerutil.ContainsFinalizer(ipAddress, infrav1alpha1.DeleteFloatingIPFinalizer) {
-			if pool.Spec.ReclaimPolicy == infrav1alpha1.ReclaimDelete && !contains(pool.Spec.PreAllocatedFloatingIPs, ipAddress.Spec.Address) {
-				if err = networkingService.DeleteFloatingIP(pool, ipAddress.Spec.Address); err != nil {
-					return fmt.Errorf("delete floating IP %q: %w", ipAddress.Spec.Address, err)
-				}
-			} else {
-				pool.Status.AvailableIPs = append(pool.Status.AvailableIPs, ipAddress.Spec.Address)
-			}
+		err := r.deleteIPAddress(ctx, scope, pool, ipAddress)
+		if err != nil {
+			return fmt.Errorf("failed to delete IPAddress %q: %w", ipAddress.Name, err)
 		}
+
 		// Clear AddressRef so the claim will be re-assigned an IP on the next reconcile.
 		if claim != nil && claim.Status.AddressRef.Name != "" {
 			claim.Status.AddressRef.Name = ""
@@ -358,15 +363,34 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 				return fmt.Errorf("failed to clear AddressRef for claim %q: %w", claim.Name, err)
 			}
 		}
-
-		controllerutil.RemoveFinalizer(ipAddress, infrav1alpha1.DeleteFloatingIPFinalizer)
-		if err := r.Client.Update(ctx, ipAddress); err != nil {
-			return err
-		}
 	}
 	allIPs := union(pool.Status.AvailableIPs, pool.Spec.PreAllocatedFloatingIPs)
 	unclaimedIPs := diff(allIPs, pool.Status.ClaimedIPs)
 	pool.Status.AvailableIPs = diff(unclaimedIPs, pool.Status.FailedIPs)
+	return nil
+}
+
+func (r *OpenStackFloatingIPPoolReconciler) deleteIPAddress(ctx context.Context, scope *scope.WithLogger, pool *infrav1alpha1.OpenStackFloatingIPPool, ipAddress *ipamv1.IPAddress) error {
+	networkingService, err := networking.NewService(scope)
+	if err != nil {
+		return err
+	}
+
+	if controllerutil.ContainsFinalizer(ipAddress, infrav1alpha1.DeleteFloatingIPFinalizer) {
+		if pool.Spec.ReclaimPolicy == infrav1alpha1.ReclaimDelete && !contains(pool.Spec.PreAllocatedFloatingIPs, ipAddress.Spec.Address) {
+			if err = networkingService.DeleteFloatingIP(pool, ipAddress.Spec.Address); err != nil {
+				return fmt.Errorf("delete floating IP %q: %w", ipAddress.Spec.Address, err)
+			}
+		} else {
+			pool.Status.AvailableIPs = append(pool.Status.AvailableIPs, ipAddress.Spec.Address)
+		}
+	}
+
+	controllerutil.RemoveFinalizer(ipAddress, infrav1alpha1.DeleteFloatingIPFinalizer)
+	if err := r.Client.Update(ctx, ipAddress); err != nil {
+		return err
+	}
+
 	return nil
 }
 
