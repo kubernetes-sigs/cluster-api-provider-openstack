@@ -66,6 +66,16 @@ const (
 	FloatingAddressFromPoolErrorReason = "FloatingIPError"
 	// UnableToFindFloatingIPNetworkReason is used when the floating ip network is not found.
 	UnableToFindFloatingIPNetworkReason = "UnableToFindFloatingIPNetwork"
+	// PortCreateFailedReason used when creating a port failed.
+	PortCreateFailedReason = "PortCreateFailed"
+)
+
+const (
+	// OpenStackAuthenticationSucceeded reports on the current status of the OpenStack credentials.
+	OpenStackAuthenticationSucceeded string = "OpenStackAuthenticationSucceeded"
+
+	// OpenStackAuthenticationFailedReason is used when the controller fails to authenticate with OpenStack.
+	OpenStackAuthenticationFailedReason = "OpenStackAuthenticationFailed"
 )
 
 const (

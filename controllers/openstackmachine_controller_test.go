@@ -27,14 +27,12 @@ import (
 	. "github.com/onsi/gomega"    //nolint:revive
 	"go.uber.org/mock/gomock"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
-	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
-	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
+	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -712,7 +710,7 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 
 			// Check InstanceReadyCondition
 			if tt.expectedInstanceReadyCondition != nil {
-				condition := meta.FindStatusCondition(openStackMachine.Status.Conditions, tt.expectedInstanceReadyCondition.Type)
+				condition := conditions.Get(openStackMachine, tt.expectedInstanceReadyCondition.Type)
 				if condition == nil {
 					t.Errorf("expected %s condition to be set", tt.expectedInstanceReadyCondition.Type)
 				} else {
@@ -730,7 +728,7 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 
 			// Check ReadyCondition
 			if tt.expectedReadyCondition != nil {
-				condition := meta.FindStatusCondition(openStackMachine.Status.Conditions, tt.expectedReadyCondition.Type)
+				condition := conditions.Get(openStackMachine, tt.expectedReadyCondition.Type)
 				if condition == nil {
 					t.Errorf("expected %s condition to be set", tt.expectedReadyCondition.Type)
 				} else {
@@ -805,9 +803,7 @@ var _ = Describe("OpenStackMachine controller", func() {
 					CloudName: "openstack",
 				},
 			},
-			Status: infrav1.OpenStackClusterStatus{
-				Ready: true,
-			},
+			Status: infrav1.OpenStackClusterStatus{},
 		}
 
 		capiCluster = &clusterv1.Cluster{
@@ -962,11 +958,10 @@ var _ = Describe("OpenStackMachine controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testMachine.Name, Namespace: testMachine.Namespace}, updatedMachine)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
@@ -1009,11 +1004,10 @@ var _ = Describe("OpenStackMachine controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testMachine.Name, Namespace: testMachine.Namespace}, updatedMachine)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedMachine, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 })

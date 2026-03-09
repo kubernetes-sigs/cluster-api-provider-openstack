@@ -39,7 +39,6 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util/conditions"
-	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -677,7 +676,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 		osServer      infrav1alpha1.OpenStackServer
 		expect        func(r *recorders)
 		wantErr       error
-		wantCondition *clusterv1beta1.Condition
+		wantCondition *metav1.Condition
 	}{
 		{
 			name: "Minimal server spec creating port and server",
@@ -747,12 +746,11 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 				createDefaultPortFails(r)
 			},
 			wantErr: fmt.Errorf("creating ports: %w", fmt.Errorf("Error creating port")),
-			wantCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.PortCreateFailedReason,
-				Message:  "Error creating port",
+			wantCondition: &metav1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.PortCreateFailedReason,
+				Message: "Error creating port",
 			},
 		},
 	}
@@ -1094,11 +1092,10 @@ var _ = Describe("OpenStackServer controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testServer.Name, Namespace: testServer.Namespace}, updatedServer)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedServer, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedServer, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedServer, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedServer, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
@@ -1135,11 +1132,10 @@ var _ = Describe("OpenStackServer controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testServer.Name, Namespace: testServer.Namespace}, updatedServer)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedServer, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedServer, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedServer, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedServer, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 })
