@@ -32,11 +32,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
-	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
+	"sigs.k8s.io/cluster-api/util/conditions"
 	capiannotations "sigs.k8s.io/cluster-api/util/annotations"
-	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -604,11 +603,10 @@ var _ = Describe("OpenStackMachineTemplate controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testOSMT.Name, Namespace: testOSMT.Namespace}, updatedOSMT)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
@@ -660,11 +658,10 @@ var _ = Describe("OpenStackMachineTemplate controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testOSMT.Name, Namespace: testOSMT.Namespace}, updatedOSMT)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedOSMT, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 })
