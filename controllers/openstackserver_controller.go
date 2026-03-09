@@ -24,7 +24,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	apierrors 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -36,7 +36,7 @@ import (
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
-	"sigs.k8s.io/cluster-api/util/conditions"
+	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -108,10 +108,10 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		terminalError := &capoerrors.TerminalError{}
 		if errors.As(reterr, &terminalError) {
 			conditions.Set(openStackServer, metav1.Condition{
-				Type:               infrav1.InstanceReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             terminalError.Reason,
-				Message:            terminalError.Message,
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  terminalError.Reason,
+				Message: terminalError.Message,
 			})
 		}
 
@@ -272,10 +272,10 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 	} else {
 		if err := computeService.DeleteInstance(openStackServer, instanceStatus); err != nil {
 			conditions.Set(openStackServer, metav1.Condition{
-				Type:               infrav1.InstanceReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             infrav1.InstanceDeleteFailedReason,
-				Message:            fmt.Sprintf("Deleting instance failed: %v", err),
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceDeleteFailedReason,
+				Message: fmt.Sprintf("Deleting instance failed: %v", err),
 			})
 			return fmt.Errorf("delete instance: %w", err)
 		}
@@ -385,17 +385,17 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	if floatingAddressClaim != nil {
 		if err := r.associateIPAddressFromIPAddressClaim(ctx, openStackServer, instanceStatus, instanceNS, floatingAddressClaim, networkingService); err != nil {
 			conditions.Set(openStackServer, metav1.Condition{
-				Type:               infrav1.FloatingAddressFromPoolReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             infrav1.FloatingAddressFromPoolErrorReason,
-				Message:            fmt.Sprintf("Failed while associating ip from pool: %v", err),
+				Type:    infrav1.FloatingAddressFromPoolReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.FloatingAddressFromPoolErrorReason,
+				Message: fmt.Sprintf("Failed while associating ip from pool: %v", err),
 			})
 			return ctrl.Result{}, err
 		}
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.FloatingAddressFromPoolReadyCondition,
-			Status:             metav1.ConditionTrue,
-			Reason:             infrav1.ReadyConditionReason,
+			Type:   infrav1.FloatingAddressFromPoolReadyCondition,
+			Status: metav1.ConditionTrue,
+			Reason: infrav1.ReadyConditionReason,
 		})
 	}
 
@@ -407,27 +407,27 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	case infrav1.InstanceStateActive:
 		scope.Logger().Info("Server instance state is ACTIVE", "id", instanceStatus.ID())
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.InstanceReadyCondition,
-			Status:             metav1.ConditionTrue,
-			Reason:             infrav1.ReadyConditionReason,
+			Type:   infrav1.InstanceReadyCondition,
+			Status: metav1.ConditionTrue,
+			Reason: infrav1.ReadyConditionReason,
 		})
 		// Set the Ready field for v1alpha1 compatibility with predicates
 		openStackServer.Status.Ready = true
 	case infrav1.InstanceStateError:
 		scope.Logger().Info("Server instance state is ERROR", "id", instanceStatus.ID())
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.InstanceReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.InstanceStateErrorReason,
+			Type:   infrav1.InstanceReadyCondition,
+			Status: metav1.ConditionFalse,
+			Reason: infrav1.InstanceStateErrorReason,
 		})
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
 		scope.Logger().Info("Server instance state is DELETED, no actions")
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.InstanceReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.InstanceDeletedReason,
+			Type:   infrav1.InstanceReadyCondition,
+			Status: metav1.ConditionFalse,
+			Reason: infrav1.InstanceDeletedReason,
 		})
 		return ctrl.Result{}, nil
 	case infrav1.InstanceStateBuild, infrav1.InstanceStateUndefined:
@@ -438,10 +438,10 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 		// due to potential conflict or unexpected actions
 		scope.Logger().Info("Waiting for instance to become ACTIVE", "id", instanceStatus.ID(), "status", instanceStatus.State())
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.InstanceReadyCondition,
-			Status:             metav1.ConditionUnknown,
-			Reason:             infrav1.InstanceNotReadyReason,
-			Message:            fmt.Sprintf("Instance state is not handled: %s", instanceStatus.State()),
+			Type:    infrav1.InstanceReadyCondition,
+			Status:  metav1.ConditionUnknown,
+			Reason:  infrav1.InstanceNotReadyReason,
+			Message: fmt.Sprintf("Instance state is not handled: %s", instanceStatus.State()),
 		})
 
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
@@ -506,10 +506,10 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 				reason = infrav1.InstanceNotFoundReason
 			}
 			conditions.Set(openStackServer, metav1.Condition{
-				Type:               infrav1.InstanceReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             reason,
-				Message:            msg,
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  reason,
+				Message: msg,
 			})
 			return nil, err
 		}
@@ -535,10 +535,10 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 		instanceStatus, err = computeService.CreateInstance(openStackServer, instanceSpec, portIDs)
 		if err != nil {
 			conditions.Set(openStackServer, metav1.Condition{
-				Type:               infrav1.InstanceReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             infrav1.InstanceCreateFailedReason,
-				Message:            err.Error(),
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceCreateFailedReason,
+				Message: err.Error(),
 			})
 			openStackServer.Status.InstanceState = &infrav1.InstanceStateError
 			return nil, fmt.Errorf("create OpenStack instance: %w", err)
@@ -638,10 +638,10 @@ func (r *OpenStackServerReconciler) reconcileFloatingAddressFromPool(ctx context
 	claim, err := r.getOrCreateIPAddressClaimForFloatingAddress(ctx, scope, openStackServer)
 	if err != nil {
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.FloatingAddressFromPoolReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.FloatingAddressFromPoolErrorReason,
-			Message:            fmt.Sprintf("Failed to reconcile floating IP claims: %v", err),
+			Type:    infrav1.FloatingAddressFromPoolReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.FloatingAddressFromPoolErrorReason,
+			Message: fmt.Sprintf("Failed to reconcile floating IP claims: %v", err),
 		})
 		return nil, true, err
 	}
@@ -650,8 +650,8 @@ func (r *OpenStackServerReconciler) reconcileFloatingAddressFromPool(ctx context
 		return claim, true, nil
 	}
 	conditions.Set(openStackServer, metav1.Condition{
-		Type:               infrav1.FloatingAddressFromPoolReadyCondition,
-		Status:             metav1.ConditionTrue,
+		Type:   infrav1.FloatingAddressFromPoolReadyCondition,
+		Status: metav1.ConditionTrue,
 		Reason: infrav1.ReadyConditionReason,
 	})
 	return claim, false, nil
@@ -723,9 +723,9 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 	for _, instanceAddress := range instanceAddresses {
 		if instanceAddress.Address == address.Spec.Address {
 			conditions.Set(openStackServer, metav1.Condition{
-				Type:               infrav1.FloatingAddressFromPoolReadyCondition,
-				Status:             metav1.ConditionTrue,
-				Reason:             infrav1.ReadyConditionReason,
+				Type:   infrav1.FloatingAddressFromPoolReadyCondition,
+				Status: metav1.ConditionTrue,
+				Reason: infrav1.ReadyConditionReason,
 			})
 			return nil
 		}
@@ -738,10 +738,10 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 
 	if fip == nil {
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.FloatingAddressFromPoolReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.FloatingAddressFromPoolErrorReason,
-			Message:            "floating IP does not exist",
+			Type:    infrav1.FloatingAddressFromPoolReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.FloatingAddressFromPoolErrorReason,
+			Message: "floating IP does not exist",
 		})
 		return fmt.Errorf("floating IP %q does not exist", address.Spec.Address)
 	}
@@ -753,10 +753,10 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 
 	if port == nil {
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:               infrav1.FloatingAddressFromPoolReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.FloatingAddressFromPoolErrorReason,
-			Message:            fmt.Sprintf("Can't find port for floating IP %q on external network %s", fip.FloatingIP, fip.FloatingNetworkID),
+			Type:    infrav1.FloatingAddressFromPoolReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.FloatingAddressFromPoolErrorReason,
+			Message: fmt.Sprintf("Can't find port for floating IP %q on external network %s", fip.FloatingIP, fip.FloatingNetworkID),
 		})
 		return fmt.Errorf("port for floating IP %q on network %s does not exist", fip.FloatingIP, fip.FloatingNetworkID)
 	}

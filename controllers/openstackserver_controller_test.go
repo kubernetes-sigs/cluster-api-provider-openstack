@@ -38,7 +38,7 @@ import (
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
-	"sigs.k8s.io/cluster-api/util/conditions"
+	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -796,7 +796,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 				}
 				unstructuredServer, err := tt.osServer.ToUnstructured()
 				g.Expect(err).ToNot(HaveOccurred())
-				conditionType, err := conditions.UnstructuredGet(unstructuredServer, string(tt.wantCondition.Type))
+				conditionType, err := conditions.UnstructuredGet(unstructuredServer, tt.wantCondition.Type)
 				g.Expect(err).ToNot(HaveOccurred())
 				g.Expect(conditionType).ToNot(BeNil())
 				g.Expect(string(conditionType.Status)).To(Equal(string(tt.wantCondition.Status)))

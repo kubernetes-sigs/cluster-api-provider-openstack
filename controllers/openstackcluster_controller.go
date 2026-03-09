@@ -35,8 +35,8 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
-	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/collections"
+	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -379,10 +379,9 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 	// This condition surfaces into Cluster's status.conditions[InfrastructureReady].
 	// It reflects the current operational state of the cluster infrastructure.
 	conditions.Set(openStackCluster, metav1.Condition{
-		Type:               clusterv1.ReadyCondition,
-		Status:             metav1.ConditionTrue,
-		Reason:             infrav1.ReadyConditionReason,
-
+		Type:   clusterv1.ReadyCondition,
+		Status: metav1.ConditionTrue,
+		Reason: infrav1.ReadyConditionReason,
 	})
 
 	scope.Logger().Info("Reconciled Cluster created successfully")
@@ -754,38 +753,34 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.SecurityGroupsReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.SecurityGroupReconcileFailedReason,
-			Message:            fmt.Sprintf("Failed to reconcile security groups: %v", err),
-	
+			Type:    infrav1.SecurityGroupsReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.SecurityGroupReconcileFailedReason,
+			Message: fmt.Sprintf("Failed to reconcile security groups: %v", err),
 		})
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile security groups: %w", err))
 		return fmt.Errorf("failed to reconcile security groups: %w", err)
 	}
 	conditions.Set(openStackCluster, metav1.Condition{
-		Type:               infrav1.SecurityGroupsReadyCondition,
-		Status:             metav1.ConditionTrue,
-		Reason:             infrav1.ReadyConditionReason,
-
+		Type:   infrav1.SecurityGroupsReadyCondition,
+		Status: metav1.ConditionTrue,
+		Reason: infrav1.ReadyConditionReason,
 	})
 
 	err = reconcileControlPlaneEndpoint(scope, networkingService, openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.APIEndpointReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.APIEndpointConfigFailedReason,
-			Message:            fmt.Sprintf("Failed to reconcile control plane endpoint: %v", err),
-	
+			Type:    infrav1.APIEndpointReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.APIEndpointConfigFailedReason,
+			Message: fmt.Sprintf("Failed to reconcile control plane endpoint: %v", err),
 		})
 		return err
 	}
 	conditions.Set(openStackCluster, metav1.Condition{
-		Type:               infrav1.APIEndpointReadyCondition,
-		Status:             metav1.ConditionTrue,
-		Reason:             infrav1.ReadyConditionReason,
-
+		Type:   infrav1.APIEndpointReadyCondition,
+		Status: metav1.ConditionTrue,
+		Reason: infrav1.ReadyConditionReason,
 	})
 
 	return nil
@@ -805,11 +800,10 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 		network, err := networkingService.GetNetworkByParam(openStackCluster.Spec.Network)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
-				Type:               infrav1.NetworkReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             infrav1.OpenStackErrorReason,
-				Message:            fmt.Sprintf("Failed to find network: %v", err),
-		
+				Type:    infrav1.NetworkReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.OpenStackErrorReason,
+				Message: fmt.Sprintf("Failed to find network: %v", err),
 			})
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find network: %w", err))
 			return fmt.Errorf("error fetching cluster network: %w", err)
@@ -820,11 +814,10 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	subnets, err := getClusterSubnets(networkingService, openStackCluster)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.NetworkReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.OpenStackErrorReason,
-			Message:            fmt.Sprintf("Failed to get cluster subnets: %v", err),
-	
+			Type:    infrav1.NetworkReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.OpenStackErrorReason,
+			Message: fmt.Sprintf("Failed to get cluster subnets: %v", err),
 		})
 		return err
 	}
@@ -842,11 +835,10 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	}
 	if err := utils.ValidateSubnets(capoSubnets); err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.NetworkReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.OpenStackErrorReason,
-			Message:            fmt.Sprintf("Failed to validate subnets: %v", err),
-	
+			Type:    infrav1.NetworkReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.OpenStackErrorReason,
+			Message: fmt.Sprintf("Failed to validate subnets: %v", err),
 		})
 		return err
 	}
@@ -859,11 +851,10 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 		network, err := networkingService.GetNetworkByID(subnets[0].NetworkID)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
-				Type:               infrav1.NetworkReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             infrav1.OpenStackErrorReason,
-				Message:            fmt.Sprintf("Failed to get network by ID: %v", err),
-		
+				Type:    infrav1.NetworkReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.OpenStackErrorReason,
+				Message: fmt.Sprintf("Failed to get network by ID: %v", err),
 			})
 			return err
 		}
@@ -871,21 +862,19 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	}
 
 	conditions.Set(openStackCluster, metav1.Condition{
-		Type:               infrav1.NetworkReadyCondition,
-		Status:             metav1.ConditionTrue,
-		Reason:             infrav1.ReadyConditionReason,
-
+		Type:   infrav1.NetworkReadyCondition,
+		Status: metav1.ConditionTrue,
+		Reason: infrav1.ReadyConditionReason,
 	})
 
 	if openStackCluster.Spec.Router != nil {
 		router, err := networkingService.GetRouterByParam(openStackCluster.Spec.Router)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
-				Type:               infrav1.RouterReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             infrav1.OpenStackErrorReason,
-				Message:            fmt.Sprintf("Failed to find router: %v", err),
-		
+				Type:    infrav1.RouterReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.OpenStackErrorReason,
+				Message: fmt.Sprintf("Failed to find router: %v", err),
 			})
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find router: %w", err))
 			return fmt.Errorf("error fetching cluster router: %w", err)
@@ -905,10 +894,9 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 			IPs:  routerIPs,
 		}
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.RouterReadyCondition,
-			Status:             metav1.ConditionTrue,
-			Reason:             infrav1.ReadyConditionReason,
-	
+			Type:   infrav1.RouterReadyCondition,
+			Status: metav1.ConditionTrue,
+			Reason: infrav1.ReadyConditionReason,
 		})
 	}
 
@@ -921,11 +909,10 @@ func reconcileProvisionedNetworkComponents(networkingService *networking.Service
 	err := networkingService.ReconcileNetwork(openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.NetworkReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.NetworkReconcileFailedReason,
-			Message:            fmt.Sprintf("Failed to reconcile network: %v", err),
-	
+			Type:    infrav1.NetworkReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.NetworkReconcileFailedReason,
+			Message: fmt.Sprintf("Failed to reconcile network: %v", err),
 		})
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile network: %w", err))
 		return fmt.Errorf("failed to reconcile network: %w", err)
@@ -933,39 +920,35 @@ func reconcileProvisionedNetworkComponents(networkingService *networking.Service
 	err = networkingService.ReconcileSubnet(openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.NetworkReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.SubnetReconcileFailedReason,
-			Message:            fmt.Sprintf("Failed to reconcile subnets: %v", err),
-	
+			Type:    infrav1.NetworkReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.SubnetReconcileFailedReason,
+			Message: fmt.Sprintf("Failed to reconcile subnets: %v", err),
 		})
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile subnets: %w", err))
 		return fmt.Errorf("failed to reconcile subnets: %w", err)
 	}
 	conditions.Set(openStackCluster, metav1.Condition{
-		Type:               infrav1.NetworkReadyCondition,
-		Status:             metav1.ConditionTrue,
-		Reason:             infrav1.ReadyConditionReason,
-
+		Type:   infrav1.NetworkReadyCondition,
+		Status: metav1.ConditionTrue,
+		Reason: infrav1.ReadyConditionReason,
 	})
 
 	err = networkingService.ReconcileRouter(openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
-			Type:               infrav1.RouterReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.RouterReconcileFailedReason,
-			Message:            fmt.Sprintf("Failed to reconcile router: %v", err),
-	
+			Type:    infrav1.RouterReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.RouterReconcileFailedReason,
+			Message: fmt.Sprintf("Failed to reconcile router: %v", err),
 		})
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile router: %w", err))
 		return fmt.Errorf("failed to reconcile router: %w", err)
 	}
 	conditions.Set(openStackCluster, metav1.Condition{
-		Type:               infrav1.RouterReadyCondition,
-		Status:             metav1.ConditionTrue,
-		Reason:             infrav1.ReadyConditionReason,
-
+		Type:   infrav1.RouterReadyCondition,
+		Status: metav1.ConditionTrue,
+		Reason: infrav1.ReadyConditionReason,
 	})
 
 	return nil
@@ -1095,11 +1078,10 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message error) {
 	// Set the Ready condition to False for errors
 	conditions.Set(openstackCluster, metav1.Condition{
-		Type:               clusterv1.ReadyCondition,
-		Status:             metav1.ConditionFalse,
-		Reason:             infrav1.OpenStackErrorReason,
-		Message:            message.Error(),
-
+		Type:    clusterv1.ReadyCondition,
+		Status:  metav1.ConditionFalse,
+		Reason:  infrav1.OpenStackErrorReason,
+		Message: message.Error(),
 	})
 }
 
