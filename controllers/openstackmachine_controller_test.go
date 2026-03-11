@@ -449,8 +449,9 @@ func TestGetPortIDs(t *testing.T) {
 func TestReconcileMachineState(t *testing.T) {
 	tests := []struct {
 		name                            string
-		instanceState                   infrav1.InstanceState
+		instanceState                   *infrav1.InstanceState
 		machineHasNodeRef               bool
+		serverConditions                []clusterv1beta1.Condition
 		expectRequeue                   bool
 		expectedInstanceReadyCondition  *clusterv1beta1.Condition
 		expectedReadyCondition          *clusterv1beta1.Condition
@@ -458,8 +459,77 @@ func TestReconcileMachineState(t *testing.T) {
 		expectFailureSet                bool
 	}{
 		{
+			name:          "Nil InstanceState with DependencyFailed condition propagates error to machine",
+			instanceState: nil,
+			serverConditions: []clusterv1beta1.Condition{
+				{
+					Type:     infrav1.InstanceReadyCondition,
+					Status:   corev1.ConditionFalse,
+					Severity: clusterv1beta1.ConditionSeverityError,
+					Reason:   infrav1.DependencyFailedReason,
+					Message:  "Failed to resolve server spec: image not found",
+				},
+			},
+			expectRequeue: true,
+			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
+				Type:     infrav1.InstanceReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityError,
+				Reason:   infrav1.DependencyFailedReason,
+			},
+			expectedReadyCondition: &clusterv1beta1.Condition{
+				Type:     clusterv1beta1.ReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityError,
+				Reason:   infrav1.DependencyFailedReason,
+			},
+		},
+		{
+			name:          "Nil InstanceState with InstanceNotReady condition propagates info to machine",
+			instanceState: nil,
+			serverConditions: []clusterv1beta1.Condition{
+				{
+					Type:     infrav1.InstanceReadyCondition,
+					Status:   corev1.ConditionFalse,
+					Severity: clusterv1beta1.ConditionSeverityInfo,
+					Reason:   infrav1.InstanceNotReadyReason,
+					Message:  "Waiting for dependencies",
+				},
+			},
+			expectRequeue: true,
+			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
+				Type:     infrav1.InstanceReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityInfo,
+				Reason:   infrav1.InstanceNotReadyReason,
+			},
+			expectedReadyCondition: &clusterv1beta1.Condition{
+				Type:     clusterv1beta1.ReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityInfo,
+				Reason:   infrav1.InstanceNotReadyReason,
+			},
+		},
+		{
+			name:          "Nil InstanceState with no server condition sets default waiting conditions",
+			instanceState: nil,
+			expectRequeue: true,
+			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
+				Type:     infrav1.InstanceReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityInfo,
+				Reason:   infrav1.InstanceNotReadyReason,
+			},
+			expectedReadyCondition: &clusterv1beta1.Condition{
+				Type:     clusterv1beta1.ReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityInfo,
+				Reason:   infrav1.InstanceNotReadyReason,
+			},
+		},
+		{
 			name:          "Instance state ACTIVE sets conditions to True and initialization.provisioned",
-			instanceState: infrav1.InstanceStateActive,
+			instanceState: ptr.To(infrav1.InstanceStateActive),
 			expectRequeue: false,
 			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
 				Type:   infrav1.InstanceReadyCondition,
@@ -473,7 +543,7 @@ func TestReconcileMachineState(t *testing.T) {
 		},
 		{
 			name:              "Instance state ERROR sets conditions to False without NodeRef",
-			instanceState:     infrav1.InstanceStateError,
+			instanceState:     ptr.To(infrav1.InstanceStateError),
 			machineHasNodeRef: false,
 			expectRequeue:     true,
 			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
@@ -492,7 +562,7 @@ func TestReconcileMachineState(t *testing.T) {
 		},
 		{
 			name:              "Instance state ERROR with NodeRef does not set failure",
-			instanceState:     infrav1.InstanceStateError,
+			instanceState:     ptr.To(infrav1.InstanceStateError),
 			machineHasNodeRef: true,
 			expectRequeue:     true,
 			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
@@ -511,7 +581,7 @@ func TestReconcileMachineState(t *testing.T) {
 		},
 		{
 			name:          "Instance state DELETED sets conditions to False",
-			instanceState: infrav1.InstanceStateDeleted,
+			instanceState: ptr.To(infrav1.InstanceStateDeleted),
 			expectRequeue: true,
 			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
 				Type:     infrav1.InstanceReadyCondition,
@@ -528,7 +598,7 @@ func TestReconcileMachineState(t *testing.T) {
 		},
 		{
 			name:          "Instance state BUILD sets ReadyCondition to False",
-			instanceState: infrav1.InstanceStateBuild,
+			instanceState: ptr.To(infrav1.InstanceStateBuild),
 			expectRequeue: true,
 			expectedReadyCondition: &clusterv1beta1.Condition{
 				Type:     clusterv1beta1.ReadyCondition,
@@ -539,7 +609,7 @@ func TestReconcileMachineState(t *testing.T) {
 		},
 		{
 			name:          "Instance state SHUTOFF sets conditions to Unknown",
-			instanceState: infrav1.InstanceStateShutoff,
+			instanceState: ptr.To(infrav1.InstanceStateShutoff),
 			expectRequeue: true,
 			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
 				Type:   infrav1.InstanceReadyCondition,
@@ -590,8 +660,13 @@ func TestReconcileMachineState(t *testing.T) {
 				},
 				Status: infrav1alpha1.OpenStackServerStatus{
 					InstanceID:    ptr.To(testInstanceID),
-					InstanceState: ptr.To(tt.instanceState),
+					InstanceState: tt.instanceState,
 				},
+			}
+
+			// Set any pre-existing conditions on the OpenStackServer
+			for i := range tt.serverConditions {
+				v1beta1conditions.Set(openStackServer, &tt.serverConditions[i])
 			}
 
 			r := &OpenStackMachineReconciler{}
