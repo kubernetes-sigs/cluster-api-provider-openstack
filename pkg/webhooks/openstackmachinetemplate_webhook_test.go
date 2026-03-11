@@ -42,7 +42,11 @@ func TestOpenStackMachineTemplate_ValidateCreate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("m1.small"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("m1.small"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("ubuntu"),
@@ -61,7 +65,11 @@ func TestOpenStackMachineTemplate_ValidateCreate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("m1.small"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("m1.small"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("ubuntu"),
@@ -107,7 +115,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("bar"),
@@ -121,7 +133,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("NewImage"),
@@ -140,7 +156,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("bar"),
@@ -157,7 +177,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("bar"),
@@ -178,7 +202,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("bar"),
@@ -192,7 +220,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("NewImage"),
@@ -211,7 +243,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("bar"),
@@ -230,7 +266,11 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
 					Template: infrav1beta2.OpenStackMachineTemplateResource{
 						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
+							Flavor: infrav1beta2.FlavorParam{
+								Filter: &infrav1beta2.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
 							Image: infrav1beta2.ImageParam{
 								Filter: &infrav1beta2.ImageFilter{
 									Name: ptr.To("NewImage"),

@@ -30,6 +30,7 @@ import (
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 // ConvertTo converts this OpenStackCluster to the Hub version (v1beta2).
@@ -56,7 +57,6 @@ func (dst *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	return err
 }
 
-// ConvertTo converts this OpenStackMachine to the Hub version (v1beta2).
 func (src *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1beta2.OpenStackMachine)
 	if err := Convert_v1beta1_OpenStackMachine_To_v1beta2_OpenStackMachine(src, dst, nil); err != nil {
@@ -68,9 +68,6 @@ func (src *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	return utilconversion.MarshalData(src, dst)
 }
 
-// ConvertFrom converts from the Hub version (v1beta2) to this version.
-//
-//nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	src := srcRaw.(*infrav1beta2.OpenStackMachine)
 	if err := Convert_v1beta2_OpenStackMachine_To_v1beta1_OpenStackMachine(src, dst, nil); err != nil {
@@ -282,6 +279,80 @@ func Convert_v1_Condition_To_v1beta1_Condition(in *metav1.Condition, out *cluste
 	out.LastTransitionTime = in.LastTransitionTime
 	out.Reason = in.Reason
 	out.Message = in.Message
+	return nil
+}
+
+// Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec
+// handles manual conversion for Flavor/FlavorID -> FlavorParam.
+func Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(
+	in *OpenStackMachineSpec,
+	out *infrav1beta2.OpenStackMachineSpec,
+	s apiconversion.Scope,
+) error {
+
+	// First copy all identical fields
+	if err := autoConvert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in, out, s); err != nil {
+		return err
+	}
+
+	switch {
+	case in.FlavorID != nil:
+		var id optional.String
+		_ = optional.Convert_string_To_optional_String(in.FlavorID, &id, s)
+
+		out.Flavor = infrav1beta2.FlavorParam{
+			ID: id,
+		}
+
+	case in.Flavor != nil:
+		var name optional.String
+		_ = optional.Convert_string_To_optional_String(in.Flavor, &name, s)
+
+		out.Flavor = infrav1beta2.FlavorParam{
+			Filter: &infrav1beta2.FlavorFilter{
+				Name: name,
+			},
+		}
+
+	default:
+		// Defensive fallback — should not happen if old validation guaranteed one set.
+		out.Flavor = infrav1beta2.FlavorParam{}
+	}
+
+	return nil
+}
+
+// Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec
+// handles manual conversion for FlavorParam -> Flavor/FlavorID.
+func Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(
+	in *infrav1beta2.OpenStackMachineSpec,
+	out *OpenStackMachineSpec,
+	s apiconversion.Scope,
+) error {
+
+	if err := autoConvert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s); err != nil {
+		return err
+	}
+
+	switch {
+	case in.Flavor.ID != nil && *in.Flavor.ID != "":
+		id := *in.Flavor.ID
+		out.FlavorID = &id
+		out.Flavor = nil
+
+	case in.Flavor.Filter != nil &&
+		in.Flavor.Filter.Name != nil &&
+		*in.Flavor.Filter.Name != "":
+		name := *in.Flavor.Filter.Name
+		out.Flavor = &name
+		out.FlavorID = nil
+
+	default:
+		// v1beta1 cannot represent filter-only constraints
+		out.Flavor = nil
+		out.FlavorID = nil
+	}
+
 	return nil
 }
 
