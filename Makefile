@@ -583,10 +583,10 @@ templates: templates/cluster-template.yaml \
 	templates/cluster-template-flatcar-sysext.yaml \
 	templates/cluster-template-capi-v1beta1.yaml
 
-templates/cluster-template.yaml: kustomize/v1beta1/default $(KUSTOMIZE) FORCE
+templates/cluster-template.yaml: kustomize/default $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
-templates/cluster-template-%.yaml: kustomize/v1beta1/% $(KUSTOMIZE) FORCE
+templates/cluster-template-%.yaml: kustomize/% $(KUSTOMIZE) FORCE
 	$(KUSTOMIZE) build "$<" > "$@"
 
 .PHONY: release-templates

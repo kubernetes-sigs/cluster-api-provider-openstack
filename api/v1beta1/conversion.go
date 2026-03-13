@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"sort"
 	"strings"
 	"unsafe"
 
@@ -202,6 +203,9 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatus(in
 				Attributes:   fd.Attributes,
 			})
 		}
+		sort.Slice(out.FailureDomains, func(i, j int) bool {
+			return out.FailureDomains[i].Name < out.FailureDomains[j].Name
+		})
 	}
 
 	out.Conditions = infrav1.ConvertConditionsToV1Beta2(in.Conditions, 0)

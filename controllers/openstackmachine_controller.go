@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
@@ -231,8 +232,8 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	// Nothing to do if the cluster is not ready because no machine resources were created.
-	if !conditions.IsTrue(openStackCluster, clusterv1.ReadyCondition) || openStackCluster.Status.Network == nil {
+	// Nothing to do if the cluster infrastructure was never provisioned because no machine resources were created.
+	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned || openStackCluster.Status.Network == nil {
 		// The finalizer should not have been added yet in this case,
 		// but the following handles the upgrade case.
 		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
@@ -360,7 +361,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, nil
 	}
 
-	if !conditions.IsTrue(openStackCluster, clusterv1.ReadyCondition) {
+	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned {
 		scope.Logger().Info("Cluster infrastructure is not ready yet, re-queuing machine")
 		conditions.Set(openStackMachine, metav1.Condition{
 			Type:   infrav1.InstanceReadyCondition,
@@ -474,36 +475,32 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 		scope.Logger().Info("Waiting for OpenStackServer instance state", "name", openStackServer.Name)
 
 		if condition := meta.FindStatusCondition(openStackServer.Status.Conditions, infrav1.InstanceReadyCondition); condition != nil && condition.Status == metav1.ConditionFalse {
-			meta.SetStatusCondition(&openStackMachine.Status.Conditions, metav1.Condition{
-				Type:               infrav1.InstanceReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             condition.Reason,
-				Message:            condition.Message,
-				ObservedGeneration: openStackMachine.Generation,
+			conditions.Set(openStackMachine, metav1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  condition.Reason,
+				Message: condition.Message,
 			})
-			meta.SetStatusCondition(&openStackMachine.Status.Conditions, metav1.Condition{
-				Type:               clusterv1.ReadyCondition,
-				Status:             metav1.ConditionFalse,
-				Reason:             condition.Reason,
-				Message:            condition.Message,
-				ObservedGeneration: openStackMachine.Generation,
+			conditions.Set(openStackMachine, metav1.Condition{
+				Type:    clusterv1.ReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  condition.Reason,
+				Message: condition.Message,
 			})
 			return &ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}
 		}
 
-		meta.SetStatusCondition(&openStackMachine.Status.Conditions, metav1.Condition{
-			Type:               infrav1.InstanceReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.InstanceNotReadyReason,
-			Message:            "Waiting for instance to be created",
-			ObservedGeneration: openStackMachine.Generation,
+		conditions.Set(openStackMachine, metav1.Condition{
+			Type:    infrav1.InstanceReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.InstanceNotReadyReason,
+			Message: "Waiting for instance to be created",
 		})
-		meta.SetStatusCondition(&openStackMachine.Status.Conditions, metav1.Condition{
-			Type:               clusterv1.ReadyCondition,
-			Status:             metav1.ConditionFalse,
-			Reason:             infrav1.InstanceNotReadyReason,
-			Message:            "Waiting for instance to be created",
-			ObservedGeneration: openStackMachine.Generation,
+		conditions.Set(openStackMachine, metav1.Condition{
+			Type:    clusterv1.ReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.InstanceNotReadyReason,
+			Message: "Waiting for instance to be created",
 		})
 		return &ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}
 	}

@@ -330,14 +330,24 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	if err != nil {
 		// Set a condition to make the error visible on the OpenStackServer status.
 		// This helps users understand why the server is not being created.
-		v1beta1conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.DependencyFailedReason, clusterv1beta1.ConditionSeverityError, "Failed to resolve server spec: %v", err)
+		conditions.Set(openStackServer, metav1.Condition{
+			Type:    infrav1.InstanceReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.DependencyFailedReason,
+			Message: fmt.Sprintf("Failed to resolve server spec: %v", err),
+		})
 		return ctrl.Result{}, err
 	}
 	if !resolveDone {
 		// Set a condition to indicate we're waiting for dependencies (e.g., ORC Image not ready yet).
 		// This helps users understand why the server is not being created.
 		// Include the list of pending dependencies to help with debugging.
-		v1beta1conditions.MarkFalse(openStackServer, infrav1.InstanceReadyCondition, infrav1.InstanceNotReadyReason, clusterv1beta1.ConditionSeverityInfo, "Waiting for server dependencies to be resolved: %v", pendingDependencies)
+		conditions.Set(openStackServer, metav1.Condition{
+			Type:    infrav1.InstanceReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.InstanceNotReadyReason,
+			Message: fmt.Sprintf("Waiting for server dependencies to be resolved: %v", pendingDependencies),
+		})
 		return ctrl.Result{}, nil
 	}
 

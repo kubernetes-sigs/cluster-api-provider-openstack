@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
@@ -115,7 +116,14 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Always patch the openStackCluster when exiting this function so we can persist any OpenStackCluster changes.
 	defer func() {
-		if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
+		if err := patchHelper.Patch(ctx, openStackCluster, patch.WithOwnedConditions{Conditions: []string{
+			clusterv1.ReadyCondition,
+			infrav1.OpenStackAuthenticationSucceeded,
+			infrav1.SecurityGroupsReadyCondition,
+			infrav1.APIEndpointReadyCondition,
+			infrav1.NetworkReadyCondition,
+			infrav1.RouterReadyCondition,
+		}}); err != nil {
 			result = ctrl.Result{}
 			reterr = kerrors.NewAggregate([]error{reterr, fmt.Errorf("error patching OpenStackCluster %s/%s: %w", openStackCluster.Namespace, openStackCluster.Name, err)})
 		}
@@ -347,19 +355,25 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	// Create a new list in case any AZs have been removed from OpenStack
-	openStackCluster.Status.FailureDomains = make([]clusterv1.FailureDomain, 0, len(availabilityZones))
-	for _, az := range availabilityZones {
-		// By default, the AZ is used or not used for control plane nodes depending on the flag
-		found := !ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
-		// If explicit AZs for control plane nodes are given, they override the value
-		if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
-			found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
+	// Only populate failure domains during initial provisioning to avoid
+	// unnecessary status updates from transient AZ changes (e.g. the default
+	// "nova" zone appearing briefly when a new compute host registers).
+	if len(openStackCluster.Status.FailureDomains) == 0 {
+		openStackCluster.Status.FailureDomains = make([]clusterv1.FailureDomain, 0, len(availabilityZones))
+		for _, az := range availabilityZones {
+			// By default, the AZ is used or not used for control plane nodes depending on the flag
+			found := !ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
+			// If explicit AZs for control plane nodes are given, they override the value
+			if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
+				found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
+			}
+			openStackCluster.Status.FailureDomains = append(openStackCluster.Status.FailureDomains, clusterv1.FailureDomain{
+				Name:         az.ZoneName,
+				ControlPlane: ptr.To(found),
+			})
 		}
-		// Add the AZ object to the failure domains for the cluster
-		openStackCluster.Status.FailureDomains = append(openStackCluster.Status.FailureDomains, clusterv1.FailureDomain{
-			Name:         az.ZoneName,
-			ControlPlane: ptr.To(found),
+		sort.Slice(openStackCluster.Status.FailureDomains, func(i, j int) bool {
+			return openStackCluster.Status.FailureDomains[i].Name < openStackCluster.Status.FailureDomains[j].Name
 		})
 	}
 

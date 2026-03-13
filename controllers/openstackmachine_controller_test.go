@@ -449,87 +449,77 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 	tests := []struct {
 		name                            string
 		instanceState                   *infrav1.InstanceState
-		machineHasNodeRef               bool
-		serverConditions                []clusterv1beta1.Condition
+		serverConditions                []metav1.Condition
 		expectRequeue                   bool
 		expectedInstanceReadyCondition  *metav1.Condition
 		expectedReadyCondition          *metav1.Condition
 		expectInitializationProvisioned bool
-		expectFailureSet                bool
 	}{
 		{
 			name:          "Nil InstanceState with DependencyFailed condition propagates error to machine",
 			instanceState: nil,
-			serverConditions: []clusterv1beta1.Condition{
+			serverConditions: []metav1.Condition{
 				{
-					Type:     infrav1.InstanceReadyCondition,
-					Status:   corev1.ConditionFalse,
-					Severity: clusterv1beta1.ConditionSeverityError,
-					Reason:   infrav1.DependencyFailedReason,
-					Message:  "Failed to resolve server spec: image not found",
+					Type:    infrav1.InstanceReadyCondition,
+					Status:  metav1.ConditionFalse,
+					Reason:  infrav1.DependencyFailedReason,
+					Message: "Failed to resolve server spec: image not found",
 				},
 			},
 			expectRequeue: true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.DependencyFailedReason,
-				Message:  "Failed to resolve server spec: image not found",
+			expectedInstanceReadyCondition: &metav1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.DependencyFailedReason,
+				Message: "Failed to resolve server spec: image not found",
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.DependencyFailedReason,
-				Message:  "Failed to resolve server spec: image not found",
+			expectedReadyCondition: &metav1.Condition{
+				Type:    clusterv1.ReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.DependencyFailedReason,
+				Message: "Failed to resolve server spec: image not found",
 			},
 		},
 		{
 			name:          "Nil InstanceState with InstanceNotReady condition propagates info to machine",
 			instanceState: nil,
-			serverConditions: []clusterv1beta1.Condition{
+			serverConditions: []metav1.Condition{
 				{
-					Type:     infrav1.InstanceReadyCondition,
-					Status:   corev1.ConditionFalse,
-					Severity: clusterv1beta1.ConditionSeverityInfo,
-					Reason:   infrav1.InstanceNotReadyReason,
-					Message:  "Waiting for dependencies",
+					Type:    infrav1.InstanceReadyCondition,
+					Status:  metav1.ConditionFalse,
+					Reason:  infrav1.InstanceNotReadyReason,
+					Message: "Waiting for dependencies",
 				},
 			},
 			expectRequeue: true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityInfo,
-				Reason:   infrav1.InstanceNotReadyReason,
-				Message:  "Waiting for dependencies",
+			expectedInstanceReadyCondition: &metav1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceNotReadyReason,
+				Message: "Waiting for dependencies",
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityInfo,
-				Reason:   infrav1.InstanceNotReadyReason,
-				Message:  "Waiting for dependencies",
+			expectedReadyCondition: &metav1.Condition{
+				Type:    clusterv1.ReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceNotReadyReason,
+				Message: "Waiting for dependencies",
 			},
 		},
 		{
 			name:          "Nil InstanceState with no server condition sets default waiting conditions",
 			instanceState: nil,
 			expectRequeue: true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityInfo,
-				Reason:   infrav1.InstanceNotReadyReason,
-				Message:  "Waiting for instance to be created",
+			expectedInstanceReadyCondition: &metav1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceNotReadyReason,
+				Message: "Waiting for instance to be created",
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityInfo,
-				Reason:   infrav1.InstanceNotReadyReason,
-				Message:  "Waiting for instance to be created",
+			expectedReadyCondition: &metav1.Condition{
+				Type:    clusterv1.ReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceNotReadyReason,
+				Message: "Waiting for instance to be created",
 			},
 		},
 		{
@@ -547,10 +537,9 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 			expectInitializationProvisioned: true,
 		},
 		{
-			name:              "Instance state ERROR sets conditions to False without NodeRef",
-			instanceState:     ptr.To(infrav1.InstanceStateError),
-			machineHasNodeRef: false,
-			expectRequeue:     true,
+			name:          "Instance state ERROR sets conditions to False",
+			instanceState: ptr.To(infrav1.InstanceStateError),
+			expectRequeue: true,
 			expectedInstanceReadyCondition: &metav1.Condition{
 				Type:   infrav1.InstanceReadyCondition,
 				Status: metav1.ConditionFalse,
@@ -561,54 +550,31 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 				Status: metav1.ConditionFalse,
 				Reason: infrav1.InstanceStateErrorReason,
 			},
-			expectFailureSet: true,
 		},
 		{
-			name:              "Instance state ERROR with NodeRef does not set failure",
-			instanceState:     ptr.To(infrav1.InstanceStateError),
-			machineHasNodeRef: true,
-			expectRequeue:     true,
-			expectedInstanceReadyCondition: &metav1.Condition{
-				Type:   infrav1.InstanceReadyCondition,
-				Status: metav1.ConditionFalse,
-				Reason: infrav1.InstanceStateErrorReason,
-			},
-			expectedReadyCondition: &metav1.Condition{
-				Type:   clusterv1.ReadyCondition,
-				Status: metav1.ConditionFalse,
-				Reason: infrav1.InstanceStateErrorReason,
-			},
-			expectFailureSet: false,
-		},
-		{
-			name:              "Instance state ERROR propagates error message from server condition",
-			instanceState:     ptr.To(infrav1.InstanceStateError),
-			machineHasNodeRef: false,
-			serverConditions: []clusterv1beta1.Condition{
+			name:          "Instance state ERROR propagates error message from server condition",
+			instanceState: ptr.To(infrav1.InstanceStateError),
+			serverConditions: []metav1.Condition{
 				{
-					Type:     infrav1.InstanceReadyCondition,
-					Status:   corev1.ConditionFalse,
-					Severity: clusterv1beta1.ConditionSeverityError,
-					Reason:   infrav1.InstanceStateErrorReason,
-					Message:  "Server entered ERROR state: No valid host was found",
+					Type:    infrav1.InstanceReadyCondition,
+					Status:  metav1.ConditionFalse,
+					Reason:  infrav1.InstanceStateErrorReason,
+					Message: "Server entered ERROR state: No valid host was found",
 				},
 			},
 			expectRequeue: true,
-			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
-				Type:     infrav1.InstanceReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceStateErrorReason,
-				Message:  "Server entered ERROR state: No valid host was found",
+			expectedInstanceReadyCondition: &metav1.Condition{
+				Type:    infrav1.InstanceReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceStateErrorReason,
+				Message: "Server entered ERROR state: No valid host was found",
 			},
-			expectedReadyCondition: &clusterv1beta1.Condition{
-				Type:     clusterv1beta1.ReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: clusterv1beta1.ConditionSeverityError,
-				Reason:   infrav1.InstanceStateErrorReason,
-				Message:  "Server entered ERROR state: No valid host was found",
+			expectedReadyCondition: &metav1.Condition{
+				Type:    clusterv1.ReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.InstanceStateErrorReason,
+				Message: "Server entered ERROR state: No valid host was found",
 			},
-			expectFailureSet: true,
 		},
 		{
 			name:          "Instance state DELETED sets conditions to False",
@@ -675,12 +641,6 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 					Namespace: namespace,
 				},
 			}
-			if tt.machineHasNodeRef {
-				machine.Status.NodeRef = clusterv1.MachineNodeReference{
-					Name: "test-node",
-				}
-			}
-
 			openStackServer := &infrav1alpha1.OpenStackServer{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      openStackMachineName,
@@ -693,9 +653,7 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 			}
 
 			// Set any pre-existing conditions on the OpenStackServer
-			for i := range tt.serverConditions {
-				v1beta1conditions.Set(openStackServer, &tt.serverConditions[i])
-			}
+			openStackServer.Status.Conditions = tt.serverConditions
 
 			r := &OpenStackMachineReconciler{}
 			result := r.reconcileMachineState(scope.NewWithLogger(nil, logr.Discard()), openStackMachine, machine, openStackServer)
