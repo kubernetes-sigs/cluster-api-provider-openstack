@@ -28,14 +28,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackclustertemplate,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclustertemplates,versions=v1beta2,name=validation.openstackclustertemplate.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
 func SetupOpenStackClusterTemplateWebhook(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
-		For(&infrav1beta2.OpenStackClusterTemplate{}).
+		For(&infrav1.OpenStackClusterTemplate{}).
 		WithValidator(&openStackClusterTemplateWebhook{}).
 		Complete()
 }
@@ -81,8 +81,8 @@ func (*openStackClusterTemplateWebhook) ValidateDelete(_ context.Context, _ runt
 	return nil, nil
 }
 
-func castToOpenStackClusterTemplate(obj runtime.Object) (*infrav1beta2.OpenStackClusterTemplate, error) {
-	cast, ok := obj.(*infrav1beta2.OpenStackClusterTemplate)
+func castToOpenStackClusterTemplate(obj runtime.Object) (*infrav1.OpenStackClusterTemplate, error) {
+	cast, ok := obj.(*infrav1.OpenStackClusterTemplate)
 	if !ok {
 		return nil, fmt.Errorf("expected an OpenStackClusterTemplate but got a %T", obj)
 	}

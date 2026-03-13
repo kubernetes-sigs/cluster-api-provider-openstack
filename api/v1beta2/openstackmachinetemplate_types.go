@@ -75,6 +75,14 @@ type OpenStackMachineTemplateList struct {
 	Items           []OpenStackMachineTemplate `json:"items"`
 }
 
+// GetIdentityRef returns the object's namespace and IdentityRef if it has an IdentityRef, or nulls if it does not.
+func (r *OpenStackMachineTemplate) GetIdentityRef() (*string, *OpenStackIdentityReference) {
+	if r.Spec.Template.Spec.IdentityRef != nil {
+		return &r.Namespace, r.Spec.Template.Spec.IdentityRef
+	}
+	return nil, nil
+}
+
 func init() {
 	objectTypes = append(objectTypes, &OpenStackMachineTemplate{}, &OpenStackMachineTemplateList{})
 }

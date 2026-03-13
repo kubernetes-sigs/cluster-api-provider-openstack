@@ -30,14 +30,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackmachine,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,versions=v1beta2,name=validation.openstackmachine.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
 func SetupOpenStackMachineWebhook(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr).
-		For(&infrav1beta2.OpenStackMachine{}).
+		For(&infrav1.OpenStackMachine{}).
 		WithValidator(&openStackMachineWebhook{}).
 		Complete()
 }
@@ -80,13 +80,13 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	newOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(newObj)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert new OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
 	oldOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(oldObjRaw)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert old OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
@@ -95,13 +95,13 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	newOpenStackMachineSpec, ok := newOpenStackMachine["spec"].(map[string]interface{})
 	if !ok {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("new OpenStackMachine spec is not a map")),
 		})
 	}
 	oldOpenStackMachineSpec, ok := oldOpenStackMachine["spec"].(map[string]interface{})
 	if !ok {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("old OpenStackMachine spec is not a map")),
 		})
 	}
@@ -134,8 +134,8 @@ func (*openStackMachineWebhook) ValidateDelete(_ context.Context, _ runtime.Obje
 	return nil, nil
 }
 
-func castToOpenStackMachine(obj runtime.Object) (*infrav1beta2.OpenStackMachine, error) {
-	cast, ok := obj.(*infrav1beta2.OpenStackMachine)
+func castToOpenStackMachine(obj runtime.Object) (*infrav1.OpenStackMachine, error) {
+	cast, ok := obj.(*infrav1.OpenStackMachine)
 	if !ok {
 		return nil, fmt.Errorf("expected an OpenStackMachine but got a %T", obj)
 	}

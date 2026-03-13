@@ -50,8 +50,8 @@ import (
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/v2/api/v1alpha1"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/controllers"
 	"sigs.k8s.io/cluster-api-provider-openstack/feature"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
@@ -108,8 +108,8 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
 	_ = ipamv1.AddToScheme(scheme)
+	_ = infrav1beta1.AddToScheme(scheme)
 	_ = infrav1.AddToScheme(scheme)
-	_ = infrav1beta2.AddToScheme(scheme)
 	_ = infrav1alpha1.AddToScheme(scheme)
 	_ = orcv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
@@ -324,16 +324,16 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 	scopeFactory := scope.NewFactory(scopeCacheMaxSize)
 
 	crdMigratorConfig := map[client.Object]crdmigrator.ByObjectConfig{
-		&infrav1.OpenStackCluster{}: {
+		&infrav1beta1.OpenStackCluster{}: {
 			UseCache: true,
 		},
-		&infrav1.OpenStackMachine{}: {
+		&infrav1beta1.OpenStackMachine{}: {
 			UseCache: true,
 		},
-		&infrav1.OpenStackMachineTemplate{}: {
+		&infrav1beta1.OpenStackMachineTemplate{}: {
 			UseCache: true,
 		},
-		&infrav1.OpenStackClusterTemplate{}: {
+		&infrav1beta1.OpenStackClusterTemplate{}: {
 			UseCache: true,
 		},
 		&infrav1alpha1.OpenStackFloatingIPPool{}: {

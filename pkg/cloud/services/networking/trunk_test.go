@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/gomega" //nolint:revive
 	"go.uber.org/mock/gomock"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 )
 
