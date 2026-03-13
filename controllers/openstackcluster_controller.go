@@ -115,7 +115,14 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Always patch the openStackCluster when exiting this function so we can persist any OpenStackCluster changes.
 	defer func() {
-		if err := patchHelper.Patch(ctx, openStackCluster); err != nil {
+		if err := patchHelper.Patch(ctx, openStackCluster, patch.WithOwnedConditions{Conditions: []string{
+			clusterv1.ReadyCondition,
+			infrav1.OpenStackAuthenticationSucceeded,
+			infrav1.SecurityGroupsReadyCondition,
+			infrav1.APIEndpointReadyCondition,
+			infrav1.NetworkReadyCondition,
+			infrav1.RouterReadyCondition,
+		}}); err != nil {
 			result = ctrl.Result{}
 			reterr = kerrors.NewAggregate([]error{reterr, fmt.Errorf("error patching OpenStackCluster %s/%s: %w", openStackCluster.Namespace, openStackCluster.Name, err)})
 		}

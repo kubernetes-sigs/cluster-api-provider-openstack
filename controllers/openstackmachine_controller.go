@@ -231,8 +231,8 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	// Nothing to do if the cluster is not ready because no machine resources were created.
-	if !conditions.IsTrue(openStackCluster, clusterv1.ReadyCondition) || openStackCluster.Status.Network == nil {
+	// Nothing to do if the cluster infrastructure was never provisioned because no machine resources were created.
+	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned || openStackCluster.Status.Network == nil {
 		// The finalizer should not have been added yet in this case,
 		// but the following handles the upgrade case.
 		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
@@ -360,7 +360,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, nil
 	}
 
-	if !conditions.IsTrue(openStackCluster, clusterv1.ReadyCondition) {
+	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned {
 		scope.Logger().Info("Cluster infrastructure is not ready yet, re-queuing machine")
 		conditions.Set(openStackMachine, metav1.Condition{
 			Type:   infrav1.InstanceReadyCondition,
