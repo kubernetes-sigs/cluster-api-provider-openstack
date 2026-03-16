@@ -1,6 +1,6 @@
 module sigs.k8s.io/cluster-api-provider-openstack/hack/tools
 
-go 1.25.0
+go 1.25.7
 
 require (
 	github.com/a8m/envsubst v1.4.3
@@ -65,7 +65,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/pprof v0.0.0-20260115054156-294ebfa9ad83 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gophercloud/gophercloud/v2 v2.10.0 // indirect
+	github.com/gophercloud/gophercloud/v2 v2.11.0 // indirect
 	github.com/gophercloud/utils/v2 v2.0.0-20241220104409-2e0af06694a1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.7 // indirect
 	github.com/hashicorp/go-version v1.8.0 // indirect
