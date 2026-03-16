@@ -43,6 +43,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
+	mockclient "sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
@@ -349,7 +351,7 @@ func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 
 			tt.expect(mf)
 
-			err := r.reconcileNormal(ctx, withLogger, tpl)
+			err := r.reconcileNormal(ctx, withLogger, "", tpl)
 
 			if tt.wantErr == "" {
 				g.Expect(err).ToNot(HaveOccurred())
@@ -435,6 +437,219 @@ func newOSCluster(name string) *infrav1.OpenStackCluster {
 			Namespace: "test-ns",
 			Name:      name,
 		},
+	}
+}
+
+func TestReconcileAllowedAddressPairs(t *testing.T) {
+	ctx := context.Background()
+
+	scheme := runtime.NewScheme()
+	_ = corev1.AddToScheme(scheme)
+	_ = clusterv1.AddToScheme(scheme)
+	_ = infrav1.AddToScheme(scheme)
+	_ = infrav1alpha1.AddToScheme(scheme)
+
+	const (
+		testNS      = "test-ns"
+		osmtName    = "test-osmt"
+		msName      = "test-ms"
+		machineName = "test-machine"
+		osmName     = "test-osm"
+		testCluster = "test-cluster"
+		portID      = "port-uuid-1234"
+	)
+
+	makeOSMTWithPorts := func(pairs []infrav1.AddressPair) *infrav1.OpenStackMachineTemplate {
+		return &infrav1.OpenStackMachineTemplate{
+			ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmtName},
+			Spec: infrav1.OpenStackMachineTemplateSpec{
+				Template: infrav1.OpenStackMachineTemplateResource{
+					Spec: infrav1.OpenStackMachineSpec{
+						Ports: []infrav1.PortOpts{
+							{
+								ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+									AllowedAddressPairs: pairs,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	makeMS := func() *clusterv1.MachineSet {
+		return &clusterv1.MachineSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: testNS,
+				Name:      msName,
+				Labels:    map[string]string{clusterv1.ClusterNameLabel: testCluster},
+			},
+			Spec: clusterv1.MachineSetSpec{
+				Template: clusterv1.MachineTemplateSpec{
+					Spec: clusterv1.MachineSpec{
+						InfrastructureRef: clusterv1.ContractVersionedObjectReference{
+							Name: osmtName,
+						},
+					},
+				},
+			},
+		}
+	}
+
+	makeMachine := func() *clusterv1.Machine {
+		return &clusterv1.Machine{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: testNS,
+				Name:      machineName,
+				Labels:    map[string]string{clusterv1.ClusterNameLabel: testCluster},
+				OwnerReferences: []metav1.OwnerReference{
+					{Kind: "MachineSet", Name: msName, APIVersion: clusterv1.GroupVersion.String()},
+				},
+			},
+			Spec: clusterv1.MachineSpec{
+				InfrastructureRef: clusterv1.ContractVersionedObjectReference{Name: osmName},
+			},
+		}
+	}
+
+	makeOSM := func(annotationVal string) *infrav1.OpenStackMachine {
+		osm := &infrav1.OpenStackMachine{
+			ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmName},
+		}
+		if annotationVal != "" {
+			osm.Annotations = map[string]string{annotationAllowedAddressPairs: annotationVal}
+		}
+		return osm
+	}
+
+	makeOSS := func() *infrav1alpha1.OpenStackServer {
+		return &infrav1alpha1.OpenStackServer{
+			ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmName},
+			Status: infrav1alpha1.OpenStackServerStatus{
+				Resources: &infrav1alpha1.ServerResources{
+					Ports: []infrav1.PortStatus{{ID: portID}},
+				},
+			},
+		}
+	}
+
+	tests := []struct {
+		name        string
+		osmt        *infrav1.OpenStackMachineTemplate
+		clusterName string
+		objects     []client.Object
+		setupMock   func(nc *mockclient.MockNetworkClient)
+		wantErr     string
+		verify      func(g Gomega, cl client.Client)
+	}{
+		{
+			name:        "no ports in template - skip",
+			clusterName: testCluster,
+			osmt: &infrav1.OpenStackMachineTemplate{
+				ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmtName},
+			},
+			setupMock: func(nc *mockclient.MockNetworkClient) {},
+		},
+		{
+			name:        "empty clusterName - skip",
+			clusterName: "",
+			osmt:        makeOSMTWithPorts(nil),
+			setupMock:   func(nc *mockclient.MockNetworkClient) {},
+		},
+		{
+			name:        "annotation already matches desired - skip UpdatePort",
+			clusterName: testCluster,
+			// ports: 1 port with nil AllowedAddressPairs → JSON: [null]
+			osmt: makeOSMTWithPorts(nil),
+			objects: []client.Object{
+				makeMS(),
+				makeMachine(),
+				makeOSM("[null]"),
+			},
+			setupMock: func(nc *mockclient.MockNetworkClient) {
+				// no UpdatePort expected
+			},
+		},
+		{
+			name:        "osm has no status resources - skip",
+			clusterName: testCluster,
+			osmt:        makeOSMTWithPorts(nil),
+			objects: []client.Object{
+				makeMS(),
+				makeMachine(),
+				&infrav1.OpenStackMachine{
+					ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmName},
+				},
+			},
+			setupMock: func(nc *mockclient.MockNetworkClient) {},
+		},
+		{
+			name:        "update succeeds - UpdatePort called and annotation set",
+			clusterName: testCluster,
+			osmt:        makeOSMTWithPorts([]infrav1.AddressPair{{IPAddress: "192.0.2.100"}}),
+			objects:     []client.Object{makeMS(), makeMachine(), makeOSM(""), makeOSS()},
+			setupMock: func(nc *mockclient.MockNetworkClient) {
+				nc.EXPECT().
+					UpdatePort(portID, gomock.Any()).
+					Return(nil, nil)
+			},
+			verify: func(g Gomega, cl client.Client) {
+				osm := &infrav1.OpenStackMachine{}
+				g.Expect(cl.Get(ctx, client.ObjectKey{Namespace: testNS, Name: osmName}, osm)).To(Succeed())
+				g.Expect(osm.Annotations).To(HaveKey(annotationAllowedAddressPairs))
+				g.Expect(osm.Annotations[annotationAllowedAddressPairs]).To(ContainSubstring("192.0.2.100"))
+			},
+		},
+		{
+			name:        "UpdatePort error - propagated",
+			clusterName: testCluster,
+			osmt:        makeOSMTWithPorts([]infrav1.AddressPair{{IPAddress: "192.0.2.100"}}),
+			objects:     []client.Object{makeMS(), makeMachine(), makeOSM(""), makeOSS()},
+			setupMock: func(nc *mockclient.MockNetworkClient) {
+				nc.EXPECT().
+					UpdatePort(portID, gomock.Any()).
+					Return(nil, fmt.Errorf("neutron error"))
+			},
+			wantErr: "neutron error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: testNS}}
+			allObjects := append([]client.Object{ns, tt.osmt}, tt.objects...)
+
+			cl := fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(allObjects...).
+				Build()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mf := scope.NewMockScopeFactory(mockCtrl, "proj")
+			tt.setupMock(mf.NetworkClient)
+
+			log := ctrl.Log.WithName("test")
+			s := scope.NewWithLogger(mf, log)
+
+			r := &OpenStackMachineTemplateReconciler{Client: cl}
+
+			err := r.reconcileAllowedAddressPairs(ctx, s, tt.clusterName, tt.osmt)
+
+			if tt.wantErr != "" {
+				g.Expect(err).To(HaveOccurred())
+				g.Expect(err.Error()).To(ContainSubstring(tt.wantErr))
+			} else {
+				g.Expect(err).ToNot(HaveOccurred())
+				if tt.verify != nil {
+					tt.verify(g, cl)
+				}
+			}
+		})
 	}
 }
 

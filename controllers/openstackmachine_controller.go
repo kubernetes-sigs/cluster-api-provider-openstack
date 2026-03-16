@@ -671,9 +671,17 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 
 	// If not ports are provided we create one.
 	// Ports must have a network so if none is provided we use the default network.
-	serverPorts := openStackMachineSpec.Ports
+	// Deep-copy the ports so in-place mutations below (Network injection, SecurityGroups
+	// merge) do not modify the original OpenStackMachineSpec referenced by the patchHelper
+	// baseline, which would cause a spurious spec-immutability webhook rejection.
+	var serverPorts []infrav1.PortOpts
 	if len(openStackMachineSpec.Ports) == 0 {
 		serverPorts = make([]infrav1.PortOpts, 1)
+	} else {
+		serverPorts = make([]infrav1.PortOpts, len(openStackMachineSpec.Ports))
+		for i, p := range openStackMachineSpec.Ports {
+			serverPorts[i] = *p.DeepCopy()
+		}
 	}
 
 	var clusterSubnets []infrav1.FixedIP

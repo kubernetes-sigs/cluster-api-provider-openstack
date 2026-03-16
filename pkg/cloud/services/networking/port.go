@@ -670,3 +670,18 @@ func uniqueSortedTags(tags []string) []string {
 	slices.Sort(uniqueTags)
 	return uniqueTags
 }
+
+// UpdateAllowedAddressPairs updates the allowedAddressPairs on an existing Neutron port.
+func (s *Service) UpdateAllowedAddressPairs(portID string, pairs []infrav1.AddressPair) error {
+	addressPairs := make([]ports.AddressPair, len(pairs))
+	for i, ap := range pairs {
+		addressPairs[i] = ports.AddressPair{
+			IPAddress:  ap.IPAddress,
+			MACAddress: ptr.Deref(ap.MACAddress, ""),
+		}
+	}
+	_, err := s.client.UpdatePort(portID, ports.UpdateOpts{
+		AllowedAddressPairs: &addressPairs,
+	})
+	return err
+}

@@ -111,6 +111,10 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	delete(oldOpenStackMachineSpec, "identityRef")
 	delete(newOpenStackMachineSpec, "identityRef")
 
+	// allowedAddressPairs is mutable: zero it out in ports before comparison
+	clearAllowedAddressPairsInPorts(oldOpenStackMachineSpec)
+	clearAllowedAddressPairsInPorts(newOpenStackMachineSpec)
+
 	if !reflect.DeepEqual(oldOpenStackMachineSpec, newOpenStackMachineSpec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
@@ -121,4 +125,20 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 // ValidateDelete implements admission.Validator so a webhook will be registered for the type.
 func (*openStackMachineWebhook) ValidateDelete(_ context.Context, _ *infrav1.OpenStackMachine) (admission.Warnings, error) {
 	return nil, nil
+}
+
+// clearAllowedAddressPairsInPorts removes allowedAddressPairs from each port entry
+// in an unstructured spec map so changes to that field do not trigger immutability rejection.
+func clearAllowedAddressPairsInPorts(spec map[string]interface{}) {
+	ports, ok := spec["ports"].([]interface{})
+	if !ok {
+		return
+	}
+	for _, p := range ports {
+		port, ok := p.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		delete(port, "allowedAddressPairs")
+	}
 }

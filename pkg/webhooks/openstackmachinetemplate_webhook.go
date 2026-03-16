@@ -63,11 +63,22 @@ func (*openStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldO
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a admission.Request inside context: %v", err))
 	}
 
-	if !topology.IsDryRunRequest(req, newObj) &&
-		!reflect.DeepEqual(newObj.Spec.Template.Spec, oldObj.Spec.Template.Spec) {
-		allErrs = append(allErrs,
-			field.Invalid(field.NewPath("spec", "template", "spec"), newObj.Spec.Template.Spec, "OpenStackMachineTemplate spec.template.spec field is immutable. Please create a new resource instead. Ref doc: https://cluster-api.sigs.k8s.io/tasks/change-machine-template.html"),
-		)
+	if !topology.IsDryRunRequest(req, newObj) {
+		newSpec := newObj.Spec.Template.Spec.DeepCopy()
+		oldSpec := oldObj.Spec.Template.Spec.DeepCopy()
+		// allowedAddressPairs is mutable: zero it out before comparison so that
+		// changes to that field do not trigger the immutability error.
+		for i := range newSpec.Ports {
+			newSpec.Ports[i].AllowedAddressPairs = nil
+		}
+		for i := range oldSpec.Ports {
+			oldSpec.Ports[i].AllowedAddressPairs = nil
+		}
+		if !reflect.DeepEqual(newSpec, oldSpec) {
+			allErrs = append(allErrs,
+				field.Invalid(field.NewPath("spec", "template", "spec"), newObj.Spec.Template.Spec, "OpenStackMachineTemplate spec.template.spec field is immutable. Please create a new resource instead. Ref doc: https://cluster-api.sigs.k8s.io/tasks/change-machine-template.html"),
+			)
+		}
 	}
 
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
