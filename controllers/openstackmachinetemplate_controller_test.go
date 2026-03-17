@@ -59,7 +59,12 @@ func TestOpenStackMachineTemplateReconciler_Reconcile_UnhappyPaths(t *testing.T)
 	scheme := runtime.NewScheme()
 	_ = corev1.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
+	_ = infrav1alpha1.AddToScheme(scheme)
 	_ = infrav1.AddToScheme(scheme)
+	_ = scheme.AddKnownTypes(infrav1alpha1.SchemeGroupVersion,
+		&infrav1alpha1.OpenStackServer{},
+		&infrav1alpha1.OpenStackServerList{},
+	)
 
 	ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-ns"}}
 
@@ -549,13 +554,13 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 			osmt: &infrav1.OpenStackMachineTemplate{
 				ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmtName},
 			},
-			setupMock: func(nc *mockclient.MockNetworkClient) {},
+			setupMock: func(_ *mockclient.MockNetworkClient) {},
 		},
 		{
 			name:        "empty clusterName - skip",
 			clusterName: "",
 			osmt:        makeOSMTWithPorts(nil),
-			setupMock:   func(nc *mockclient.MockNetworkClient) {},
+			setupMock:   func(_ *mockclient.MockNetworkClient) {},
 		},
 		{
 			name:        "annotation already matches desired - skip UpdatePort",
@@ -567,7 +572,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 				makeMachine(),
 				makeOSM("[null]"),
 			},
-			setupMock: func(nc *mockclient.MockNetworkClient) {
+			setupMock: func(_ *mockclient.MockNetworkClient) {
 				// no UpdatePort expected
 			},
 		},
@@ -582,7 +587,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmName},
 				},
 			},
-			setupMock: func(nc *mockclient.MockNetworkClient) {},
+			setupMock: func(_ *mockclient.MockNetworkClient) {},
 		},
 		{
 			name:        "update succeeds - UpdatePort called and annotation set",

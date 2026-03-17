@@ -55,8 +55,10 @@ const (
 )
 
 // Set here so we can easily mock it in tests.
-var newComputeService = compute.NewService
-var newNetworkingService = networking.NewService
+var (
+	newComputeService    = compute.NewService
+	newNetworkingService = networking.NewService
+)
 
 // OpenStackMachineTemplateReconciler reconciles a OpenStackMachineTemplate object.
 // it only updates the .status field to allow auto-scaling.
