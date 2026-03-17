@@ -60,11 +60,11 @@ func TestOpenStackMachineTemplateReconciler_Reconcile_UnhappyPaths(t *testing.T)
 	_ = corev1.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
 	_ = infrav1alpha1.AddToScheme(scheme)
-	_ = infrav1.AddToScheme(scheme)
-	_ = scheme.AddKnownTypes(infrav1alpha1.SchemeGroupVersion,
+	scheme.AddKnownTypes(infrav1alpha1.SchemeGroupVersion,
 		&infrav1alpha1.OpenStackServer{},
 		&infrav1alpha1.OpenStackServerList{},
 	)
+	_ = infrav1.AddToScheme(scheme)
 
 	ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-ns"}}
 
@@ -451,6 +451,11 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = corev1.AddToScheme(scheme)
 	_ = clusterv1.AddToScheme(scheme)
+	_ = infrav1alpha1.AddToScheme(scheme)
+	scheme.AddKnownTypes(infrav1alpha1.SchemeGroupVersion,
+		&infrav1alpha1.OpenStackServer{},
+		&infrav1alpha1.OpenStackServerList{},
+	)
 	_ = infrav1.AddToScheme(scheme)
 	_ = infrav1alpha1.AddToScheme(scheme)
 
@@ -571,6 +576,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 				makeMS(),
 				makeMachine(),
 				makeOSM("[null]"),
+				makeOSS(),
 			},
 			setupMock: func(_ *mockclient.MockNetworkClient) {
 				// no UpdatePort expected
@@ -586,6 +592,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 				&infrav1.OpenStackMachine{
 					ObjectMeta: metav1.ObjectMeta{Namespace: testNS, Name: osmName},
 				},
+				// no OpenStackServer → reconciler will skip (NotFound → continue)
 			},
 			setupMock: func(_ *mockclient.MockNetworkClient) {},
 		},
@@ -630,6 +637,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 			cl := fake.NewClientBuilder().
 				WithScheme(scheme).
 				WithObjects(allObjects...).
+				WithStatusSubresource(&infrav1alpha1.OpenStackServer{}).
 				Build()
 
 			mockCtrl := gomock.NewController(t)
