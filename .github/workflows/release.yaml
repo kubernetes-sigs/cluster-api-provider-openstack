@@ -114,9 +114,11 @@ jobs:
         curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/main/releasenotes/${RELEASE_TAG}.md" \
         -o "${RELEASE_TAG}.md"
     - name: Release
-      uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # tag=v2.5.0
-      with:
-        draft: true
-        files: out/*
-        body_path: ${{ env.RELEASE_TAG }}.md
-        tag_name: ${{ env.RELEASE_TAG }}
+      run: |
+        gh release create "${RELEASE_TAG}" \
+          --draft \
+          --notes-file "${RELEASE_TAG}.md" \
+          out/*
+      env:
+        RELEASE_TAG: ${{ env.RELEASE_TAG }}
+        GH_TOKEN: ${{ github.token }}
