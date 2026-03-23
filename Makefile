@@ -29,6 +29,10 @@ TRACE ?= 0
 # Go
 GO_VERSION ?= 1.25.8
 
+# Ensure correct toolchain is used
+GOTOOLCHAIN = go$(GO_VERSION)
+export GOTOOLCHAIN
+
 # Directories.
 ARTIFACTS ?= $(REPO_ROOT)/_artifacts
 TOOLS_DIR := hack/tools
