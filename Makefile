@@ -61,7 +61,7 @@ GOVULNCHECK_VER := v1.1.4
 GOVULNCHECK_BIN := govulncheck
 GOVULNCHECK_PKG := golang.org/x/vuln/cmd/govulncheck
 
-TRIVY_VER := 0.49.1
+TRIVY_VER := 0.69.3
 
 # Binaries.
 CONTROLLER_GEN := $(TOOLS_BIN_DIR)/controller-gen
