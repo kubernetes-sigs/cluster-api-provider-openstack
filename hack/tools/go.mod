@@ -143,7 +143,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.34.5 // indirect
 	k8s.io/apiextensions-apiserver v0.34.5 // indirect
-	k8s.io/apimachinery v0.34.5 // indirect
+	k8s.io/apimachinery v0.34.6 // indirect
 	k8s.io/apiserver v0.34.5 // indirect
 	k8s.io/client-go v0.34.5 // indirect
 	k8s.io/cluster-bootstrap v0.34.2 // indirect
