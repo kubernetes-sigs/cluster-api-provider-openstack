@@ -22,15 +22,15 @@ require (
 	gopkg.in/ini.v1 v1.67.1
 	k8s.io/api v0.33.9
 	k8s.io/apiextensions-apiserver v0.33.9
-	k8s.io/apimachinery v0.33.9
+	k8s.io/apimachinery v0.33.10
 	k8s.io/client-go v0.33.9
 	k8s.io/code-generator v0.33.9
 	k8s.io/component-base v0.33.9
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/kube-openapi v0.0.0-20250610211856-8b98d1ed966a
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
-	sigs.k8s.io/cluster-api v1.11.6
-	sigs.k8s.io/cluster-api/test v1.11.6
+	sigs.k8s.io/cluster-api v1.11.7
+	sigs.k8s.io/cluster-api/test v1.11.7
 	sigs.k8s.io/controller-runtime v0.21.0
 	sigs.k8s.io/structured-merge-diff/v4 v4.7.0
 	sigs.k8s.io/yaml v1.6.0
@@ -51,7 +51,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
