@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   update-golangci-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       latest_version: ${{ steps.get_version.outputs.latest_version }}
       current_version: ${{ steps.check_version.outputs.current_version }}

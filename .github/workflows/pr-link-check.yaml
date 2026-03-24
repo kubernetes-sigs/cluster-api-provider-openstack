@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   check-links-pr:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
     - name: Clone repository
