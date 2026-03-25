@@ -73,6 +73,7 @@ type OpenStackMachineTemplateReconciler struct {
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachinetemplates,verbs=get;list;watch
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachinetemplates/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;patch
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackservers,verbs=get;list;watch
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=machinesets,verbs=get;list;watch
 // +kubebuilder:rbac:groups=cluster.x-k8s.io,resources=machines,verbs=get;list;watch
 
@@ -218,6 +219,12 @@ func (r *OpenStackMachineTemplateReconciler) reconcileNormal(ctx context.Context
 		openStackMachineTemplate.Status.Capacity[corev1.ResourceStorage] = *resource.NewQuantity(storageBytes, resource.BinarySI)
 	}
 
+	// reconcileAllowedAddressPairs is called independently of the image/flavor logic so that
+	// it is never skipped by an early return (e.g. when imageID is not yet resolvable).
+	if err := r.reconcileAllowedAddressPairs(ctx, scope, clusterName, openStackMachineTemplate); err != nil {
+		return err
+	}
+
 	imageID, err := computeService.GetImageID(ctx, r.Client, openStackMachineTemplate.Namespace, openStackMachineTemplate.Spec.Template.Spec.Image)
 	if err != nil {
 		return err
@@ -239,10 +246,6 @@ func (r *OpenStackMachineTemplateReconciler) reconcileNormal(ctx context.Context
 				openStackMachineTemplate.Status.NodeInfo.OperatingSystem = osType
 			}
 		}
-	}
-
-	if err := r.reconcileAllowedAddressPairs(ctx, scope, clusterName, openStackMachineTemplate); err != nil {
-		return err
 	}
 
 	return nil
