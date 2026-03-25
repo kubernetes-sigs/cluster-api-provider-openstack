@@ -16,6 +16,8 @@ updates:
   commit-message:
     prefix: ":seedling:"
     include: scope
+  cooldown:
+    default-days: 7
   labels:
   - "area/dependency"
   - "ok-to-test"
@@ -44,6 +46,8 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - dependency-name: "sigs.k8s.io/controller-tools"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  cooldown:
+    default-days: 7
   labels:
   - "area/dependency"
   - "ok-to-test"
@@ -62,6 +66,8 @@ updates:
   commit-message:
     prefix: ":seedling:"
     include: scope
+  cooldown:
+    default-days: 7
   labels:
   - "area/dependency"
   - "ok-to-test"
@@ -93,6 +99,14 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - dependency-name: "sigs.k8s.io/controller-tools"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore golang.org/x minor and major bumps to prevent cascading Go version requirements
+  - dependency-name: "golang.org/x/*"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore gophercloud minor and major bumps to prevent cascading Go version requirements
+  - dependency-name: "github.com/gophercloud/gophercloud/v2"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  cooldown:
+    default-days: 7
   labels:
   - "area/dependency"
   - "ok-to-test"
@@ -111,6 +125,8 @@ updates:
   commit-message:
     prefix: ":seedling:"
     include: scope
+  cooldown:
+    default-days: 7
   labels:
   - "area/dependency"
   - "ok-to-test"
@@ -145,7 +161,16 @@ updates:
   # Ignore ORC major and minor bumps to prevent cascading k8s.io and controller-runtime updates
   - dependency-name: "github.com/k-orc/openstack-resource-controller*"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore golang.org/x minor and major bumps to prevent cascading Go version requirements
+  - dependency-name: "golang.org/x/*"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore gophercloud minor and major bumps to prevent cascading Go version requirements
+  - dependency-name: "github.com/gophercloud/gophercloud/v2"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  cooldown:
+    default-days: 7
   labels:
   - "area/dependency"
   - "ok-to-test"
+
 ## release-0.13 branch config ends here

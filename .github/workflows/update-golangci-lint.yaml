@@ -21,10 +21,11 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0
+        persist-credentials: false
     - name: Get latest golangci-lint version
       id: get_version
       run: |
-        export LATEST_VERSION=$(curl -s https://api.github.com/repos/golangci/golangci-lint/releases/latest | jq -r .tag_name)
+        export LATEST_VERSION=$(curl -fsSL https://api.github.com/repos/golangci/golangci-lint/releases/latest | jq -r .tag_name)
         echo "LATEST_VERSION=${LATEST_VERSION}" >> $GITHUB_ENV
         echo "LATEST_VERSION=${LATEST_VERSION}" >> $GITHUB_OUTPUT
     - name: Check current version in Makefile
@@ -35,8 +36,10 @@ jobs:
         echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
     - name: Update Makefile if needed
       if: ${{ steps.check_version.outputs.current_version != steps.get_version.outputs.latest_version }}
+      env:
+        LATEST_VERSION: ${{ steps.get_version.outputs.latest_version }}
       run: |
-        sed -i "s/GOLANGCI_LINT_VERSION ?= .*/GOLANGCI_LINT_VERSION ?= ${{ steps.get_version.outputs.latest_version }}/" hack/tools/Makefile
+        sed -i "s/GOLANGCI_LINT_VERSION ?= .*/GOLANGCI_LINT_VERSION ?= ${LATEST_VERSION}/" hack/tools/Makefile
     - name: Create Pull Request
       if: ${{ steps.check_version.outputs.current_version != steps.get_version.outputs.latest_version }}
       uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # tag=v8.1.0
