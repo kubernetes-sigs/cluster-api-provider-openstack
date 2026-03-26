@@ -20,6 +20,8 @@ package v1beta2
 
 // OpenStackClusterTemplateResourceApplyConfiguration represents a declarative configuration of the OpenStackClusterTemplateResource type for use
 // with apply.
+//
+// OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.
 type OpenStackClusterTemplateResourceApplyConfiguration struct {
 	Spec *OpenStackClusterSpecApplyConfiguration `json:"spec,omitempty"`
 }

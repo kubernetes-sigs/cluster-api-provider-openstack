@@ -21,8 +21,12 @@ package v1beta1
 // BindingProfileApplyConfiguration represents a declarative configuration of the BindingProfile type for use
 // with apply.
 type BindingProfileApplyConfiguration struct {
+	// OVSHWOffload enables or disables the OVS hardware offload feature.
+	// This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached.
+	// See: https://bugs.launchpad.net/nova/+bug/2020813
 	OVSHWOffload *bool `json:"ovsHWOffload,omitempty"`
-	TrustedVF    *bool `json:"trustedVF,omitempty"`
+	// TrustedVF enables or disables the “trusted mode” for the VF.
+	TrustedVF *bool `json:"trustedVF,omitempty"`
 }
 
 // BindingProfileApplyConfiguration constructs a declarative configuration of the BindingProfile type for use with

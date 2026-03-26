@@ -20,7 +20,10 @@ package v1beta2
 
 // OpenStackMachineTemplateResourceApplyConfiguration represents a declarative configuration of the OpenStackMachineTemplateResource type for use
 // with apply.
+//
+// OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.
 type OpenStackMachineTemplateResourceApplyConfiguration struct {
+	// Spec is the specification of the desired behavior of the machine.
 	Spec *OpenStackMachineSpecApplyConfiguration `json:"spec,omitempty"`
 }
 

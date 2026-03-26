@@ -20,7 +20,11 @@ package v1beta1
 
 // ClusterInitializationApplyConfiguration represents a declarative configuration of the ClusterInitialization type for use
 // with apply.
+//
+// ClusterInitialization represents the initialization status of the cluster.
 type ClusterInitializationApplyConfiguration struct {
+	// Provisioned is set to true when the initial provisioning of the cluster infrastructure is completed.
+	// The value of this field is never updated after provisioning is completed.
 	Provisioned *bool `json:"provisioned,omitempty"`
 }
 

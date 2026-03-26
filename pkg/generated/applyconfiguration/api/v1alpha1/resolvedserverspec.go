@@ -24,11 +24,17 @@ import (
 
 // ResolvedServerSpecApplyConfiguration represents a declarative configuration of the ResolvedServerSpec type for use
 // with apply.
+//
+// ResolvedServerSpec contains resolved references to resources required by the server.
 type ResolvedServerSpecApplyConfiguration struct {
-	ServerGroupID *string                                      `json:"serverGroupID,omitempty"`
-	ImageID       *string                                      `json:"imageID,omitempty"`
-	FlavorID      *string                                      `json:"flavorID,omitempty"`
-	Ports         []v1beta2.ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
+	// ServerGroupID is the ID of the server group the server should be added to and is calculated based on ServerGroupFilter.
+	ServerGroupID *string `json:"serverGroupID,omitempty"`
+	// ImageID is the ID of the image to use for the server and is calculated based on ImageFilter.
+	ImageID *string `json:"imageID,omitempty"`
+	// FlavorID is the ID of the flavor to use.
+	FlavorID *string `json:"flavorID,omitempty"`
+	// Ports is the fully resolved list of ports to create for the server.
+	Ports []v1beta2.ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
 }
 
 // ResolvedServerSpecApplyConfiguration constructs a declarative configuration of the ResolvedServerSpec type for use with

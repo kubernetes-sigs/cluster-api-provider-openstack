@@ -20,6 +20,8 @@ package v1beta2
 
 // NetworkStatusApplyConfiguration represents a declarative configuration of the NetworkStatus type for use
 // with apply.
+//
+// NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatusApplyConfiguration struct {
 	Name *string  `json:"name,omitempty"`
 	ID   *string  `json:"id,omitempty"`

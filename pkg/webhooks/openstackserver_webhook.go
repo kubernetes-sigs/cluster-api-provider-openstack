@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/cluster-api/util/topology"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
@@ -39,22 +38,18 @@ import (
 
 func SetupOpenStackServerWebhook(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr, &infrav1alpha1.OpenStackServer{}).
-		WithCustomValidator(&openStackServerWebhook{}).
+		WithValidator(&openStackServerWebhook{}).
 		Complete()
 }
 
 type openStackServerWebhook struct{}
 
-// Compile-time assertion that openStackServerWebhook implements webhook.CustomValidator.
-var _ webhook.CustomValidator = &openStackServerWebhook{}
+// Compile-time assertion that openStackServerWebhook implements admission.Validator.
+var _ admission.Validator[*infrav1alpha1.OpenStackServer] = &openStackServerWebhook{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackServerWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackServerWebhook) ValidateCreate(_ context.Context, newObj *infrav1alpha1.OpenStackServer) (admission.Warnings, error) {
 	var allErrs field.ErrorList
-	newObj, err := castToOpenStackServer(objRaw)
-	if err != nil {
-		return nil, err
-	}
 
 	if newObj.Spec.RootVolume != nil && newObj.Spec.AdditionalBlockDevices != nil {
 		for _, device := range newObj.Spec.AdditionalBlockDevices {
@@ -73,18 +68,8 @@ func (*openStackServerWebhook) ValidateCreate(_ context.Context, objRaw runtime.
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
-	oldObj, err := castToOpenStackServer(oldObjRaw)
-	if err != nil {
-		return nil, err
-	}
-
-	newObj, err := castToOpenStackServer(newObjRaw)
-	if err != nil {
-		return nil, err
-	}
-
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj *infrav1alpha1.OpenStackServer) (admission.Warnings, error) {
 	req, err := admission.RequestFromContext(ctx)
 	if err != nil {
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a admission.Request inside context: %v", err))
@@ -96,7 +81,7 @@ func (*openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, ne
 			field.InternalError(nil, fmt.Errorf("failed to convert new OpenStackServer to unstructured object: %w", err)),
 		})
 	}
-	oldOpenStackServer, err := runtime.DefaultUnstructuredConverter.ToUnstructured(oldObjRaw)
+	oldOpenStackServer, err := runtime.DefaultUnstructuredConverter.ToUnstructured(oldObj)
 	if err != nil {
 		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackServer").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert old OpenStackServer to unstructured object: %w", err)),
@@ -122,15 +107,7 @@ func (*openStackServerWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, ne
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackServerWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type.
+func (*openStackServerWebhook) ValidateDelete(_ context.Context, _ *infrav1alpha1.OpenStackServer) (admission.Warnings, error) {
 	return nil, nil
-}
-
-func castToOpenStackServer(obj runtime.Object) (*infrav1alpha1.OpenStackServer, error) {
-	cast, ok := obj.(*infrav1alpha1.OpenStackServer)
-	if !ok {
-		return nil, fmt.Errorf("expected an OpenStackServer but got a %T", obj)
-	}
-	return cast, nil
 }

@@ -29,6 +29,8 @@ import (
 
 // OpenStackClusterApplyConfiguration represents a declarative configuration of the OpenStackCluster type for use
 // with apply.
+//
+// OpenStackCluster is the Schema for the openstackclusters API.
 type OpenStackClusterApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
@@ -47,29 +49,14 @@ func OpenStackCluster(name, namespace string) *OpenStackClusterApplyConfiguratio
 	return b
 }
 
-// ExtractOpenStackCluster extracts the applied configuration owned by fieldManager from
-// openStackCluster. If no managedFields are found in openStackCluster for fieldManager, a
-// OpenStackClusterApplyConfiguration is returned with only the Name, Namespace (if applicable),
-// APIVersion and Kind populated. It is possible that no managed fields were found for because other
-// field managers have taken ownership of all the fields previously owned by fieldManager, or because
-// the fieldManager never owned fields any fields.
+// ExtractOpenStackClusterFrom extracts the applied configuration owned by fieldManager from
+// openStackCluster for the specified subresource. Pass an empty string for subresource to extract
+// the main resource. Common subresources include "status", "scale", etc.
 // openStackCluster must be a unmodified OpenStackCluster API object that was retrieved from the Kubernetes API.
-// ExtractOpenStackCluster provides a way to perform a extract/modify-in-place/apply workflow.
+// ExtractOpenStackClusterFrom provides a way to perform a extract/modify-in-place/apply workflow.
 // Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
 // applied if another fieldManager has updated or force applied any of the previously applied fields.
-// Experimental!
-func ExtractOpenStackCluster(openStackCluster *apiv1beta2.OpenStackCluster, fieldManager string) (*OpenStackClusterApplyConfiguration, error) {
-	return extractOpenStackCluster(openStackCluster, fieldManager, "")
-}
-
-// ExtractOpenStackClusterStatus is the same as ExtractOpenStackCluster except
-// that it extracts the status subresource applied configuration.
-// Experimental!
-func ExtractOpenStackClusterStatus(openStackCluster *apiv1beta2.OpenStackCluster, fieldManager string) (*OpenStackClusterApplyConfiguration, error) {
-	return extractOpenStackCluster(openStackCluster, fieldManager, "status")
-}
-
-func extractOpenStackCluster(openStackCluster *apiv1beta2.OpenStackCluster, fieldManager string, subresource string) (*OpenStackClusterApplyConfiguration, error) {
+func ExtractOpenStackClusterFrom(openStackCluster *apiv1beta2.OpenStackCluster, fieldManager string, subresource string) (*OpenStackClusterApplyConfiguration, error) {
 	b := &OpenStackClusterApplyConfiguration{}
 	err := managedfields.ExtractInto(openStackCluster, internal.Parser().Type("io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackCluster"), fieldManager, b, subresource)
 	if err != nil {
@@ -82,6 +69,27 @@ func extractOpenStackCluster(openStackCluster *apiv1beta2.OpenStackCluster, fiel
 	b.WithAPIVersion("infrastructure.cluster.x-k8s.io/v1beta2")
 	return b, nil
 }
+
+// ExtractOpenStackCluster extracts the applied configuration owned by fieldManager from
+// openStackCluster. If no managedFields are found in openStackCluster for fieldManager, a
+// OpenStackClusterApplyConfiguration is returned with only the Name, Namespace (if applicable),
+// APIVersion and Kind populated. It is possible that no managed fields were found for because other
+// field managers have taken ownership of all the fields previously owned by fieldManager, or because
+// the fieldManager never owned fields any fields.
+// openStackCluster must be a unmodified OpenStackCluster API object that was retrieved from the Kubernetes API.
+// ExtractOpenStackCluster provides a way to perform a extract/modify-in-place/apply workflow.
+// Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
+// applied if another fieldManager has updated or force applied any of the previously applied fields.
+func ExtractOpenStackCluster(openStackCluster *apiv1beta2.OpenStackCluster, fieldManager string) (*OpenStackClusterApplyConfiguration, error) {
+	return ExtractOpenStackClusterFrom(openStackCluster, fieldManager, "")
+}
+
+// ExtractOpenStackClusterStatus extracts the applied configuration owned by fieldManager from
+// openStackCluster for the status subresource.
+func ExtractOpenStackClusterStatus(openStackCluster *apiv1beta2.OpenStackCluster, fieldManager string) (*OpenStackClusterApplyConfiguration, error) {
+	return ExtractOpenStackClusterFrom(openStackCluster, fieldManager, "status")
+}
+
 func (b OpenStackClusterApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

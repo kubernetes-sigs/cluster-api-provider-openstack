@@ -21,6 +21,7 @@ package v1beta1
 // PortStatusApplyConfiguration represents a declarative configuration of the PortStatus type for use
 // with apply.
 type PortStatusApplyConfiguration struct {
+	// ID is the unique identifier of the port.
 	ID *string `json:"id,omitempty"`
 }
 

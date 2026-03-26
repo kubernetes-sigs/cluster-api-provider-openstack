@@ -21,13 +21,24 @@ package v1beta1
 // PortOptsApplyConfiguration represents a declarative configuration of the PortOpts type for use
 // with apply.
 type PortOptsApplyConfiguration struct {
-	Network                                  *NetworkParamApplyConfiguration        `json:"network,omitempty"`
-	Description                              *string                                `json:"description,omitempty"`
-	NameSuffix                               *string                                `json:"nameSuffix,omitempty"`
-	FixedIPs                                 []FixedIPApplyConfiguration            `json:"fixedIPs,omitempty"`
-	SecurityGroups                           []SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
-	Tags                                     []string                               `json:"tags,omitempty"`
-	Trunk                                    *bool                                  `json:"trunk,omitempty"`
+	// Network is a query for an openstack network that the port will be created or discovered on.
+	// This will fail if the query returns more than one network.
+	Network *NetworkParamApplyConfiguration `json:"network,omitempty"`
+	// Description is a human-readable description for the port.
+	Description *string `json:"description,omitempty"`
+	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
+	NameSuffix *string `json:"nameSuffix,omitempty"`
+	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	FixedIPs []FixedIPApplyConfiguration `json:"fixedIPs,omitempty"`
+	// SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
+	SecurityGroups []SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
+	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
+	Tags []string `json:"tags,omitempty"`
+	// Trunk specifies whether trunking is enabled at the port level. If not
+	// provided the value is inherited from the machine, or false for a
+	// bastion host.
+	Trunk                                    *bool `json:"trunk,omitempty"`
 	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
 }
 

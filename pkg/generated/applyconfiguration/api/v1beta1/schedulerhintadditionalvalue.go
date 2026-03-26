@@ -24,11 +24,23 @@ import (
 
 // SchedulerHintAdditionalValueApplyConfiguration represents a declarative configuration of the SchedulerHintAdditionalValue type for use
 // with apply.
+//
+// SchedulerHintAdditionalValue represents the value of a scheduler hint property.
+// The value can be of various types: Bool, String, or Number.
+// The Type field indicates the type of the value being used.
 type SchedulerHintAdditionalValueApplyConfiguration struct {
-	Type   *apiv1beta1.SchedulerHintValueType `json:"type,omitempty"`
-	Bool   *bool                              `json:"bool,omitempty"`
-	Number *int                               `json:"number,omitempty"`
-	String *string                            `json:"string,omitempty"`
+	// Type represents the type of the value.
+	// Valid values are Bool, String, and Number.
+	Type *apiv1beta1.SchedulerHintValueType `json:"type,omitempty"`
+	// Bool is the boolean value of the scheduler hint, used when Type is "Bool".
+	// This field is required if type is 'Bool', and must not be set otherwise.
+	Bool *bool `json:"bool,omitempty"`
+	// Number is the integer value of the scheduler hint, used when Type is "Number".
+	// This field is required if type is 'Number', and must not be set otherwise.
+	Number *int `json:"number,omitempty"`
+	// String is the string value of the scheduler hint, used when Type is "String".
+	// This field is required if type is 'String', and must not be set otherwise.
+	String *string `json:"string,omitempty"`
 }
 
 // SchedulerHintAdditionalValueApplyConfiguration constructs a declarative configuration of the SchedulerHintAdditionalValue type for use with

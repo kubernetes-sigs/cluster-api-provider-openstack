@@ -27,17 +27,59 @@ import (
 
 // OpenStackMachineStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineStatus type for use
 // with apply.
+//
+// OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatusApplyConfiguration struct {
-	Ready          *bool                                    `json:"ready,omitempty"`
+	// Ready is true when the provider resource is ready.
+	//
+	// Deprecated: This field is deprecated and will be removed in a future API version.
+	// Use status.conditions to determine the ready state of the machine.
+	Ready *bool `json:"ready,omitempty"`
+	// Initialization contains information about the initialization status of the machine.
 	Initialization *MachineInitializationApplyConfiguration `json:"initialization,omitempty"`
-	InstanceID     *string                                  `json:"instanceID,omitempty"`
-	Addresses      []v1.NodeAddress                         `json:"addresses,omitempty"`
-	InstanceState  *apiv1beta1.InstanceState                `json:"instanceState,omitempty"`
-	Resolved       *ResolvedMachineSpecApplyConfiguration   `json:"resolved,omitempty"`
-	Resources      *MachineResourcesApplyConfiguration      `json:"resources,omitempty"`
-	FailureReason  *errors.DeprecatedCAPIMachineStatusError `json:"failureReason,omitempty"`
-	FailureMessage *string                                  `json:"failureMessage,omitempty"`
-	Conditions     *corev1beta1.Conditions                  `json:"conditions,omitempty"`
+	// InstanceID is the OpenStack instance ID for this machine.
+	InstanceID *string `json:"instanceID,omitempty"`
+	// Addresses contains the OpenStack instance associated addresses.
+	Addresses []v1.NodeAddress `json:"addresses,omitempty"`
+	// InstanceState is the state of the OpenStack instance for this machine.
+	// This field is not set anymore by the OpenStackMachine controller.
+	// Instead, it's set by the OpenStackServer controller.
+	InstanceState *apiv1beta1.InstanceState `json:"instanceState,omitempty"`
+	// Resolved contains parts of the machine spec with all external
+	// references fully resolved.
+	Resolved *ResolvedMachineSpecApplyConfiguration `json:"resolved,omitempty"`
+	// Resources contains references to OpenStack resources created for the machine.
+	Resources *MachineResourcesApplyConfiguration `json:"resources,omitempty"`
+	// FailureReason explains the reson behind a failure.
+	//
+	// Deprecated: This field is deprecated and will be removed in a future API version.
+	// Use status.conditions to report failures.
+	FailureReason *errors.DeprecatedCAPIMachineStatusError `json:"failureReason,omitempty"`
+	// FailureMessage will be set in the event that there is a terminal problem
+	// reconciling the Machine and will contain a more verbose string suitable
+	// for logging and human consumption.
+	//
+	// This field should not be set for transitive errors that a controller
+	// faces that are expected to be fixed automatically over
+	// time (like service outages), but instead indicate that something is
+	// fundamentally wrong with the Machine's spec or the configuration of
+	// the controller, and that manual intervention is required. Examples
+	// of terminal errors would be invalid combinations of settings in the
+	// spec, values that are unsupported by the controller, or the
+	// responsible controller itself being critically misconfigured.
+	//
+	// Any transient errors that occur during the reconciliation of Machines
+	// can be added as events to the Machine object and/or logged in the
+	// controller's output.
+	//
+	// Deprecated: This field is deprecated and will be removed in a future API version.
+	// Use status.conditions to report failures.
+	FailureMessage *string `json:"failureMessage,omitempty"`
+	// Conditions defines current service state of the OpenStackMachine.
+	// This field surfaces into Machine's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
+	// (both during initial provisioning and after the initial provisioning is completed).
+	Conditions *corev1beta1.Conditions `json:"conditions,omitempty"`
 }
 
 // OpenStackMachineStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineStatus type for use with

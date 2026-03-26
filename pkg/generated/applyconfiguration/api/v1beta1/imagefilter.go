@@ -20,8 +20,12 @@ package v1beta1
 
 // ImageFilterApplyConfiguration represents a declarative configuration of the ImageFilter type for use
 // with apply.
+//
+// ImageFilter describes a query for an image.
 type ImageFilterApplyConfiguration struct {
-	Name *string  `json:"name,omitempty"`
+	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	Name *string `json:"name,omitempty"`
+	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	Tags []string `json:"tags,omitempty"`
 }
 

@@ -20,8 +20,12 @@ package v1beta1
 
 // ServerGroupParamApplyConfiguration represents a declarative configuration of the ServerGroupParam type for use
 // with apply.
+//
+// ServerGroupParam specifies an OpenStack server group. It may be specified by ID or filter, but not both.
 type ServerGroupParamApplyConfiguration struct {
-	ID     *string                              `json:"id,omitempty"`
+	// ID is the ID of the server group to use.
+	ID *string `json:"id,omitempty"`
+	// Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.
 	Filter *ServerGroupFilterApplyConfiguration `json:"filter,omitempty"`
 }
 

@@ -20,8 +20,12 @@ package v1alpha1
 
 // OpenStackCredentialSecretReferenceApplyConfiguration represents a declarative configuration of the OpenStackCredentialSecretReference type for use
 // with apply.
+//
+// OpenStackCredentialSecretReference references a Secret containing OpenStack credentials.
 type OpenStackCredentialSecretReferenceApplyConfiguration struct {
-	Name      *string `json:"name,omitempty"`
+	// Name of the Secret which contains a `clouds.yaml` key (and optionally `cacert`).
+	Name *string `json:"name,omitempty"`
+	// Namespace where the Secret resides.
 	Namespace *string `json:"namespace,omitempty"`
 }
 

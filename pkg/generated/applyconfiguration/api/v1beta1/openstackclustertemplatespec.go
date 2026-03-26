@@ -20,6 +20,8 @@ package v1beta1
 
 // OpenStackClusterTemplateSpecApplyConfiguration represents a declarative configuration of the OpenStackClusterTemplateSpec type for use
 // with apply.
+//
+// OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.
 type OpenStackClusterTemplateSpecApplyConfiguration struct {
 	Template *OpenStackClusterTemplateResourceApplyConfiguration `json:"template,omitempty"`
 }

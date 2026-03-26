@@ -25,24 +25,51 @@ import (
 
 // OpenStackServerSpecApplyConfiguration represents a declarative configuration of the OpenStackServerSpec type for use
 // with apply.
+//
+// OpenStackServerSpec defines the desired state of OpenStackServer.
 type OpenStackServerSpecApplyConfiguration struct {
-	AdditionalBlockDevices            []v1beta2.AdditionalBlockDeviceApplyConfiguration           `json:"additionalBlockDevices,omitempty"`
-	AvailabilityZone                  *string                                                     `json:"availabilityZone,omitempty"`
-	ConfigDrive                       *bool                                                       `json:"configDrive,omitempty"`
-	Flavor                            *string                                                     `json:"flavor,omitempty"`
-	FlavorID                          *string                                                     `json:"flavorID,omitempty"`
-	FloatingIPPoolRef                 *v1.TypedLocalObjectReference                               `json:"floatingIPPoolRef,omitempty"`
-	IdentityRef                       *v1beta2.OpenStackIdentityReferenceApplyConfiguration       `json:"identityRef,omitempty"`
-	Image                             *v1beta2.ImageParamApplyConfiguration                       `json:"image,omitempty"`
-	Ports                             []v1beta2.PortOptsApplyConfiguration                        `json:"ports,omitempty"`
-	RootVolume                        *v1beta2.RootVolumeApplyConfiguration                       `json:"rootVolume,omitempty"`
-	SSHKeyName                        *string                                                     `json:"sshKeyName,omitempty"`
-	SecurityGroups                    []v1beta2.SecurityGroupParamApplyConfiguration              `json:"securityGroups,omitempty"`
-	ServerGroup                       *v1beta2.ServerGroupParamApplyConfiguration                 `json:"serverGroup,omitempty"`
-	ServerMetadata                    []v1beta2.ServerMetadataApplyConfiguration                  `json:"serverMetadata,omitempty"`
-	Tags                              []string                                                    `json:"tags,omitempty"`
-	Trunk                             *bool                                                       `json:"trunk,omitempty"`
-	UserDataRef                       *v1.LocalObjectReference                                    `json:"userDataRef,omitempty"`
+	// AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance.
+	AdditionalBlockDevices []v1beta2.AdditionalBlockDeviceApplyConfiguration `json:"additionalBlockDevices,omitempty"`
+	// AvailabilityZone is the availability zone in which to create the server instance.
+	AvailabilityZone *string `json:"availabilityZone,omitempty"`
+	// ConfigDrive is a flag to enable config drive for the server instance.
+	ConfigDrive *bool `json:"configDrive,omitempty"`
+	// The flavor reference for the flavor for the server instance.
+	Flavor *string `json:"flavor,omitempty"`
+	// FlavorID allows flavors to be specified by ID.  This field takes precedence
+	// over Flavor.
+	FlavorID *string `json:"flavorID,omitempty"`
+	// FloatingIPPoolRef is a reference to a FloatingIPPool to allocate a floating IP from.
+	FloatingIPPoolRef *v1.TypedLocalObjectReference `json:"floatingIPPoolRef,omitempty"`
+	// IdentityRef is a reference to a secret holding OpenStack credentials.
+	IdentityRef *v1beta2.OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`
+	// The image to use for the server instance.
+	Image *v1beta2.ImageParamApplyConfiguration `json:"image,omitempty"`
+	// Ports to be attached to the server instance.
+	Ports []v1beta2.PortOptsApplyConfiguration `json:"ports,omitempty"`
+	// RootVolume is the specification for the root volume of the server instance.
+	RootVolume *v1beta2.RootVolumeApplyConfiguration `json:"rootVolume,omitempty"`
+	// SSHKeyName is the name of the SSH key to inject in the instance.
+	SSHKeyName *string `json:"sshKeyName,omitempty"`
+	// SecurityGroups is a list of security groups names to assign to the instance.
+	SecurityGroups []v1beta2.SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
+	// ServerGroup is the server group to which the server instance belongs.
+	ServerGroup *v1beta2.ServerGroupParamApplyConfiguration `json:"serverGroup,omitempty"`
+	// ServerMetadata is a map of key value pairs to add to the server instance.
+	ServerMetadata []v1beta2.ServerMetadataApplyConfiguration `json:"serverMetadata,omitempty"`
+	// Tags which will be added to the machine and all dependent resources
+	// which support them. These are in addition to Tags defined on the
+	// cluster.
+	// Requires Nova api 2.52 minimum!
+	Tags []string `json:"tags,omitempty"`
+	// Trunk is a flag to indicate if the server instance is created on a trunk port or not.
+	Trunk *bool `json:"trunk,omitempty"`
+	// UserDataRef is a reference to a secret containing the user data to
+	// be injected into the server instance.
+	UserDataRef *v1.LocalObjectReference `json:"userDataRef,omitempty"`
+	// SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+	// to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
+	// such as specifying certain host aggregates or availability zones.
 	SchedulerHintAdditionalProperties []v1beta2.SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`
 }
 

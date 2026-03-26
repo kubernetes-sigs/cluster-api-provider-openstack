@@ -21,15 +21,34 @@ package v1beta2
 // APIServerLoadBalancerApplyConfiguration represents a declarative configuration of the APIServerLoadBalancer type for use
 // with apply.
 type APIServerLoadBalancerApplyConfiguration struct {
-	Enabled          *bool                                           `json:"enabled,omitempty"`
-	AdditionalPorts  []int                                           `json:"additionalPorts,omitempty"`
-	AllowedCIDRs     []string                                        `json:"allowedCIDRs,omitempty"`
-	Provider         *string                                         `json:"provider,omitempty"`
-	Network          *NetworkParamApplyConfiguration                 `json:"network,omitempty"`
-	Subnets          []SubnetParamApplyConfiguration                 `json:"subnets,omitempty"`
-	AvailabilityZone *string                                         `json:"availabilityZone,omitempty"`
-	Flavor           *string                                         `json:"flavor,omitempty"`
-	Monitor          *APIServerLoadBalancerMonitorApplyConfiguration `json:"monitor,omitempty"`
+	// Enabled defines whether a load balancer should be created. This value
+	// defaults to true if an APIServerLoadBalancer is given.
+	//
+	// There is no reason to set this to false. To disable creation of the
+	// API server loadbalancer, omit the APIServerLoadBalancer field in the
+	// cluster spec instead.
+	Enabled *bool `json:"enabled,omitempty"`
+	// AdditionalPorts adds additional tcp ports to the load balancer.
+	AdditionalPorts []int `json:"additionalPorts,omitempty"`
+	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
+	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
+	// Provider specifies name of a specific Octavia provider to use for the
+	// API load balancer. The Octavia default will be used if it is not
+	// specified.
+	Provider *string `json:"provider,omitempty"`
+	// Network defines which network should the load balancer be allocated on.
+	Network *NetworkParamApplyConfiguration `json:"network,omitempty"`
+	// Subnets define which subnets should the load balancer be allocated on.
+	// It is expected that subnets are located on the network specified in this resource.
+	// Only the first element is taken into account.
+	// kubebuilder:validation:MaxLength:=2
+	Subnets []SubnetParamApplyConfiguration `json:"subnets,omitempty"`
+	// AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
+	AvailabilityZone *string `json:"availabilityZone,omitempty"`
+	// Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
+	Flavor *string `json:"flavor,omitempty"`
+	// Monitor contains configuration for the load balancer health monitor.
+	Monitor *APIServerLoadBalancerMonitorApplyConfiguration `json:"monitor,omitempty"`
 }
 
 // APIServerLoadBalancerApplyConfiguration constructs a declarative configuration of the APIServerLoadBalancer type for use with

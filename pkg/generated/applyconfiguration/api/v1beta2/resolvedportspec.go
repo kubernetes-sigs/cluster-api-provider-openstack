@@ -20,14 +20,23 @@ package v1beta2
 
 // ResolvedPortSpecApplyConfiguration represents a declarative configuration of the ResolvedPortSpec type for use
 // with apply.
+//
+// ResolvedPortSpec is a PortOpts with all contained references fully resolved.
 type ResolvedPortSpecApplyConfiguration struct {
-	Name                                     *string                             `json:"name,omitempty"`
-	Description                              *string                             `json:"description,omitempty"`
-	NetworkID                                *string                             `json:"networkID,omitempty"`
-	Tags                                     []string                            `json:"tags,omitempty"`
-	Trunk                                    *bool                               `json:"trunk,omitempty"`
-	FixedIPs                                 []ResolvedFixedIPApplyConfiguration `json:"fixedIPs,omitempty"`
-	SecurityGroups                           []string                            `json:"securityGroups,omitempty"`
+	// Name is the name of the port.
+	Name *string `json:"name,omitempty"`
+	// Description is a human-readable description for the port.
+	Description *string `json:"description,omitempty"`
+	// NetworkID is the ID of the network the port will be created in.
+	NetworkID *string `json:"networkID,omitempty"`
+	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	Tags []string `json:"tags,omitempty"`
+	// Trunk specifies whether trunking is enabled at the port level.
+	Trunk *bool `json:"trunk,omitempty"`
+	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	FixedIPs []ResolvedFixedIPApplyConfiguration `json:"fixedIPs,omitempty"`
+	// SecurityGroups is a list of security group IDs to assign to the port.
+	SecurityGroups                           []string `json:"securityGroups,omitempty"`
 	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
 }
 

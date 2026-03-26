@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
@@ -68,7 +68,7 @@ const (
 // OpenStackServerReconciler reconciles a OpenStackServer object.
 type OpenStackServerReconciler struct {
 	Client           client.Client
-	Recorder         record.EventRecorder
+	Recorder         events.EventRecorder
 	WatchFilterValue string
 	ScopeFactory     scope.Factory
 	CaCertificates   []byte // PEM encoded ca certificates.
@@ -666,7 +666,7 @@ func (r *OpenStackServerReconciler) reconcileFloatingAddressFromPool(ctx context
 		return nil, true, err
 	}
 	if claim.Status.AddressRef.Name == "" {
-		r.Recorder.Eventf(openStackServer, corev1.EventTypeNormal, "WaitingForIPAddressClaim", "Waiting for IPAddressClaim %s/%s to be allocated", claim.Namespace, claim.Name)
+		r.Recorder.Eventf(openStackServer, nil, corev1.EventTypeNormal, "WaitingForIPAddressClaim", "WaitingForIPAddressClaim", "Waiting for IPAddressClaim %s/%s to be allocated", claim.Namespace, claim.Name)
 		return claim, true, nil
 	}
 	conditions.Set(openStackServer, metav1.Condition{
@@ -726,7 +726,7 @@ func (r *OpenStackServerReconciler) getOrCreateIPAddressClaimForFloatingAddress(
 		return nil, err
 	}
 
-	r.Recorder.Eventf(openStackServer, corev1.EventTypeNormal, "CreatingIPAddressClaim", "Creating IPAddressClaim %s/%s", claim.Namespace, claim.Name)
+	r.Recorder.Eventf(openStackServer, nil, corev1.EventTypeNormal, "CreatingIPAddressClaim", "CreatingIPAddressClaim", "Creating IPAddressClaim %s/%s", claim.Namespace, claim.Name)
 	scope.Logger().Info("Created IPAddressClaim", "name", claim.Name)
 	return claim, nil
 }

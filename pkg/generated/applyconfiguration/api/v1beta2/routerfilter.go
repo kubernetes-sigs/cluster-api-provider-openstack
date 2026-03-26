@@ -24,6 +24,8 @@ import (
 
 // RouterFilterApplyConfiguration represents a declarative configuration of the RouterFilter type for use
 // with apply.
+//
+// RouterFilter specifies a query to select an OpenStack router. At least one property must be set.
 type RouterFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`

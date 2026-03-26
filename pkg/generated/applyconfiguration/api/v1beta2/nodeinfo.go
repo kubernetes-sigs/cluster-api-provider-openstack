@@ -20,7 +20,11 @@ package v1beta2
 
 // NodeInfoApplyConfiguration represents a declarative configuration of the NodeInfo type for use
 // with apply.
+//
+// NodeInfo contains information about the node's architecture and operating system.
 type NodeInfoApplyConfiguration struct {
+	// operatingSystem is a string representing the operating system of the node.
+	// This may be a string like 'linux' or 'windows'.
 	OperatingSystem *string `json:"operatingSystem,omitempty"`
 }
 

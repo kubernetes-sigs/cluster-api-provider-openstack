@@ -24,6 +24,8 @@ import (
 
 // SubnetFilterApplyConfiguration represents a declarative configuration of the SubnetFilter type for use
 // with apply.
+//
+// SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.
 type SubnetFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`

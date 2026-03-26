@@ -25,18 +25,38 @@ import (
 
 // OpenStackClusterStatusApplyConfiguration represents a declarative configuration of the OpenStackClusterStatus type for use
 // with apply.
+//
+// OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatusApplyConfiguration struct {
-	Initialization            *ClusterInitializationApplyConfiguration    `json:"initialization,omitempty"`
-	Network                   *NetworkStatusWithSubnetsApplyConfiguration `json:"network,omitempty"`
-	ExternalNetwork           *NetworkStatusApplyConfiguration            `json:"externalNetwork,omitempty"`
-	Router                    *RouterApplyConfiguration                   `json:"router,omitempty"`
-	APIServerLoadBalancer     *LoadBalancerApplyConfiguration             `json:"apiServerLoadBalancer,omitempty"`
-	FailureDomains            []corev1beta2.FailureDomain                 `json:"failureDomains,omitempty"`
-	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration      `json:"controlPlaneSecurityGroup,omitempty"`
-	WorkerSecurityGroup       *SecurityGroupStatusApplyConfiguration      `json:"workerSecurityGroup,omitempty"`
-	BastionSecurityGroup      *SecurityGroupStatusApplyConfiguration      `json:"bastionSecurityGroup,omitempty"`
-	Bastion                   *BastionStatusApplyConfiguration            `json:"bastion,omitempty"`
-	Conditions                []v1.ConditionApplyConfiguration            `json:"conditions,omitempty"`
+	// Initialization contains information about the initialization status of the cluster.
+	Initialization *ClusterInitializationApplyConfiguration `json:"initialization,omitempty"`
+	// Network contains information about the created OpenStack Network.
+	Network *NetworkStatusWithSubnetsApplyConfiguration `json:"network,omitempty"`
+	// ExternalNetwork contains information about the external network used for default ingress and egress traffic.
+	ExternalNetwork *NetworkStatusApplyConfiguration `json:"externalNetwork,omitempty"`
+	// Router describes the default cluster router
+	Router *RouterApplyConfiguration `json:"router,omitempty"`
+	// APIServerLoadBalancer describes the api server load balancer if one exists
+	APIServerLoadBalancer *LoadBalancerApplyConfiguration `json:"apiServerLoadBalancer,omitempty"`
+	// FailureDomains represent OpenStack availability zones
+	FailureDomains []corev1beta2.FailureDomain `json:"failureDomains,omitempty"`
+	// ControlPlaneSecurityGroup contains the information about the
+	// OpenStack Security Group that needs to be applied to control plane
+	// nodes.
+	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"controlPlaneSecurityGroup,omitempty"`
+	// WorkerSecurityGroup contains the information about the OpenStack
+	// Security Group that needs to be applied to worker nodes.
+	WorkerSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"workerSecurityGroup,omitempty"`
+	// BastionSecurityGroup contains the information about the OpenStack
+	// Security Group that needs to be applied to worker nodes.
+	BastionSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"bastionSecurityGroup,omitempty"`
+	// Bastion contains the information about the deployed bastion host
+	Bastion *BastionStatusApplyConfiguration `json:"bastion,omitempty"`
+	// Conditions defines current service state of the OpenStackCluster.
+	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
+	// (both during initial provisioning and after the initial provisioning is completed).
+	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // OpenStackClusterStatusApplyConfiguration constructs a declarative configuration of the OpenStackClusterStatus type for use with

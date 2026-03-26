@@ -20,6 +20,8 @@ package v1beta2
 
 // RouterApplyConfiguration represents a declarative configuration of the Router type for use
 // with apply.
+//
+// Router represents basic information about the associated OpenStack Neutron Router.
 type RouterApplyConfiguration struct {
 	Name *string  `json:"name,omitempty"`
 	ID   *string  `json:"id,omitempty"`
