@@ -36,9 +36,8 @@ import (
 
 // SetupOpenStackClusterWebhook registers the validating webhook for OpenStackCluster with the manager.
 func SetupOpenStackClusterWebhook(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackCluster{}).
-		WithValidator(&openStackClusterWebhook{}).
+	return builder.WebhookManagedBy(mgr, &infrav1.OpenStackCluster{}).
+		WithCustomValidator(&openStackClusterWebhook{}).
 		Complete()
 }
 

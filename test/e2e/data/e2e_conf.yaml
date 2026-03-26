@@ -17,8 +17,8 @@ providers:
 - name: cluster-api
   type: CoreProvider
   versions:
-  - name: "{go://sigs.k8s.io/cluster-api@v1.12}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.12}/core-components.yaml"
+  - name: "{go://sigs.k8s.io/cluster-api@latest-v1.13}"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@latest-v1.13}/core-components.yaml"
     type: "url"
     contract: v1beta2
     replacements:
@@ -27,8 +27,8 @@ providers:
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
-  - name: "{go://sigs.k8s.io/cluster-api@v1.11}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.11}/core-components.yaml"
+  - name: "{go://sigs.k8s.io/cluster-api@v1.12}"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.12}/core-components.yaml"
     type: "url"
     contract: v1beta2
     replacements:
@@ -39,8 +39,8 @@ providers:
 - name: kubeadm
   type: BootstrapProvider
   versions:
-  - name: "{go://sigs.k8s.io/cluster-api@v1.12}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.12}/bootstrap-components.yaml"
+  - name: "{go://sigs.k8s.io/cluster-api@latest-v1.13}"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@latest-v1.13}/bootstrap-components.yaml"
     type: "url"
     contract: v1beta2
     replacements:
@@ -49,8 +49,8 @@ providers:
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
-  - name: "{go://sigs.k8s.io/cluster-api@v1.11}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.11}/bootstrap-components.yaml"
+  - name: "{go://sigs.k8s.io/cluster-api@v1.12}"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.12}/bootstrap-components.yaml"
     type: "url"
     contract: v1beta2
     replacements:
@@ -61,8 +61,8 @@ providers:
 - name: kubeadm
   type: ControlPlaneProvider
   versions:
-  - name: "{go://sigs.k8s.io/cluster-api@v1.12}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.12}/control-plane-components.yaml"
+  - name: "{go://sigs.k8s.io/cluster-api@latest-v1.13}"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@latest-v1.13}/control-plane-components.yaml"
     type: "url"
     contract: v1beta2
     replacements:
@@ -71,8 +71,8 @@ providers:
     files:
     - sourcePath: "../data/shared/capi/metadata.yaml"
   # For clusterctl upgrade test
-  - name: "{go://sigs.k8s.io/cluster-api@v1.11}"
-    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.11}/control-plane-components.yaml"
+  - name: "{go://sigs.k8s.io/cluster-api@v1.12}"
+    value: "https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.12}/control-plane-components.yaml"
     type: "url"
     contract: v1beta2
     replacements:

@@ -38,9 +38,8 @@ import (
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha1-openstackserver,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackservers,versions=v1alpha1,name=validation.openstackserver.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
 
 func SetupOpenStackServerWebhook(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(&infrav1alpha1.OpenStackServer{}).
-		WithValidator(&openStackServerWebhook{}).
+	return builder.WebhookManagedBy(mgr, &infrav1alpha1.OpenStackServer{}).
+		WithCustomValidator(&openStackServerWebhook{}).
 		Complete()
 }
 

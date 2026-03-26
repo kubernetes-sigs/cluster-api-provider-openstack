@@ -34,9 +34,8 @@ import (
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackclustertemplate,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackclustertemplates,versions=v1beta2,name=validation.openstackclustertemplate.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
 func SetupOpenStackClusterTemplateWebhook(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackClusterTemplate{}).
-		WithValidator(&openStackClusterTemplateWebhook{}).
+	return builder.WebhookManagedBy(mgr, &infrav1.OpenStackClusterTemplate{}).
+		WithCustomValidator(&openStackClusterTemplateWebhook{}).
 		Complete()
 }
 
