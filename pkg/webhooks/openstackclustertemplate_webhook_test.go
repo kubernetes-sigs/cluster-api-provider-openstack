@@ -23,23 +23,23 @@ import (
 	. "github.com/onsi/gomega" //nolint:revive
 	"k8s.io/utils/ptr"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 func TestOpenStackClusterTemplate_ValidateUpdate(t *testing.T) {
 	tests := []struct {
 		name        string
-		oldTemplate *infrav1beta2.OpenStackClusterTemplate
-		newTemplate *infrav1beta2.OpenStackClusterTemplate
+		oldTemplate *infrav1.OpenStackClusterTemplate
+		newTemplate *infrav1.OpenStackClusterTemplate
 		wantErr     bool
 	}{
 		{
 			name: "Changing spec.template.spec is not allowed",
-			oldTemplate: &infrav1beta2.OpenStackClusterTemplate{
-				Spec: infrav1beta2.OpenStackClusterTemplateSpec{
-					Template: infrav1beta2.OpenStackClusterTemplateResource{
-						Spec: infrav1beta2.OpenStackClusterSpec{
-							IdentityRef: infrav1beta2.OpenStackIdentityReference{
+			oldTemplate: &infrav1.OpenStackClusterTemplate{
+				Spec: infrav1.OpenStackClusterTemplateSpec{
+					Template: infrav1.OpenStackClusterTemplateResource{
+						Spec: infrav1.OpenStackClusterSpec{
+							IdentityRef: infrav1.OpenStackIdentityReference{
 								Name:      "foobar",
 								CloudName: "foobar",
 							},
@@ -47,11 +47,11 @@ func TestOpenStackClusterTemplate_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &infrav1beta2.OpenStackClusterTemplate{
-				Spec: infrav1beta2.OpenStackClusterTemplateSpec{
-					Template: infrav1beta2.OpenStackClusterTemplateResource{
-						Spec: infrav1beta2.OpenStackClusterSpec{
-							IdentityRef: infrav1beta2.OpenStackIdentityReference{
+			newTemplate: &infrav1.OpenStackClusterTemplate{
+				Spec: infrav1.OpenStackClusterTemplateSpec{
+					Template: infrav1.OpenStackClusterTemplateResource{
+						Spec: infrav1.OpenStackClusterSpec{
+							IdentityRef: infrav1.OpenStackIdentityReference{
 								Name:      "changed",
 								CloudName: "foobar",
 							},
@@ -64,11 +64,11 @@ func TestOpenStackClusterTemplate_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "No change to spec.template.spec is allowed",
-			oldTemplate: &infrav1beta2.OpenStackClusterTemplate{
-				Spec: infrav1beta2.OpenStackClusterTemplateSpec{
-					Template: infrav1beta2.OpenStackClusterTemplateResource{
-						Spec: infrav1beta2.OpenStackClusterSpec{
-							IdentityRef: infrav1beta2.OpenStackIdentityReference{
+			oldTemplate: &infrav1.OpenStackClusterTemplate{
+				Spec: infrav1.OpenStackClusterTemplateSpec{
+					Template: infrav1.OpenStackClusterTemplateResource{
+						Spec: infrav1.OpenStackClusterSpec{
+							IdentityRef: infrav1.OpenStackIdentityReference{
 								Name:      "foobar",
 								CloudName: "foobar",
 							},
@@ -76,11 +76,11 @@ func TestOpenStackClusterTemplate_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &infrav1beta2.OpenStackClusterTemplate{
-				Spec: infrav1beta2.OpenStackClusterTemplateSpec{
-					Template: infrav1beta2.OpenStackClusterTemplateResource{
-						Spec: infrav1beta2.OpenStackClusterSpec{
-							IdentityRef: infrav1beta2.OpenStackIdentityReference{
+			newTemplate: &infrav1.OpenStackClusterTemplate{
+				Spec: infrav1.OpenStackClusterTemplateSpec{
+					Template: infrav1.OpenStackClusterTemplateResource{
+						Spec: infrav1.OpenStackClusterSpec{
+							IdentityRef: infrav1.OpenStackIdentityReference{
 								Name:      "foobar",
 								CloudName: "foobar",
 							},

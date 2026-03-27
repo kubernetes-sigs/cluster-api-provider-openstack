@@ -90,7 +90,7 @@ providers:
     contract: v1beta1
     files:
     - sourcePath: "../data/shared/provider/metadata.yaml"
-    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-capi-v1beta1.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -105,7 +105,7 @@ providers:
     contract: v1beta1
     files:
     - sourcePath: "../data/shared/provider/metadata.yaml"
-    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-capi-v1beta1.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"
@@ -120,7 +120,7 @@ providers:
     contract: v1beta1
     files:
     - sourcePath: "../data/shared/provider/metadata.yaml"
-    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-capi-v1beta1.yaml"
     replacements:
     - old: "imagePullPolicy: Always"
       new: "imagePullPolicy: IfNotPresent"

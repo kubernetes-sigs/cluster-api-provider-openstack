@@ -25,7 +25,7 @@ import (
 	"k8s.io/utils/ptr"
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 func TestOpenStackClusterConversion(t *testing.T) {
@@ -83,7 +83,7 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	}
 
 	// Convert to v1beta2
-	dst := &infrav1beta2.OpenStackCluster{}
+	dst := &infrav1.OpenStackCluster{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
 	// Verify basic fields
@@ -175,7 +175,7 @@ func TestOpenStackMachineConversion(t *testing.T) {
 	}
 
 	// Convert to v1beta2
-	dst := &infrav1beta2.OpenStackMachine{}
+	dst := &infrav1.OpenStackMachine{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
 	// Verify basic fields
@@ -234,7 +234,7 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 	}
 
 	// Convert to v1beta2
-	dst := &infrav1beta2.OpenStackClusterTemplate{}
+	dst := &infrav1.OpenStackClusterTemplate{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
 	// Verify template spec
@@ -274,7 +274,7 @@ func TestOpenStackMachineTemplateConversion(t *testing.T) {
 	}
 
 	// Convert to v1beta2
-	dst := &infrav1beta2.OpenStackMachineTemplate{}
+	dst := &infrav1.OpenStackMachineTemplate{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
 	// Verify template spec
@@ -313,7 +313,7 @@ func TestConditionConversion(t *testing.T) {
 		},
 	}
 
-	v1beta2Conditions := infrav1beta2.ConvertConditionsToV1Beta2(v1beta1Conditions, 10)
+	v1beta2Conditions := infrav1.ConvertConditionsToV1Beta2(v1beta1Conditions, 10)
 
 	g.Expect(v1beta2Conditions).To(HaveLen(2))
 	g.Expect(v1beta2Conditions[0].Type).To(Equal("Ready"))
@@ -323,7 +323,7 @@ func TestConditionConversion(t *testing.T) {
 	g.Expect(v1beta2Conditions[1].Status).To(Equal(metav1.ConditionFalse))
 
 	// Test v1beta2 -> v1beta1 condition conversion
-	restoredConditions := infrav1beta2.ConvertConditionsFromV1Beta2(v1beta2Conditions)
+	restoredConditions := infrav1.ConvertConditionsFromV1Beta2(v1beta2Conditions)
 
 	g.Expect(restoredConditions).To(HaveLen(2))
 	g.Expect(restoredConditions[0].Type).To(Equal(clusterv1beta1.ConditionType("Ready")))
@@ -367,7 +367,7 @@ func TestOpenStackClusterListConversion(t *testing.T) {
 	}
 
 	// Convert to v1beta2
-	dst := &infrav1beta2.OpenStackClusterList{}
+	dst := &infrav1.OpenStackClusterList{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
 	// Verify items converted
@@ -395,7 +395,7 @@ func TestIsReadyHelper(t *testing.T) {
 			Status: metav1.ConditionTrue,
 		},
 	}
-	g.Expect(infrav1beta2.IsReady(conditions)).To(BeTrue())
+	g.Expect(infrav1.IsReady(conditions)).To(BeTrue())
 
 	// Test with Ready condition False
 	conditions = []metav1.Condition{
@@ -404,7 +404,7 @@ func TestIsReadyHelper(t *testing.T) {
 			Status: metav1.ConditionFalse,
 		},
 	}
-	g.Expect(infrav1beta2.IsReady(conditions)).To(BeFalse())
+	g.Expect(infrav1.IsReady(conditions)).To(BeFalse())
 
 	// Test with no Ready condition
 	conditions = []metav1.Condition{
@@ -413,9 +413,9 @@ func TestIsReadyHelper(t *testing.T) {
 			Status: metav1.ConditionTrue,
 		},
 	}
-	g.Expect(infrav1beta2.IsReady(conditions)).To(BeFalse())
+	g.Expect(infrav1.IsReady(conditions)).To(BeFalse())
 
 	// Test with empty conditions
-	g.Expect(infrav1beta2.IsReady(nil)).To(BeFalse())
-	g.Expect(infrav1beta2.IsReady([]metav1.Condition{})).To(BeFalse())
+	g.Expect(infrav1.IsReady(nil)).To(BeFalse())
+	g.Expect(infrav1.IsReady([]metav1.Condition{})).To(BeFalse())
 }

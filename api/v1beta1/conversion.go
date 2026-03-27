@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"sort"
 	"strings"
 	"unsafe"
 
@@ -29,12 +30,12 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	ctrlconversion "sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 // ConvertTo converts this OpenStackCluster to the Hub version (v1beta2).
 func (src *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackCluster)
+	dst := dstRaw.(*infrav1.OpenStackCluster)
 	if err := Convert_v1beta1_OpenStackCluster_To_v1beta2_OpenStackCluster(src, dst, nil); err != nil {
 		return err
 	}
@@ -48,7 +49,7 @@ func (src *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackCluster)
+	src := srcRaw.(*infrav1.OpenStackCluster)
 	if err := Convert_v1beta2_OpenStackCluster_To_v1beta1_OpenStackCluster(src, dst, nil); err != nil {
 		return err
 	}
@@ -58,7 +59,7 @@ func (dst *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 // ConvertTo converts this OpenStackMachine to the Hub version (v1beta2).
 func (src *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackMachine)
+	dst := dstRaw.(*infrav1.OpenStackMachine)
 	if err := Convert_v1beta1_OpenStackMachine_To_v1beta2_OpenStackMachine(src, dst, nil); err != nil {
 		return err
 	}
@@ -72,7 +73,7 @@ func (src *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackMachine)
+	src := srcRaw.(*infrav1.OpenStackMachine)
 	if err := Convert_v1beta2_OpenStackMachine_To_v1beta1_OpenStackMachine(src, dst, nil); err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (dst *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 
 // ConvertTo converts this OpenStackClusterTemplate to the Hub version (v1beta2).
 func (src *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackClusterTemplate)
+	dst := dstRaw.(*infrav1.OpenStackClusterTemplate)
 	if err := Convert_v1beta1_OpenStackClusterTemplate_To_v1beta2_OpenStackClusterTemplate(src, dst, nil); err != nil {
 		return err
 	}
@@ -93,7 +94,7 @@ func (src *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error 
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackClusterTemplate)
+	src := srcRaw.(*infrav1.OpenStackClusterTemplate)
 	if err := Convert_v1beta2_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate(src, dst, nil); err != nil {
 		return err
 	}
@@ -103,7 +104,7 @@ func (dst *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) erro
 
 // ConvertTo converts this OpenStackMachineTemplate to the Hub version (v1beta2).
 func (src *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackMachineTemplate)
+	dst := dstRaw.(*infrav1.OpenStackMachineTemplate)
 	if err := Convert_v1beta1_OpenStackMachineTemplate_To_v1beta2_OpenStackMachineTemplate(src, dst, nil); err != nil {
 		return err
 	}
@@ -114,7 +115,7 @@ func (src *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error 
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackMachineTemplate)
+	src := srcRaw.(*infrav1.OpenStackMachineTemplate)
 	if err := Convert_v1beta2_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate(src, dst, nil); err != nil {
 		return err
 	}
@@ -124,7 +125,7 @@ func (dst *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) erro
 
 // ConvertTo converts this OpenStackClusterList to the Hub version (v1beta2).
 func (src *OpenStackClusterList) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackClusterList)
+	dst := dstRaw.(*infrav1.OpenStackClusterList)
 	return Convert_v1beta1_OpenStackClusterList_To_v1beta2_OpenStackClusterList(src, dst, nil)
 }
 
@@ -132,13 +133,13 @@ func (src *OpenStackClusterList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackClusterList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackClusterList)
+	src := srcRaw.(*infrav1.OpenStackClusterList)
 	return Convert_v1beta2_OpenStackClusterList_To_v1beta1_OpenStackClusterList(src, dst, nil)
 }
 
 // ConvertTo converts this OpenStackMachineList to the Hub version (v1beta2).
 func (src *OpenStackMachineList) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackMachineList)
+	dst := dstRaw.(*infrav1.OpenStackMachineList)
 	return Convert_v1beta1_OpenStackMachineList_To_v1beta2_OpenStackMachineList(src, dst, nil)
 }
 
@@ -146,13 +147,13 @@ func (src *OpenStackMachineList) ConvertTo(dstRaw ctrlconversion.Hub) error {
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackMachineList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackMachineList)
+	src := srcRaw.(*infrav1.OpenStackMachineList)
 	return Convert_v1beta2_OpenStackMachineList_To_v1beta1_OpenStackMachineList(src, dst, nil)
 }
 
 // ConvertTo converts this OpenStackClusterTemplateList to the Hub version (v1beta2).
 func (src *OpenStackClusterTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackClusterTemplateList)
+	dst := dstRaw.(*infrav1.OpenStackClusterTemplateList)
 	return Convert_v1beta1_OpenStackClusterTemplateList_To_v1beta2_OpenStackClusterTemplateList(src, dst, nil)
 }
 
@@ -160,13 +161,13 @@ func (src *OpenStackClusterTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) er
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackClusterTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackClusterTemplateList)
+	src := srcRaw.(*infrav1.OpenStackClusterTemplateList)
 	return Convert_v1beta2_OpenStackClusterTemplateList_To_v1beta1_OpenStackClusterTemplateList(src, dst, nil)
 }
 
 // ConvertTo converts this OpenStackMachineTemplateList to the Hub version (v1beta2).
 func (src *OpenStackMachineTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) error {
-	dst := dstRaw.(*infrav1beta2.OpenStackMachineTemplateList)
+	dst := dstRaw.(*infrav1.OpenStackMachineTemplateList)
 	return Convert_v1beta1_OpenStackMachineTemplateList_To_v1beta2_OpenStackMachineTemplateList(src, dst, nil)
 }
 
@@ -174,7 +175,7 @@ func (src *OpenStackMachineTemplateList) ConvertTo(dstRaw ctrlconversion.Hub) er
 //
 //nolint:revive // dst is the receiver here (converting FROM hub TO spoke)
 func (dst *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) error {
-	src := srcRaw.(*infrav1beta2.OpenStackMachineTemplateList)
+	src := srcRaw.(*infrav1.OpenStackMachineTemplateList)
 	return Convert_v1beta2_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(src, dst, nil)
 }
 
@@ -182,16 +183,16 @@ func (dst *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) 
 // auto-generate due to FailureDomains (map↔slice), Conditions (CAPI↔metav1),
 // and deprecated fields (Ready, FailureReason, FailureMessage).
 
-func Convert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1beta2.OpenStackClusterStatus, _ apiconversion.Scope) error {
-	out.Initialization = (*infrav1beta2.ClusterInitialization)(unsafe.Pointer(in.Initialization))
-	out.Network = (*infrav1beta2.NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*infrav1beta2.NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
-	out.Router = (*infrav1beta2.Router)(unsafe.Pointer(in.Router))
-	out.APIServerLoadBalancer = (*infrav1beta2.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
-	out.ControlPlaneSecurityGroup = (*infrav1beta2.SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
-	out.WorkerSecurityGroup = (*infrav1beta2.SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
-	out.BastionSecurityGroup = (*infrav1beta2.SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*infrav1beta2.BastionStatus)(unsafe.Pointer(in.Bastion))
+func Convert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, _ apiconversion.Scope) error {
+	out.Initialization = (*infrav1.ClusterInitialization)(unsafe.Pointer(in.Initialization))
+	out.Network = (*infrav1.NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
+	out.ExternalNetwork = (*infrav1.NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
+	out.Router = (*infrav1.Router)(unsafe.Pointer(in.Router))
+	out.APIServerLoadBalancer = (*infrav1.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+	out.ControlPlaneSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
+	out.WorkerSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
+	out.BastionSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
+	out.Bastion = (*infrav1.BastionStatus)(unsafe.Pointer(in.Bastion))
 
 	if len(in.FailureDomains) > 0 {
 		out.FailureDomains = make([]clusterv1.FailureDomain, 0, len(in.FailureDomains))
@@ -202,14 +203,17 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatus(in
 				Attributes:   fd.Attributes,
 			})
 		}
+		sort.Slice(out.FailureDomains, func(i, j int) bool {
+			return out.FailureDomains[i].Name < out.FailureDomains[j].Name
+		})
 	}
 
-	out.Conditions = infrav1beta2.ConvertConditionsToV1Beta2(in.Conditions, 0)
+	out.Conditions = infrav1.ConvertConditionsToV1Beta2(in.Conditions, 0)
 
 	return nil
 }
 
-func Convert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in *infrav1beta2.OpenStackClusterStatus, out *OpenStackClusterStatus, _ apiconversion.Scope) error {
+func Convert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, _ apiconversion.Scope) error {
 	out.Initialization = (*ClusterInitialization)(unsafe.Pointer(in.Initialization))
 	out.Network = (*NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
@@ -230,26 +234,26 @@ func Convert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in
 		}
 	}
 
-	out.Conditions = infrav1beta2.ConvertConditionsFromV1Beta2(in.Conditions)
-	out.Ready = infrav1beta2.IsReady(in.Conditions)
+	out.Conditions = infrav1.ConvertConditionsFromV1Beta2(in.Conditions)
+	out.Ready = infrav1.IsReady(in.Conditions)
 
 	return nil
 }
 
-func Convert_v1beta1_OpenStackMachineStatus_To_v1beta2_OpenStackMachineStatus(in *OpenStackMachineStatus, out *infrav1beta2.OpenStackMachineStatus, _ apiconversion.Scope) error {
-	out.Initialization = (*infrav1beta2.MachineInitialization)(unsafe.Pointer(in.Initialization))
+func Convert_v1beta1_OpenStackMachineStatus_To_v1beta2_OpenStackMachineStatus(in *OpenStackMachineStatus, out *infrav1.OpenStackMachineStatus, _ apiconversion.Scope) error {
+	out.Initialization = (*infrav1.MachineInitialization)(unsafe.Pointer(in.Initialization))
 	out.InstanceID = in.InstanceID
 	out.Addresses = in.Addresses
-	out.InstanceState = (*infrav1beta2.InstanceState)(unsafe.Pointer(in.InstanceState))
-	out.Resolved = (*infrav1beta2.ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
-	out.Resources = (*infrav1beta2.MachineResources)(unsafe.Pointer(in.Resources))
+	out.InstanceState = (*infrav1.InstanceState)(unsafe.Pointer(in.InstanceState))
+	out.Resolved = (*infrav1.ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
+	out.Resources = (*infrav1.MachineResources)(unsafe.Pointer(in.Resources))
 
-	out.Conditions = infrav1beta2.ConvertConditionsToV1Beta2(in.Conditions, 0)
+	out.Conditions = infrav1.ConvertConditionsToV1Beta2(in.Conditions, 0)
 
 	return nil
 }
 
-func Convert_v1beta2_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *infrav1beta2.OpenStackMachineStatus, out *OpenStackMachineStatus, _ apiconversion.Scope) error {
+func Convert_v1beta2_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *infrav1.OpenStackMachineStatus, out *OpenStackMachineStatus, _ apiconversion.Scope) error {
 	out.Initialization = (*MachineInitialization)(unsafe.Pointer(in.Initialization))
 	out.InstanceID = in.InstanceID
 	out.Addresses = in.Addresses
@@ -257,8 +261,8 @@ func Convert_v1beta2_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in
 	out.Resolved = (*ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
 	out.Resources = (*MachineResources)(unsafe.Pointer(in.Resources))
 
-	out.Conditions = infrav1beta2.ConvertConditionsFromV1Beta2(in.Conditions)
-	out.Ready = infrav1beta2.IsReady(in.Conditions)
+	out.Conditions = infrav1.ConvertConditionsFromV1Beta2(in.Conditions)
+	out.Ready = infrav1.IsReady(in.Conditions)
 
 	return nil
 }

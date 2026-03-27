@@ -25,7 +25,7 @@ import (
 	"k8s.io/utils/ptr"
 	capi_e2e "sigs.k8s.io/cluster-api/test/e2e"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	shared "sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 

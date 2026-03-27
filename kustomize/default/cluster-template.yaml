@@ -16,7 +16,7 @@ spec:
     kind: KubeadmControlPlane
     name: ${CLUSTER_NAME}-control-plane
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -89,7 +89,7 @@ spec:
           value: "openstack:///'{{ instance_id }}'"
   version: "${KUBERNETES_VERSION}"
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -126,7 +126,7 @@ spec:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: OpenStackMachineTemplate
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0

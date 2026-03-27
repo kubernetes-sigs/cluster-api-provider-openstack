@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	infrastructurev1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrastructurev1beta1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrastructurev1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 var scheme = runtime.NewScheme()
@@ -34,6 +35,7 @@ var codecs = serializer.NewCodecFactory(scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
 	infrastructurev1alpha1.AddToScheme,
 	infrastructurev1beta1.AddToScheme,
+	infrastructurev1beta2.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

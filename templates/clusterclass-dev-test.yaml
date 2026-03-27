@@ -10,12 +10,12 @@ spec:
       name: dev-test-control-plane
     machineInfrastructure:
       templateRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackMachineTemplate
         name: dev-test-control-plane-machine
   infrastructure:
     templateRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
       kind: OpenStackClusterTemplate
       name: dev-test-openstackcluster
   workers:
@@ -28,7 +28,7 @@ spec:
           name: dev-test-default-worker-bootstraptemplate
       infrastructure:
         templateRef:
-          apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+          apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
           kind: OpenStackMachineTemplate
           name: dev-test-default-worker-machine
   variables:
@@ -137,7 +137,7 @@ spec:
     enabledIf: "{{ if .imageName }}true{{ end }}"
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackMachineTemplate
         matchResources:
           controlPlane: true
@@ -150,7 +150,7 @@ spec:
           template: |
             name: {{ .imageName }}{{ if .addImageVersion }}-{{ .builtin.controlPlane.version }}{{ end }}
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackMachineTemplate
         matchResources:
           machineDeploymentClass:
@@ -169,7 +169,7 @@ spec:
     enabledIf: "{{ if .imageRef }}true{{ end }}"
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackMachineTemplate
         matchResources:
           controlPlane: true
@@ -180,7 +180,7 @@ spec:
           template: |
             {{ .imageRef }}{{ if .addImageVersion }}-{{ .builtin.controlPlane.version }}{{ end }}
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackMachineTemplate
         matchResources:
           machineDeploymentClass:
@@ -196,7 +196,7 @@ spec:
     description: "Sets the OpenStack identity reference."
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackClusterTemplate
         matchResources:
           infrastructureCluster: true
@@ -210,7 +210,7 @@ spec:
     enabledIf: "{{ if .allowedCIDRs }}{{ gt (len .allowedCIDRs) 0 }}{{ end }}"
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackClusterTemplate
         matchResources:
           infrastructureCluster: true
@@ -224,7 +224,7 @@ spec:
     enabledIf: "{{ if .bastion }}{{ .bastion.enabled }}{{ end }}"
     definitions:
     - selector:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackClusterTemplate
         matchResources:
           infrastructureCluster: true
@@ -463,7 +463,7 @@ spec:
               value: "openstack:///{{ v1.instance_id }}"
             name: "{{ v1.local_hostname }}"
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackClusterTemplate
 metadata:
   name: dev-test-openstackcluster
@@ -503,7 +503,7 @@ spec:
         dnsNameservers:
         - 8.8.8.8
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackMachineTemplate
 metadata:
   name: dev-test-control-plane-machine
@@ -516,7 +516,7 @@ spec:
           name: node-image
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackMachineTemplate
 metadata:
   name: dev-test-default-worker-machine

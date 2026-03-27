@@ -103,7 +103,7 @@ spec:
   replicas: 1
   version: ${KUBERNETES_VERSION}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
@@ -138,7 +138,7 @@ spec:
     dnsNameservers:
     - ${OPENSTACK_DNS_NAMESERVERS}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-control-plane
@@ -151,7 +151,7 @@ spec:
           name: ${OPENSTACK_IMAGE_NAME}
       sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackMachineTemplate
 metadata:
   name: ${CLUSTER_NAME}-md-0

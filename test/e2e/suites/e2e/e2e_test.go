@@ -50,14 +50,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/ptr"
 	bootstrapv1 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta2"
-	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/internal/util/ssa"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 	shared "sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
@@ -220,11 +219,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(bastionServer).To(HaveLen(1), "Did not find the bastion in OpenStack")
 
 			shared.Logf("Disable the bastion")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterDisabledBastion := openStackCluster.DeepCopy()
-			openStackClusterDisabledBastion.Spec.Bastion.Enabled = ptr.To(false)
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterDisabledBastion)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion.Enabled = ptr.To(false)
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			Eventually(
 				func() (bool, error) {
 					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName})
@@ -257,11 +259,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 
 			shared.Logf("Delete the bastion")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterWithoutBastion := openStackCluster.DeepCopy()
-			openStackClusterWithoutBastion.Spec.Bastion = nil
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithoutBastion)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion = nil
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(
@@ -279,12 +284,15 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			bastionNewFlavorName := ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackBastionFlavorAlt))
 			bastionNewFlavor, err := shared.GetFlavorFromName(e2eCtx, bastionNewFlavorName)
 			Expect(err).NotTo(HaveOccurred())
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterWithNewBastionFlavor := openStackCluster.DeepCopy()
-			openStackClusterWithNewBastionFlavor.Spec.Bastion = bastionSpec
-			openStackClusterWithNewBastionFlavor.Spec.Bastion.Spec.Flavor = bastionNewFlavorName
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithNewBastionFlavor)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion = bastionSpec
+				openStackCluster.Spec.Bastion.Spec.Flavor = bastionNewFlavorName
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			Eventually(
 				func() (bool, error) {
 					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName, Flavor: bastionNewFlavor.ID})
@@ -297,7 +305,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(openStackCluster.Spec.Bastion).To(Equal(openStackClusterWithNewBastionFlavor.Spec.Bastion))
+			Expect(openStackCluster.Spec.Bastion).To(Equal(bastionSpec))
 			Eventually(
 				func() (bool, error) {
 					openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
@@ -315,12 +323,15 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Change the bastion spec with the original flavor")
 			bastionOriginalFlavor, err := shared.GetFlavorFromName(e2eCtx, bastionFlavor)
 			Expect(err).NotTo(HaveOccurred())
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterWithOriginalBastionFlavor := openStackCluster.DeepCopy()
-			openStackClusterWithOriginalBastionFlavor.Spec.Bastion = bastionSpec
-			openStackClusterWithOriginalBastionFlavor.Spec.Bastion.Spec.Flavor = bastionFlavor
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithOriginalBastionFlavor)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion = bastionSpec
+				openStackCluster.Spec.Bastion.Spec.Flavor = bastionFlavor
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			Eventually(
 				func() (bool, error) {
 					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName, Flavor: bastionOriginalFlavor.ID})
@@ -333,7 +344,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(openStackCluster.Spec.Bastion).To(Equal(openStackClusterWithOriginalBastionFlavor.Spec.Bastion))
+			Expect(openStackCluster.Spec.Bastion).To(Equal(bastionSpec))
 			Eventually(
 				func() (bool, error) {
 					openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
@@ -1037,13 +1048,13 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			shared.Logf("Waiting for the OpenStackMachine to have a condition that the server has been unexpectedly deleted")
 			retries := 0
-			Eventually(func() (clusterv1beta1.Condition, error) {
+			Eventually(func() (metav1.Condition, error) {
 				k8sClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
 
 				openStackMachine := &infrav1.OpenStackMachine{}
 				err := k8sClient.Get(ctx, crclient.ObjectKey{Name: controlPlaneMachines[0].Name, Namespace: controlPlaneMachines[0].Namespace}, openStackMachine)
 				if err != nil {
-					return clusterv1beta1.Condition{}, err
+					return metav1.Condition{}, err
 				}
 				for _, condition := range openStackMachine.Status.Conditions {
 					if condition.Type == infrav1.InstanceReadyCondition {
@@ -1062,18 +1073,17 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					})
 				err = k8sClient.Patch(ctx, openStackMachine, ssa.ApplyConfigPatch(applyConfig), crclient.ForceOwnership, crclient.FieldOwner("capo-e2e"))
 				if err != nil {
-					return clusterv1beta1.Condition{}, err
+					return metav1.Condition{}, err
 				}
 
-				return clusterv1beta1.Condition{}, errors.New("condition InstanceReadyCondition not found")
+				return metav1.Condition{}, errors.New("condition InstanceReadyCondition not found")
 			}, time.Minute*3, time.Second*10).Should(MatchFields(
 				IgnoreExtras,
 				Fields{
-					"Type":     Equal(infrav1.InstanceReadyCondition),
-					"Status":   Equal(corev1.ConditionFalse),
-					"Reason":   Equal(infrav1.InstanceDeletedReason),
-					"Message":  Equal(infrav1.ServerUnexpectedDeletedMessage),
-					"Severity": Equal(clusterv1beta1.ConditionSeverityError),
+					"Type":    Equal(infrav1.InstanceReadyCondition),
+					"Status":  Equal(metav1.ConditionFalse),
+					"Reason":  Equal(infrav1.InstanceDeletedReason),
+					"Message": Equal(infrav1.ServerUnexpectedDeletedMessage),
 				},
 			), "OpenStackMachine should be marked not ready with InstanceDeletedReason")
 		})
@@ -1147,14 +1157,15 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(clusterMonitor.Type).To(Equal("TCP"), "Monitor should be TCP type")
 
 			shared.Logf("Testing health monitor configuration update")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-
-			updatedCluster := openStackCluster.DeepCopy()
-			updatedCluster.Spec.APIServerLoadBalancer.Monitor.Delay = 20
-			updatedCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries = 4
-
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, updatedCluster)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.APIServerLoadBalancer.Monitor.Delay = 20
+				openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries = 4
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 
 			Eventually(func() (bool, error) {
 				updatedMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)
@@ -1172,16 +1183,18 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(finalMonitor.MaxRetriesDown).To(Equal(2), "Monitor maxRetriesDown should remain unchanged")
 
 			shared.Logf("Testing monitor configuration removal and default value reversion")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-
-			clusterWithRemovedMonitor := openStackCluster.DeepCopy()
-			clusterWithRemovedMonitor.Spec.APIServerLoadBalancer.Monitor = nil
-			if clusterWithRemovedMonitor.Annotations == nil {
-				clusterWithRemovedMonitor.Annotations = make(map[string]string)
-			}
-			clusterWithRemovedMonitor.Annotations["test.e2e/monitor-update"] = fmt.Sprintf("%d", time.Now().Unix())
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, clusterWithRemovedMonitor)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.APIServerLoadBalancer.Monitor = nil
+				if openStackCluster.Annotations == nil {
+					openStackCluster.Annotations = make(map[string]string)
+				}
+				openStackCluster.Annotations["test.e2e/monitor-update"] = fmt.Sprintf("%d", time.Now().Unix())
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 
 			Eventually(func() (bool, error) {
 				revertedMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)

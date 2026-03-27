@@ -23,29 +23,29 @@ import (
 	. "github.com/onsi/gomega" //nolint:revive
 	"k8s.io/utils/ptr"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 	tests := []struct {
 		name    string
-		machine *infrav1beta2.OpenStackMachine
+		machine *infrav1.OpenStackMachine
 		wantErr bool
 	}{
 		{
 			name: "RootVolume and AdditionalBlockDevices with conflicting name",
-			machine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			machine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: ptr.To("m1.small"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					RootVolume: &infrav1beta2.RootVolume{
+					RootVolume: &infrav1.RootVolume{
 						SizeGiB: 50,
 					},
-					AdditionalBlockDevices: []infrav1beta2.AdditionalBlockDevice{
+					AdditionalBlockDevices: []infrav1.AdditionalBlockDevice{
 						{
 							Name:    "root",
 							SizeGiB: 10,
@@ -57,18 +57,18 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 		},
 		{
 			name: "Port security disabled with security groups",
-			machine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			machine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: ptr.To("m1.small"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					Ports: []infrav1beta2.PortOpts{
+					Ports: []infrav1.PortOpts{
 						{
-							SecurityGroups: []infrav1beta2.SecurityGroupParam{{ID: ptr.To("sg-1")}},
-							ResolvedPortSpecFields: infrav1beta2.ResolvedPortSpecFields{
+							SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To("sg-1")}},
+							ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
 								DisablePortSecurity: ptr.To(true),
 							},
 						},
@@ -79,11 +79,11 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 		},
 		{
 			name: "Valid machine spec",
-			machine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			machine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: ptr.To("m1.small"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -112,29 +112,29 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 	tests := []struct {
 		name       string
-		oldMachine *infrav1beta2.OpenStackMachine
-		newMachine *infrav1beta2.OpenStackMachine
+		oldMachine *infrav1.OpenStackMachine
+		newMachine *infrav1.OpenStackMachine
 		wantErr    bool
 	}{
 		{
 			name: "ProviderID is immutable once set",
-			oldMachine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			oldMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor:     ptr.To("m1.small"),
 					ProviderID: ptr.To("openstack:///old-id"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
 				},
 			},
-			newMachine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			newMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor:     ptr.To("m1.small"),
 					ProviderID: ptr.To("openstack:///new-id"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -144,22 +144,22 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "ProviderID can be set for the first time",
-			oldMachine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			oldMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: ptr.To("m1.small"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
 				},
 			},
-			newMachine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			newMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor:     ptr.To("m1.small"),
 					ProviderID: ptr.To("openstack:///new-id"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -169,29 +169,29 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "IdentityRef change is allowed",
-			oldMachine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			oldMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: ptr.To("m1.small"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					IdentityRef: &infrav1beta2.OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Name:      "old-ref",
 						CloudName: "old-cloud",
 					},
 				},
 			},
-			newMachine: &infrav1beta2.OpenStackMachine{
-				Spec: infrav1beta2.OpenStackMachineSpec{
+			newMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: ptr.To("m1.small"),
-					Image: infrav1beta2.ImageParam{
-						Filter: &infrav1beta2.ImageFilter{
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					IdentityRef: &infrav1beta2.OpenStackIdentityReference{
+					IdentityRef: &infrav1.OpenStackIdentityReference{
 						Name:      "new-ref",
 						CloudName: "new-cloud",
 					},

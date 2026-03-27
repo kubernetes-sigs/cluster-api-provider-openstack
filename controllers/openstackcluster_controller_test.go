@@ -33,17 +33,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
-	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util/annotations"
-	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
+	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
@@ -253,11 +252,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, updatedCluster)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
@@ -288,11 +286,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, updatedCluster)).To(Succeed())
 
 		// Verify OpenStackAuthenticationSucceededCondition is set to False
-		Expect(v1beta1conditions.IsFalse(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
-		condition := v1beta1conditions.Get(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)
+		Expect(conditions.IsFalse(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		condition := conditions.Get(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackAuthenticationFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
@@ -497,9 +494,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 
 		// Verify conditions are set correctly
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("should allow two subnets for the cluster network", func() {
@@ -584,9 +581,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(len(testCluster.Status.Network.Subnets)).To(Equal(2))
 
 		// Verify conditions are set correctly
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("should allow fetch network by subnet", func() {
@@ -635,9 +632,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
 
 		// Verify conditions are set correctly
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("reconcile pre-existing network components by id", func() {
@@ -700,8 +697,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Router.ID).To(Equal(clusterRouterID))
 
 		// Verify conditions are set correctly
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
 	})
 
 	It("reconcile pre-existing network components by name", func() {
@@ -786,8 +783,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Router.ID).To(Equal(clusterRouterID))
 
 		// Verify conditions are set correctly
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
 	})
 
 	It("should reconcile API endpoint with floating IP and set condition", func() {
@@ -862,9 +859,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(6443)))
 
 		// Verify conditions are set correctly
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("should reconcile API endpoint with fixed IP and set condition", func() {
@@ -923,9 +920,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(6443)))
 
 		// Verify conditions are set correctly
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
 	It("should set NetworkReadyCondition to False when network lookup fails", func() {
@@ -964,11 +961,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err.Error()).To(ContainSubstring("error fetching cluster network"))
 
 		// Verify NetworkReadyCondition is set to False
-		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		condition := v1beta1conditions.Get(testCluster, infrav1.NetworkReadyCondition)
+		Expect(conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		condition := conditions.Get(testCluster, infrav1.NetworkReadyCondition)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackErrorReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to find network"))
 	})
 
@@ -1015,11 +1011,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).ToNot(BeNil())
 
 		// Verify NetworkReadyCondition is set to False
-		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		condition := v1beta1conditions.Get(testCluster, infrav1.NetworkReadyCondition)
+		Expect(conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		condition := conditions.Get(testCluster, infrav1.NetworkReadyCondition)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackErrorReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 	})
 
 	It("should set RouterReadyCondition to False when router lookup fails", func() {
@@ -1080,15 +1075,14 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err.Error()).To(ContainSubstring("error fetching cluster router"))
 
 		// Verify RouterReadyCondition is set to False
-		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
-		condition := v1beta1conditions.Get(testCluster, infrav1.RouterReadyCondition)
+		Expect(conditions.IsFalse(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
+		condition := conditions.Get(testCluster, infrav1.RouterReadyCondition)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackErrorReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to find router"))
 
 		// NetworkReadyCondition should still be True since network succeeded
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
 	})
 
 	It("should set SecurityGroupsReadyCondition to False when security group reconciliation fails", func() {
@@ -1157,15 +1151,14 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err.Error()).To(ContainSubstring("failed to reconcile security groups"))
 
 		// Verify SecurityGroupsReadyCondition is set to False
-		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
-		condition := v1beta1conditions.Get(testCluster, infrav1.SecurityGroupsReadyCondition)
+		Expect(conditions.IsFalse(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		condition := conditions.Get(testCluster, infrav1.SecurityGroupsReadyCondition)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.SecurityGroupReconcileFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to reconcile security groups"))
 
 		// NetworkReadyCondition should still be True since network succeeded
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
 	})
 
 	It("should set APIEndpointReadyCondition to False when floating IP creation fails", func() {
@@ -1230,16 +1223,15 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).ToNot(BeNil())
 
 		// Verify APIEndpointReadyCondition is set to False
-		Expect(v1beta1conditions.IsFalse(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
-		condition := v1beta1conditions.Get(testCluster, infrav1.APIEndpointReadyCondition)
+		Expect(conditions.IsFalse(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
+		condition := conditions.Get(testCluster, infrav1.APIEndpointReadyCondition)
 		Expect(condition).ToNot(BeNil())
 		Expect(condition.Reason).To(Equal(infrav1.APIEndpointConfigFailedReason))
-		Expect(condition.Severity).To(Equal(clusterv1beta1.ConditionSeverityError))
 		Expect(condition.Message).To(ContainSubstring("Failed to reconcile control plane endpoint"))
 
 		// NetworkReadyCondition and SecurityGroupsReadyCondition should still be True
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
-		Expect(v1beta1conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
 	})
 })
 
@@ -1289,7 +1281,7 @@ func Test_getAPIServerPort(t *testing.T) {
 			name: "with a control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ControlPlaneEndpoint: &clusterv1beta1.APIEndpoint{
+					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "192.168.0.1",
 						Port: 6444,
 					},
