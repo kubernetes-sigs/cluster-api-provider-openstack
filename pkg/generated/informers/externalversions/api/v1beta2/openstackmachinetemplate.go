@@ -57,7 +57,7 @@ func NewOpenStackMachineTemplateInformer(client clientset.Interface, namespace s
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredOpenStackMachineTemplateInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
@@ -82,7 +82,7 @@ func NewFilteredOpenStackMachineTemplateInformer(client clientset.Interface, nam
 				}
 				return client.InfrastructureV1beta2().OpenStackMachineTemplates(namespace).Watch(ctx, options)
 			},
-		},
+		}, client),
 		&clusterapiprovideropenstackapiv1beta2.OpenStackMachineTemplate{},
 		resyncPeriod,
 		indexers,

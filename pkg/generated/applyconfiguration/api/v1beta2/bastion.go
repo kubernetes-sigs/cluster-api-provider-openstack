@@ -20,11 +20,25 @@ package v1beta2
 
 // BastionApplyConfiguration represents a declarative configuration of the Bastion type for use
 // with apply.
+//
+// Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.
 type BastionApplyConfiguration struct {
-	Enabled          *bool                                   `json:"enabled,omitempty"`
-	Spec             *OpenStackMachineSpecApplyConfiguration `json:"spec,omitempty"`
-	AvailabilityZone *string                                 `json:"availabilityZone,omitempty"`
-	FloatingIP       *string                                 `json:"floatingIP,omitempty"`
+	// Enabled means that bastion is enabled. The bastion is enabled by
+	// default if this field is not specified. Set this field to false to disable the
+	// bastion.
+	//
+	// It is not currently possible to remove the bastion from the cluster
+	// spec without first disabling it by setting this field to false and
+	// waiting until the bastion has been deleted.
+	Enabled *bool `json:"enabled,omitempty"`
+	// Spec for the bastion itself
+	Spec *OpenStackMachineSpecApplyConfiguration `json:"spec,omitempty"`
+	// AvailabilityZone is the failure domain that will be used to create the Bastion Spec.
+	AvailabilityZone *string `json:"availabilityZone,omitempty"`
+	// FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
+	// The floating IP should already exist and should not be associated with a port. If FIP of this address does not
+	// exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
+	FloatingIP *string `json:"floatingIP,omitempty"`
 }
 
 // BastionApplyConfiguration constructs a declarative configuration of the Bastion type for use with

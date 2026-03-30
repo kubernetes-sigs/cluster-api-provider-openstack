@@ -25,21 +25,83 @@ import (
 
 // OpenStackClusterStatusApplyConfiguration represents a declarative configuration of the OpenStackClusterStatus type for use
 // with apply.
+//
+// OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatusApplyConfiguration struct {
-	Ready                     *bool                                       `json:"ready,omitempty"`
-	Initialization            *ClusterInitializationApplyConfiguration    `json:"initialization,omitempty"`
-	Network                   *NetworkStatusWithSubnetsApplyConfiguration `json:"network,omitempty"`
-	ExternalNetwork           *NetworkStatusApplyConfiguration            `json:"externalNetwork,omitempty"`
-	Router                    *RouterApplyConfiguration                   `json:"router,omitempty"`
-	APIServerLoadBalancer     *LoadBalancerApplyConfiguration             `json:"apiServerLoadBalancer,omitempty"`
-	FailureDomains            *corev1beta1.FailureDomains                 `json:"failureDomains,omitempty"`
-	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration      `json:"controlPlaneSecurityGroup,omitempty"`
-	WorkerSecurityGroup       *SecurityGroupStatusApplyConfiguration      `json:"workerSecurityGroup,omitempty"`
-	BastionSecurityGroup      *SecurityGroupStatusApplyConfiguration      `json:"bastionSecurityGroup,omitempty"`
-	Bastion                   *BastionStatusApplyConfiguration            `json:"bastion,omitempty"`
-	FailureReason             *errors.DeprecatedCAPIClusterStatusError    `json:"failureReason,omitempty"`
-	FailureMessage            *string                                     `json:"failureMessage,omitempty"`
-	Conditions                *corev1beta1.Conditions                     `json:"conditions,omitempty"`
+	// Ready is true when the cluster infrastructure is ready.
+	//
+	// Deprecated: This field is deprecated and will be removed in a future API version.
+	// Use status.conditions to determine the ready state of the cluster.
+	Ready *bool `json:"ready,omitempty"`
+	// Initialization contains information about the initialization status of the cluster.
+	Initialization *ClusterInitializationApplyConfiguration `json:"initialization,omitempty"`
+	// Network contains information about the created OpenStack Network.
+	Network *NetworkStatusWithSubnetsApplyConfiguration `json:"network,omitempty"`
+	// ExternalNetwork contains information about the external network used for default ingress and egress traffic.
+	ExternalNetwork *NetworkStatusApplyConfiguration `json:"externalNetwork,omitempty"`
+	// Router describes the default cluster router
+	Router *RouterApplyConfiguration `json:"router,omitempty"`
+	// APIServerLoadBalancer describes the api server load balancer if one exists
+	APIServerLoadBalancer *LoadBalancerApplyConfiguration `json:"apiServerLoadBalancer,omitempty"`
+	// FailureDomains represent OpenStack availability zones
+	FailureDomains *corev1beta1.FailureDomains `json:"failureDomains,omitempty"`
+	// ControlPlaneSecurityGroup contains the information about the
+	// OpenStack Security Group that needs to be applied to control plane
+	// nodes.
+	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"controlPlaneSecurityGroup,omitempty"`
+	// WorkerSecurityGroup contains the information about the OpenStack
+	// Security Group that needs to be applied to worker nodes.
+	WorkerSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"workerSecurityGroup,omitempty"`
+	// BastionSecurityGroup contains the information about the OpenStack
+	// Security Group that needs to be applied to worker nodes.
+	BastionSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"bastionSecurityGroup,omitempty"`
+	// Bastion contains the information about the deployed bastion host
+	Bastion *BastionStatusApplyConfiguration `json:"bastion,omitempty"`
+	// FailureReason will be set in the event that there is a terminal problem
+	// reconciling the OpenStackCluster and will contain a succinct value suitable
+	// for machine interpretation.
+	//
+	// This field should not be set for transitive errors that a controller
+	// faces that are expected to be fixed automatically over
+	// time (like service outages), but instead indicate that something is
+	// fundamentally wrong with the OpenStackCluster's spec or the configuration of
+	// the controller, and that manual intervention is required. Examples
+	// of terminal errors would be invalid combinations of settings in the
+	// spec, values that are unsupported by the controller, or the
+	// responsible controller itself being critically misconfigured.
+	//
+	// Any transient errors that occur during the reconciliation of
+	// OpenStackClusters can be added as events to the OpenStackCluster object
+	// and/or logged in the controller's output.
+	//
+	// Deprecated: This field is deprecated and will be removed in a future API version.
+	// Use status.conditions to report failures.
+	FailureReason *errors.DeprecatedCAPIClusterStatusError `json:"failureReason,omitempty"`
+	// FailureMessage will be set in the event that there is a terminal problem
+	// reconciling the OpenStackCluster and will contain a more verbose string suitable
+	// for logging and human consumption.
+	//
+	// This field should not be set for transitive errors that a controller
+	// faces that are expected to be fixed automatically over
+	// time (like service outages), but instead indicate that something is
+	// fundamentally wrong with the OpenStackCluster's spec or the configuration of
+	// the controller, and that manual intervention is required. Examples
+	// of terminal errors would be invalid combinations of settings in the
+	// spec, values that are unsupported by the controller, or the
+	// responsible controller itself being critically misconfigured.
+	//
+	// Any transient errors that occur during the reconciliation of
+	// OpenStackClusters can be added as events to the OpenStackCluster object
+	// and/or logged in the controller's output.
+	//
+	// Deprecated: This field is deprecated and will be removed in a future API version.
+	// Use status.conditions to report failures.
+	FailureMessage *string `json:"failureMessage,omitempty"`
+	// Conditions defines current service state of the OpenStackCluster.
+	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
+	// (both during initial provisioning and after the initial provisioning is completed).
+	Conditions *corev1beta1.Conditions `json:"conditions,omitempty"`
 }
 
 // OpenStackClusterStatusApplyConfiguration constructs a declarative configuration of the OpenStackClusterStatus type for use with

@@ -24,6 +24,8 @@ import (
 
 // SecurityGroupFilterApplyConfiguration represents a declarative configuration of the SecurityGroupFilter type for use
 // with apply.
+//
+// SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.
 type SecurityGroupFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`

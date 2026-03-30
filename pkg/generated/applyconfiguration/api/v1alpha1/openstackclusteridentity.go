@@ -29,6 +29,8 @@ import (
 
 // OpenStackClusterIdentityApplyConfiguration represents a declarative configuration of the OpenStackClusterIdentity type for use
 // with apply.
+//
+// OpenStackClusterIdentity is a cluster-scoped identity that centralizes OpenStack credentials.
 type OpenStackClusterIdentityApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
@@ -46,29 +48,14 @@ func OpenStackClusterIdentity(name, namespace string) *OpenStackClusterIdentityA
 	return b
 }
 
-// ExtractOpenStackClusterIdentity extracts the applied configuration owned by fieldManager from
-// openStackClusterIdentity. If no managedFields are found in openStackClusterIdentity for fieldManager, a
-// OpenStackClusterIdentityApplyConfiguration is returned with only the Name, Namespace (if applicable),
-// APIVersion and Kind populated. It is possible that no managed fields were found for because other
-// field managers have taken ownership of all the fields previously owned by fieldManager, or because
-// the fieldManager never owned fields any fields.
+// ExtractOpenStackClusterIdentityFrom extracts the applied configuration owned by fieldManager from
+// openStackClusterIdentity for the specified subresource. Pass an empty string for subresource to extract
+// the main resource. Common subresources include "status", "scale", etc.
 // openStackClusterIdentity must be a unmodified OpenStackClusterIdentity API object that was retrieved from the Kubernetes API.
-// ExtractOpenStackClusterIdentity provides a way to perform a extract/modify-in-place/apply workflow.
+// ExtractOpenStackClusterIdentityFrom provides a way to perform a extract/modify-in-place/apply workflow.
 // Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
 // applied if another fieldManager has updated or force applied any of the previously applied fields.
-// Experimental!
-func ExtractOpenStackClusterIdentity(openStackClusterIdentity *apiv1alpha1.OpenStackClusterIdentity, fieldManager string) (*OpenStackClusterIdentityApplyConfiguration, error) {
-	return extractOpenStackClusterIdentity(openStackClusterIdentity, fieldManager, "")
-}
-
-// ExtractOpenStackClusterIdentityStatus is the same as ExtractOpenStackClusterIdentity except
-// that it extracts the status subresource applied configuration.
-// Experimental!
-func ExtractOpenStackClusterIdentityStatus(openStackClusterIdentity *apiv1alpha1.OpenStackClusterIdentity, fieldManager string) (*OpenStackClusterIdentityApplyConfiguration, error) {
-	return extractOpenStackClusterIdentity(openStackClusterIdentity, fieldManager, "status")
-}
-
-func extractOpenStackClusterIdentity(openStackClusterIdentity *apiv1alpha1.OpenStackClusterIdentity, fieldManager string, subresource string) (*OpenStackClusterIdentityApplyConfiguration, error) {
+func ExtractOpenStackClusterIdentityFrom(openStackClusterIdentity *apiv1alpha1.OpenStackClusterIdentity, fieldManager string, subresource string) (*OpenStackClusterIdentityApplyConfiguration, error) {
 	b := &OpenStackClusterIdentityApplyConfiguration{}
 	err := managedfields.ExtractInto(openStackClusterIdentity, internal.Parser().Type("io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackClusterIdentity"), fieldManager, b, subresource)
 	if err != nil {
@@ -81,6 +68,21 @@ func extractOpenStackClusterIdentity(openStackClusterIdentity *apiv1alpha1.OpenS
 	b.WithAPIVersion("infrastructure.cluster.x-k8s.io/v1alpha1")
 	return b, nil
 }
+
+// ExtractOpenStackClusterIdentity extracts the applied configuration owned by fieldManager from
+// openStackClusterIdentity. If no managedFields are found in openStackClusterIdentity for fieldManager, a
+// OpenStackClusterIdentityApplyConfiguration is returned with only the Name, Namespace (if applicable),
+// APIVersion and Kind populated. It is possible that no managed fields were found for because other
+// field managers have taken ownership of all the fields previously owned by fieldManager, or because
+// the fieldManager never owned fields any fields.
+// openStackClusterIdentity must be a unmodified OpenStackClusterIdentity API object that was retrieved from the Kubernetes API.
+// ExtractOpenStackClusterIdentity provides a way to perform a extract/modify-in-place/apply workflow.
+// Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
+// applied if another fieldManager has updated or force applied any of the previously applied fields.
+func ExtractOpenStackClusterIdentity(openStackClusterIdentity *apiv1alpha1.OpenStackClusterIdentity, fieldManager string) (*OpenStackClusterIdentityApplyConfiguration, error) {
+	return ExtractOpenStackClusterIdentityFrom(openStackClusterIdentity, fieldManager, "")
+}
+
 func (b OpenStackClusterIdentityApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

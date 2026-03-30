@@ -22,12 +22,10 @@ import (
 	"reflect"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/cluster-api/util/topology"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
@@ -36,23 +34,17 @@ import (
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackmachinetemplate,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachinetemplates,versions=v1beta2,name=validation.openstackmachinetemplate.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
 func SetupOpenStackMachineTemplateWebhook(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackMachineTemplate{}).
+	return builder.WebhookManagedBy(mgr, &infrav1.OpenStackMachineTemplate{}).
 		WithValidator(&openStackMachineTemplateWebhook{}).
 		Complete()
 }
 
 type openStackMachineTemplateWebhook struct{}
 
-var _ webhook.CustomValidator = &openStackMachineTemplateWebhook{}
+var _ admission.Validator[*infrav1.OpenStackMachineTemplate] = &openStackMachineTemplateWebhook{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineTemplateWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
-	newObj, err := castToOpenStackMachineTemplate(objRaw)
-	if err != nil {
-		return nil, err
-	}
-
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackMachineTemplateWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackMachineTemplate) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
 	if newObj.Spec.Template.Spec.ProviderID != nil {
@@ -62,18 +54,9 @@ func (*openStackMachineTemplateWebhook) ValidateCreate(_ context.Context, objRaw
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj *infrav1.OpenStackMachineTemplate) (admission.Warnings, error) {
 	var allErrs field.ErrorList
-	oldObj, err := castToOpenStackMachineTemplate(oldObjRaw)
-	if err != nil {
-		return nil, err
-	}
-
-	newObj, err := castToOpenStackMachineTemplate(newObjRaw)
-	if err != nil {
-		return nil, err
-	}
 
 	req, err := admission.RequestFromContext(ctx)
 	if err != nil {
@@ -90,15 +73,7 @@ func (*openStackMachineTemplateWebhook) ValidateUpdate(ctx context.Context, oldO
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type.
+func (*openStackMachineTemplateWebhook) ValidateDelete(_ context.Context, _ *infrav1.OpenStackMachineTemplate) (admission.Warnings, error) {
 	return nil, nil
-}
-
-func castToOpenStackMachineTemplate(obj runtime.Object) (*infrav1.OpenStackMachineTemplate, error) {
-	cast, ok := obj.(*infrav1.OpenStackMachineTemplate)
-	if !ok {
-		return nil, fmt.Errorf("expected an OpenStackMachineTemplate but got a %T", obj)
-	}
-	return cast, nil
 }

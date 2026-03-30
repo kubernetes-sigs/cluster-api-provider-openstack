@@ -29,6 +29,8 @@ import (
 
 // OpenStackMachineApplyConfiguration represents a declarative configuration of the OpenStackMachine type for use
 // with apply.
+//
+// OpenStackMachine is the Schema for the openstackmachines API.
 type OpenStackMachineApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
@@ -47,29 +49,14 @@ func OpenStackMachine(name, namespace string) *OpenStackMachineApplyConfiguratio
 	return b
 }
 
-// ExtractOpenStackMachine extracts the applied configuration owned by fieldManager from
-// openStackMachine. If no managedFields are found in openStackMachine for fieldManager, a
-// OpenStackMachineApplyConfiguration is returned with only the Name, Namespace (if applicable),
-// APIVersion and Kind populated. It is possible that no managed fields were found for because other
-// field managers have taken ownership of all the fields previously owned by fieldManager, or because
-// the fieldManager never owned fields any fields.
+// ExtractOpenStackMachineFrom extracts the applied configuration owned by fieldManager from
+// openStackMachine for the specified subresource. Pass an empty string for subresource to extract
+// the main resource. Common subresources include "status", "scale", etc.
 // openStackMachine must be a unmodified OpenStackMachine API object that was retrieved from the Kubernetes API.
-// ExtractOpenStackMachine provides a way to perform a extract/modify-in-place/apply workflow.
+// ExtractOpenStackMachineFrom provides a way to perform a extract/modify-in-place/apply workflow.
 // Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
 // applied if another fieldManager has updated or force applied any of the previously applied fields.
-// Experimental!
-func ExtractOpenStackMachine(openStackMachine *apiv1beta1.OpenStackMachine, fieldManager string) (*OpenStackMachineApplyConfiguration, error) {
-	return extractOpenStackMachine(openStackMachine, fieldManager, "")
-}
-
-// ExtractOpenStackMachineStatus is the same as ExtractOpenStackMachine except
-// that it extracts the status subresource applied configuration.
-// Experimental!
-func ExtractOpenStackMachineStatus(openStackMachine *apiv1beta1.OpenStackMachine, fieldManager string) (*OpenStackMachineApplyConfiguration, error) {
-	return extractOpenStackMachine(openStackMachine, fieldManager, "status")
-}
-
-func extractOpenStackMachine(openStackMachine *apiv1beta1.OpenStackMachine, fieldManager string, subresource string) (*OpenStackMachineApplyConfiguration, error) {
+func ExtractOpenStackMachineFrom(openStackMachine *apiv1beta1.OpenStackMachine, fieldManager string, subresource string) (*OpenStackMachineApplyConfiguration, error) {
 	b := &OpenStackMachineApplyConfiguration{}
 	err := managedfields.ExtractInto(openStackMachine, internal.Parser().Type("io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.OpenStackMachine"), fieldManager, b, subresource)
 	if err != nil {
@@ -82,6 +69,27 @@ func extractOpenStackMachine(openStackMachine *apiv1beta1.OpenStackMachine, fiel
 	b.WithAPIVersion("infrastructure.cluster.x-k8s.io/v1beta1")
 	return b, nil
 }
+
+// ExtractOpenStackMachine extracts the applied configuration owned by fieldManager from
+// openStackMachine. If no managedFields are found in openStackMachine for fieldManager, a
+// OpenStackMachineApplyConfiguration is returned with only the Name, Namespace (if applicable),
+// APIVersion and Kind populated. It is possible that no managed fields were found for because other
+// field managers have taken ownership of all the fields previously owned by fieldManager, or because
+// the fieldManager never owned fields any fields.
+// openStackMachine must be a unmodified OpenStackMachine API object that was retrieved from the Kubernetes API.
+// ExtractOpenStackMachine provides a way to perform a extract/modify-in-place/apply workflow.
+// Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
+// applied if another fieldManager has updated or force applied any of the previously applied fields.
+func ExtractOpenStackMachine(openStackMachine *apiv1beta1.OpenStackMachine, fieldManager string) (*OpenStackMachineApplyConfiguration, error) {
+	return ExtractOpenStackMachineFrom(openStackMachine, fieldManager, "")
+}
+
+// ExtractOpenStackMachineStatus extracts the applied configuration owned by fieldManager from
+// openStackMachine for the status subresource.
+func ExtractOpenStackMachineStatus(openStackMachine *apiv1beta1.OpenStackMachine, fieldManager string) (*OpenStackMachineApplyConfiguration, error) {
+	return ExtractOpenStackMachineFrom(openStackMachine, fieldManager, "status")
+}
+
 func (b OpenStackMachineApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

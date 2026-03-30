@@ -26,14 +26,24 @@ import (
 
 // OpenStackServerStatusApplyConfiguration represents a declarative configuration of the OpenStackServerStatus type for use
 // with apply.
+//
+// OpenStackServerStatus defines the observed state of OpenStackServer.
 type OpenStackServerStatusApplyConfiguration struct {
-	Ready         *bool                                 `json:"ready,omitempty"`
-	InstanceID    *string                               `json:"instanceID,omitempty"`
-	InstanceState *v1beta2.InstanceState                `json:"instanceState,omitempty"`
-	Addresses     []v1.NodeAddress                      `json:"addresses,omitempty"`
-	Resolved      *ResolvedServerSpecApplyConfiguration `json:"resolved,omitempty"`
-	Resources     *ServerResourcesApplyConfiguration    `json:"resources,omitempty"`
-	Conditions    []metav1.ConditionApplyConfiguration  `json:"conditions,omitempty"`
+	// Ready is true when the OpenStack server is ready.
+	Ready *bool `json:"ready,omitempty"`
+	// InstanceID is the ID of the server instance.
+	InstanceID *string `json:"instanceID,omitempty"`
+	// InstanceState is the state of the server instance.
+	InstanceState *v1beta2.InstanceState `json:"instanceState,omitempty"`
+	// Addresses is the list of addresses of the server instance.
+	Addresses []v1.NodeAddress `json:"addresses,omitempty"`
+	// Resolved contains parts of the machine spec with all external
+	// references fully resolved.
+	Resolved *ResolvedServerSpecApplyConfiguration `json:"resolved,omitempty"`
+	// Resources contains references to OpenStack resources created for the machine.
+	Resources *ServerResourcesApplyConfiguration `json:"resources,omitempty"`
+	// Conditions defines current service state of the OpenStackServer.
+	Conditions []metav1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // OpenStackServerStatusApplyConfiguration constructs a declarative configuration of the OpenStackServerStatus type for use with

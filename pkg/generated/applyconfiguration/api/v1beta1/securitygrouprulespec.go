@@ -24,16 +24,43 @@ import (
 
 // SecurityGroupRuleSpecApplyConfiguration represents a declarative configuration of the SecurityGroupRuleSpec type for use
 // with apply.
+//
+// SecurityGroupRuleSpec represent the basic information of the associated OpenStack
+// Security Group Role.
+// For now this is only used for the allNodesSecurityGroupRules but when we add
+// other security groups, we'll need to add a validation because
+// Remote* fields are mutually exclusive.
 type SecurityGroupRuleSpecApplyConfiguration struct {
-	Name                *string                               `json:"name,omitempty"`
-	Description         *string                               `json:"description,omitempty"`
-	Direction           *string                               `json:"direction,omitempty"`
-	EtherType           *string                               `json:"etherType,omitempty"`
-	PortRangeMin        *int                                  `json:"portRangeMin,omitempty"`
-	PortRangeMax        *int                                  `json:"portRangeMax,omitempty"`
-	Protocol            *string                               `json:"protocol,omitempty"`
-	RemoteGroupID       *string                               `json:"remoteGroupID,omitempty"`
-	RemoteIPPrefix      *string                               `json:"remoteIPPrefix,omitempty"`
+	// name of the security group rule.
+	// It's used to identify the rule so it can be patched and will not be sent to the OpenStack API.
+	Name *string `json:"name,omitempty"`
+	// description of the security group rule.
+	Description *string `json:"description,omitempty"`
+	// direction in which the security group rule is applied. The only values
+	// allowed are "ingress" or "egress". For a compute instance, an ingress
+	// security group rule is applied to incoming (ingress) traffic for that
+	// instance. An egress rule is applied to traffic leaving the instance.
+	Direction *string `json:"direction,omitempty"`
+	// etherType must be IPv4 or IPv6, and addresses represented in CIDR must match the
+	// ingress or egress rules.
+	EtherType *string `json:"etherType,omitempty"`
+	// portRangeMin is a number in the range that is matched by the security group
+	// rule. If the protocol is TCP or UDP, this value must be less than or equal
+	// to the value of the portRangeMax attribute.
+	PortRangeMin *int `json:"portRangeMin,omitempty"`
+	// portRangeMax is a number in the range that is matched by the security group
+	// rule. The portRangeMin attribute constrains the portRangeMax attribute.
+	PortRangeMax *int `json:"portRangeMax,omitempty"`
+	// protocol is the protocol that is matched by the security group rule.
+	Protocol *string `json:"protocol,omitempty"`
+	// remoteGroupID is the remote group ID to be associated with this security group rule.
+	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
+	RemoteGroupID *string `json:"remoteGroupID,omitempty"`
+	// remoteIPPrefix is the remote IP prefix to be associated with this security group rule.
+	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
+	RemoteIPPrefix *string `json:"remoteIPPrefix,omitempty"`
+	// remoteManagedGroups is the remote managed groups to be associated with this security group rule.
+	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
 	RemoteManagedGroups []apiv1beta1.ManagedSecurityGroupName `json:"remoteManagedGroups,omitempty"`
 }
 

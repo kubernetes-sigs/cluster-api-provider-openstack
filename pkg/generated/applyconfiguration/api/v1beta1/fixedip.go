@@ -21,8 +21,14 @@ package v1beta1
 // FixedIPApplyConfiguration represents a declarative configuration of the FixedIP type for use
 // with apply.
 type FixedIPApplyConfiguration struct {
-	Subnet    *SubnetParamApplyConfiguration `json:"subnet,omitempty"`
-	IPAddress *string                        `json:"ipAddress,omitempty"`
+	// Subnet is an openstack subnet query that will return the id of a subnet to create
+	// the fixed IP of a port in. This query must not return more than one subnet.
+	Subnet *SubnetParamApplyConfiguration `json:"subnet,omitempty"`
+	// IPAddress is a specific IP address to assign to the port. If Subnet
+	// is also specified, IPAddress must be a valid IP address in the
+	// subnet. If Subnet is not specified, IPAddress must be a valid IP
+	// address in any subnet of the port's network.
+	IPAddress *string `json:"ipAddress,omitempty"`
 }
 
 // FixedIPApplyConfiguration constructs a declarative configuration of the FixedIP type for use with

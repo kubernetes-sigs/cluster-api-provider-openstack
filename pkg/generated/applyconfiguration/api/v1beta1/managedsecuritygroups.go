@@ -20,11 +20,17 @@ package v1beta1
 
 // ManagedSecurityGroupsApplyConfiguration represents a declarative configuration of the ManagedSecurityGroups type for use
 // with apply.
+//
+// ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.
 type ManagedSecurityGroupsApplyConfiguration struct {
-	AllNodesSecurityGroupRules          []SecurityGroupRuleSpecApplyConfiguration `json:"allNodesSecurityGroupRules,omitempty"`
+	// allNodesSecurityGroupRules defines the rules that should be applied to all nodes.
+	AllNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"allNodesSecurityGroupRules,omitempty"`
+	// controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.
 	ControlPlaneNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"controlPlaneNodesSecurityGroupRules,omitempty"`
-	WorkerNodesSecurityGroupRules       []SecurityGroupRuleSpecApplyConfiguration `json:"workerNodesSecurityGroupRules,omitempty"`
-	AllowAllInClusterTraffic            *bool                                     `json:"allowAllInClusterTraffic,omitempty"`
+	// workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.
+	WorkerNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"workerNodesSecurityGroupRules,omitempty"`
+	// AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
+	AllowAllInClusterTraffic *bool `json:"allowAllInClusterTraffic,omitempty"`
 }
 
 // ManagedSecurityGroupsApplyConfiguration constructs a declarative configuration of the ManagedSecurityGroups type for use with

@@ -24,7 +24,10 @@ import (
 
 // ServerResourcesApplyConfiguration represents a declarative configuration of the ServerResources type for use
 // with apply.
+//
+// ServerResources contains references to OpenStack resources created for the server.
 type ServerResourcesApplyConfiguration struct {
+	// Ports is the status of the ports created for the server.
 	Ports []v1beta2.PortStatusApplyConfiguration `json:"ports,omitempty"`
 }
 

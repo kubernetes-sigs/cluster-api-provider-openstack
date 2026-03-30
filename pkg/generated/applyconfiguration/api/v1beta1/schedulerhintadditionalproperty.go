@@ -20,8 +20,15 @@ package v1beta1
 
 // SchedulerHintAdditionalPropertyApplyConfiguration represents a declarative configuration of the SchedulerHintAdditionalProperty type for use
 // with apply.
+//
+// SchedulerHintAdditionalProperty represents a single additional property for a scheduler hint.
+// It includes a Name to identify the property and a Value that can be of various types.
 type SchedulerHintAdditionalPropertyApplyConfiguration struct {
-	Name  *string                                         `json:"name,omitempty"`
+	// Name is the name of the scheduler hint property.
+	// It is a unique identifier for the property.
+	Name *string `json:"name,omitempty"`
+	// Value is the value of the scheduler hint property, which can be of various types
+	// (e.g., bool, string, int). The type is indicated by the Value.Type field.
 	Value *SchedulerHintAdditionalValueApplyConfiguration `json:"value,omitempty"`
 }
 

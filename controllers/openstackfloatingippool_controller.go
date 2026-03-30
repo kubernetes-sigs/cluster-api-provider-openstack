@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/ptr"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
 	conditions "sigs.k8s.io/cluster-api/util/conditions"
@@ -59,7 +59,7 @@ var backoff = wait.Backoff{
 // OpenStackFloatingIPPoolReconciler reconciles a OpenStackFloatingIPPool object.
 type OpenStackFloatingIPPoolReconciler struct {
 	Client           client.Client
-	Recorder         record.EventRecorder
+	Recorder         events.EventRecorder
 	WatchFilterValue string
 	ScopeFactory     scope.Factory
 	CaCertificates   []byte // PEM encoded ca certificates.

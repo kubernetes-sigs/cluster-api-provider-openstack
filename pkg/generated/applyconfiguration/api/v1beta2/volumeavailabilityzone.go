@@ -24,9 +24,19 @@ import (
 
 // VolumeAvailabilityZoneApplyConfiguration represents a declarative configuration of the VolumeAvailabilityZone type for use
 // with apply.
+//
+// VolumeAvailabilityZone specifies the availability zone for a volume.
 type VolumeAvailabilityZoneApplyConfiguration struct {
+	// From specifies where we will obtain the availability zone for the
+	// volume. The options are "Name" and "Machine". If "Name" is specified
+	// then the Name field must also be specified. If "Machine" is specified
+	// the volume will use the value of FailureDomain, if any, from the
+	// associated Machine.
 	From *apiv1beta2.VolumeAZSource `json:"from,omitempty"`
-	Name *apiv1beta2.VolumeAZName   `json:"name,omitempty"`
+	// Name is the name of a volume availability zone to use. It is required
+	// if From is "Name". The volume availability zone name may not contain
+	// spaces.
+	Name *apiv1beta2.VolumeAZName `json:"name,omitempty"`
 }
 
 // VolumeAvailabilityZoneApplyConfiguration constructs a declarative configuration of the VolumeAvailabilityZone type for use with

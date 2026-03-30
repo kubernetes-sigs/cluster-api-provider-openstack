@@ -20,6 +20,8 @@ package v1beta1
 
 // SubnetApplyConfiguration represents a declarative configuration of the Subnet type for use
 // with apply.
+//
+// Subnet represents basic information about the associated OpenStack Neutron Subnet.
 type SubnetApplyConfiguration struct {
 	Name *string  `json:"name,omitempty"`
 	ID   *string  `json:"id,omitempty"`

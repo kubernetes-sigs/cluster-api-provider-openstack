@@ -24,8 +24,14 @@ import (
 
 // BlockDeviceStorageApplyConfiguration represents a declarative configuration of the BlockDeviceStorage type for use
 // with apply.
+//
+// BlockDeviceStorage is the storage type of a block device to create and
+// contains additional storage options.
 type BlockDeviceStorageApplyConfiguration struct {
-	Type   *apiv1beta1.BlockDeviceType          `json:"type,omitempty"`
+	// Type is the type of block device to create.
+	// This can be either "Volume" or "Local".
+	Type *apiv1beta1.BlockDeviceType `json:"type,omitempty"`
+	// Volume contains additional storage options for a volume block device.
 	Volume *BlockDeviceVolumeApplyConfiguration `json:"volume,omitempty"`
 }
 

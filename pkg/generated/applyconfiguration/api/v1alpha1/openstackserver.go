@@ -29,6 +29,8 @@ import (
 
 // OpenStackServerApplyConfiguration represents a declarative configuration of the OpenStackServer type for use
 // with apply.
+//
+// OpenStackServer is the Schema for the openstackservers API.
 type OpenStackServerApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
@@ -47,29 +49,14 @@ func OpenStackServer(name, namespace string) *OpenStackServerApplyConfiguration 
 	return b
 }
 
-// ExtractOpenStackServer extracts the applied configuration owned by fieldManager from
-// openStackServer. If no managedFields are found in openStackServer for fieldManager, a
-// OpenStackServerApplyConfiguration is returned with only the Name, Namespace (if applicable),
-// APIVersion and Kind populated. It is possible that no managed fields were found for because other
-// field managers have taken ownership of all the fields previously owned by fieldManager, or because
-// the fieldManager never owned fields any fields.
+// ExtractOpenStackServerFrom extracts the applied configuration owned by fieldManager from
+// openStackServer for the specified subresource. Pass an empty string for subresource to extract
+// the main resource. Common subresources include "status", "scale", etc.
 // openStackServer must be a unmodified OpenStackServer API object that was retrieved from the Kubernetes API.
-// ExtractOpenStackServer provides a way to perform a extract/modify-in-place/apply workflow.
+// ExtractOpenStackServerFrom provides a way to perform a extract/modify-in-place/apply workflow.
 // Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
 // applied if another fieldManager has updated or force applied any of the previously applied fields.
-// Experimental!
-func ExtractOpenStackServer(openStackServer *apiv1alpha1.OpenStackServer, fieldManager string) (*OpenStackServerApplyConfiguration, error) {
-	return extractOpenStackServer(openStackServer, fieldManager, "")
-}
-
-// ExtractOpenStackServerStatus is the same as ExtractOpenStackServer except
-// that it extracts the status subresource applied configuration.
-// Experimental!
-func ExtractOpenStackServerStatus(openStackServer *apiv1alpha1.OpenStackServer, fieldManager string) (*OpenStackServerApplyConfiguration, error) {
-	return extractOpenStackServer(openStackServer, fieldManager, "status")
-}
-
-func extractOpenStackServer(openStackServer *apiv1alpha1.OpenStackServer, fieldManager string, subresource string) (*OpenStackServerApplyConfiguration, error) {
+func ExtractOpenStackServerFrom(openStackServer *apiv1alpha1.OpenStackServer, fieldManager string, subresource string) (*OpenStackServerApplyConfiguration, error) {
 	b := &OpenStackServerApplyConfiguration{}
 	err := managedfields.ExtractInto(openStackServer, internal.Parser().Type("io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackServer"), fieldManager, b, subresource)
 	if err != nil {
@@ -82,6 +69,27 @@ func extractOpenStackServer(openStackServer *apiv1alpha1.OpenStackServer, fieldM
 	b.WithAPIVersion("infrastructure.cluster.x-k8s.io/v1alpha1")
 	return b, nil
 }
+
+// ExtractOpenStackServer extracts the applied configuration owned by fieldManager from
+// openStackServer. If no managedFields are found in openStackServer for fieldManager, a
+// OpenStackServerApplyConfiguration is returned with only the Name, Namespace (if applicable),
+// APIVersion and Kind populated. It is possible that no managed fields were found for because other
+// field managers have taken ownership of all the fields previously owned by fieldManager, or because
+// the fieldManager never owned fields any fields.
+// openStackServer must be a unmodified OpenStackServer API object that was retrieved from the Kubernetes API.
+// ExtractOpenStackServer provides a way to perform a extract/modify-in-place/apply workflow.
+// Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
+// applied if another fieldManager has updated or force applied any of the previously applied fields.
+func ExtractOpenStackServer(openStackServer *apiv1alpha1.OpenStackServer, fieldManager string) (*OpenStackServerApplyConfiguration, error) {
+	return ExtractOpenStackServerFrom(openStackServer, fieldManager, "")
+}
+
+// ExtractOpenStackServerStatus extracts the applied configuration owned by fieldManager from
+// openStackServer for the status subresource.
+func ExtractOpenStackServerStatus(openStackServer *apiv1alpha1.OpenStackServer, fieldManager string) (*OpenStackServerApplyConfiguration, error) {
+	return ExtractOpenStackServerFrom(openStackServer, fieldManager, "status")
+}
+
 func (b OpenStackServerApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

@@ -20,7 +20,10 @@ package v1beta2
 
 // ServerGroupFilterApplyConfiguration represents a declarative configuration of the ServerGroupFilter type for use
 // with apply.
+//
+// ServerGroupFilter specifies a query to select an OpenStack server group. At least one property must be set.
 type ServerGroupFilterApplyConfiguration struct {
+	// Name is the name of a server group to look for.
 	Name *string `json:"name,omitempty"`
 }
 

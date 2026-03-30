@@ -25,9 +25,17 @@ import (
 
 // OpenStackMachineTemplateStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineTemplateStatus type for use
 // with apply.
+//
+// OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateStatusApplyConfiguration struct {
-	Capacity   *v1.ResourceList                     `json:"capacity,omitempty"`
-	NodeInfo   *NodeInfoApplyConfiguration          `json:"nodeInfo,omitempty"`
+	// Capacity defines the resource capacity for this machine.
+	// This value is used for autoscaling from zero operations as defined in:
+	// https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md
+	Capacity *v1.ResourceList            `json:"capacity,omitempty"`
+	NodeInfo *NodeInfoApplyConfiguration `json:"nodeInfo,omitempty"`
+	// Conditions defines current service state of the OpenStackMachineTemplate.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
+	// (both during initial provisioning and after the initial provisioning is completed).
 	Conditions []metav1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 

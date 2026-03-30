@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
@@ -58,7 +58,7 @@ import (
 // OpenStackMachineReconciler reconciles a OpenStackMachine object.
 type OpenStackMachineReconciler struct {
 	Client           client.Client
-	Recorder         record.EventRecorder
+	Recorder         events.EventRecorder
 	WatchFilterValue string
 	ScopeFactory     scope.Factory
 	CaCertificates   []byte // PEM encoded ca certificates.

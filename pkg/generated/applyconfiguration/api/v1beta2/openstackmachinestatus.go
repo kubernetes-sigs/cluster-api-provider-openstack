@@ -26,14 +26,29 @@ import (
 
 // OpenStackMachineStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineStatus type for use
 // with apply.
+//
+// OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatusApplyConfiguration struct {
+	// Initialization contains information about the initialization status of the machine.
 	Initialization *MachineInitializationApplyConfiguration `json:"initialization,omitempty"`
-	InstanceID     *string                                  `json:"instanceID,omitempty"`
-	Addresses      []v1.NodeAddress                         `json:"addresses,omitempty"`
-	InstanceState  *apiv1beta2.InstanceState                `json:"instanceState,omitempty"`
-	Resolved       *ResolvedMachineSpecApplyConfiguration   `json:"resolved,omitempty"`
-	Resources      *MachineResourcesApplyConfiguration      `json:"resources,omitempty"`
-	Conditions     []metav1.ConditionApplyConfiguration     `json:"conditions,omitempty"`
+	// InstanceID is the OpenStack instance ID for this machine.
+	InstanceID *string `json:"instanceID,omitempty"`
+	// Addresses contains the OpenStack instance associated addresses.
+	Addresses []v1.NodeAddress `json:"addresses,omitempty"`
+	// InstanceState is the state of the OpenStack instance for this machine.
+	// This field is not set anymore by the OpenStackMachine controller.
+	// Instead, it's set by the OpenStackServer controller.
+	InstanceState *apiv1beta2.InstanceState `json:"instanceState,omitempty"`
+	// Resolved contains parts of the machine spec with all external
+	// references fully resolved.
+	Resolved *ResolvedMachineSpecApplyConfiguration `json:"resolved,omitempty"`
+	// Resources contains references to OpenStack resources created for the machine.
+	Resources *MachineResourcesApplyConfiguration `json:"resources,omitempty"`
+	// Conditions defines current service state of the OpenStackMachine.
+	// This field surfaces into Machine's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
+	// (both during initial provisioning and after the initial provisioning is completed).
+	Conditions []metav1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // OpenStackMachineStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineStatus type for use with

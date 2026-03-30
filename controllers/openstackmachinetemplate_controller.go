@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	conditions "sigs.k8s.io/cluster-api/util/conditions"
@@ -50,7 +50,7 @@ var newComputeService = compute.NewService
 // it only updates the .status field to allow auto-scaling.
 type OpenStackMachineTemplateReconciler struct {
 	Client           client.Client
-	Recorder         record.EventRecorder
+	Recorder         events.EventRecorder
 	WatchFilterValue string
 	ScopeFactory     scope.Factory
 	CaCertificates   []byte // PEM encoded ca certificates.

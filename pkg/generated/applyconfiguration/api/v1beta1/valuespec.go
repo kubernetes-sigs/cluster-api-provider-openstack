@@ -20,9 +20,15 @@ package v1beta1
 
 // ValueSpecApplyConfiguration represents a declarative configuration of the ValueSpec type for use
 // with apply.
+//
+// ValueSpec represents a single value_spec key-value pair.
 type ValueSpecApplyConfiguration struct {
-	Name  *string `json:"name,omitempty"`
-	Key   *string `json:"key,omitempty"`
+	// Name is the name of the key-value pair.
+	// This is just for identifying the pair and will not be sent to the OpenStack API.
+	Name *string `json:"name,omitempty"`
+	// Key is the key in the key-value pair.
+	Key *string `json:"key,omitempty"`
+	// Value is the value in the key-value pair.
 	Value *string `json:"value,omitempty"`
 }
 

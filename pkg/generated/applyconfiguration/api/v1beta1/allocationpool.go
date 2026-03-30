@@ -21,8 +21,10 @@ package v1beta1
 // AllocationPoolApplyConfiguration represents a declarative configuration of the AllocationPool type for use
 // with apply.
 type AllocationPoolApplyConfiguration struct {
+	// Start represents the start of the AllocationPool, that is the lowest IP of the pool.
 	Start *string `json:"start,omitempty"`
-	End   *string `json:"end,omitempty"`
+	// End represents the end of the AlloctionPool, that is the highest IP of the pool.
+	End *string `json:"end,omitempty"`
 }
 
 // AllocationPoolApplyConfiguration constructs a declarative configuration of the AllocationPool type for use with

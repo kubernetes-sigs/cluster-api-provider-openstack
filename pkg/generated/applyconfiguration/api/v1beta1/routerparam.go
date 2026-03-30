@@ -20,8 +20,12 @@ package v1beta1
 
 // RouterParamApplyConfiguration represents a declarative configuration of the RouterParam type for use
 // with apply.
+//
+// RouterParam specifies an OpenStack router to use. It may be specified by either ID or filter, but not both.
 type RouterParamApplyConfiguration struct {
-	ID     *string                         `json:"id,omitempty"`
+	// ID is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	ID *string `json:"id,omitempty"`
+	// Filter specifies a filter to select an OpenStack router. If provided, cannot be empty.
 	Filter *RouterFilterApplyConfiguration `json:"filter,omitempty"`
 }
 

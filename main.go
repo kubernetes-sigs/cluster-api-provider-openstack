@@ -295,7 +295,7 @@ func main() {
 	ctx := ctrl.SetupSignalHandler()
 
 	// Initialize event recorder.
-	record.InitFromRecorder(mgr.GetEventRecorderFor("openstack-controller"))
+	record.InitFromRecorder(mgr.GetEventRecorder("openstack-controller"))
 
 	setupChecks(mgr)
 	setupReconcilers(ctx, mgr, caCerts)
@@ -362,7 +362,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 
 	if err := (&controllers.OpenStackClusterReconciler{
 		Client:           mgr.GetClient(),
-		Recorder:         mgr.GetEventRecorderFor("openstackcluster-controller"),
+		Recorder:         mgr.GetEventRecorder("openstackcluster-controller"),
 		WatchFilterValue: watchFilterValue,
 		ScopeFactory:     scopeFactory,
 		CaCertificates:   caCerts,
@@ -372,7 +372,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 	}
 	if err := (&controllers.OpenStackMachineReconciler{
 		Client:           mgr.GetClient(),
-		Recorder:         mgr.GetEventRecorderFor("openstackmachine-controller"),
+		Recorder:         mgr.GetEventRecorder("openstackmachine-controller"),
 		WatchFilterValue: watchFilterValue,
 		ScopeFactory:     scopeFactory,
 		CaCertificates:   caCerts,
@@ -382,7 +382,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 	}
 	if err := (&controllers.OpenStackFloatingIPPoolReconciler{
 		Client:         mgr.GetClient(),
-		Recorder:       mgr.GetEventRecorderFor("floatingippool-controller"),
+		Recorder:       mgr.GetEventRecorder("floatingippool-controller"),
 		ScopeFactory:   scopeFactory,
 		Scheme:         mgr.GetScheme(),
 		CaCertificates: caCerts,
@@ -392,7 +392,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 	}
 	if err := (&controllers.OpenStackServerReconciler{
 		Client:           mgr.GetClient(),
-		Recorder:         mgr.GetEventRecorderFor("openstackserver-controller"),
+		Recorder:         mgr.GetEventRecorder("openstackserver-controller"),
 		WatchFilterValue: watchFilterValue,
 		ScopeFactory:     scopeFactory,
 		CaCertificates:   caCerts,
@@ -405,7 +405,7 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 	if feature.Gates.Enabled(feature.AutoScaleFromZero) {
 		if err := (&controllers.OpenStackMachineTemplateReconciler{
 			Client:           mgr.GetClient(),
-			Recorder:         mgr.GetEventRecorderFor("openstackmachinetemplate-controller"),
+			Recorder:         mgr.GetEventRecorder("openstackmachinetemplate-controller"),
 			WatchFilterValue: watchFilterValue,
 			ScopeFactory:     scopeFactory,
 			CaCertificates:   caCerts,

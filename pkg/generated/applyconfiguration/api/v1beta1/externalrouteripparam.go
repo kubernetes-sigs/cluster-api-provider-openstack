@@ -21,8 +21,10 @@ package v1beta1
 // ExternalRouterIPParamApplyConfiguration represents a declarative configuration of the ExternalRouterIPParam type for use
 // with apply.
 type ExternalRouterIPParamApplyConfiguration struct {
-	FixedIP *string                        `json:"fixedIP,omitempty"`
-	Subnet  *SubnetParamApplyConfiguration `json:"subnet,omitempty"`
+	// The FixedIP in the corresponding subnet
+	FixedIP *string `json:"fixedIP,omitempty"`
+	// The subnet in which the FixedIP is used for the Gateway of this router
+	Subnet *SubnetParamApplyConfiguration `json:"subnet,omitempty"`
 }
 
 // ExternalRouterIPParamApplyConfiguration constructs a declarative configuration of the ExternalRouterIPParam type for use with

@@ -20,16 +20,49 @@ package v1beta1
 
 // ResolvedPortSpecFieldsApplyConfiguration represents a declarative configuration of the ResolvedPortSpecFields type for use
 // with apply.
+//
+// ResolvePortSpecFields is a convenience struct containing all fields of a
+// PortOpts which don't contain references which need to be resolved, and can
+// therefore be shared with ResolvedPortSpec.
 type ResolvedPortSpecFieldsApplyConfiguration struct {
-	AdminStateUp          *bool                             `json:"adminStateUp,omitempty"`
-	MACAddress            *string                           `json:"macAddress,omitempty"`
-	AllowedAddressPairs   []AddressPairApplyConfiguration   `json:"allowedAddressPairs,omitempty"`
-	HostID                *string                           `json:"hostID,omitempty"`
-	VNICType              *string                           `json:"vnicType,omitempty"`
-	Profile               *BindingProfileApplyConfiguration `json:"profile,omitempty"`
-	DisablePortSecurity   *bool                             `json:"disablePortSecurity,omitempty"`
-	PropagateUplinkStatus *bool                             `json:"propagateUplinkStatus,omitempty"`
-	ValueSpecs            []ValueSpecApplyConfiguration     `json:"valueSpecs,omitempty"`
+	// AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
+	AdminStateUp *bool `json:"adminStateUp,omitempty"`
+	// MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
+	MACAddress *string `json:"macAddress,omitempty"`
+	// AllowedAddressPairs is a list of address pairs which Neutron will
+	// allow the port to send traffic from in addition to the port's
+	// addresses. If not specified, the MAC Address will be the MAC Address
+	// of the port. Depending on the configuration of Neutron, it may be
+	// supported to specify a CIDR instead of a specific IP address.
+	AllowedAddressPairs []AddressPairApplyConfiguration `json:"allowedAddressPairs,omitempty"`
+	// HostID specifies the ID of the host where the port resides.
+	HostID *string `json:"hostID,omitempty"`
+	// VNICType specifies the type of vNIC which this port should be
+	// attached to. This is used to determine which mechanism driver(s) to
+	// be used to bind the port. The valid values are normal, macvtap,
+	// direct, baremetal, direct-physical, virtio-forwarder, smart-nic and
+	// remote-managed, although these values will not be validated in this
+	// API to ensure compatibility with future neutron changes or custom
+	// implementations. What type of vNIC is actually available depends on
+	// deployments. If not specified, the Neutron default value is used.
+	VNICType *string `json:"vnicType,omitempty"`
+	// Profile is a set of key-value pairs that are used for binding
+	// details. We intentionally don't expose this as a map[string]string
+	// because we only want to enable the users to set the values of the
+	// keys that are known to work in OpenStack Networking API.  See
+	// https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port
+	// To set profiles, your tenant needs permissions rule:create_port, and
+	// rule:create_port:binding:profile
+	Profile *BindingProfileApplyConfiguration `json:"profile,omitempty"`
+	// DisablePortSecurity enables or disables the port security when set.
+	// When not set, it takes the value of the corresponding field at the network level.
+	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
+	// PropageteUplinkStatus enables or disables the propagate uplink status on the port.
+	PropagateUplinkStatus *bool `json:"propagateUplinkStatus,omitempty"`
+	// Value specs are extra parameters to include in the API request with OpenStack.
+	// This is an extension point for the API, so what they do and if they are supported,
+	// depends on the specific OpenStack implementation.
+	ValueSpecs []ValueSpecApplyConfiguration `json:"valueSpecs,omitempty"`
 }
 
 // ResolvedPortSpecFieldsApplyConfiguration constructs a declarative configuration of the ResolvedPortSpecFields type for use with

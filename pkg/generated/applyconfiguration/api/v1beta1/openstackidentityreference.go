@@ -20,11 +20,23 @@ package v1beta1
 
 // OpenStackIdentityReferenceApplyConfiguration represents a declarative configuration of the OpenStackIdentityReference type for use
 // with apply.
+//
+// OpenStackIdentityReference is a reference to an infrastructure
+// provider identity to be used to provision cluster resources.
 type OpenStackIdentityReferenceApplyConfiguration struct {
-	Type      *string `json:"type,omitempty"`
-	Name      *string `json:"name,omitempty"`
+	// Type specifies the identity reference type. Defaults to Secret for backward compatibility.
+	Type *string `json:"type,omitempty"`
+	// Name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned,
+	// or the name of an OpenStackClusterIdentity (type=ClusterIdentity).
+	// The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
+	// The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
+	Name *string `json:"name,omitempty"`
+	// CloudName specifies the name of the entry in the clouds.yaml file to use.
 	CloudName *string `json:"cloudName,omitempty"`
-	Region    *string `json:"region,omitempty"`
+	// Region specifies an OpenStack region to use. If specified, it overrides
+	// any value in clouds.yaml. If specified for an OpenStackMachine, its
+	// value will be included in providerID.
+	Region *string `json:"region,omitempty"`
 }
 
 // OpenStackIdentityReferenceApplyConfiguration constructs a declarative configuration of the OpenStackIdentityReference type for use with

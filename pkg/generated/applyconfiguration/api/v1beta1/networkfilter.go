@@ -24,6 +24,8 @@ import (
 
 // NetworkFilterApplyConfiguration represents a declarative configuration of the NetworkFilter type for use
 // with apply.
+//
+// NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.
 type NetworkFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`

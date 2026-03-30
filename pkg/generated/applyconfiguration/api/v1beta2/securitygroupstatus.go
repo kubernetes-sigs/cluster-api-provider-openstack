@@ -20,9 +20,14 @@ package v1beta2
 
 // SecurityGroupStatusApplyConfiguration represents a declarative configuration of the SecurityGroupStatus type for use
 // with apply.
+//
+// SecurityGroupStatus represents the basic information of the associated
+// OpenStack Neutron Security Group.
 type SecurityGroupStatusApplyConfiguration struct {
+	// name of the security group
 	Name *string `json:"name,omitempty"`
-	ID   *string `json:"id,omitempty"`
+	// id of the security group
+	ID *string `json:"id,omitempty"`
 }
 
 // SecurityGroupStatusApplyConfiguration constructs a declarative configuration of the SecurityGroupStatus type for use with

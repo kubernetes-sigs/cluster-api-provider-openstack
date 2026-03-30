@@ -20,13 +20,19 @@ package v1beta2
 
 // LoadBalancerApplyConfiguration represents a declarative configuration of the LoadBalancer type for use
 // with apply.
+//
+// LoadBalancer represents basic information about the associated OpenStack LoadBalancer.
 type LoadBalancerApplyConfiguration struct {
-	Name                *string                                     `json:"name,omitempty"`
-	ID                  *string                                     `json:"id,omitempty"`
-	IP                  *string                                     `json:"ip,omitempty"`
-	InternalIP          *string                                     `json:"internalIP,omitempty"`
-	AllowedCIDRs        []string                                    `json:"allowedCIDRs,omitempty"`
-	Tags                []string                                    `json:"tags,omitempty"`
+	Name         *string  `json:"name,omitempty"`
+	ID           *string  `json:"id,omitempty"`
+	IP           *string  `json:"ip,omitempty"`
+	InternalIP   *string  `json:"internalIP,omitempty"`
+	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
+	Tags         []string `json:"tags,omitempty"`
+	// LoadBalancerNetwork contains information about network and/or subnets which the
+	// loadbalancer is allocated on.
+	// If subnets are specified within the LoadBalancerNetwork currently only the first
+	// subnet in the list is taken into account.
 	LoadBalancerNetwork *NetworkStatusWithSubnetsApplyConfiguration `json:"loadBalancerNetwork,omitempty"`
 }
 

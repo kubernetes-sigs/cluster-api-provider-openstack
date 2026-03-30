@@ -29,6 +29,8 @@ import (
 
 // OpenStackClusterTemplateApplyConfiguration represents a declarative configuration of the OpenStackClusterTemplate type for use
 // with apply.
+//
+// OpenStackClusterTemplate is the Schema for the openstackclustertemplates API.
 type OpenStackClusterTemplateApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
@@ -46,29 +48,14 @@ func OpenStackClusterTemplate(name, namespace string) *OpenStackClusterTemplateA
 	return b
 }
 
-// ExtractOpenStackClusterTemplate extracts the applied configuration owned by fieldManager from
-// openStackClusterTemplate. If no managedFields are found in openStackClusterTemplate for fieldManager, a
-// OpenStackClusterTemplateApplyConfiguration is returned with only the Name, Namespace (if applicable),
-// APIVersion and Kind populated. It is possible that no managed fields were found for because other
-// field managers have taken ownership of all the fields previously owned by fieldManager, or because
-// the fieldManager never owned fields any fields.
+// ExtractOpenStackClusterTemplateFrom extracts the applied configuration owned by fieldManager from
+// openStackClusterTemplate for the specified subresource. Pass an empty string for subresource to extract
+// the main resource. Common subresources include "status", "scale", etc.
 // openStackClusterTemplate must be a unmodified OpenStackClusterTemplate API object that was retrieved from the Kubernetes API.
-// ExtractOpenStackClusterTemplate provides a way to perform a extract/modify-in-place/apply workflow.
+// ExtractOpenStackClusterTemplateFrom provides a way to perform a extract/modify-in-place/apply workflow.
 // Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
 // applied if another fieldManager has updated or force applied any of the previously applied fields.
-// Experimental!
-func ExtractOpenStackClusterTemplate(openStackClusterTemplate *apiv1beta2.OpenStackClusterTemplate, fieldManager string) (*OpenStackClusterTemplateApplyConfiguration, error) {
-	return extractOpenStackClusterTemplate(openStackClusterTemplate, fieldManager, "")
-}
-
-// ExtractOpenStackClusterTemplateStatus is the same as ExtractOpenStackClusterTemplate except
-// that it extracts the status subresource applied configuration.
-// Experimental!
-func ExtractOpenStackClusterTemplateStatus(openStackClusterTemplate *apiv1beta2.OpenStackClusterTemplate, fieldManager string) (*OpenStackClusterTemplateApplyConfiguration, error) {
-	return extractOpenStackClusterTemplate(openStackClusterTemplate, fieldManager, "status")
-}
-
-func extractOpenStackClusterTemplate(openStackClusterTemplate *apiv1beta2.OpenStackClusterTemplate, fieldManager string, subresource string) (*OpenStackClusterTemplateApplyConfiguration, error) {
+func ExtractOpenStackClusterTemplateFrom(openStackClusterTemplate *apiv1beta2.OpenStackClusterTemplate, fieldManager string, subresource string) (*OpenStackClusterTemplateApplyConfiguration, error) {
 	b := &OpenStackClusterTemplateApplyConfiguration{}
 	err := managedfields.ExtractInto(openStackClusterTemplate, internal.Parser().Type("io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplate"), fieldManager, b, subresource)
 	if err != nil {
@@ -81,6 +68,21 @@ func extractOpenStackClusterTemplate(openStackClusterTemplate *apiv1beta2.OpenSt
 	b.WithAPIVersion("infrastructure.cluster.x-k8s.io/v1beta2")
 	return b, nil
 }
+
+// ExtractOpenStackClusterTemplate extracts the applied configuration owned by fieldManager from
+// openStackClusterTemplate. If no managedFields are found in openStackClusterTemplate for fieldManager, a
+// OpenStackClusterTemplateApplyConfiguration is returned with only the Name, Namespace (if applicable),
+// APIVersion and Kind populated. It is possible that no managed fields were found for because other
+// field managers have taken ownership of all the fields previously owned by fieldManager, or because
+// the fieldManager never owned fields any fields.
+// openStackClusterTemplate must be a unmodified OpenStackClusterTemplate API object that was retrieved from the Kubernetes API.
+// ExtractOpenStackClusterTemplate provides a way to perform a extract/modify-in-place/apply workflow.
+// Note that an extracted apply configuration will contain fewer fields than what the fieldManager previously
+// applied if another fieldManager has updated or force applied any of the previously applied fields.
+func ExtractOpenStackClusterTemplate(openStackClusterTemplate *apiv1beta2.OpenStackClusterTemplate, fieldManager string) (*OpenStackClusterTemplateApplyConfiguration, error) {
+	return ExtractOpenStackClusterTemplateFrom(openStackClusterTemplate, fieldManager, "")
+}
+
 func (b OpenStackClusterTemplateApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

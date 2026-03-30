@@ -21,12 +21,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
@@ -36,24 +34,18 @@ import (
 
 // SetupOpenStackClusterWebhook registers the validating webhook for OpenStackCluster with the manager.
 func SetupOpenStackClusterWebhook(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(&infrav1.OpenStackCluster{}).
+	return builder.WebhookManagedBy(mgr, &infrav1.OpenStackCluster{}).
 		WithValidator(&openStackClusterWebhook{}).
 		Complete()
 }
 
 type openStackClusterWebhook struct{}
 
-var _ webhook.CustomValidator = &openStackClusterWebhook{}
+var _ admission.Validator[*infrav1.OpenStackCluster] = &openStackClusterWebhook{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackClusterWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackCluster) (admission.Warnings, error) {
 	var allErrs field.ErrorList
-
-	newObj, err := castToOpenStackCluster(objRaw)
-	if err != nil {
-		return nil, err
-	}
 
 	if newObj.Spec.ManagedSecurityGroups != nil {
 		allErrs = append(allErrs, validateManagedSecurityGroupRules(newObj.Spec.ManagedSecurityGroups)...)
@@ -116,17 +108,9 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 	return true
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) { //nolint:gocyclo,cyclop
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj *infrav1.OpenStackCluster) (admission.Warnings, error) { //nolint:gocyclo,cyclop
 	var allErrs field.ErrorList
-	oldObj, err := castToOpenStackCluster(oldObjRaw)
-	if err != nil {
-		return nil, err
-	}
-	newObj, err := castToOpenStackCluster(newObjRaw)
-	if err != nil {
-		return nil, err
-	}
 
 	// Allow changes to Spec.IdentityRef
 	oldObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
@@ -274,8 +258,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackClusterWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type.
+func (*openStackClusterWebhook) ValidateDelete(_ context.Context, _ *infrav1.OpenStackCluster) (admission.Warnings, error) {
 	return nil, nil
 }
 
@@ -304,13 +288,4 @@ func validateManagedSecurityGroupRules(msg *infrav1.ManagedSecurityGroups) field
 		securityGroupRemoteFields,
 	)...)
 	return allErrs
-}
-
-// castToOpenStackCluster casts a runtime.Object to an OpenStackCluster.
-func castToOpenStackCluster(obj runtime.Object) (*infrav1.OpenStackCluster, error) {
-	cast, ok := obj.(*infrav1.OpenStackCluster)
-	if !ok {
-		return nil, fmt.Errorf("expected an OpenStackCluster but got a %T", obj)
-	}
-	return cast, nil
 }

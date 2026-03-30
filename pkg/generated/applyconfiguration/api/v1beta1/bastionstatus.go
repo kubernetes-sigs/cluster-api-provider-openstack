@@ -25,14 +25,17 @@ import (
 // BastionStatusApplyConfiguration represents a declarative configuration of the BastionStatus type for use
 // with apply.
 type BastionStatusApplyConfiguration struct {
-	ID         *string                                `json:"id,omitempty"`
-	Name       *string                                `json:"name,omitempty"`
-	SSHKeyName *string                                `json:"sshKeyName,omitempty"`
-	State      *apiv1beta1.InstanceState              `json:"state,omitempty"`
-	IP         *string                                `json:"ip,omitempty"`
-	FloatingIP *string                                `json:"floatingIP,omitempty"`
-	Resolved   *ResolvedMachineSpecApplyConfiguration `json:"resolved,omitempty"`
-	Resources  *MachineResourcesApplyConfiguration    `json:"resources,omitempty"`
+	ID         *string                   `json:"id,omitempty"`
+	Name       *string                   `json:"name,omitempty"`
+	SSHKeyName *string                   `json:"sshKeyName,omitempty"`
+	State      *apiv1beta1.InstanceState `json:"state,omitempty"`
+	IP         *string                   `json:"ip,omitempty"`
+	FloatingIP *string                   `json:"floatingIP,omitempty"`
+	// Resolved contains parts of the bastion's machine spec with all
+	// external references fully resolved.
+	Resolved *ResolvedMachineSpecApplyConfiguration `json:"resolved,omitempty"`
+	// Resources contains references to OpenStack resources created for the bastion.
+	Resources *MachineResourcesApplyConfiguration `json:"resources,omitempty"`
 }
 
 // BastionStatusApplyConfiguration constructs a declarative configuration of the BastionStatus type for use with

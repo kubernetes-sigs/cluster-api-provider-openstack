@@ -24,9 +24,13 @@ import (
 
 // OpenStackClusterIdentitySpecApplyConfiguration represents a declarative configuration of the OpenStackClusterIdentitySpec type for use
 // with apply.
+//
+// OpenStackClusterIdentitySpec defines the desired state for an OpenStackClusterIdentity.
 type OpenStackClusterIdentitySpecApplyConfiguration struct {
-	SecretRef         *OpenStackCredentialSecretReferenceApplyConfiguration `json:"secretRef,omitempty"`
-	NamespaceSelector *v1.LabelSelectorApplyConfiguration                   `json:"namespaceSelector,omitempty"`
+	// SecretRef references the credentials Secret containing a `clouds.yaml` file.
+	SecretRef *OpenStackCredentialSecretReferenceApplyConfiguration `json:"secretRef,omitempty"`
+	// NamespaceSelector limits which namespaces may use this identity. If nil, all namespaces are allowed.
+	NamespaceSelector *v1.LabelSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
 }
 
 // OpenStackClusterIdentitySpecApplyConfiguration constructs a declarative configuration of the OpenStackClusterIdentitySpec type for use with
