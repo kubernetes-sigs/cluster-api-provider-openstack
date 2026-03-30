@@ -391,16 +391,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*OpenStackMachineSpec)(nil), (*v1beta2.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1beta2.OpenStackMachineSpec), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta2.OpenStackMachineSpec)(nil), (*OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(a.(*v1beta2.OpenStackMachineSpec), b.(*OpenStackMachineSpec), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*OpenStackMachineTemplate)(nil), (*v1beta2.OpenStackMachineTemplate)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_OpenStackMachineTemplate_To_v1beta2_OpenStackMachineTemplate(a.(*OpenStackMachineTemplate), b.(*v1beta2.OpenStackMachineTemplate), scope)
 	}); err != nil {
@@ -726,6 +716,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*OpenStackMachineSpec)(nil), (*v1beta2.OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(a.(*OpenStackMachineSpec), b.(*v1beta2.OpenStackMachineSpec), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*OpenStackMachineStatus)(nil), (*v1beta2.OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_OpenStackMachineStatus_To_v1beta2_OpenStackMachineStatus(a.(*OpenStackMachineStatus), b.(*v1beta2.OpenStackMachineStatus), scope)
 	}); err != nil {
@@ -733,6 +728,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta2.OpenStackClusterStatus)(nil), (*OpenStackClusterStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(a.(*v1beta2.OpenStackClusterStatus), b.(*OpenStackClusterStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta2.OpenStackMachineSpec)(nil), (*OpenStackMachineSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(a.(*v1beta2.OpenStackMachineSpec), b.(*OpenStackMachineSpec), scope)
 	}); err != nil {
 		return err
 	}
@@ -880,7 +880,15 @@ func Convert_v1beta2_AllocationPool_To_v1beta1_AllocationPool(in *v1beta2.Alloca
 
 func autoConvert_v1beta1_Bastion_To_v1beta2_Bastion(in *Bastion, out *v1beta2.Bastion, s conversion.Scope) error {
 	out.Enabled = (*bool)(unsafe.Pointer(in.Enabled))
-	out.Spec = (*v1beta2.OpenStackMachineSpec)(unsafe.Pointer(in.Spec))
+	if in.Spec != nil {
+		in, out := &in.Spec, &out.Spec
+		*out = new(v1beta2.OpenStackMachineSpec)
+		if err := Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Spec = nil
+	}
 	out.AvailabilityZone = (optional.String)(unsafe.Pointer(in.AvailabilityZone))
 	out.FloatingIP = (optional.String)(unsafe.Pointer(in.FloatingIP))
 	return nil
@@ -893,7 +901,15 @@ func Convert_v1beta1_Bastion_To_v1beta2_Bastion(in *Bastion, out *v1beta2.Bastio
 
 func autoConvert_v1beta2_Bastion_To_v1beta1_Bastion(in *v1beta2.Bastion, out *Bastion, s conversion.Scope) error {
 	out.Enabled = (*bool)(unsafe.Pointer(in.Enabled))
-	out.Spec = (*OpenStackMachineSpec)(unsafe.Pointer(in.Spec))
+	if in.Spec != nil {
+		in, out := &in.Spec, &out.Spec
+		*out = new(OpenStackMachineSpec)
+		if err := Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Spec = nil
+	}
 	out.AvailabilityZone = (optional.String)(unsafe.Pointer(in.AvailabilityZone))
 	out.FloatingIP = (optional.String)(unsafe.Pointer(in.FloatingIP))
 	return nil
@@ -1458,7 +1474,15 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 	out.ControlPlaneEndpoint = (*corev1beta2.APIEndpoint)(unsafe.Pointer(in.ControlPlaneEndpoint))
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	out.ControlPlaneOmitAvailabilityZone = (optional.Bool)(unsafe.Pointer(in.ControlPlaneOmitAvailabilityZone))
-	out.Bastion = (*v1beta2.Bastion)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1beta2.Bastion)
+		if err := Convert_v1beta1_Bastion_To_v1beta2_Bastion(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	if err := Convert_v1beta1_OpenStackIdentityReference_To_v1beta2_OpenStackIdentityReference(&in.IdentityRef, &out.IdentityRef, s); err != nil {
 		return err
 	}
@@ -1490,7 +1514,15 @@ func autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in
 	out.ControlPlaneEndpoint = (*corev1beta1.APIEndpoint)(unsafe.Pointer(in.ControlPlaneEndpoint))
 	out.ControlPlaneAvailabilityZones = *(*[]string)(unsafe.Pointer(&in.ControlPlaneAvailabilityZones))
 	out.ControlPlaneOmitAvailabilityZone = (optional.Bool)(unsafe.Pointer(in.ControlPlaneOmitAvailabilityZone))
-	out.Bastion = (*Bastion)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(Bastion)
+		if err := Convert_v1beta2_Bastion_To_v1beta1_Bastion(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	if err := Convert_v1beta2_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(&in.IdentityRef, &out.IdentityRef, s); err != nil {
 		return err
 	}
@@ -1583,7 +1615,17 @@ func Convert_v1beta2_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplat
 
 func autoConvert_v1beta1_OpenStackClusterTemplateList_To_v1beta2_OpenStackClusterTemplateList(in *OpenStackClusterTemplateList, out *v1beta2.OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]v1beta2.OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1beta2.OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_OpenStackClusterTemplate_To_v1beta2_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1594,7 +1636,17 @@ func Convert_v1beta1_OpenStackClusterTemplateList_To_v1beta2_OpenStackClusterTem
 
 func autoConvert_v1beta2_OpenStackClusterTemplateList_To_v1beta1_OpenStackClusterTemplateList(in *v1beta2.OpenStackClusterTemplateList, out *OpenStackClusterTemplateList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]OpenStackClusterTemplate)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]OpenStackClusterTemplate, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
@@ -1753,8 +1805,8 @@ func Convert_v1beta2_OpenStackMachineList_To_v1beta1_OpenStackMachineList(in *v1
 
 func autoConvert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1beta2.OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
-	out.Flavor = (*string)(unsafe.Pointer(in.Flavor))
-	out.FlavorID = (*string)(unsafe.Pointer(in.FlavorID))
+	// WARNING: in.Flavor requires manual conversion: inconvertible types (*string vs sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorParam)
+	// WARNING: in.FlavorID requires manual conversion: does not exist in peer-type
 	if err := Convert_v1beta1_ImageParam_To_v1beta2_ImageParam(&in.Image, &out.Image, s); err != nil {
 		return err
 	}
@@ -1774,15 +1826,9 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in
 	return nil
 }
 
-// Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec is an autogenerated conversion function.
-func Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in *OpenStackMachineSpec, out *v1beta2.OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in, out, s)
-}
-
 func autoConvert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *v1beta2.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
 	out.ProviderID = (*string)(unsafe.Pointer(in.ProviderID))
-	out.Flavor = (*string)(unsafe.Pointer(in.Flavor))
-	out.FlavorID = (*string)(unsafe.Pointer(in.FlavorID))
+	// WARNING: in.Flavor requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorParam vs *string)
 	if err := Convert_v1beta2_ImageParam_To_v1beta1_ImageParam(&in.Image, &out.Image, s); err != nil {
 		return err
 	}
@@ -1800,11 +1846,6 @@ func autoConvert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in
 	out.FloatingIPPoolRef = (*corev1.TypedLocalObjectReference)(unsafe.Pointer(in.FloatingIPPoolRef))
 	out.SchedulerHintAdditionalProperties = *(*[]SchedulerHintAdditionalProperty)(unsafe.Pointer(&in.SchedulerHintAdditionalProperties))
 	return nil
-}
-
-// Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec is an autogenerated conversion function.
-func Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in *v1beta2.OpenStackMachineSpec, out *OpenStackMachineSpec, s conversion.Scope) error {
-	return autoConvert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in, out, s)
 }
 
 func autoConvert_v1beta1_OpenStackMachineStatus_To_v1beta2_OpenStackMachineStatus(in *OpenStackMachineStatus, out *v1beta2.OpenStackMachineStatus, s conversion.Scope) error {

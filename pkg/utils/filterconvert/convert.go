@@ -17,6 +17,7 @@ limitations under the License.
 package filterconvert
 
 import (
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	securitygroups "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
@@ -104,4 +105,27 @@ func ImageFilterToListOpts(imageFilter *infrav1.ImageFilter) (listOpts images.Li
 		listOpts.Tags = imageFilter.Tags
 	}
 	return listOpts
+}
+
+func FlavorFilterToListOpts(f *infrav1.FlavorFilter) flavors.ListOpts {
+	if f == nil {
+		return flavors.ListOpts{}
+	}
+
+	opts := flavors.ListOpts{}
+	if v := f.MinDisk; v != nil {
+		opts.MinDisk = int(*v)
+	}
+	if v := f.MinRAM; v != nil {
+		opts.MinRAM = int(*v)
+	}
+	if v := f.Public; v != nil {
+		if *v {
+			opts.AccessType = flavors.PublicAccess
+		} else {
+			opts.AccessType = flavors.PrivateAccess
+		}
+	}
+
+	return opts
 }

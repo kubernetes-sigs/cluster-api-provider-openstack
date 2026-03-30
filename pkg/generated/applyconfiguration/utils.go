@@ -214,6 +214,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta2.FilterByNeutronTagsApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("FixedIP"):
 		return &apiv1beta2.FixedIPApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("FlavorFilter"):
+		return &apiv1beta2.FlavorFilterApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("FlavorParam"):
+		return &apiv1beta2.FlavorParamApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("ImageFilter"):
 		return &apiv1beta2.ImageFilterApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("ImageParam"):

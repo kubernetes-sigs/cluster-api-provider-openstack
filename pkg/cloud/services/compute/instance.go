@@ -426,29 +426,57 @@ func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Cl
 	return nil, nil
 }
 
-// Helper to resolve a flavor ID.
-// TODO: needs a breaking CRD change so it works like images.
-func (s *Service) GetFlavorID(flavorID, flavorName *string) (string, error) {
-	if flavorID != nil {
-		return *flavorID, nil
-	}
+// Helper function for getting flavor ID from name, ID, or other ListOpts.
+func (s *Service) GetFlavorID(flavor infrav1.FlavorParam) (*string, error) {
+	switch {
+	case flavor.ID != nil:
+		return flavor.ID, nil
 
-	if flavorName == nil {
-		return "", fmt.Errorf("no flavors were found: no name set")
-	}
-
-	allFlavors, err := s.getComputeClient().ListFlavors()
-	if err != nil {
-		return "", err
-	}
-
-	for _, flavor := range allFlavors {
-		if flavor.Name == *flavorName {
-			return flavor.ID, nil
+	case flavor.Filter != nil:
+		id, err := s.getFlavorIDByFilter(flavor.Filter)
+		if err != nil {
+			return nil, err
 		}
+		return &id, nil
+
+	default:
+		// Should have been caught by validation
+		return nil, errors.New("flavor id and filter are nil")
+	}
+}
+
+func (s *Service) getFlavorIDByFilter(filter *infrav1.FlavorFilter) (string, error) {
+	if filter == nil {
+		return "", fmt.Errorf("flavor filter is nil")
 	}
 
-	return "", fmt.Errorf("no flavors were found: name=%v", *flavorName)
+	listOpts := filterconvert.FlavorFilterToListOpts(filter)
+
+	flavorsList, err := s.getComputeClient().ListFlavors(listOpts)
+	if err != nil {
+		return "", fmt.Errorf("listing flavors: %w", err)
+	}
+
+	// if filter.Name is defined, traverse the list of flavors for
+	// a matching one. This is required as we cannot list by name
+	if filter.Name != nil {
+		for _, flavor := range flavorsList {
+			if flavor.Name == *filter.Name {
+				return flavor.ID, nil
+			}
+		}
+
+		return "", fmt.Errorf("no flavor found with name %q matching filter %+v", *filter.Name, filter)
+	}
+
+	switch len(flavorsList) {
+	case 0:
+		return "", fmt.Errorf("no flavors found matching filter %+v", filter)
+	case 1:
+		return flavorsList[0].ID, nil
+	default:
+		return "", fmt.Errorf("multiple flavors found matching filter %+v", filter)
+	}
 }
 
 func (s *Service) GetFlavor(flavorID string) (*flavors.Flavor, error) {

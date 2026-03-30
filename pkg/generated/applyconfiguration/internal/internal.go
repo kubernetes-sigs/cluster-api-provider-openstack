@@ -1962,6 +1962,30 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: subnet
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorFilter
+  map:
+    fields:
+    - name: minDisk
+      type:
+        scalar: numeric
+    - name: minRAM
+      type:
+        scalar: numeric
+    - name: name
+      type:
+        scalar: string
+    - name: public
+      type:
+        scalar: boolean
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorFilter
+    - name: id
+      type:
+        scalar: string
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageFilter
   map:
     fields:
@@ -2387,10 +2411,8 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: boolean
     - name: flavor
       type:
-        scalar: string
-    - name: flavorID
-      type:
-        scalar: string
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorParam
+      default: {}
     - name: floatingIPPoolRef
       type:
         namedType: TypedLocalObjectReference.v1.core.api.k8s.io

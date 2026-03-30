@@ -195,7 +195,11 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			name:    "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
 			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor:     ptr.To(flavorName),
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
@@ -213,7 +217,11 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			name:    "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with an additional security group",
 			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor:     ptr.To(flavorName),
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
 				Image:      image,
 				SSHKeyName: sshKeyName,
 				SecurityGroups: []infrav1.SecurityGroupParam{
@@ -236,7 +244,11 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			name:    "Test a OpenStackMachineSpec to OpenStackServerSpec conversion with a specified subnet",
 			cluster: openStackClusterWithSubnet,
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor:     ptr.To(flavorName),
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
@@ -254,8 +266,12 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			name:    "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavor and flavorID specified",
 			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor:     ptr.To(flavorName),
-				FlavorID:   ptr.To(flavorUUID),
+				Flavor: infrav1.FlavorParam{
+					ID: ptr.To(flavorUUID),
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
@@ -274,7 +290,9 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			name:    "Test an OpenStackMachineSpec to OpenStackServerSpec conversion with flavorID specified but not flavor",
 			cluster: openStackCluster,
 			spec: &infrav1.OpenStackMachineSpec{
-				FlavorID:   ptr.To(flavorUUID),
+				Flavor: infrav1.FlavorParam{
+					ID: ptr.To(flavorUUID),
+				},
 				Image:      image,
 				SSHKeyName: sshKeyName,
 			},
@@ -331,7 +349,11 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 		{
 			name: "Error case: no cluster network and no machine ports",
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor:     ptr.To(flavorName),
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
 				Image:      image,
 				SSHKeyName: sshKeyName,
 				// No ports defined
@@ -343,8 +365,12 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 		{
 			name: "Empty cluster network ID, machine defines explicit ports",
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor: ptr.To(flavorName),
-				Image:  image,
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
+				Image: image,
 				Ports: []infrav1.PortOpts{{
 					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
 				}},
@@ -365,8 +391,12 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 		{
 			name: "Explicit port with disablePortSecurity",
 			spec: &infrav1.OpenStackMachineSpec{
-				Flavor: ptr.To(flavorName),
-				Image:  image,
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
+				Image: image,
 				Ports: []infrav1.PortOpts{{
 					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
 					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
@@ -626,7 +656,11 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 					Namespace: namespace,
 				},
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To(flavorName),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To(flavorName),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("test-image"),
@@ -814,7 +848,11 @@ var _ = Describe("OpenStackMachine controller", func() {
 				},
 			},
 			Spec: infrav1.OpenStackMachineSpec{
-				Flavor: ptr.To(flavorName),
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
 				Image: infrav1.ImageParam{
 					Filter: &infrav1.ImageFilter{
 						Name: ptr.To("test-image"),

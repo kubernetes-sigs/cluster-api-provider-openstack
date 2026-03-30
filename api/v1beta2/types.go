@@ -77,6 +77,54 @@ func (f *ImageFilter) IsZero() bool {
 	return f.Name == nil && len(f.Tags) == 0
 }
 
+// FlavorParam describes a nova flavor. It can be specified by ID or filter
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type FlavorParam struct {
+	// ID is the uuid of the flavor. ID will not be validated before use.
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter describes a query for a flavor.
+	// +optional
+	Filter *FlavorFilter `json:"filter,omitempty"`
+}
+
+// FlavorFilter describes a query for a flavor. If defined,
+// the combination of attributes should return exactly one
+// flavor, if not an error will be raised.
+// +kubebuilder:validation:MinProperties:=1
+type FlavorFilter struct {
+	// The name of the desired flavor.
+	// +optional
+	Name optional.String `json:"name,omitempty"`
+
+	// Whether the flavor is public.
+	// +optional
+	Public *bool `json:"public,omitempty"`
+
+	// MinDisk filters the response by a minimum disk size (in GiB).
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	MinDisk *int32 `json:"minDisk,omitempty"`
+
+	// MinRAM filters the response by a minimum RAM size (in MiB).
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	MinRAM *int32 `json:"minRAM,omitempty"`
+}
+
+func (f *FlavorFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+
+	return f.Name == nil &&
+		f.Public == nil &&
+		f.MinDisk == nil &&
+		f.MinRAM == nil
+}
+
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`
