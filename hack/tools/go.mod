@@ -8,7 +8,7 @@ require (
 	github.com/itchyny/gojq v0.12.18
 	github.com/onsi/ginkgo/v2 v2.28.1
 	go.uber.org/mock v0.6.0
-	k8s.io/code-generator v0.34.5
+	k8s.io/code-generator v0.34.6
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20250620151452-b9a9ca01fd37
@@ -32,7 +32,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.5 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
@@ -141,13 +141,13 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.34.5 // indirect
-	k8s.io/apiextensions-apiserver v0.34.5 // indirect
+	k8s.io/api v0.34.6 // indirect
+	k8s.io/apiextensions-apiserver v0.34.6 // indirect
 	k8s.io/apimachinery v0.34.6 // indirect
-	k8s.io/apiserver v0.34.5 // indirect
-	k8s.io/client-go v0.34.5 // indirect
+	k8s.io/apiserver v0.34.6 // indirect
+	k8s.io/client-go v0.34.6 // indirect
 	k8s.io/cluster-bootstrap v0.34.2 // indirect
-	k8s.io/component-base v0.34.5 // indirect
+	k8s.io/component-base v0.34.6 // indirect
 	k8s.io/gengo v0.0.0-20201203183100-97869a43a9d9 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250604051438-85fd79dbfd9f // indirect
 	k8s.io/klog v0.2.0 // indirect
@@ -156,7 +156,7 @@ require (
 	k8s.io/release v0.16.9 // indirect
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 // indirect
-	sigs.k8s.io/cluster-api v1.12.3 // indirect
+	sigs.k8s.io/cluster-api v1.12.4 // indirect
 	sigs.k8s.io/controller-runtime v0.22.5 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20211028165026-57688c578b5d // indirect
