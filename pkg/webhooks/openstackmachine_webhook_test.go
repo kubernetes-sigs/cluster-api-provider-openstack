@@ -199,6 +199,154 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Changing only allowedAddressPairs is allowed",
+			oldMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{
+							ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+								AllowedAddressPairs: []infrav1.AddressPair{
+									{IPAddress: "192.168.1.100"},
+								},
+							},
+						},
+					},
+				},
+			},
+			newMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{
+							ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+								AllowedAddressPairs: []infrav1.AddressPair{
+									{IPAddress: "192.168.1.100"},
+									{IPAddress: "192.168.1.200"},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing allowedAddressPairs and another field is rejected",
+			oldMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{
+							ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+								AllowedAddressPairs: []infrav1.AddressPair{
+									{IPAddress: "192.168.1.100"},
+								},
+							},
+						},
+					},
+				},
+			},
+			newMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.large"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{
+							ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+								AllowedAddressPairs: []infrav1.AddressPair{
+									{IPAddress: "192.168.1.100"},
+									{IPAddress: "192.168.1.200"},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Adding a port is rejected",
+			oldMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
+					},
+				},
+			},
+			newMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
+						{Network: &infrav1.NetworkParam{ID: ptr.To("net-2")}},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Removing a port is rejected",
+			oldMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
+						{Network: &infrav1.NetworkParam{ID: ptr.To("net-2")}},
+					},
+				},
+			},
+			newMachine: &infrav1.OpenStackMachine{
+				Spec: infrav1.OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+					Image: infrav1.ImageParam{
+						Filter: &infrav1.ImageFilter{
+							Name: ptr.To("ubuntu"),
+						},
+					},
+					Ports: []infrav1.PortOpts{
+						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
