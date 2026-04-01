@@ -27,8 +27,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
-	. "github.com/onsi/ginkgo/v2" //nolint:revive
-	. "github.com/onsi/gomega"    //nolint:revive
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
