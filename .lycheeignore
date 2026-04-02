@@ -1,0 +1,7 @@
+# External sites that block automated link checkers (return 403/418 despite being valid)
+https://docs.openstack.org/api-ref/network/v2/index.html
+https://docs.openstack.org/keystone/latest/user/application_credentials.html
+https://www.freedesktop.org/software/systemd/man/latest/sysupdate.d.html
+
+# v1beta2 API docs are published from this repo; links are valid once deployed
+https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#.*
