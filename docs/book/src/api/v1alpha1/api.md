@@ -152,7 +152,9 @@ OpenStackServerSpec
 <td>
 <code>additionalBlockDevices</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.AdditionalBlockDevice">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.AdditionalBlockDevice
+</a>
 </em>
 </td>
 <td>
@@ -225,7 +227,9 @@ Kubernetes core/v1.TypedLocalObjectReference
 <td>
 <code>identityRef</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference
+</a>
 </em>
 </td>
 <td>
@@ -236,7 +240,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReferenc
 <td>
 <code>image</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.ImageParam">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam
+</a>
 </em>
 </td>
 <td>
@@ -247,7 +253,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam
 <td>
 <code>ports</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.PortOpts">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.PortOpts
+</a>
 </em>
 </td>
 <td>
@@ -258,7 +266,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam
 <td>
 <code>rootVolume</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.RootVolume">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RootVolume
+</a>
 </em>
 </td>
 <td>
@@ -281,7 +291,9 @@ string
 <td>
 <code>securityGroups</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.SecurityGroupParam">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupParam
+</a>
 </em>
 </td>
 <td>
@@ -293,7 +305,9 @@ string
 <td>
 <code>serverGroup</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.ServerGroupParam">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam
+</a>
 </em>
 </td>
 <td>
@@ -305,7 +319,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam
 <td>
 <code>serverMetadata</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.ServerMetadata">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerMetadata
+</a>
 </em>
 </td>
 <td>
@@ -356,7 +372,9 @@ be injected into the server instance.</p>
 <td>
 <code>schedulerHintAdditionalProperties</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.SchedulerHintAdditionalProperty">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SchedulerHintAdditionalProperty
+</a>
 </em>
 </td>
 <td>
@@ -535,7 +553,9 @@ If set, the pool will stop allocating floating ips when it reaches this number o
 <td>
 <code>identityRef</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference
+</a>
 </em>
 </td>
 <td>
@@ -546,7 +566,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReferenc
 <td>
 <code>floatingIPNetwork</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam
+</a>
 </em>
 </td>
 <td>
@@ -630,7 +652,9 @@ If set, the pool will stop allocating floating ips when it reaches this number o
 <td>
 <code>identityRef</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference
+</a>
 </em>
 </td>
 <td>
@@ -641,7 +665,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReferenc
 <td>
 <code>floatingIPNetwork</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam
+</a>
 </em>
 </td>
 <td>
@@ -719,7 +745,9 @@ ReclaimPolicy
 <td>
 <code>floatingIPNetwork</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.NetworkStatus">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatus
+</a>
 </em>
 </td>
 <td>
@@ -762,7 +790,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatus
 <td>
 <code>additionalBlockDevices</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.AdditionalBlockDevice">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.AdditionalBlockDevice
+</a>
 </em>
 </td>
 <td>
@@ -835,7 +865,9 @@ Kubernetes core/v1.TypedLocalObjectReference
 <td>
 <code>identityRef</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference
+</a>
 </em>
 </td>
 <td>
@@ -846,7 +878,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReferenc
 <td>
 <code>image</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.ImageParam">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam
+</a>
 </em>
 </td>
 <td>
@@ -857,7 +891,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam
 <td>
 <code>ports</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.PortOpts">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.PortOpts
+</a>
 </em>
 </td>
 <td>
@@ -868,7 +904,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam
 <td>
 <code>rootVolume</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.RootVolume">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RootVolume
+</a>
 </em>
 </td>
 <td>
@@ -891,7 +929,9 @@ string
 <td>
 <code>securityGroups</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.SecurityGroupParam">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupParam
+</a>
 </em>
 </td>
 <td>
@@ -903,7 +943,9 @@ string
 <td>
 <code>serverGroup</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.ServerGroupParam">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam
+</a>
 </em>
 </td>
 <td>
@@ -915,7 +957,9 @@ sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam
 <td>
 <code>serverMetadata</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.ServerMetadata">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerMetadata
+</a>
 </em>
 </td>
 <td>
@@ -966,7 +1010,9 @@ be injected into the server instance.</p>
 <td>
 <code>schedulerHintAdditionalProperties</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.SchedulerHintAdditionalProperty">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SchedulerHintAdditionalProperty
+</a>
 </em>
 </td>
 <td>
@@ -1022,7 +1068,9 @@ string
 <td>
 <code>instanceState</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.InstanceState">
 sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.InstanceState
+</a>
 </em>
 </td>
 <td>
@@ -1168,7 +1216,9 @@ string
 <td>
 <code>ports</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.ResolvedPortSpec">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ResolvedPortSpec
+</a>
 </em>
 </td>
 <td>
@@ -1199,7 +1249,9 @@ string
 <td>
 <code>ports</code><br/>
 <em>
+<a href="https://cluster-api-openstack.sigs.k8s.io/api/v1beta2/api#infrastructure.cluster.x-k8s.io/v1beta2.PortStatus">
 []sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.PortStatus
+</a>
 </em>
 </td>
 <td>
