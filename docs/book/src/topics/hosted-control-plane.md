@@ -122,12 +122,12 @@ spec:
     name: openstack-hcp-cluster-cp
     namespace: hcp-system
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
     kind: OpenStackCluster
     name: openstack-hcp-cluster
     namespace: hcp-system
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackCluster
 metadata:
   name: openstack-hcp-cluster
@@ -174,13 +174,13 @@ spec:
           namespace: hcp-system
       clusterName: openstack-hcp-cluster
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
         kind: OpenStackMachineTemplate
         name: openstack-hcp-cluster-mt
         namespace: hcp-system
       version: v1.32.6
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackMachineTemplate
 metadata:
   name: openstack-hcp-cluster-mt
