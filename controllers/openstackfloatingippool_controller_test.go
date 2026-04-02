@@ -19,8 +19,8 @@ package controllers
 import (
 	"fmt"
 
-	. "github.com/onsi/ginkgo/v2" //nolint:revive
-	. "github.com/onsi/gomega"    //nolint:revive
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/cluster-api/test/framework"
