@@ -36,7 +36,11 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 			name: "RootVolume and AdditionalBlockDevices with conflicting name",
 			machine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
@@ -59,7 +63,11 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 			name: "Port security disabled with security groups",
 			machine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
@@ -81,7 +89,11 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 			name: "Valid machine spec",
 			machine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
@@ -120,7 +132,11 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			name: "ProviderID is immutable once set",
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor:     ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					ProviderID: ptr.To("openstack:///old-id"),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
@@ -131,7 +147,11 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			},
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor:     ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					ProviderID: ptr.To("openstack:///new-id"),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
@@ -146,7 +166,11 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			name: "ProviderID can be set for the first time",
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
@@ -156,7 +180,11 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			},
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor:     ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					ProviderID: ptr.To("openstack:///new-id"),
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
@@ -171,7 +199,11 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			name: "IdentityRef change is allowed",
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
@@ -185,7 +217,11 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			},
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To("m1.small"),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To("m1.small"),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),

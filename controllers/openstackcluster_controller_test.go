@@ -61,7 +61,11 @@ var _ = Describe("OpenStackCluster controller", func() {
 	testClusterName := "test-cluster"
 	testNum := 0
 	bastionSpec := infrav1.OpenStackMachineSpec{
-		Flavor: ptr.To("flavor-name"),
+		Flavor: infrav1.FlavorParam{
+			Filter: &infrav1.FlavorFilter{
+				Name: ptr.To("m1.small"),
+			},
+		},
 		Image: infrav1.ImageParam{
 			Filter: &infrav1.ImageFilter{
 				Name: ptr.To("fake-name"),

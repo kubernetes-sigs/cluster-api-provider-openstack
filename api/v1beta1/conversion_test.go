@@ -48,6 +48,12 @@ func TestOpenStackClusterConversion(t *testing.T) {
 				},
 			},
 			ManagedSecurityGroups: &ManagedSecurityGroups{},
+			Bastion: &Bastion{
+				Enabled: ptr.To(true),
+				Spec: &OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+				},
+			},
 		},
 		Status: OpenStackClusterStatus{
 			Ready: true,
@@ -91,6 +97,12 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	g.Expect(dst.Namespace).To(Equal("default"))
 	g.Expect(dst.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 	g.Expect(dst.Spec.ManagedSubnets).To(HaveLen(1))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Bastion.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Bastion.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Bastion.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Bastion.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Verify FailureDomains converted from map to slice
 	g.Expect(dst.Status.FailureDomains).To(HaveLen(2))
@@ -138,7 +150,7 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	g.Expect(restored.Status.FailureDomains["az-2"].Attributes).To(HaveKeyWithValue("region", "us-west-1"))
 }
 
-func TestOpenStackMachineConversion(t *testing.T) {
+func TestOpenStackMachineConversion_FlavorName(t *testing.T) {
 	g := NewWithT(t)
 
 	src := &OpenStackMachine{
@@ -180,9 +192,14 @@ func TestOpenStackMachineConversion(t *testing.T) {
 
 	// Verify basic fields
 	g.Expect(dst.Name).To(Equal("test-machine"))
-	g.Expect(dst.Spec.Flavor).To(Equal(ptr.To("m1.small")))
 	g.Expect(dst.Spec.SSHKeyName).To(Equal("test-key"))
 	g.Expect(ptr.Deref((*string)(dst.Spec.Image.Filter.Name), "")).To(Equal("ubuntu-22.04"))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Verify status fields including Initialization and InstanceID
 	g.Expect(dst.Status.Initialization).NotTo(BeNil())
@@ -201,11 +218,46 @@ func TestOpenStackMachineConversion(t *testing.T) {
 	// Verify round-trip
 	g.Expect(restored.Name).To(Equal(src.Name))
 	g.Expect(restored.Spec.Flavor).To(Equal(src.Spec.Flavor))
+	g.Expect(restored.Spec.FlavorID).To(BeNil())
 	g.Expect(restored.Spec.SSHKeyName).To(Equal("test-key"))
 	g.Expect(restored.Status.Ready).To(BeTrue())
 	g.Expect(restored.Status.Initialization).NotTo(BeNil())
 	g.Expect(restored.Status.Initialization.Provisioned).To(BeTrue())
 	g.Expect(*restored.Status.InstanceID).To(Equal("instance-12345"))
+}
+
+func TestOpenStackMachineConversion_FlavorID(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-machine",
+		},
+		Spec: OpenStackMachineSpec{
+			FlavorID:   ptr.To("uuid-123"),
+			SSHKeyName: "test-key",
+			Image: ImageParam{
+				Filter: &ImageFilter{
+					Name: ptr.To("ubuntu-22.04"),
+				},
+			},
+		},
+	}
+
+	dst := &infrav1.OpenStackMachine{}
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
+
+	// Expect ID chosen, Filter nil
+	g.Expect(dst.Spec.Flavor.ID).NotTo(BeNil())
+	g.Expect(*dst.Spec.Flavor.ID).To(Equal("uuid-123"))
+	g.Expect(dst.Spec.Flavor.Filter).To(BeNil())
+
+	// Round-trip back: expect FlavorID set, Flavor nil
+	restored := &OpenStackMachine{}
+	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
+
+	g.Expect(restored.Spec.FlavorID).To(Equal(src.Spec.FlavorID))
+	g.Expect(restored.Spec.Flavor).To(BeNil())
 }
 
 func TestOpenStackClusterTemplateConversion(t *testing.T) {
@@ -228,6 +280,12 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 							CIDR: "10.0.0.0/16",
 						},
 					},
+					Bastion: &Bastion{
+						Enabled: ptr.To(true),
+						Spec: &OpenStackMachineSpec{
+							Flavor: ptr.To("m1.small"),
+						},
+					},
 				},
 			},
 		},
@@ -241,6 +299,12 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 	g.Expect(dst.Name).To(Equal("test-template"))
 	g.Expect(dst.Spec.Template.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 	g.Expect(dst.Spec.Template.Spec.ManagedSubnets).To(HaveLen(1))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Template.Spec.Bastion.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Convert back
 	restored := &OpenStackClusterTemplate{}
@@ -262,7 +326,7 @@ func TestOpenStackMachineTemplateConversion(t *testing.T) {
 		Spec: OpenStackMachineTemplateSpec{
 			Template: OpenStackMachineTemplateResource{
 				Spec: OpenStackMachineSpec{
-					Flavor: ptr.To("m1.large"),
+					Flavor: ptr.To("m1.small"),
 					Image: ImageParam{
 						Filter: &ImageFilter{
 							Name: ptr.To("ubuntu-22.04"),
@@ -279,7 +343,12 @@ func TestOpenStackMachineTemplateConversion(t *testing.T) {
 
 	// Verify template spec
 	g.Expect(dst.Name).To(Equal("test-machine-template"))
-	g.Expect(dst.Spec.Template.Spec.Flavor).To(Equal(ptr.To("m1.large")))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Template.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Template.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Convert back
 	restored := &OpenStackMachineTemplate{}

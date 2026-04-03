@@ -30,6 +30,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 // ResolveServerSpec is responsible for populating a ResolvedServerSpec from
@@ -118,12 +119,24 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 				return true, false, nil
 			}
 
-			flavorID, err := computeService.GetFlavorID(spec.FlavorID, spec.Flavor)
+			var flavorParam infrav1.FlavorParam
+
+			if id := spec.FlavorID; id != nil {
+				flavorParam.ID = optional.String(id)
+			}
+
+			if name := spec.Flavor; name != nil {
+				flavorParam.Filter = &infrav1.FlavorFilter{
+					Name: optional.String(name),
+				}
+			}
+
+			flavorID, err := computeService.GetFlavorID(flavorParam)
 			if err != nil {
 				return false, false, err
 			}
 
-			resolved.FlavorID = flavorID
+			resolved.FlavorID = *flavorID
 			return true, true, nil
 		},
 	}

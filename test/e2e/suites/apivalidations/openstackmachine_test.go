@@ -34,8 +34,12 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine := &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Image:  infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
-				Flavor: ptr.To("flavor-name"),
+				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To("flavor-name"),
+					},
+				},
 			},
 		}
 		machine.Namespace = namespace.Name
@@ -162,11 +166,11 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			machine := defaultMachine()
 
 			By("Creating a machine with no flavor or flavor id")
-			machine.Spec.Flavor = nil
+			machine.Spec.Flavor = infrav1.FlavorParam{}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with no flavor name or id should fail")
 
 			By("Creating a machine with a flavor id")
-			machine.Spec.FlavorID = ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9")
+			machine.Spec.Flavor.ID = ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9")
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a flavor id should succeed")
 		})
 	})

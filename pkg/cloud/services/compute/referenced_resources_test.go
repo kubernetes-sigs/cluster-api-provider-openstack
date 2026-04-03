@@ -143,7 +143,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 				Ports:  defaultPortOpts,
 			},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
-				m.ListFlavors().Return([]flavors.Flavor{}, nil)
+				m.ListFlavors(gomock.Any()).Return([]flavors.Flavor{}, nil)
 			},
 			wantErr: true,
 		},

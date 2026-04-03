@@ -28,12 +28,8 @@ import (
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpecApplyConfiguration struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
-	ProviderID *string `json:"providerID,omitempty"`
-	// The flavor reference for the flavor for your server instance.
-	Flavor *string `json:"flavor,omitempty"`
-	// FlavorID allows flavors to be specified by ID.  This field takes precedence
-	// over Flavor.
-	FlavorID *string `json:"flavorID,omitempty"`
+	ProviderID *string                        `json:"providerID,omitempty"`
+	Flavor     *FlavorParamApplyConfiguration `json:"flavor,omitempty"`
 	// The image to use for your server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
 	Image *ImageParamApplyConfiguration `json:"image,omitempty"`
@@ -92,16 +88,8 @@ func (b *OpenStackMachineSpecApplyConfiguration) WithProviderID(value string) *O
 // WithFlavor sets the Flavor field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Flavor field is set to the value of the last call.
-func (b *OpenStackMachineSpecApplyConfiguration) WithFlavor(value string) *OpenStackMachineSpecApplyConfiguration {
-	b.Flavor = &value
-	return b
-}
-
-// WithFlavorID sets the FlavorID field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the FlavorID field is set to the value of the last call.
-func (b *OpenStackMachineSpecApplyConfiguration) WithFlavorID(value string) *OpenStackMachineSpecApplyConfiguration {
-	b.FlavorID = &value
+func (b *OpenStackMachineSpecApplyConfiguration) WithFlavor(value *FlavorParamApplyConfiguration) *OpenStackMachineSpecApplyConfiguration {
+	b.Flavor = value
 	return b
 }
 

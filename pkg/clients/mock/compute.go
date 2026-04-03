@@ -179,18 +179,18 @@ func (mr *MockComputeClientMockRecorder) ListAvailabilityZones() *gomock.Call {
 }
 
 // ListFlavors mocks base method.
-func (m *MockComputeClient) ListFlavors() ([]flavors.Flavor, error) {
+func (m *MockComputeClient) ListFlavors(listOpts flavors.ListOpts) ([]flavors.Flavor, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListFlavors")
+	ret := m.ctrl.Call(m, "ListFlavors", listOpts)
 	ret0, _ := ret[0].([]flavors.Flavor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListFlavors indicates an expected call of ListFlavors.
-func (mr *MockComputeClientMockRecorder) ListFlavors() *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListFlavors(listOpts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFlavors", reflect.TypeOf((*MockComputeClient)(nil).ListFlavors))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFlavors", reflect.TypeOf((*MockComputeClient)(nil).ListFlavors), listOpts)
 }
 
 // ListServerGroups mocks base method.
