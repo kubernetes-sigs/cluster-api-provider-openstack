@@ -1161,6 +1161,110 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
 	})
 
+	It("should clear ReadyCondition when security group reconciliation fails on a previously ready cluster", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+
+		testCluster.SetName("sg-failure-previously-ready")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(clusterNetworkID),
+			},
+			DisableExternalNetwork:     ptr.To(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To("192.168.0.10"),
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+					{
+						Direction: "ingress",
+						Protocol:  ptr.To("tcp"),
+						RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
+							"worker",
+						},
+					},
+				},
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		// Simulate a previously successful reconcile by pre-setting conditions to True.
+		// This is the scenario from https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2993
+		// where the cluster was already Ready and a subsequent security group update fails.
+		conditions.Set(testCluster, metav1.Condition{
+			Type:   clusterv1.ReadyCondition,
+			Status: metav1.ConditionTrue,
+			Reason: infrav1.ReadyConditionReason,
+		})
+		conditions.Set(testCluster, metav1.Condition{
+			Type:   infrav1.SecurityGroupsReadyCondition,
+			Status: metav1.ConditionTrue,
+			Reason: infrav1.ReadyConditionReason,
+		})
+		conditions.Set(testCluster, metav1.Condition{
+			Type:   infrav1.NetworkReadyCondition,
+			Status: metav1.ConditionTrue,
+			Reason: infrav1.ReadyConditionReason,
+		})
+
+		// Verify preconditions: cluster appears Ready
+		Expect(conditions.IsTrue(testCluster, clusterv1.ReadyCondition)).To(BeTrue())
+		Expect(conditions.IsTrue(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// Network lookup succeeds
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID:   clusterNetworkID,
+			Name: "cluster-network",
+		}, nil)
+
+		// Subnet lookup succeeds
+		networkClientRecorder.ListSubnet(subnets.ListOpts{
+			NetworkID: clusterNetworkID,
+		}).Return([]subnets.Subnet{
+			{
+				ID:   clusterSubnetID,
+				Name: "cluster-subnet",
+				CIDR: "192.168.0.0/24",
+			},
+		}, nil)
+
+		// Security group reconciliation fails (e.g. rule conflict as reported in #2993)
+		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil).AnyTimes()
+		networkClientRecorder.CreateSecGroup(gomock.Any()).Return(nil, fmt.Errorf("SecurityGroupRuleExists")).AnyTimes()
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+		Expect(err.Error()).To(ContainSubstring("failed to reconcile security groups"))
+
+		// Verify ReadyCondition is now False (was True before)
+		Expect(conditions.IsFalse(testCluster, clusterv1.ReadyCondition)).To(BeTrue())
+		readyCondition := conditions.Get(testCluster, clusterv1.ReadyCondition)
+		Expect(readyCondition).ToNot(BeNil())
+		Expect(readyCondition.Reason).To(Equal(infrav1.OpenStackErrorReason))
+
+		// Verify SecurityGroupsReadyCondition is now False (was True before)
+		Expect(conditions.IsFalse(testCluster, infrav1.SecurityGroupsReadyCondition)).To(BeTrue())
+		sgCondition := conditions.Get(testCluster, infrav1.SecurityGroupsReadyCondition)
+		Expect(sgCondition).ToNot(BeNil())
+		Expect(sgCondition.Reason).To(Equal(infrav1.SecurityGroupReconcileFailedReason))
+
+		// NetworkReadyCondition should remain True since network reconciliation succeeded
+		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+	})
+
 	It("should set APIEndpointReadyCondition to False when floating IP creation fails", func() {
 		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
