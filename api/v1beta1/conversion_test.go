@@ -19,7 +19,7 @@ package v1beta1
 import (
 	"testing"
 
-	. "github.com/onsi/gomega" //nolint:revive // dot imports are fine in tests
+	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"

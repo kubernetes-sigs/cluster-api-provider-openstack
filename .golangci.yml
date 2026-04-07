@@ -159,7 +159,7 @@ linters:
     - linters:
       - revive
       - staticcheck
-      path: (test)/.*.go
+      path: (_test\.go$|^test/.*\.go$)
       text: should not use dot imports
     - linters:
       - revive
