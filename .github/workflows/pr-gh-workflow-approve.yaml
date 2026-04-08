@@ -13,7 +13,7 @@ permissions: {}
 jobs:
   approve:
     name: Approve on ok-to-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     permissions:
       actions: write
