@@ -67,16 +67,22 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 
 	templates := []clusterctl.Files{}
 
+	// Open the templates directory as an os.Root to ensure that writes
+	// cannot escape this directory, even via symlink manipulation.
+	templatesDirRoot, err := os.OpenRoot(templatesDir)
+	Expect(err).NotTo(HaveOccurred())
+	defer templatesDirRoot.Close()
+
 	// Cluster templates in this folder will get ci artifacts injected. It makes it possible to use generic cloud images
 	// without kubernetes pre-installed.
-	err := filepath.WalkDir(path.Join(e2eCtx.Settings.DataFolder, "infrastructure-openstack"), func(f string, d fs.DirEntry, _ error) error {
+	err = filepath.WalkDir(path.Join(e2eCtx.Settings.DataFolder, "infrastructure-openstack"), func(f string, d fs.DirEntry, _ error) error {
 		filename := filepath.Base(f)
 		fileExtension := filepath.Ext(filename)
 		if d.IsDir() || !strings.HasPrefix(filename, "cluster-template") {
 			return nil
 		}
 
-		sourceTemplate, err := os.ReadFile(f)
+		sourceTemplate, err := os.ReadFile(f) //nolint:gosec // G122: This is test code, symlink TOCTOU is not a concern
 		Expect(err).NotTo(HaveOccurred())
 
 		platformKustomization, err := os.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, "ci-artifacts-platform-kustomization.yaml"))
@@ -92,17 +98,16 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 		Expect(err).NotTo(HaveOccurred())
 
 		targetName := fmt.Sprintf("%s-ci-artifacts.yaml", strings.TrimSuffix(filename, fileExtension))
-		targetTemplate := path.Join(templatesDir, targetName)
 
 		// We have to copy the file from ciTemplate to targetTemplate. Otherwise it would be overwritten because
 		// ciTemplate is the same for all templates
 		ciTemplateBytes, err := os.ReadFile(ciTemplate)
 		Expect(err).NotTo(HaveOccurred())
-		err = os.WriteFile(targetTemplate, ciTemplateBytes, 0o600)
+		err = templatesDirRoot.WriteFile(targetName, ciTemplateBytes, 0o600)
 		Expect(err).NotTo(HaveOccurred())
 
 		clusterctlCITemplate := clusterctl.Files{
-			SourcePath: targetTemplate,
+			SourcePath: path.Join(templatesDir, targetName),
 			TargetName: targetName,
 		}
 
@@ -119,16 +124,14 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 			return nil
 		}
 
-		t, err := os.ReadFile(f)
+		t, err := os.ReadFile(f) //nolint:gosec // G122: This is test code, symlink TOCTOU is not a concern
 		Expect(err).NotTo(HaveOccurred())
 
-		targetTemplate := path.Join(templatesDir, filename)
-
-		err = os.WriteFile(targetTemplate, t, 0o600)
+		err = templatesDirRoot.WriteFile(filename, t, 0o600)
 		Expect(err).NotTo(HaveOccurred())
 
 		clusterctlTemplate := clusterctl.Files{
-			SourcePath: targetTemplate,
+			SourcePath: path.Join(templatesDir, filename),
 			TargetName: filename,
 		}
 

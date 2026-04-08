@@ -271,7 +271,7 @@ func securityGroupRemoteFields(r *infrav1.SecurityGroupRuleSpec) (bool, bool, bo
 // validateManagedSecurityGroupRules validates that remote* fields are mutually exclusive
 // across all security group rule lists in ManagedSecurityGroups.
 func validateManagedSecurityGroupRules(msg *infrav1.ManagedSecurityGroups) field.ErrorList {
-	var allErrs field.ErrorList
+	var allErrs field.ErrorList //nolint:prealloc // We can't know the number of errors upfront
 	allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusion(
 		msg.AllNodesSecurityGroupRules,
 		field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"),
