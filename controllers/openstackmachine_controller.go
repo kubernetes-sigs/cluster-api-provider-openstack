@@ -460,13 +460,33 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		})
 	}
 
+	// Set the Ready condition to True now that all infrastructure prerequisites
+	// are met:
+	//   - ProviderID is set (done in reconcileMachineState above)
+	//   - Addresses are available (fetched from the OpenStack API above)
+	//   - For control plane machines: API server ingress (load balancer member
+	//     or floating IP) is configured (done via reconcileAPIServerLoadBalancer
+	//     above)
+	//
+	// Deferring this until all prerequisites are satisfied ensures that when
+	// CAPI observes Ready=True and copies addresses to the Machine object, the
+	// addresses are already populated. This prevents a potential bootstrap
+	// deadlock where a control plane provider cannot reach nodes because
+	// addresses were empty when InfrastructureReady first transitioned to true.
+	conditions.Set(openStackMachine, metav1.Condition{
+		Type:   clusterv1.ReadyCondition,
+		Status: metav1.ConditionTrue,
+		Reason: infrav1.ReadyConditionReason,
+	})
+
 	scope.Logger().Info("Reconciled Machine create successfully")
 	return ctrl.Result{}, nil
 }
 
-// reconcileMachineState updates the conditions of the OpenStackMachine instance based on the instance state
-// and sets the ProviderID and Ready fields when the instance is active.
-// It returns a reconcile request if the instance is not yet active or in an error state.
+// reconcileMachineState updates the conditions of the OpenStackMachine instance based on the instance state.
+// For ACTIVE instances it sets ProviderID, initialization.provisioned, and InstanceReady=True, then returns nil
+// so that reconcileNormal can proceed to fetch addresses and configure ingress before setting Ready=True.
+// For all other states it sets the appropriate Ready condition and returns a requeue result.
 func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogger, openStackMachine *infrav1.OpenStackMachine, _ *clusterv1.Machine, openStackServer *infrav1alpha1.OpenStackServer) *ctrl.Result {
 	// Handle the case where the instance state is not yet available.
 	// This can happen when the server is still being created or when
@@ -533,14 +553,14 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 			scope.Logger().Info("Initial machine infrastructure provisioning completed")
 		}
 
-		// Set the Ready condition to True when infrastructure is ready.
-		// This condition surfaces into Machine's status.conditions[InfrastructureReady].
-		// It reflects the current operational state of the machine infrastructure.
-		conditions.Set(openStackMachine, metav1.Condition{
-			Type:   clusterv1.ReadyCondition,
-			Status: metav1.ConditionTrue,
-			Reason: infrav1.ReadyConditionReason,
-		})
+		// NOTE: Ready=True is intentionally NOT set here. It is set at the end of
+		// reconcileNormal, after addresses are fetched from the OpenStack API and,
+		// for control plane machines, after the API server ingress (load balancer
+		// member or floating IP) is also confirmed ready. This ensures that when
+		// CAPI sees Ready=True and copies addresses to the Machine object, the
+		// addresses are already populated — preventing a bootstrap deadlock where
+		// a control plane provider cannot connect to nodes because addresses were
+		// empty when InfrastructureReady first became true.
 	case infrav1.InstanceStateError:
 		scope.Logger().Info("Machine instance state is ERROR", "id", openStackServer.Status.InstanceID)
 		errorMessage := "Instance is in ERROR state"

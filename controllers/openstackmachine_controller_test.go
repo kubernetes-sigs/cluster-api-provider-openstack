@@ -453,6 +453,7 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 		expectRequeue                   bool
 		expectedInstanceReadyCondition  *metav1.Condition
 		expectedReadyCondition          *metav1.Condition
+		expectReadyConditionNotSet      bool
 		expectInitializationProvisioned bool
 	}{
 		{
@@ -523,17 +524,18 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 			},
 		},
 		{
-			name:          "Instance state ACTIVE sets conditions to True and initialization.provisioned",
+			name:          "Instance state ACTIVE sets InstanceReady to True and initialization.provisioned (Ready is set later by reconcileNormal)",
 			instanceState: ptr.To(infrav1.InstanceStateActive),
 			expectRequeue: false,
 			expectedInstanceReadyCondition: &metav1.Condition{
 				Type:   infrav1.InstanceReadyCondition,
 				Status: metav1.ConditionTrue,
 			},
-			expectedReadyCondition: &metav1.Condition{
-				Type:   clusterv1.ReadyCondition,
-				Status: metav1.ConditionTrue,
-			},
+			// Ready=True is intentionally NOT set by reconcileMachineState for the
+			// ACTIVE case. It is set at the end of reconcileNormal, after addresses
+			// and (for CP nodes) the API server ingress are also confirmed ready.
+			expectedReadyCondition:          nil,
+			expectReadyConditionNotSet:      true,
 			expectInitializationProvisioned: true,
 		},
 		{
@@ -699,6 +701,11 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 					if tt.expectedReadyCondition.Message != "" && condition.Message != tt.expectedReadyCondition.Message {
 						t.Errorf("expected %s message %q, got %q", tt.expectedReadyCondition.Type, tt.expectedReadyCondition.Message, condition.Message)
 					}
+				}
+			}
+			if tt.expectReadyConditionNotSet {
+				if condition := conditions.Get(openStackMachine, clusterv1.ReadyCondition); condition != nil {
+					t.Errorf("expected %s condition to NOT be set by reconcileMachineState, but got status=%s", clusterv1.ReadyCondition, condition.Status)
 				}
 			}
 
