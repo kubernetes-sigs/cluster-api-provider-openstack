@@ -6,7 +6,7 @@ require (
 	github.com/a8m/envsubst v1.4.3
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
 	github.com/golangci/golangci-lint/v2 v2.11.4
-	github.com/itchyny/gojq v0.12.18
+	github.com/itchyny/gojq v0.12.19
 	github.com/onsi/ginkgo/v2 v2.28.1
 	go.uber.org/mock v0.6.0
 	k8s.io/code-generator v0.35.3
@@ -156,7 +156,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/itchyny/go-yaml v0.0.0-20251001235044-fca9a0999f15 // indirect
-	github.com/itchyny/timefmt-go v0.1.7 // indirect
+	github.com/itchyny/timefmt-go v0.1.8 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jgautheron/goconst v1.8.2 // indirect
 	github.com/jingyugao/rowserrcheck v1.1.1 // indirect
