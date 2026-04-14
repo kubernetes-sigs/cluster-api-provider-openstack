@@ -925,6 +925,95 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
+	It("should set NetworkReadyCondition to False when ManagedSubnets has more than one element", func() {
+		testCluster.SetName("managed-subnets-too-many")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			DisableExternalNetwork:     ptr.To(true),
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To("192.168.0.10"),
+			ManagedSubnets: []infrav1.SubnetSpec{
+				{CIDR: "192.168.0.0/24", DNSNameservers: []string{"8.8.8.8"}},
+			},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		// Add a second managed subnet in memory to bypass CRD validation
+		// (maxItems: 1) and test the controller-level check.
+		testCluster.Spec.ManagedSubnets = append(testCluster.Spec.ManagedSubnets,
+			infrav1.SubnetSpec{CIDR: "192.168.1.0/24", DNSNameservers: []string{"8.8.8.8"}},
+		)
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+		Expect(err.Error()).To(ContainSubstring("ManagedSubnets only supports one element"))
+
+		// Verify NetworkReadyCondition is set to False
+		Expect(conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		condition := conditions.Get(testCluster, infrav1.NetworkReadyCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.NetworkReconcileFailedReason))
+
+		// Verify ReadyCondition is set to False
+		Expect(conditions.IsFalse(testCluster, clusterv1.ReadyCondition)).To(BeTrue())
+	})
+
+	It("should set NetworkReadyCondition to False when external network reconciliation fails", func() {
+		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
+
+		testCluster.SetName("external-network-failure")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			ExternalNetwork: &infrav1.NetworkParam{
+				ID: ptr.To(externalNetworkID),
+			},
+			DisableAPIServerFloatingIP: ptr.To(true),
+			APIServerFixedIP:           ptr.To("192.168.0.10"),
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+
+		// External network lookup fails
+		networkClientRecorder.GetNetwork(externalNetworkID).Return(nil, fmt.Errorf("external network not found"))
+
+		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		Expect(err).ToNot(BeNil())
+		Expect(err.Error()).To(ContainSubstring("failed to reconcile external network"))
+
+		// Verify NetworkReadyCondition is set to False
+		Expect(conditions.IsFalse(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
+		condition := conditions.Get(testCluster, infrav1.NetworkReadyCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Reason).To(Equal(infrav1.NetworkReconcileFailedReason))
+		Expect(condition.Message).To(ContainSubstring("Failed to reconcile external network"))
+
+		// Verify ReadyCondition is set to False
+		Expect(conditions.IsFalse(testCluster, clusterv1.ReadyCondition)).To(BeTrue())
+	})
+
 	It("should set NetworkReadyCondition to False when network lookup fails", func() {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 

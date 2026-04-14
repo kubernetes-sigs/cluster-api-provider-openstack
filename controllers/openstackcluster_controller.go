@@ -687,9 +687,7 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 	if lbSpec.Network != nil {
 		lbNet, err := networkingService.GetNetworkByParam(lbSpec.Network)
 		if err != nil {
-			if errors.Is(err, capoerrors.ErrFilterMatch) {
-				handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err))
-			}
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err))
 			return fmt.Errorf("failed to find network: %w", err)
 		}
 
@@ -742,6 +740,12 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 
 	err = networkingService.ReconcileExternalNetwork(openStackCluster)
 	if err != nil {
+		conditions.Set(openStackCluster, metav1.Condition{
+			Type:    infrav1.NetworkReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.NetworkReconcileFailedReason,
+			Message: fmt.Sprintf("Failed to reconcile external network: %v", err),
+		})
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile external network: %w", err))
 		return fmt.Errorf("failed to reconcile external network: %w", err)
 	}
@@ -755,11 +759,25 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 			return err
 		}
 	} else {
-		return fmt.Errorf("failed to reconcile network: ManagedSubnets only supports one element, %d provided", len(openStackCluster.Spec.ManagedSubnets))
+		err := fmt.Errorf("failed to reconcile network: ManagedSubnets only supports one element, %d provided", len(openStackCluster.Spec.ManagedSubnets))
+		conditions.Set(openStackCluster, metav1.Condition{
+			Type:    infrav1.NetworkReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.NetworkReconcileFailedReason,
+			Message: err.Error(),
+		})
+		handleUpdateOSCError(openStackCluster, err)
+		return err
 	}
 
 	err = resolveLoadBalancerNetwork(openStackCluster, networkingService)
 	if err != nil {
+		conditions.Set(openStackCluster, metav1.Condition{
+			Type:    infrav1.NetworkReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.NetworkReconcileFailedReason,
+			Message: fmt.Sprintf("Failed to reconcile load balancer network: %v", err),
+		})
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile loadbalancer network: %w", err))
 		return fmt.Errorf("failed to reconcile loadbalancer network: %w", err)
 	}
@@ -985,6 +1003,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	case openStackCluster.Spec.APIServerLoadBalancer.IsEnabled():
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
+			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to create load balancer service: %w", err))
 			return err
 		}
 
