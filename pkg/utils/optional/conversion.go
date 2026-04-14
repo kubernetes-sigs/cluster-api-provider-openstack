@@ -39,7 +39,7 @@ func RestoreUInt16(previous, dst *UInt16) {
 }
 
 func RestoreBool(previous, dst *Bool) {
-	if *dst == nil || !**dst {
+	if *dst == nil {
 		*dst = *previous
 	}
 }
@@ -103,11 +103,7 @@ func Convert_optional_UInt16_To_uint16(in *UInt16, out *uint16, _ conversion.Sco
 }
 
 func Convert_bool_To_optional_Bool(in *bool, out *Bool, _ conversion.Scope) error {
-	if !*in {
-		*out = nil
-	} else {
-		*out = in
-	}
+	*out = in
 	return nil
 }
 
