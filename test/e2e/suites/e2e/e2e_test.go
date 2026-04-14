@@ -1213,6 +1213,144 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(revertedMonitor.MaxRetriesDown).To(Equal(3), "Monitor maxRetriesDown should revert to default value (3)")
 		})
 	})
+
+	Describe("AllowedAddressPairs mutability", func() {
+		It("should update Neutron port allowedAddressPairs when OSMT spec is patched [Feature:AllowedAddressPairs]", func(ctx context.Context) {
+			shared.Logf("Creating a cluster with 1 CP and 0 initial workers")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(0))
+			configCluster.Flavor = shared.FlavorWithoutLB
+			createCluster(ctx, configCluster, clusterResources)
+
+			mgmtClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
+
+			// Fetch the cluster to get its UID (needed for OSMT owner reference).
+			cluster := &clusterv1.Cluster{}
+			Expect(mgmtClient.Get(ctx, apimachinerytypes.NamespacedName{Namespace: namespace.Name, Name: clusterName}, cluster)).To(Succeed())
+
+			// Create a new MachineDeployment whose OSMT has 1 port with initially empty allowedAddressPairs.
+			mdName := clusterName + "-md-aap"
+			testTag := utilrand.String(6)
+			initialPortOpts := &[]infrav1.PortOpts{
+				{Description: ptr.To("aap-port")},
+			}
+			osmt := makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, mdName, initialPortOpts, []string{testTag})
+
+			// The OSMT controller requires a direct Cluster owner reference.
+			osmt.Labels = map[string]string{clusterv1.ClusterNameLabel: clusterName}
+			osmt.OwnerReferences = []metav1.OwnerReference{
+				{
+					APIVersion: clusterv1.GroupVersion.String(),
+					Kind:       "Cluster",
+					Name:       cluster.Name,
+					UID:        cluster.UID,
+				},
+			}
+			md := makeMachineDeployment(namespace.Name, mdName, clusterName, "", 1)
+			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
+				Creator:                 mgmtClient,
+				MachineDeployment:       md,
+				BootstrapConfigTemplate: makeWorkerJoinConfigTemplate(namespace.Name, mdName),
+				InfraMachineTemplate:    osmt,
+			})
+
+			// Wait for the worker port to appear in OpenStack.
+			shared.Logf("Waiting for worker port to be created in OpenStack")
+			var portList []ports.Port
+			Eventually(func() int {
+				portList, _ = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "aap-port", Tags: testTag})
+				return len(portList)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
+			workerPort := portList[0]
+			shared.Logf("Port created: %s", workerPort.ID)
+
+			// Wait for the Machine's InfrastructureRef to be populated (OSM created by CAPI).
+			var osmKey apimachinerytypes.NamespacedName
+			shared.Logf("Waiting for Machine InfrastructureRef to be set")
+			Eventually(func() bool {
+				workers := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+					Lister:            mgmtClient,
+					ClusterName:       clusterName,
+					Namespace:         namespace.Name,
+					MachineDeployment: *md,
+				})
+				if len(workers) == 0 || workers[0].Spec.InfrastructureRef.Name == "" {
+					return false
+				}
+				osmKey = apimachinerytypes.NamespacedName{
+					Namespace: namespace.Name,
+					Name:      workers[0].Spec.InfrastructureRef.Name,
+				}
+				return true
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
+			shared.Logf("Machine InfrastructureRef resolved to OSM %s", osmKey.Name)
+
+			// Wait for the OSMT controller to set the initial annotation on the OSM.
+			// Requires the OSM controller to have provisioned the Nova server first
+			// (status.resources.ports must be populated).
+			shared.Logf("Waiting for OSMT controller to annotate OSM %s", osmKey.Name)
+			Eventually(func() bool {
+				osm := &infrav1.OpenStackMachine{}
+				if err := mgmtClient.Get(ctx, osmKey, osm); err != nil {
+					return false
+				}
+				_, ok := osm.Annotations["infrastructure.cluster.x-k8s.io/osmt-allowed-address-pairs"]
+				return ok
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
+
+			osmtKey := apimachinerytypes.NamespacedName{Namespace: namespace.Name, Name: mdName}
+
+			// Helper to get a fresh Neutron client and verify allowedAddressPairs on the port.
+			verifyNeutronPort := func(expectedIPs ...string) {
+				GinkgoHelper()
+				providerClient, clientOpts, _, err := shared.GetTenantProviderClient(e2eCtx)
+				Expect(err).To(BeNil(), "cannot get OpenStack provider client")
+				networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+					Region: clientOpts.RegionName,
+				})
+				Expect(err).To(BeNil(), "cannot create Neutron client")
+				updatedPort, err := ports.Get(ctx, networkClient, workerPort.ID).Extract()
+				Expect(err).To(BeNil(), "cannot get port from Neutron")
+				for _, ip := range expectedIPs {
+					Expect(updatedPort.AllowedAddressPairs).To(ContainElement(
+						MatchFields(IgnoreExtras, Fields{"IPAddress": Equal(ip)}),
+					), "expected allowedAddressPair %s on port %s", ip, workerPort.ID)
+				}
+				Expect(updatedPort.AllowedAddressPairs).To(HaveLen(len(expectedIPs)),
+					"expected exactly %d allowedAddressPairs on port %s", len(expectedIPs), workerPort.ID)
+			}
+
+			patchAndVerify := func(newIPs []string, waitForIP string) {
+				GinkgoHelper()
+				currentOSMT := &infrav1.OpenStackMachineTemplate{}
+				Expect(mgmtClient.Get(ctx, osmtKey, currentOSMT)).To(Succeed())
+				patchBase := currentOSMT.DeepCopy()
+				pairs := make([]infrav1.AddressPair, len(newIPs))
+				for i, ip := range newIPs {
+					pairs[i] = infrav1.AddressPair{IPAddress: ip}
+				}
+				currentOSMT.Spec.Template.Spec.Ports[0].AllowedAddressPairs = pairs
+				Expect(mgmtClient.Patch(ctx, currentOSMT, crclient.MergeFrom(patchBase))).To(Succeed())
+
+				Eventually(func() string {
+					osm := &infrav1.OpenStackMachine{}
+					if err := mgmtClient.Get(ctx, osmKey, osm); err != nil {
+						return ""
+					}
+					return osm.Annotations["infrastructure.cluster.x-k8s.io/osmt-allowed-address-pairs"]
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(ContainSubstring(waitForIP))
+
+				verifyNeutronPort(newIPs...)
+				time.Sleep(5 * time.Second)
+			}
+
+			patchAndVerify([]string{"192.0.2.100"}, "192.0.2.100")
+			patchAndVerify([]string{"192.0.2.100", "192.0.2.101"}, "192.0.2.101")
+			patchAndVerify([]string{"192.0.2.100", "192.0.2.101", "192.0.2.102"}, "192.0.2.102")
+		})
+	})
 })
 
 func defaultConfigCluster(clusterName, namespace string) clusterctl.ConfigClusterInput {
@@ -1325,6 +1463,38 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 					},
 					Ports: *portOpts,
 					Tags:  machineTags,
+				},
+			},
+		},
+	}
+}
+
+// makeWorkerJoinConfigTemplate returns a KubeadmConfigTemplate that correctly configures
+// a worker node to join a cluster, matching the flags used by the standard cluster templates.
+func makeWorkerJoinConfigTemplate(namespace, name string) *bootstrapv1.KubeadmConfigTemplate {
+	return &bootstrapv1.KubeadmConfigTemplate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: bootstrapv1.KubeadmConfigTemplateSpec{
+			Template: bootstrapv1.KubeadmConfigTemplateResource{
+				Spec: bootstrapv1.KubeadmConfigSpec{
+					JoinConfiguration: bootstrapv1.JoinConfiguration{
+						NodeRegistration: bootstrapv1.NodeRegistrationOptions{
+							Name: "{{ local_hostname }}",
+							KubeletExtraArgs: []bootstrapv1.Arg{
+								{
+									Name:  "cloud-provider",
+									Value: ptr.To("external"),
+								},
+								{
+									Name:  "provider-id",
+									Value: ptr.To("openstack:///'{{ instance_id }}'"),
+								},
+							},
+						},
+					},
 				},
 			},
 		},
