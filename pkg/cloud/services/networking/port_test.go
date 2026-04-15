@@ -25,6 +25,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portstrustedvif"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
@@ -161,12 +162,58 @@ func Test_EnsurePort(t *testing.T) {
 					Name:      "foo-port-1",
 					NetworkID: netID,
 				}).Return(nil, nil)
+				// Extension not available, so trusted goes into binding:profile
+				m.ListExtensions().Return([]extensions.Extension{}, nil)
 				// The following allows us to use gomega to
 				// compare the argument instead of gomock.
 				// Gomock's output in the case of a mismatch is
 				// not usable for this struct.
 				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
+					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
+					return &ports.Port{ID: portID}, nil
+				})
+			},
+			want: &ports.Port{ID: portID},
+		},
+		{
+			name: "uses port_trusted_vif extension when available instead of binding:profile",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
+					VNICType: ptr.To("direct"),
+					Profile: &infrav1.BindingProfile{
+						TrustedVF: ptr.To(true),
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, g Gomega) {
+				var expectedCreateOpts ports.CreateOptsBuilder
+				expectedCreateOpts = ports.CreateOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}
+				// When extension is available, trusted is NOT in binding:profile
+				expectedCreateOpts = portsbinding.CreateOptsExt{
+					CreateOptsBuilder: expectedCreateOpts,
+					VNICType:          "direct",
+				}
+				expectedCreateOpts = portstrustedvif.PortCreateOptsExt{
+					CreateOptsBuilder: expectedCreateOpts,
+					PortTrustedVIF:    ptr.To(true),
+				}
+
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
+				// Extension is available
+				trustedVIFExt := extensions.Extension{}
+				trustedVIFExt.Alias = "port-trusted-vif"
+				m.ListExtensions().Return([]extensions.Extension{trustedVIFExt}, nil)
+				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+					gotCreateOpts := builder.(portstrustedvif.PortCreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID}, nil
 				})
