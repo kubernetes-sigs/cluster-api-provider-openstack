@@ -17,7 +17,6 @@ limitations under the License.
 package v1beta1
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 	"unsafe"
@@ -323,9 +322,10 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(
 		}
 
 	default:
-		// This should not be reached due to api validations
-		return fmt.Errorf("cannot convert OpenStackMachineSpec to v1beta2: " +
-			"neither Flavor nor FlavorID is set in v1beta1 object")
+		// This would fail the validation webhook, but we need to handle
+		// conversion anyway. The apiserver may send objects without
+		// a spec e.g. during managedField conversion.
+		// Therefore we return no error.
 	}
 
 	return nil
@@ -356,9 +356,10 @@ func Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(
 		out.FlavorID = nil
 
 	default:
-		// This should not be reached due to api validations
-		return fmt.Errorf("cannot convert OpenStackMachineSpec to v1beta1: " +
-			"neither Flavor nor FlavorID is set in v1beta1 object")
+		// This would fail the validation webhook, but we need to handle
+		// conversion anyway. The apiserver may send objects without
+		// a spec e.g. during managedField conversion.
+		// Therefore we return no error.
 	}
 
 	return nil
