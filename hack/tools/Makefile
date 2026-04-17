@@ -139,10 +139,6 @@ $(MDBOOK): $(MDBOOK_SHARE) | $(BIN_DIR)
 	chmod +x $@
 	touch -m $@
 
-MDBOOK_EMBED := $(BIN_DIR)/mdbook-embed
-$(MDBOOK_EMBED): go.mod go.sum | $(BIN_DIR)
-	go build -tags=tools -o $(BIN_DIR)/mdbook-embed sigs.k8s.io/cluster-api/hack/tools/mdbook/embed
-
 MDBOOK_RELEASELINK := $(BIN_DIR)/mdbook-releaselink
 $(MDBOOK_RELEASELINK): go.mod go.sum | $(BIN_DIR)
 	go build -tags=tools -o $(BIN_DIR)/mdbook-releaselink sigs.k8s.io/cluster-api/hack/tools/mdbook/releaselink
