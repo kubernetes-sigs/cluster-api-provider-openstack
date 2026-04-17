@@ -6,7 +6,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/go-logr/logr v1.4.3
 	github.com/google/go-cmp v0.7.0
-	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/gophercloud/gophercloud/v2 v2.11.1
 	github.com/gophercloud/utils/v2 v2.0.0-20241220104409-2e0af06694a1
@@ -32,6 +31,7 @@ require (
 	sigs.k8s.io/cluster-api v1.13.0-beta.1
 	sigs.k8s.io/cluster-api/test v1.13.0-beta.0
 	sigs.k8s.io/controller-runtime v0.23.3
+	sigs.k8s.io/randfill v1.0.0
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.2
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -159,5 +159,4 @@ require (
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/kind v0.31.0 // indirect
-	sigs.k8s.io/randfill v1.0.0 // indirect
 )
