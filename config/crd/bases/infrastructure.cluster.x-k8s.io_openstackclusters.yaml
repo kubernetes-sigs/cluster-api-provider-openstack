@@ -4021,11 +4021,6 @@ spec:
                   to an external network. This allows for the creation of clusters when connecting
                   to an external network is not possible or desirable, e.g. if using a provider network.
                 type: boolean
-              disablePortSecurity:
-                description: |-
-                  DisablePortSecurity disables the port security of the network created for the
-                  Kubernetes cluster, which also disables SecurityGroups
-                type: boolean
               externalNetwork:
                 description: |-
                   ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
@@ -4257,6 +4252,27 @@ spec:
                 - message: region is immutable
                   rule: (!has(self.region) && !has(oldSelf.region)) || self.region
                     == oldSelf.region
+              managedNetwork:
+                description: |-
+                  ManagedNetwork specifies attributes of the network. The values are used only
+                  if the Cluster actuator creates the network.
+                properties:
+                  disablePortSecurity:
+                    description: |-
+                      DisablePortSecurity disables the port security of the network created for the
+                      Kubernetes cluster, which also disables SecurityGroups
+                    type: boolean
+                  mtu:
+                    description: |-
+                      MTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
+                      This value will be used only if the Cluster actuator creates the network.
+                      If left empty, the network will have the default MTU defined in Openstack network service.
+                      To use this field, the Openstack installation requires the net-mtu neutron API extension.
+                    type: integer
+                type: object
+                x-kubernetes-validations:
+                - message: managedNetwork must not be empty if set
+                  rule: self == null || has(self.mtu) || has(self.disablePortSecurity)
               managedSecurityGroups:
                 description: |-
                   ManagedSecurityGroups determines whether OpenStack security groups for the cluster
@@ -4641,13 +4657,6 @@ spec:
                     format: uuid
                     type: string
                 type: object
-              networkMTU:
-                description: |-
-                  NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
-                  This value will be used only if the Cluster actuator creates the network.
-                  If left empty, the network will have the default MTU defined in Openstack network service.
-                  To use this field, the Openstack installation requires the net-mtu neutron API extension.
-                type: integer
               router:
                 description: |-
                   Router specifies an existing router to be used if ManagedSubnets are

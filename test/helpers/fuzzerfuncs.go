@@ -350,6 +350,22 @@ func InfraV1Beta2FuzzerFuncs() []any {
 			filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
 		},
 
+		// ManagedNetwork must have at least one field set if non-nil.
+		// This mirrors the CEL validation:
+		//   self == null || has(self.mtu) || has(self.disablePortSecurity)
+		func(mn **infrav1.ManagedNetwork, c randfill.Continue) {
+			if c.Bool() {
+				*mn = nil
+				return
+			}
+			m := &infrav1.ManagedNetwork{}
+			c.Fill(m)
+			if m.MTU == nil && m.DisablePortSecurity == nil {
+				m.MTU = ptr.To(int(c.Int31()))
+			}
+			*mn = m
+		},
+
 		// v1beta2 filter params contain exactly one of ID or filter
 		func(param *infrav1.NetworkParam, c randfill.Continue) {
 			fuzzFilterParam(&param.ID, &param.Filter, c)
@@ -410,7 +426,14 @@ func InfraV1Beta2FuzzerFuncs() []any {
 					unique = append(unique, fd)
 				}
 			}
-			status.FailureDomains = unique
+
+			// Normalize empty slice to nil: v1beta1 round-trip cannot
+			// distinguish between nil and empty slice.
+			if len(unique) == 0 {
+				status.FailureDomains = nil
+			} else {
+				status.FailureDomains = unique
+			}
 		},
 	}
 }

@@ -31,23 +31,21 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 	// subnet is supported. If you leave this empty, no network will be created.
 	ManagedSubnets []SubnetSpecApplyConfiguration `json:"managedSubnets,omitempty"`
-	// Router specifies an existing router to be used if ManagedSubnets are
-	// specified. If specified, no new router will be created.
-	Router *RouterParamApplyConfiguration `json:"router,omitempty"`
-	// Network specifies an existing network to use if no ManagedSubnets
-	// are specified.
-	Network *NetworkParamApplyConfiguration `json:"network,omitempty"`
 	// Subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.
 	// There can be zero, one, or two subnets. If no subnets are specified,
 	// all subnets in Network will be used. If 2 subnets are specified, one
 	// must be IPv4 and the other IPv6.
 	Subnets []SubnetParamApplyConfiguration `json:"subnets,omitempty"`
-	// NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
-	// This value will be used only if the Cluster actuator creates the network.
-	// If left empty, the network will have the default MTU defined in Openstack network service.
-	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
-	NetworkMTU *int `json:"networkMTU,omitempty"`
+	// Router specifies an existing router to be used if ManagedSubnets are
+	// specified. If specified, no new router will be created.
+	Router *RouterParamApplyConfiguration `json:"router,omitempty"`
+	// ManagedNetwork specifies attributes of the network. The values are used only
+	// if the Cluster actuator creates the network.
+	ManagedNetwork *ManagedNetworkApplyConfiguration `json:"managedNetwork,omitempty"`
+	// Network specifies an existing network to use if no ManagedSubnets
+	// are specified.
+	Network *NetworkParamApplyConfiguration `json:"network,omitempty"`
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
 	ExternalRouterIPs []ExternalRouterIPParamApplyConfiguration `json:"externalRouterIPs,omitempty"`
@@ -109,9 +107,6 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// It's possible to add additional rules to the managed security groups.
 	// When defined to an empty struct, the managed security groups will be created with the default rules.
 	ManagedSecurityGroups *ManagedSecurityGroupsApplyConfiguration `json:"managedSecurityGroups,omitempty"`
-	// DisablePortSecurity disables the port security of the network created for the
-	// Kubernetes cluster, which also disables SecurityGroups
-	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
 	// Tags to set on all resources in cluster which support tags
 	Tags []string `json:"tags,omitempty"`
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
@@ -160,22 +155,6 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithManagedSubnets(values ...*S
 	return b
 }
 
-// WithRouter sets the Router field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Router field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithRouter(value *RouterParamApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
-	b.Router = value
-	return b
-}
-
-// WithNetwork sets the Network field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Network field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithNetwork(value *NetworkParamApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
-	b.Network = value
-	return b
-}
-
 // WithSubnets adds the given value to the Subnets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Subnets field.
@@ -189,11 +168,27 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithSubnets(values ...*SubnetPa
 	return b
 }
 
-// WithNetworkMTU sets the NetworkMTU field in the declarative configuration to the given value
+// WithRouter sets the Router field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the NetworkMTU field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithNetworkMTU(value int) *OpenStackClusterSpecApplyConfiguration {
-	b.NetworkMTU = &value
+// If called multiple times, the Router field is set to the value of the last call.
+func (b *OpenStackClusterSpecApplyConfiguration) WithRouter(value *RouterParamApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
+	b.Router = value
+	return b
+}
+
+// WithManagedNetwork sets the ManagedNetwork field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ManagedNetwork field is set to the value of the last call.
+func (b *OpenStackClusterSpecApplyConfiguration) WithManagedNetwork(value *ManagedNetworkApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
+	b.ManagedNetwork = value
+	return b
+}
+
+// WithNetwork sets the Network field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Network field is set to the value of the last call.
+func (b *OpenStackClusterSpecApplyConfiguration) WithNetwork(value *NetworkParamApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
+	b.Network = value
 	return b
 }
 
@@ -271,14 +266,6 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerPort(value uint16)
 // If called multiple times, the ManagedSecurityGroups field is set to the value of the last call.
 func (b *OpenStackClusterSpecApplyConfiguration) WithManagedSecurityGroups(value *ManagedSecurityGroupsApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
 	b.ManagedSecurityGroups = value
-	return b
-}
-
-// WithDisablePortSecurity sets the DisablePortSecurity field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DisablePortSecurity field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithDisablePortSecurity(value bool) *OpenStackClusterSpecApplyConfiguration {
-	b.DisablePortSecurity = &value
 	return b
 }
 
