@@ -5,6 +5,7 @@
 - [v1beta1 compared to v1beta2](#v1beta1-compared-to-v1beta2)
   - [Migration](#migration)
   - [API Changes](#api-changes)
+    - [Flavor field restructure](#flavor-field-restructure)
     - [Conditions format change](#conditions-format-change)
     - [Removal of deprecated status fields](#removal-of-deprecated-status-fields)
     - [FailureDomains representation change](#failuredomains-representation-change)
@@ -19,11 +20,29 @@ All users are encouraged to migrate their usage of the CAPO CRDs from `v1beta1` 
 
 **For most users, no action is required.** The conversion webhooks handle all translation between v1beta1 and v1beta2 automatically. The changes below are relevant primarily for developers writing controllers or tooling that reads CAPO objects directly.
 
-There are **no breaking changes to spec fields**. All spec fields from v1beta1 are present and unchanged in v1beta2. The breaking changes are limited to status fields and internal representations.
+The v1beta2 API introduces **no removals** to spec fields. All existing spec fields from v1beta1 are preserved, though some have been renamed or restructured for consistency. Status fields have additional breaking changes beyond renaming.
 
 ## API Changes
 
 This only documents backwards incompatible changes. Fields that were added to v1beta2 are not listed here.
+
+### Flavor field restructure
+
+`spec.flavor` (string) and `spec.flavorID` have been replaced by a structured `spec.flavor` object,
+following the ID/Filter pattern used by other fields. This applies to `OpenStackMachine` and to
+`OpenStackCluster`.
+
+```diff
+ spec:
+-  flavor: 
+-  flavorID: 
++  flavor:
++    id: 
++    filter:
++      name: 
+```
+
+For `OpenStackCluster` the same change applies under `spec.bastion.spec.flavor`.
 
 ### Conditions format change
 

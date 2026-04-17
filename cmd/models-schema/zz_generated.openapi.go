@@ -423,6 +423,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ExternalRouterIPParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FilterByNeutronTags":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FilterByNeutronTags(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FixedIP":                                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FixedIP(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorFilter":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorFilter(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorParam":                                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageFilter":                                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ImageFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ImageParam(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.LoadBalancer":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(ref),
@@ -22740,6 +22742,54 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FixedIP(ref com
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "FlavorFilter describes a query for a flavor. If defined, the combination of attributes should return exactly one flavor, if not an error will be raised.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The name of the desired flavor.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorParam(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "FlavorParam describes a nova flavor. It can be specified by ID or filter",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID is the uuid of the flavor. ID will not be validated before use.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"filter": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Filter describes a query for a flavor.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorFilter"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorFilter"},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ImageFilter(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -23996,16 +24046,8 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The flavor reference for the flavor for your server instance.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"flavorID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FlavorID allows flavors to be specified by ID.  This field takes precedence over Flavor.",
-							Type:        []string{"string"},
-							Format:      "",
+							Default: map[string]interface{}{},
+							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorParam"),
 						},
 					},
 					"image": {
@@ -24175,11 +24217,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 						},
 					},
 				},
-				Required: []string{"image"},
+				Required: []string{"flavor", "image"},
 			},
 		},
 		Dependencies: []string{
-			v1.TypedLocalObjectReference{}.OpenAPIModelName(), "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SchedulerHintAdditionalProperty", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerMetadata"},
+			v1.TypedLocalObjectReference{}.OpenAPIModelName(), "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.AdditionalBlockDevice", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.PortOpts", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RootVolume", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SchedulerHintAdditionalProperty", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerMetadata"},
 	}
 }
 

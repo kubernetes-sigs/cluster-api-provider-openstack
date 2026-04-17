@@ -77,6 +77,37 @@ func (f *ImageFilter) IsZero() bool {
 	return f.Name == nil && len(f.Tags) == 0
 }
 
+// FlavorParam describes a nova flavor. It can be specified by ID or filter
+// +kubebuilder:validation:MaxProperties:=1
+// +kubebuilder:validation:MinProperties:=1
+type FlavorParam struct {
+	// ID is the uuid of the flavor. ID will not be validated before use.
+	// +optional
+	ID optional.String `json:"id,omitempty"`
+
+	// Filter describes a query for a flavor.
+	// +optional
+	Filter *FlavorFilter `json:"filter,omitempty"`
+}
+
+// FlavorFilter describes a query for a flavor. If defined,
+// the combination of attributes should return exactly one
+// flavor, if not an error will be raised.
+// +kubebuilder:validation:MinProperties:=1
+type FlavorFilter struct {
+	// The name of the desired flavor.
+	// +optional
+	Name optional.String `json:"name,omitempty"`
+}
+
+func (f *FlavorFilter) IsZero() bool {
+	if f == nil {
+		return true
+	}
+
+	return f.Name == nil
+}
+
 type ExternalRouterIPParam struct {
 	// The FixedIP in the corresponding subnet
 	FixedIP string `json:"fixedIP,omitempty"`

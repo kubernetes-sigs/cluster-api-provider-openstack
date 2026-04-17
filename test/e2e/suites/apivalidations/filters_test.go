@@ -38,8 +38,12 @@ var _ = Describe("Filter API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine = &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Flavor: ptr.To("flavor-name"),
-				Image:  infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To("flavor-name"),
+					},
+				},
+				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
 			},
 		}
 		machine.Namespace = namespace.Name
@@ -188,6 +192,42 @@ var _ = Describe("Filter API validations", func() {
 			{Tags: []infrav1.NeutronTag{"foo", ""}},
 		}),
 	)
+
+	Context("FlavorParam", func() {
+		It("should allow setting ID", func() {
+			machine.Spec.Flavor = infrav1.FlavorParam{
+				ID: ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9"),
+			}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
+
+		It("should allow setting non-empty Filter", func() {
+			machine.Spec.Flavor = infrav1.FlavorParam{
+				Filter: &infrav1.FlavorFilter{Name: ptr.To("m1.small")},
+			}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+		})
+
+		It("should not allow setting empty param", func() {
+			machine.Spec.Flavor = infrav1.FlavorParam{}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting empty Filter", func() {
+			machine.Spec.Flavor = infrav1.FlavorParam{
+				Filter: &infrav1.FlavorFilter{},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+
+		It("should not allow setting both ID and Filter", func() {
+			machine.Spec.Flavor = infrav1.FlavorParam{
+				ID:     ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9"),
+				Filter: &infrav1.FlavorFilter{Name: ptr.To("m1.small")},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "OpenStackMachine creation should fail")
+		})
+	})
 
 	Context("ImageParam", func() {
 		const imageUUID = "5a78f794-cdc3-48d2-8d9f-0fd472fdd743"

@@ -26,6 +26,7 @@ import (
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
 func TestOpenStackClusterConversion(t *testing.T) {
@@ -48,6 +49,12 @@ func TestOpenStackClusterConversion(t *testing.T) {
 				},
 			},
 			ManagedSecurityGroups: &ManagedSecurityGroups{},
+			Bastion: &Bastion{
+				Enabled: ptr.To(true),
+				Spec: &OpenStackMachineSpec{
+					Flavor: ptr.To("m1.small"),
+				},
+			},
 		},
 		Status: OpenStackClusterStatus{
 			Ready: true,
@@ -91,6 +98,12 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	g.Expect(dst.Namespace).To(Equal("default"))
 	g.Expect(dst.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 	g.Expect(dst.Spec.ManagedSubnets).To(HaveLen(1))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Bastion.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Bastion.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Bastion.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Bastion.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Verify FailureDomains converted from map to slice
 	g.Expect(dst.Status.FailureDomains).To(HaveLen(2))
@@ -138,7 +151,80 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	g.Expect(restored.Status.FailureDomains["az-2"].Attributes).To(HaveKeyWithValue("region", "us-west-1"))
 }
 
-func TestOpenStackMachineConversion(t *testing.T) {
+// TestOpenStackMachineConversion_FlavorIDTakesPrecedence verifies that when
+// both Flavor (name) and FlavorID are set on a v1beta1 object, FlavorID wins
+// on upgrade to v1beta2.
+//
+// On the round-trip back to v1beta1, CAPI's restore annotation mechanism
+// preserves the original Flavor name alongside the restored FlavorID, so both
+// fields are non-nil after the round-trip.
+func TestOpenStackMachineConversion_FlavorIDTakesPrecedence(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-machine",
+		},
+		Spec: OpenStackMachineSpec{
+			// Both set — FlavorID should win on upgrade.
+			Flavor:   ptr.To("m1.small"),
+			FlavorID: ptr.To("uuid-456"),
+			Image: ImageParam{
+				Filter: &ImageFilter{
+					Name: ptr.To("ubuntu-22.04"),
+				},
+			},
+		},
+	}
+
+	dst := &infrav1.OpenStackMachine{}
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
+
+	// FlavorID takes precedence: ID must be set, Filter must be nil.
+	g.Expect(dst.Spec.Flavor.ID).NotTo(BeNil())
+	g.Expect(*dst.Spec.Flavor.ID).To(Equal("uuid-456"))
+	g.Expect(dst.Spec.Flavor.Filter).To(BeNil())
+
+	// Round-trip back: FlavorID is restored from the hub value.
+	// The restore annotation also brings back the original Flavor name, so
+	// both fields will be non-nil — this is expected CAPI behaviour.
+	restored := &OpenStackMachine{}
+	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
+
+	g.Expect(restored.Spec.FlavorID).To(Equal(ptr.To("uuid-456")))
+	// Flavor (name) is restored via annotation — it is NOT lost.
+	g.Expect(restored.Spec.Flavor).To(Equal(ptr.To("m1.small")))
+}
+
+// TestOpenStackMachineConversion_NeitherFlavorNorFlavorID verifies that
+// a v1beta1 object with neither Flavor nor FlavorID set is rejected during
+// conversion rather than producing an invalid FlavorParam{} in v1beta2.
+func TestOpenStackMachineConversion_NeitherFlavorNorFlavorID(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-machine",
+		},
+		Spec: OpenStackMachineSpec{
+			Image: ImageParam{
+				Filter: &ImageFilter{
+					Name: ptr.To("ubuntu-22.04"),
+				},
+			},
+		},
+	}
+
+	dst := &infrav1.OpenStackMachine{}
+	err := src.ConvertTo(dst)
+
+	// Neither Flavor nor FlavorID is set: conversion must fail rather than
+	// produce FlavorParam{} which would violate MinProperties=1.
+	g.Expect(err).To(HaveOccurred())
+	g.Expect(err.Error()).To(ContainSubstring("neither Flavor nor FlavorID is set"))
+}
+
+func TestOpenStackMachineConversion_FlavorName(t *testing.T) {
 	g := NewWithT(t)
 
 	src := &OpenStackMachine{
@@ -180,9 +266,14 @@ func TestOpenStackMachineConversion(t *testing.T) {
 
 	// Verify basic fields
 	g.Expect(dst.Name).To(Equal("test-machine"))
-	g.Expect(dst.Spec.Flavor).To(Equal(ptr.To("m1.small")))
 	g.Expect(dst.Spec.SSHKeyName).To(Equal("test-key"))
 	g.Expect(ptr.Deref((*string)(dst.Spec.Image.Filter.Name), "")).To(Equal("ubuntu-22.04"))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Verify status fields including Initialization and InstanceID
 	g.Expect(dst.Status.Initialization).NotTo(BeNil())
@@ -201,11 +292,46 @@ func TestOpenStackMachineConversion(t *testing.T) {
 	// Verify round-trip
 	g.Expect(restored.Name).To(Equal(src.Name))
 	g.Expect(restored.Spec.Flavor).To(Equal(src.Spec.Flavor))
+	g.Expect(restored.Spec.FlavorID).To(BeNil())
 	g.Expect(restored.Spec.SSHKeyName).To(Equal("test-key"))
 	g.Expect(restored.Status.Ready).To(BeTrue())
 	g.Expect(restored.Status.Initialization).NotTo(BeNil())
 	g.Expect(restored.Status.Initialization.Provisioned).To(BeTrue())
 	g.Expect(*restored.Status.InstanceID).To(Equal("instance-12345"))
+}
+
+func TestOpenStackMachineConversion_FlavorID(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-machine",
+		},
+		Spec: OpenStackMachineSpec{
+			FlavorID:   ptr.To("uuid-123"),
+			SSHKeyName: "test-key",
+			Image: ImageParam{
+				Filter: &ImageFilter{
+					Name: ptr.To("ubuntu-22.04"),
+				},
+			},
+		},
+	}
+
+	dst := &infrav1.OpenStackMachine{}
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
+
+	// Expect ID chosen, Filter nil
+	g.Expect(dst.Spec.Flavor.ID).NotTo(BeNil())
+	g.Expect(*dst.Spec.Flavor.ID).To(Equal("uuid-123"))
+	g.Expect(dst.Spec.Flavor.Filter).To(BeNil())
+
+	// Round-trip back: expect FlavorID set, Flavor nil
+	restored := &OpenStackMachine{}
+	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
+
+	g.Expect(restored.Spec.FlavorID).To(Equal(src.Spec.FlavorID))
+	g.Expect(restored.Spec.Flavor).To(BeNil())
 }
 
 func TestOpenStackClusterTemplateConversion(t *testing.T) {
@@ -228,6 +354,12 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 							CIDR: "10.0.0.0/16",
 						},
 					},
+					Bastion: &Bastion{
+						Enabled: ptr.To(true),
+						Spec: &OpenStackMachineSpec{
+							Flavor: ptr.To("m1.small"),
+						},
+					},
 				},
 			},
 		},
@@ -241,6 +373,12 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 	g.Expect(dst.Name).To(Equal("test-template"))
 	g.Expect(dst.Spec.Template.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 	g.Expect(dst.Spec.Template.Spec.ManagedSubnets).To(HaveLen(1))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Template.Spec.Bastion.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Convert back
 	restored := &OpenStackClusterTemplate{}
@@ -262,7 +400,7 @@ func TestOpenStackMachineTemplateConversion(t *testing.T) {
 		Spec: OpenStackMachineTemplateSpec{
 			Template: OpenStackMachineTemplateResource{
 				Spec: OpenStackMachineSpec{
-					Flavor: ptr.To("m1.large"),
+					Flavor: ptr.To("m1.small"),
 					Image: ImageParam{
 						Filter: &ImageFilter{
 							Name: ptr.To("ubuntu-22.04"),
@@ -279,7 +417,12 @@ func TestOpenStackMachineTemplateConversion(t *testing.T) {
 
 	// Verify template spec
 	g.Expect(dst.Name).To(Equal("test-machine-template"))
-	g.Expect(dst.Spec.Template.Spec.Flavor).To(Equal(ptr.To("m1.large")))
+
+	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
+	g.Expect(dst.Spec.Template.Spec.Flavor.ID).To(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Flavor.Filter).NotTo(BeNil())
+	g.Expect(dst.Spec.Template.Spec.Flavor.Filter.Name).NotTo(BeNil())
+	g.Expect(*dst.Spec.Template.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
 	// Convert back
 	restored := &OpenStackMachineTemplate{}
@@ -513,9 +656,9 @@ func TestOpenStackMachineListConversion(t *testing.T) {
 
 	g.Expect(dst.Items).To(HaveLen(2))
 	g.Expect(dst.Items[0].Name).To(Equal("machine-1"))
-	g.Expect(dst.Items[0].Spec.Flavor).To(Equal(ptr.To("m1.small")))
+	g.Expect(dst.Items[0].Spec.Flavor.Filter.Name).To(Equal(optional.String(ptr.To("m1.small"))))
 	g.Expect(dst.Items[1].Name).To(Equal("machine-2"))
-	g.Expect(dst.Items[1].Spec.Flavor).To(Equal(ptr.To("m1.large")))
+	g.Expect(dst.Items[1].Spec.Flavor.Filter.Name).To(Equal(optional.String(ptr.To("m1.large"))))
 
 	// Convert back
 	restored := &OpenStackMachineList{}
@@ -599,8 +742,7 @@ func TestOpenStackMachineTemplateListConversion(t *testing.T) {
 
 	g.Expect(dst.Items).To(HaveLen(1))
 	g.Expect(dst.Items[0].Name).To(Equal("mt-1"))
-	g.Expect(dst.Items[0].Spec.Template.Spec.Flavor).To(Equal(ptr.To("m1.xlarge")))
-
+	g.Expect(dst.Items[0].Spec.Template.Spec.Flavor.Filter.Name).To(Equal(optional.String(ptr.To("m1.xlarge"))))
 	// Convert back
 	restored := &OpenStackMachineTemplateList{}
 	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
@@ -764,7 +906,11 @@ func TestReadyFlagFromConditions(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: infrav1.OpenStackMachineSpec{
-			Flavor: ptr.To("m1.small"),
+			Flavor: infrav1.FlavorParam{
+				Filter: &infrav1.FlavorFilter{
+					Name: ptr.To("m1.small"),
+				},
+			},
 			Image: infrav1.ImageParam{
 				Filter: &infrav1.ImageFilter{
 					Name: ptr.To("ubuntu"),

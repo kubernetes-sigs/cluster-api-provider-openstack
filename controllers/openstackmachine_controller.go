@@ -635,11 +635,21 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, "no network configured: cluster network is missing and machine spec does not define ports with a network")
 	}
 
+	var serverFlavor *string
+	var serverFlavorID *string
+
+	if openStackMachineSpec.Flavor.ID != nil {
+		serverFlavorID = (*string)(openStackMachineSpec.Flavor.ID)
+	}
+	if openStackMachineSpec.Flavor.Filter != nil && openStackMachineSpec.Flavor.Filter.Name != nil {
+		serverFlavor = (*string)(openStackMachineSpec.Flavor.Filter.Name)
+	}
+
 	openStackServerSpec := &infrav1alpha1.OpenStackServerSpec{
 		AdditionalBlockDevices:            openStackMachineSpec.AdditionalBlockDevices,
 		ConfigDrive:                       openStackMachineSpec.ConfigDrive,
-		Flavor:                            openStackMachineSpec.Flavor,
-		FlavorID:                          openStackMachineSpec.FlavorID,
+		Flavor:                            serverFlavor,
+		FlavorID:                          serverFlavorID,
 		IdentityRef:                       identityRef,
 		Image:                             openStackMachineSpec.Image,
 		RootVolume:                        openStackMachineSpec.RootVolume,

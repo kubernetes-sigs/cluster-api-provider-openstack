@@ -12,7 +12,9 @@ metadata:
 spec:
   template:
     spec:
-      flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
+      flavor:
+        filter:
+          name: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR}
       image:
         imageRef:
           name: node-image
@@ -29,7 +31,9 @@ metadata:
 spec:
   template:
     spec:
-      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR}
+      flavor:
+        filter:
+          name: ${OPENSTACK_NODE_MACHINE_FLAVOR}
       image:
         imageRef:
           name: node-image

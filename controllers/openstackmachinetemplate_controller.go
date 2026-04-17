@@ -175,7 +175,7 @@ func (r *OpenStackMachineTemplateReconciler) reconcileNormal(ctx context.Context
 		return err
 	}
 
-	flavorID, err := computeService.GetFlavorID(openStackMachineTemplate.Spec.Template.Spec.FlavorID, openStackMachineTemplate.Spec.Template.Spec.Flavor)
+	flavorID, err := computeService.GetFlavorID(openStackMachineTemplate.Spec.Template.Spec.Flavor)
 	if err != nil {
 		return err
 	}
