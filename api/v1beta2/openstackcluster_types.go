@@ -41,16 +41,6 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ManagedSubnets []SubnetSpec `json:"managedSubnets,omitempty"`
 
-	// Router specifies an existing router to be used if ManagedSubnets are
-	// specified. If specified, no new router will be created.
-	// +optional
-	Router *RouterParam `json:"router,omitempty"`
-
-	// Network specifies an existing network to use if no ManagedSubnets
-	// are specified.
-	// +optional
-	Network *NetworkParam `json:"network,omitempty"`
-
 	// Subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.
 	// There can be zero, one, or two subnets. If no subnets are specified,
@@ -61,12 +51,21 @@ type OpenStackClusterSpec struct {
 	// +optional
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 
-	// NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
-	// This value will be used only if the Cluster actuator creates the network.
-	// If left empty, the network will have the default MTU defined in Openstack network service.
-	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
+	// Router specifies an existing router to be used if ManagedSubnets are
+	// specified. If specified, no new router will be created.
 	// +optional
-	NetworkMTU optional.Int `json:"networkMTU,omitempty"`
+	Router *RouterParam `json:"router,omitempty"`
+
+	// ManagedNetwork specifies attributes of the network. The values are used only
+	// if the Cluster actuator creates the network.
+	// +kubebuilder:validation:XValidation:rule="self == null || has(self.mtu) || has(self.disablePortSecurity)",message="managedNetwork must not be empty if set"
+	// +optional
+	ManagedNetwork *ManagedNetwork `json:"managedNetwork,omitempty"`
+
+	// Network specifies an existing network to use if no ManagedSubnets
+	// are specified.
+	// +optional
+	Network *NetworkParam `json:"network,omitempty"`
 
 	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
@@ -147,11 +146,6 @@ type OpenStackClusterSpec struct {
 	// When defined to an empty struct, the managed security groups will be created with the default rules.
 	// +optional
 	ManagedSecurityGroups *ManagedSecurityGroups `json:"managedSecurityGroups,omitempty"`
-
-	// DisablePortSecurity disables the port security of the network created for the
-	// Kubernetes cluster, which also disables SecurityGroups
-	// +optional
-	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
 
 	// Tags to set on all resources in cluster which support tags
 	// +listType=set
@@ -283,6 +277,21 @@ type OpenStackClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []OpenStackCluster `json:"items"`
+}
+
+// ManagedNetwork specifies attributes of the network.
+type ManagedNetwork struct {
+	// MTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
+	// This value will be used only if the Cluster actuator creates the network.
+	// If left empty, the network will have the default MTU defined in Openstack network service.
+	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
+	// +optional
+	MTU optional.Int `json:"mtu,omitempty"`
+
+	// DisablePortSecurity disables the port security of the network created for the
+	// Kubernetes cluster, which also disables SecurityGroups
+	// +optional
+	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
 }
 
 // ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.

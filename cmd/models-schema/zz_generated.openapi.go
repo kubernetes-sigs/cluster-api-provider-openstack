@@ -430,6 +430,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.LoadBalancer":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineInitialization":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineInitialization(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineResources":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineResources(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedNetwork(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurityGroups(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkFilter":                              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkParam(ref),
@@ -22990,6 +22991,33 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineResource
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedNetwork(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ManagedNetwork specifies attributes of the network.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"mtu": {
+						SchemaProps: spec.SchemaProps{
+							Description: "MTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID. This value will be used only if the Cluster actuator creates the network. If left empty, the network will have the default MTU defined in Openstack network service. To use this field, the Openstack installation requires the net-mtu neutron API extension.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"disablePortSecurity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurityGroups(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -23467,18 +23495,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 					},
-					"router": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Router specifies an existing router to be used if ManagedSubnets are specified. If specified, no new router will be created.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam"),
-						},
-					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network specifies an existing network to use if no ManagedSubnets are specified.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
-						},
-					},
 					"subnets": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
@@ -23498,11 +23514,22 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 					},
-					"networkMTU": {
+					"router": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID. This value will be used only if the Cluster actuator creates the network. If left empty, the network will have the default MTU defined in Openstack network service. To use this field, the Openstack installation requires the net-mtu neutron API extension.",
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Description: "Router specifies an existing router to be used if ManagedSubnets are specified. If specified, no new router will be created.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam"),
+						},
+					},
+					"managedNetwork": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ManagedNetwork specifies attributes of the network. The values are used only if the Cluster actuator creates the network.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork"),
+						},
+					},
+					"network": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Network specifies an existing network to use if no ManagedSubnets are specified.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
 					"externalRouterIPs": {
@@ -23577,13 +23604,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups"),
 						},
 					},
-					"disablePortSecurity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
 					"tags": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
@@ -23655,7 +23675,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
 	}
 }
 

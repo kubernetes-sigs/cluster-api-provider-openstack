@@ -6,6 +6,7 @@
   - [Migration](#migration)
   - [API Changes](#api-changes)
     - [Flavor field restructure](#flavor-field-restructure)
+    - [Network management fields restructure](#network-management-fields-restructure)
     - [Conditions format change](#conditions-format-change)
     - [Removal of deprecated status fields](#removal-of-deprecated-status-fields)
     - [FailureDomains representation change](#failuredomains-representation-change)
@@ -43,6 +44,23 @@ following the ID/Filter pattern used by other fields. This applies to `OpenStack
 ```
 
 For `OpenStackCluster` the same change applies under `spec.bastion.spec.flavor`.
+
+### Network management fields restructure
+
+`spec.networkMTU` and `spec.disablePortSecurity` have been replaced by a structured
+`spec.managedNetwork` object. The field is optional, but must not be empty if set.
+This applies to `OpenStackCluster` and `OpenStackClusterTemplate`.
+
+```diff
+ spec:
+-  networkMTU: 
+-  disablePortSecurity: 
++  managedNetwork:
++    mtu: 
++    disablePortSecurity: 
+```
+
+For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.managedNetwork`.
 
 ### Conditions format change
 
