@@ -8,4 +8,12 @@
 
 # Getting Started
 
-{{#embed-github repo:"kubernetes-sigs/cluster-api" path:"docs/book/src/user/quick-start.md"}}
+Please refer to the upstream Cluster API [Quick Start guide](https://cluster-api.sigs.k8s.io/user/quick-start) for instructions on how to set up a management cluster and create your first workload cluster.
+
+The quick start guide covers:
+
+- Installing prerequisites (`clusterctl`, `kind`, `kubectl`, etc.)
+- Creating a management cluster
+- Initializing infrastructure providers
+- Generating cluster configurations
+- Creating workload clusters
