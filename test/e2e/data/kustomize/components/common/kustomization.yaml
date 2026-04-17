@@ -8,6 +8,40 @@ patches:
     kind: OpenStackCluster
     name: \${CLUSTER_NAME}
   path: patch-cluster.yaml
+- target:
+    group: infrastructure.cluster.x-k8s.io
+    version: v1beta1
+    kind: OpenStackCluster
+    name: \${CLUSTER_NAME}
+  patch: |-
+    - op: add
+      path: /spec/bastion
+      value:
+        enabled: true
+        spec:
+          flavor: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
+          image:
+            filter:
+              name: ${OPENSTACK_BASTION_IMAGE_NAME}
+          sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
+- target:
+    group: infrastructure.cluster.x-k8s.io
+    version: v1beta2
+    kind: OpenStackCluster
+    name: \${CLUSTER_NAME}
+  patch: |-
+    - op: add
+      path: /spec/bastion
+      value:
+        enabled: true
+        spec:
+          flavor:
+            filter:
+              name: ${OPENSTACK_BASTION_MACHINE_FLAVOR}
+          image:
+            filter:
+              name: ${OPENSTACK_BASTION_IMAGE_NAME}
+          sshKeyName: ${OPENSTACK_SSH_KEY_NAME}
 # Use network name instead of ID for external network
 - patch: |-
     - op: "remove"
@@ -30,13 +64,3 @@ patches:
       value:
         imageRef:
           name: node-image
-- target:
-    group: infrastructure.cluster.x-k8s.io
-    version: v1beta2
-    kind: OpenStackCluster
-  patch: |-
-    - op: replace
-      path: /spec/bastion/spec/image
-      value:
-        imageRef:
-          name: bastion-image

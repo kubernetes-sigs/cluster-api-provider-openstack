@@ -211,7 +211,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 			bastionSpec := openStackCluster.Spec.Bastion
-			bastionFlavor := openStackCluster.Spec.Bastion.Spec.Flavor
+			bastionFlavor := openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name
 			Expect(openStackCluster.Status.Bastion).NotTo(BeNil(), "OpenStackCluster.Status.Bastion has not been populated")
 			bastionServerName := openStackCluster.Status.Bastion.Name
 			bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName})
@@ -290,7 +290,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					return err
 				}
 				openStackCluster.Spec.Bastion = bastionSpec
-				openStackCluster.Spec.Bastion.Spec.Flavor = bastionNewFlavorName
+				if openStackCluster.Spec.Bastion.Spec.Flavor.Filter == nil {
+					openStackCluster.Spec.Bastion.Spec.Flavor.Filter = &infrav1.FlavorFilter{}
+				}
+				openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name = bastionNewFlavorName
 				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
 			}, "30s", "1s").Should(Succeed())
 			Eventually(
@@ -329,7 +332,10 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					return err
 				}
 				openStackCluster.Spec.Bastion = bastionSpec
-				openStackCluster.Spec.Bastion.Spec.Flavor = bastionFlavor
+				if openStackCluster.Spec.Bastion.Spec.Flavor.Filter == nil {
+					openStackCluster.Spec.Bastion.Spec.Flavor.Filter = &infrav1.FlavorFilter{}
+				}
+				openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name = bastionFlavor
 				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
 			}, "30s", "1s").Should(Succeed())
 			Eventually(
@@ -1424,7 +1430,11 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),
@@ -1450,7 +1460,11 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),

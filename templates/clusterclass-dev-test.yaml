@@ -104,8 +104,15 @@ spec:
             description: "OpenStackMachineSpec for the bastion host"
             properties:
               flavor:
-                type: string
+                type: object
                 description: "OpenStack flavor for the bastion"
+                properties:
+                  filter:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: "Name of the flavor to use for bastion"
               image:
                 type: object
                 properties:
@@ -510,7 +517,9 @@ metadata:
 spec:
   template:
     spec:
-      flavor: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:=m1.medium}
+      flavor:
+        filter:
+          name: ${OPENSTACK_CONTROL_PLANE_MACHINE_FLAVOR:=m1.medium}
       image:
         imageRef:
           name: node-image
@@ -523,7 +532,9 @@ metadata:
 spec:
   template:
     spec:
-      flavor: ${OPENSTACK_NODE_MACHINE_FLAVOR:=m1.small}
+      flavor:
+        filter:
+          name: ${OPENSTACK_NODE_MACHINE_FLAVOR:=m1.small}
       image:
         imageRef:
           name: node-image

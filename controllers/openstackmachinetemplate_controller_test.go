@@ -383,7 +383,9 @@ func newOSMT(name, clusterName string, paused bool, rootVolume bool, ownerRef bo
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					FlavorID: ptr.To(flavorID),
+					Flavor: infrav1.FlavorParam{
+						ID: ptr.To(flavorID),
+					},
 					Image: infrav1.ImageParam{
 						ID: &imageID,
 					},
@@ -742,7 +744,9 @@ var _ = Describe("OpenStackMachineTemplate controller", func() {
 			Spec: infrav1.OpenStackMachineTemplateSpec{
 				Template: infrav1.OpenStackMachineTemplateResource{
 					Spec: infrav1.OpenStackMachineSpec{
-						FlavorID: ptr.To(flavorID),
+						Flavor: infrav1.FlavorParam{
+							ID: ptr.To(flavorID),
+						},
 						Image: infrav1.ImageParam{
 							ID: &imageID,
 						},

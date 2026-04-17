@@ -759,7 +759,9 @@ spec:
   bastion:
     enabled: true
     spec:
-      flavor: <Flavor name>
+      flavor:
+        filter:
+          name: <Flavor name>
       image:  <Image name>
       sshKeyName: <Key pair name>
 ```

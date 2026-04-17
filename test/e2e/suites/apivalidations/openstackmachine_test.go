@@ -34,8 +34,12 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine := &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Image:  infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
-				Flavor: ptr.To("flavor-name"),
+				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To("flavor-name"),
+					},
+				},
 			},
 		}
 		machine.Namespace = namespace.Name
@@ -162,12 +166,64 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			machine := defaultMachine()
 
 			By("Creating a machine with no flavor or flavor id")
-			machine.Spec.Flavor = nil
+			machine.Spec.Flavor = infrav1.FlavorParam{}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with no flavor name or id should fail")
 
 			By("Creating a machine with a flavor id")
-			machine.Spec.FlavorID = ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9")
+			machine.Spec.Flavor.ID = ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9")
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a flavor id should succeed")
+		})
+
+		It("should not allow both flavor id and filter to be set", func() {
+			machine := defaultMachine()
+
+			By("Creating a machine with both flavor id and filter")
+			machine.Spec.Flavor = infrav1.FlavorParam{
+				ID: ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9"),
+				Filter: &infrav1.FlavorFilter{
+					Name: ptr.To("m1.small"),
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with both flavor id and filter should fail")
+		})
+
+		It("should not allow an empty flavor filter", func() {
+			machine := defaultMachine()
+
+			By("Creating a machine with an empty flavor filter")
+			machine.Spec.Flavor = infrav1.FlavorParam{
+				Filter: &infrav1.FlavorFilter{},
+			}
+			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an empty flavor filter should fail")
+		})
+
+		It("should allow a flavor filter with name set", func() {
+			By("Creating a machine with a flavor filter name")
+			machine := defaultMachine()
+			machine.Spec.Flavor = infrav1.FlavorParam{Filter: &infrav1.FlavorFilter{Name: ptr.To("m1.small")}}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a flavor filter name should succeed")
+		})
+
+		It("should not allow the flavor to be changed", func() {
+			machine := defaultMachine()
+
+			By("Creating a bare machine")
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+
+			By("Changing the flavor filter name")
+			machine.Spec.Flavor = infrav1.FlavorParam{Filter: &infrav1.FlavorFilter{Name: ptr.To("m1.large")}}
+			Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Updating flavor should fail")
+		})
+
+		It("should not allow the flavor representation to be changed from filter to id", func() {
+			machine := defaultMachine()
+
+			By("Creating a machine with a flavor filter")
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
+
+			By("Changing the flavor from filter to id")
+			machine.Spec.Flavor = infrav1.FlavorParam{ID: ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9")}
+			Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Changing flavor representation should fail")
 		})
 	})
 

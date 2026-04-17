@@ -563,23 +563,12 @@ string
 <td>
 <code>flavor</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">
+FlavorParam
+</a>
 </em>
 </td>
 <td>
-<p>The flavor reference for the flavor for your server instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>flavorID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
-over Flavor.</p>
 </td>
 </tr>
 <tr>
@@ -1777,6 +1766,84 @@ string
 is also specified, IPAddress must be a valid IP address in the
 subnet. If Subnet is not specified, IPAddress must be a valid IP
 address in any subnet of the port&rsquo;s network.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.FlavorFilter">FlavorFilter
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">FlavorParam</a>)
+</p>
+<p>
+<p>FlavorFilter describes a query for a flavor. If defined,
+the combination of attributes should return exactly one
+flavor, if not an error will be raised.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the desired flavor.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">FlavorParam
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineSpec">OpenStackMachineSpec</a>)
+</p>
+<p>
+<p>FlavorParam describes a nova flavor. It can be specified by ID or filter</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID is the uuid of the flavor. ID will not be validated before use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorFilter">
+FlavorFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter describes a query for a flavor.</p>
 </td>
 </tr>
 </tbody>
@@ -3439,23 +3506,12 @@ string
 <td>
 <code>flavor</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">
+FlavorParam
+</a>
 </em>
 </td>
 <td>
-<p>The flavor reference for the flavor for your server instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>flavorID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
-over Flavor.</p>
 </td>
 </tr>
 <tr>
@@ -3812,23 +3868,12 @@ string
 <td>
 <code>flavor</code><br/>
 <em>
-string
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">
+FlavorParam
+</a>
 </em>
 </td>
 <td>
-<p>The flavor reference for the flavor for your server instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>flavorID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>FlavorID allows flavors to be specified by ID.  This field takes precedence
-over Flavor.</p>
 </td>
 </tr>
 <tr>
