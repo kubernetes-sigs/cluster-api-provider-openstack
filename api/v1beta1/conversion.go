@@ -364,6 +364,42 @@ func Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(
 	return nil
 }
 
+func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
+	in *OpenStackClusterSpec,
+	out *infrav1.OpenStackClusterSpec,
+	s apiconversion.Scope,
+) error {
+	if err := autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in, out, s); err != nil {
+		return err
+	}
+
+	if in.NetworkMTU != nil || in.DisablePortSecurity != nil {
+		out.ManagedNetwork = &infrav1.ManagedNetwork{
+			MTU:                 in.NetworkMTU,
+			DisablePortSecurity: in.DisablePortSecurity,
+		}
+	}
+
+	return nil
+}
+
+func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
+	in *infrav1.OpenStackClusterSpec,
+	out *OpenStackClusterSpec,
+	s apiconversion.Scope,
+) error {
+	if err := autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in, out, s); err != nil {
+		return err
+	}
+
+	if in.ManagedNetwork != nil {
+		out.NetworkMTU = in.ManagedNetwork.MTU
+		out.DisablePortSecurity = in.ManagedNetwork.DisablePortSecurity
+	}
+
+	return nil
+}
+
 // LegacyCalicoSecurityGroupRules returns a list of security group rules for calico
 // that need to be applied to the control plane and worker security groups when
 // managed security groups are enabled and upgrading to v1beta1.

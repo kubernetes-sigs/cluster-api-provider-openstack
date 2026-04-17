@@ -2050,6 +2050,15 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.PortStatus
           elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedNetwork
+  map:
+    fields:
+    - name: disablePortSecurity
+      type:
+        scalar: boolean
+    - name: mtu
+      type:
+        scalar: numeric
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedSecurityGroups
   map:
     fields:
@@ -2229,9 +2238,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: disableExternalNetwork
       type:
         scalar: boolean
-    - name: disablePortSecurity
-      type:
-        scalar: boolean
     - name: externalNetwork
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
@@ -2245,6 +2251,9 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
       default: {}
+    - name: managedNetwork
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedNetwork
     - name: managedSecurityGroups
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedSecurityGroups
@@ -2257,9 +2266,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
-    - name: networkMTU
-      type:
-        scalar: numeric
     - name: router
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterParam

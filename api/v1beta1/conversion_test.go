@@ -98,6 +98,7 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	g.Expect(dst.Namespace).To(Equal("default"))
 	g.Expect(dst.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 	g.Expect(dst.Spec.ManagedSubnets).To(HaveLen(1))
+	g.Expect(dst.Spec.ManagedNetwork).To(BeNil())
 
 	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
 	g.Expect(dst.Spec.Bastion.Spec.Flavor.ID).To(BeNil())
@@ -136,6 +137,8 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	g.Expect(restored.Spec.IdentityRef).To(Equal(src.Spec.IdentityRef))
 	g.Expect(restored.Status.Ready).To(BeTrue())
 	g.Expect(restored.Status.Conditions).To(HaveLen(2))
+	g.Expect(restored.Spec.NetworkMTU).To(BeNil())
+	g.Expect(restored.Spec.DisablePortSecurity).To(BeNil())
 
 	// Severity is lost during conversion, so it won't match exactly
 	g.Expect(restored.Status.Conditions[0].Type).To(Equal(src.Status.Conditions[0].Type))
@@ -966,4 +969,65 @@ func TestIsReadyHelper(t *testing.T) {
 	// Test with empty conditions
 	g.Expect(infrav1.IsReady(nil)).To(BeFalse())
 	g.Expect(infrav1.IsReady([]metav1.Condition{})).To(BeFalse())
+}
+
+func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
+	mtu := optional.Int(ptr.To(1500))
+	disablePS := optional.Bool(ptr.To(true))
+
+	tests := []struct {
+		name string
+		in   OpenStackCluster
+	}{
+		{
+			name: "both fields set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					NetworkMTU:          mtu,
+					DisablePortSecurity: disablePS,
+				},
+			},
+		},
+		{
+			name: "only MTU set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{NetworkMTU: mtu},
+			},
+		},
+		{
+			name: "only DisablePortSecurity set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{DisablePortSecurity: disablePS},
+			},
+		},
+		{
+			name: "neither set — ManagedNetwork stays nil",
+			in:   OpenStackCluster{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackCluster{}
+			g.Expect(tt.in.ConvertTo(hub)).To(Succeed())
+
+			// Verify intermediate v1beta2 state
+			if tt.in.Spec.NetworkMTU == nil && tt.in.Spec.DisablePortSecurity == nil {
+				g.Expect(hub.Spec.ManagedNetwork).To(BeNil())
+			} else {
+				g.Expect(hub.Spec.ManagedNetwork).NotTo(BeNil())
+				g.Expect(hub.Spec.ManagedNetwork.MTU).To(Equal(tt.in.Spec.NetworkMTU))
+				g.Expect(hub.Spec.ManagedNetwork.DisablePortSecurity).To(Equal(tt.in.Spec.DisablePortSecurity))
+			}
+
+			restored := &OpenStackCluster{}
+			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
+
+			// Verify final v1beta1 state
+			g.Expect(restored.Spec.NetworkMTU).To(Equal(tt.in.Spec.NetworkMTU))
+			g.Expect(restored.Spec.DisablePortSecurity).To(Equal(tt.in.Spec.DisablePortSecurity))
+		})
+	}
 }
