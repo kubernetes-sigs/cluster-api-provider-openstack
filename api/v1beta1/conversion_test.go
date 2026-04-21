@@ -197,8 +197,9 @@ func TestOpenStackMachineConversion_FlavorIDTakesPrecedence(t *testing.T) {
 }
 
 // TestOpenStackMachineConversion_NeitherFlavorNorFlavorID verifies that
-// a v1beta1 object with neither Flavor nor FlavorID set is rejected during
-// conversion rather than producing an invalid FlavorParam{} in v1beta2.
+// a v1beta1 object with neither Flavor nor FlavorID set is handled
+// gracefully during conversion. This can happen when the apiserver sends
+// objects without a spec (e.g. in the context of managedField conversion).
 func TestOpenStackMachineConversion_NeitherFlavorNorFlavorID(t *testing.T) {
 	g := NewWithT(t)
 
@@ -216,12 +217,12 @@ func TestOpenStackMachineConversion_NeitherFlavorNorFlavorID(t *testing.T) {
 	}
 
 	dst := &infrav1.OpenStackMachine{}
-	err := src.ConvertTo(dst)
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
-	// Neither Flavor nor FlavorID is set: conversion must fail rather than
-	// produce FlavorParam{} which would violate MinProperties=1.
-	g.Expect(err).To(HaveOccurred())
-	g.Expect(err.Error()).To(ContainSubstring("neither Flavor nor FlavorID is set"))
+	// Neither Flavor nor FlavorID is set: the resulting FlavorParam is
+	// zero-valued. API validation (not conversion) is responsible for
+	// rejecting objects without a flavor.
+	g.Expect(dst.Spec.Flavor).To(Equal(infrav1.FlavorParam{}))
 }
 
 func TestOpenStackMachineConversion_FlavorName(t *testing.T) {
