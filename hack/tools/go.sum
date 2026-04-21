@@ -922,8 +922,8 @@ mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 h1:ssMzja7PDPJV8FStj7hq9IKiu
 mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15/go.mod h1:4M5MMXl2kW6fivUT6yRGpLLPNfuGtU2Z0cPvFquGDYU=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 h1:jpcvIRr3GLoUoEKRkHKSmGjxb6lWwrBlJsXc+eUYQHM=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2/go.mod h1:Ve9uj1L+deCXFrPOk1LpFXqTg7LCFzFso6PA48q/XZw=
-sigs.k8s.io/cluster-api v1.13.0-beta.1 h1:ePK9r+ZeRNz2b8h9RhDcytq4LL6FdrqnD10d1w6AMFg=
-sigs.k8s.io/cluster-api v1.13.0-beta.1/go.mod h1:ccNAETmL0s+NVrqXeL1/emE8pcv0hza5InlOALB89qQ=
+sigs.k8s.io/cluster-api v1.13.0-rc.0 h1:1RArWJbP1L8ijvM16mofaNsfZiR97WND/tlO2AuZKy0=
+sigs.k8s.io/cluster-api v1.13.0-rc.0/go.mod h1:2ztlMTMi6WwMR/6jriSCpF+Vswr652JB1veFMpbh4Lc=
 sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519 h1:WkOO6Fg3tmbuFXqTMFfs80mapaQyBbdIC5p86LIVlBI=
 sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519/go.mod h1:/Zjkh19AmjuI4piKJ1fAZW7k0cDZsSoAAcGHKGZJTZU=
 sigs.k8s.io/cluster-api/test v1.13.0-beta.0 h1:kOMfJG9NgVAS7a675NnwAsr1JxH1yGq9IB+o+AWKbF8=
