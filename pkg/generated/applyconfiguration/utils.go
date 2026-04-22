@@ -230,6 +230,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta2.MachineResourcesApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("ManagedNetwork"):
 		return &apiv1beta2.ManagedNetworkApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("ManagedRouter"):
+		return &apiv1beta2.ManagedRouterApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("ManagedSecurityGroups"):
 		return &apiv1beta2.ManagedSecurityGroupsApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("NetworkFilter"):

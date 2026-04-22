@@ -1032,3 +1032,86 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenStackCluster_RoundTrip_ManagedRouter(t *testing.T) {
+	tests := []struct {
+		name string
+		in   OpenStackCluster
+	}{
+		{
+			name: "single IP with subnet filter name",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ExternalRouterIPs: []ExternalRouterIPParam{
+						{
+							FixedIP: "10.0.0.1",
+							Subnet: SubnetParam{
+								Filter: &SubnetFilter{Name: "my-subnet"},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple IPs",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ExternalRouterIPs: []ExternalRouterIPParam{
+						{
+							FixedIP: "10.0.0.1",
+							Subnet:  SubnetParam{Filter: &SubnetFilter{Name: "subnet-a"}},
+						},
+						{
+							FixedIP: "10.0.0.2",
+							Subnet:  SubnetParam{Filter: &SubnetFilter{Name: "subnet-b"}},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "subnet by ID",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ExternalRouterIPs: []ExternalRouterIPParam{
+						{
+							FixedIP: "10.0.0.1",
+							Subnet:  SubnetParam{ID: optional.String(ptr.To("some-uuid"))},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "no ExternalRouterIPs — ManagedRouter stays nil",
+			in:   OpenStackCluster{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackCluster{}
+			g.Expect(tt.in.ConvertTo(hub)).To(Succeed())
+
+			// Verify intermediate v1beta2 state
+			if len(tt.in.Spec.ExternalRouterIPs) == 0 {
+				g.Expect(hub.Spec.ManagedRouter).To(BeNil())
+			} else {
+				g.Expect(hub.Spec.ManagedRouter).NotTo(BeNil())
+				g.Expect(hub.Spec.ManagedRouter.ExternalIPs).To(HaveLen(len(tt.in.Spec.ExternalRouterIPs)))
+				for i, rip := range tt.in.Spec.ExternalRouterIPs {
+					g.Expect(hub.Spec.ManagedRouter.ExternalIPs[i].FixedIP).To(Equal(rip.FixedIP))
+				}
+			}
+
+			restored := &OpenStackCluster{}
+			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
+
+			// Verify full round-trip
+			g.Expect(restored.Spec.ExternalRouterIPs).To(Equal(tt.in.Spec.ExternalRouterIPs))
+		})
+	}
+}

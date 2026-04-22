@@ -37,6 +37,9 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// all subnets in Network will be used. If 2 subnets are specified, one
 	// must be IPv4 and the other IPv6.
 	Subnets []SubnetParamApplyConfiguration `json:"subnets,omitempty"`
+	// ManagedRouter specifies attributes of the router. The values are used only
+	// if the Cluster actuator creates the router.
+	ManagedRouter *ManagedRouterApplyConfiguration `json:"managedRouter,omitempty"`
 	// Router specifies an existing router to be used if ManagedSubnets are
 	// specified. If specified, no new router will be created.
 	Router *RouterParamApplyConfiguration `json:"router,omitempty"`
@@ -46,9 +49,6 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// Network specifies an existing network to use if no ManagedSubnets
 	// are specified.
 	Network *NetworkParamApplyConfiguration `json:"network,omitempty"`
-	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
-	// This is necessary if the router needs a fixed ip in a specific subnet.
-	ExternalRouterIPs []ExternalRouterIPParamApplyConfiguration `json:"externalRouterIPs,omitempty"`
 	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// This option is ignored if DisableExternalNetwork is set to true.
 	//
@@ -168,6 +168,14 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithSubnets(values ...*SubnetPa
 	return b
 }
 
+// WithManagedRouter sets the ManagedRouter field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ManagedRouter field is set to the value of the last call.
+func (b *OpenStackClusterSpecApplyConfiguration) WithManagedRouter(value *ManagedRouterApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
+	b.ManagedRouter = value
+	return b
+}
+
 // WithRouter sets the Router field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Router field is set to the value of the last call.
@@ -189,19 +197,6 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithManagedNetwork(value *Manag
 // If called multiple times, the Network field is set to the value of the last call.
 func (b *OpenStackClusterSpecApplyConfiguration) WithNetwork(value *NetworkParamApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
 	b.Network = value
-	return b
-}
-
-// WithExternalRouterIPs adds the given value to the ExternalRouterIPs field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the ExternalRouterIPs field.
-func (b *OpenStackClusterSpecApplyConfiguration) WithExternalRouterIPs(values ...*ExternalRouterIPParamApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithExternalRouterIPs")
-		}
-		b.ExternalRouterIPs = append(b.ExternalRouterIPs, *values[i])
-	}
 	return b
 }
 

@@ -103,6 +103,21 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
+<code>managedRouter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedRouter">
+ManagedRouter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ManagedRouter specifies attributes of the router. The values are used only
+if the Cluster actuator creates the router.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>router</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
@@ -144,21 +159,6 @@ NetworkParam
 <em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>externalRouterIPs</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ExternalRouterIPParam">
-[]ExternalRouterIPParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
-This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
 </tr>
 <tr>
@@ -1589,7 +1589,7 @@ The value of this field is never updated after provisioning is completed.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedRouter">ManagedRouter</a>)
 </p>
 <p>
 </p>
@@ -2166,6 +2166,41 @@ Kubernetes cluster, which also disables SecurityGroups</p>
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.ManagedRouter">ManagedRouter
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+</p>
+<p>
+<p>ManagedRouter specifies attributes of the router.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>externalIPs</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ExternalRouterIPParam">
+[]ExternalRouterIPParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExternalIPs is a list of external IPs to assign to the router.
+This is necessary if the router needs a fixed ip in a specific subnet.
+Each entry specifies a fixed IP and the subnet it should be allocated from.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta2.ManagedSecurityGroupName">ManagedSecurityGroupName
 (<code>string</code> alias)</p></h3>
 <p>
@@ -2552,6 +2587,21 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
+<code>managedRouter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedRouter">
+ManagedRouter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ManagedRouter specifies attributes of the router. The values are used only
+if the Cluster actuator creates the router.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>router</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
@@ -2593,21 +2643,6 @@ NetworkParam
 <em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>externalRouterIPs</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ExternalRouterIPParam">
-[]ExternalRouterIPParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
-This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
 </tr>
 <tr>
@@ -3085,6 +3120,21 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
+<code>managedRouter</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedRouter">
+ManagedRouter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ManagedRouter specifies attributes of the router. The values are used only
+if the Cluster actuator creates the router.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>router</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
@@ -3126,21 +3176,6 @@ NetworkParam
 <em>(Optional)</em>
 <p>Network specifies an existing network to use if no ManagedSubnets
 are specified.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>externalRouterIPs</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ExternalRouterIPParam">
-[]ExternalRouterIPParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ExternalRouterIPs is an array of externalIPs on the respective subnets.
-This is necessary if the router needs a fixed ip in a specific subnet.</p>
 </td>
 </tr>
 <tr>

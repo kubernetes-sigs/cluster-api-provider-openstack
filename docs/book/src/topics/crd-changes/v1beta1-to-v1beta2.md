@@ -7,6 +7,7 @@
   - [API Changes](#api-changes)
     - [Flavor field restructure](#flavor-field-restructure)
     - [Network management fields restructure](#network-management-fields-restructure)
+    - [External router IPs restructure](#external-router-ips-restructure)
     - [Conditions format change](#conditions-format-change)
     - [Removal of deprecated status fields](#removal-of-deprecated-status-fields)
     - [FailureDomains representation change](#failuredomains-representation-change)
@@ -61,6 +62,29 @@ This applies to `OpenStackCluster` and `OpenStackClusterTemplate`.
 ```
 
 For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.managedNetwork`.
+
+### External router IPs restructure
+
+`spec.externalRouterIPs` has been replaced by a structured `spec.managedRouter` object.
+The field is optional, but must not be empty if set, and `externalIPs` must contain at
+least one entry. This applies to `OpenStackCluster` and `OpenStackClusterTemplate`.
+
+```diff
+ spec:
+-  externalRouterIPs:
+-  - fixedIP: 
+-    subnet:
+-      filter:
+-        name: 
++  managedRouter:
++    externalIPs:
++    - fixedIP: 
++      subnet:
++        filter:
++          name: 
+```
+
+For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.managedRouter`.
 
 ### Conditions format change
 
