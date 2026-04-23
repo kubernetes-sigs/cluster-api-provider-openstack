@@ -17,7 +17,6 @@ include $(ROOT_DIR_RELATIVE)/common.mk
 
 # Directories.
 MDBOOK := $(TOOLS_BIN_DIR)/mdbook
-MDBOOK_EMBED := $(TOOLS_BIN_DIR)/mdbook-embed
 MDBOOK_RELEASELINK := $(TOOLS_BIN_DIR)/mdbook-releaselink
 MDBOOK_TABULATE := $(TOOLS_BIN_DIR)/mdbook-tabulate
 BOOK_SRCS :=  $(call rwildcard,.,*.*)
@@ -38,11 +37,11 @@ verify: generate ## Verify that dependent artifacts are up to date
 	fi
 
 .PHONY: build
-build: $(BOOK_SRCS) $(MDBOOK) $(MDBOOK_EMBED) $(MDBOOK_RELEASELINK) $(MDBOOK_TABULATE) ## Build the book
+build: $(BOOK_SRCS) $(MDBOOK) $(MDBOOK_RELEASELINK) $(MDBOOK_TABULATE) ## Build the book
 	$(MDBOOK) build
 
 .PHONY: serve
-serve: $(MDBOOK) $(MDBOOK_EMBED) $(MDBOOK_RELEASELINK) $(MDBOOK_TABULATE) ## Run a local webserver with the compiled book
+serve: $(MDBOOK) $(MDBOOK_RELEASELINK) $(MDBOOK_TABULATE) ## Run a local webserver with the compiled book
 	$(MDBOOK) serve
 
 .PHONY: clean
