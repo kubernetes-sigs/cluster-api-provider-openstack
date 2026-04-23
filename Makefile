@@ -75,6 +75,7 @@ ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 GOJQ := $(TOOLS_BIN_DIR)/gojq
 GOLANGCI_LINT := $(abspath $(TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
+GOLANGCI_LINT_KAL := $(abspath $(TOOLS_BIN_DIR)/golangci-lint-kube-api-linter)
 GOTESTSUM := $(TOOLS_BIN_DIR)/gotestsum
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
 MOCKGEN := $(TOOLS_BIN_DIR)/mockgen
@@ -291,20 +292,33 @@ $(GOLANGCI_LINT_BIN): $(GOLANGCI_LINT) ## Build a local copy of golangci-lint.
 $(GOLANGCI_LINT): # Build golangci-lint.
 	GOBIN=$(abspath $(TOOLS_BIN_DIR)) $(GO_INSTALL) $(GOLANGCI_LINT_PKG) $(GOLANGCI_LINT_BIN) $(GOLANGCI_LINT_VER)
 
+$(GOLANGCI_LINT_KAL): $(GOLANGCI_LINT) $(TOOLS_DIR_DEPS) # Build golangci-lint with KAL plugin.
+	cd $(TOOLS_DIR); $(GOLANGCI_LINT) custom
+
 ## --------------------------------------
 ##@ Linting
 ## --------------------------------------
 
 .PHONY: lint
-lint: $(GOLANGCI_LINT) ## Lint codebase
+lint: $(GOLANGCI_LINT) $(GOLANGCI_LINT_KAL) ## Lint codebase
 	$(GOLANGCI_LINT) run -v
+	$(GOLANGCI_LINT_KAL) run -v --config $(ROOT_DIR_RELATIVE)/.golangci-kal.yml
 
 .PHONY: lint-update
-lint-update: $(GOLANGCI_LINT) ## Lint codebase
+lint-update: $(GOLANGCI_LINT) $(GOLANGCI_LINT_KAL) ## Lint and fix issues
 	$(GOLANGCI_LINT) run -v --fix
+	$(GOLANGCI_LINT_KAL) run -v --fix --config $(ROOT_DIR_RELATIVE)/.golangci-kal.yml
 
 lint-fast: $(GOLANGCI_LINT) ## Run only faster linters to detect possible issues
 	$(GOLANGCI_LINT) run -v --fast-only
+
+.PHONY: lint-api
+lint-api: $(GOLANGCI_LINT_KAL) ## Lint API types with KAL
+	$(GOLANGCI_LINT_KAL) run -v --config $(ROOT_DIR_RELATIVE)/.golangci-kal.yml
+
+.PHONY: lint-api-fix
+lint-api-fix: $(GOLANGCI_LINT_KAL) ## Lint API types with KAL and auto-fix issues
+	$(GOLANGCI_LINT_KAL) run -v --fix --config $(ROOT_DIR_RELATIVE)/.golangci-kal.yml
 
 ## --------------------------------------
 ##@ Generate
