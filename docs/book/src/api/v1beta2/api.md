@@ -85,36 +85,6 @@ subnet is supported. If you leave this empty, no network will be created.</p>
 </tr>
 <tr>
 <td>
-<code>router</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
-RouterParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Router specifies an existing router to be used if ManagedSubnets are
-specified. If specified, no new router will be created.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>network</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
-NetworkParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Network specifies an existing network to use if no ManagedSubnets
-are specified.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>subnets</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
@@ -133,17 +103,47 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
-<code>networkMTU</code><br/>
+<code>router</code><br/>
 <em>
-int
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
+RouterParam
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
-This value will be used only if the Cluster actuator creates the network.
-If left empty, the network will have the default MTU defined in Openstack network service.
-To use this field, the Openstack installation requires the net-mtu neutron API extension.</p>
+<p>Router specifies an existing router to be used if ManagedSubnets are
+specified. If specified, no new router will be created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>managedNetwork</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedNetwork">
+ManagedNetwork
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ManagedNetwork specifies attributes of the network. The values are used only
+if the Cluster actuator creates the network.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>network</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
+NetworkParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Network specifies an existing network to use if no ManagedSubnets
+are specified.</p>
 </td>
 </tr>
 <tr>
@@ -300,19 +300,6 @@ By default, the managed security groups have rules that allow the Kubelet, etcd,
 Kubernetes API server to function correctly.
 It&rsquo;s possible to add additional rules to the managed security groups.
 When defined to an empty struct, the managed security groups will be created with the default rules.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>disablePortSecurity</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>DisablePortSecurity disables the port security of the network created for the
-Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
 </tr>
 <tr>
@@ -2132,6 +2119,53 @@ The value of this field is never updated after provisioning is completed.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.ManagedNetwork">ManagedNetwork
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+</p>
+<p>
+<p>ManagedNetwork specifies attributes of the network.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>mtu</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
+This value will be used only if the Cluster actuator creates the network.
+If left empty, the network will have the default MTU defined in Openstack network service.
+To use this field, the Openstack installation requires the net-mtu neutron API extension.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>disablePortSecurity</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DisablePortSecurity disables the port security of the network created for the
+Kubernetes cluster, which also disables SecurityGroups</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta2.ManagedSecurityGroupName">ManagedSecurityGroupName
 (<code>string</code> alias)</p></h3>
 <p>
@@ -2500,36 +2534,6 @@ subnet is supported. If you leave this empty, no network will be created.</p>
 </tr>
 <tr>
 <td>
-<code>router</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
-RouterParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Router specifies an existing router to be used if ManagedSubnets are
-specified. If specified, no new router will be created.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>network</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
-NetworkParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Network specifies an existing network to use if no ManagedSubnets
-are specified.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>subnets</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
@@ -2548,17 +2552,47 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
-<code>networkMTU</code><br/>
+<code>router</code><br/>
 <em>
-int
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
+RouterParam
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
-This value will be used only if the Cluster actuator creates the network.
-If left empty, the network will have the default MTU defined in Openstack network service.
-To use this field, the Openstack installation requires the net-mtu neutron API extension.</p>
+<p>Router specifies an existing router to be used if ManagedSubnets are
+specified. If specified, no new router will be created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>managedNetwork</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedNetwork">
+ManagedNetwork
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ManagedNetwork specifies attributes of the network. The values are used only
+if the Cluster actuator creates the network.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>network</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
+NetworkParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Network specifies an existing network to use if no ManagedSubnets
+are specified.</p>
 </td>
 </tr>
 <tr>
@@ -2715,19 +2749,6 @@ By default, the managed security groups have rules that allow the Kubelet, etcd,
 Kubernetes API server to function correctly.
 It&rsquo;s possible to add additional rules to the managed security groups.
 When defined to an empty struct, the managed security groups will be created with the default rules.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>disablePortSecurity</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>DisablePortSecurity disables the port security of the network created for the
-Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
 </tr>
 <tr>
@@ -3046,36 +3067,6 @@ subnet is supported. If you leave this empty, no network will be created.</p>
 </tr>
 <tr>
 <td>
-<code>router</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
-RouterParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Router specifies an existing router to be used if ManagedSubnets are
-specified. If specified, no new router will be created.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>network</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
-NetworkParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Network specifies an existing network to use if no ManagedSubnets
-are specified.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>subnets</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
@@ -3094,17 +3085,47 @@ must be IPv4 and the other IPv6.</p>
 </tr>
 <tr>
 <td>
-<code>networkMTU</code><br/>
+<code>router</code><br/>
 <em>
-int
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
+RouterParam
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
-This value will be used only if the Cluster actuator creates the network.
-If left empty, the network will have the default MTU defined in Openstack network service.
-To use this field, the Openstack installation requires the net-mtu neutron API extension.</p>
+<p>Router specifies an existing router to be used if ManagedSubnets are
+specified. If specified, no new router will be created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>managedNetwork</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedNetwork">
+ManagedNetwork
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ManagedNetwork specifies attributes of the network. The values are used only
+if the Cluster actuator creates the network.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>network</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
+NetworkParam
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Network specifies an existing network to use if no ManagedSubnets
+are specified.</p>
 </td>
 </tr>
 <tr>
@@ -3261,19 +3282,6 @@ By default, the managed security groups have rules that allow the Kubelet, etcd,
 Kubernetes API server to function correctly.
 It&rsquo;s possible to add additional rules to the managed security groups.
 When defined to an empty struct, the managed security groups will be created with the default rules.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>disablePortSecurity</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>DisablePortSecurity disables the port security of the network created for the
-Kubernetes cluster, which also disables SecurityGroups</p>
 </td>
 </tr>
 <tr>
