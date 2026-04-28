@@ -8,7 +8,7 @@ require (
 	github.com/itchyny/gojq v0.12.19
 	github.com/onsi/ginkgo/v2 v2.28.1
 	go.uber.org/mock v0.6.0
-	k8s.io/code-generator v0.34.6
+	k8s.io/code-generator v0.34.7
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20250620151452-b9a9ca01fd37
@@ -109,12 +109,12 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0 // indirect
-	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel v1.41.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.40.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.40.0 // indirect
-	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.41.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
@@ -141,13 +141,13 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.34.6 // indirect
-	k8s.io/apiextensions-apiserver v0.34.6 // indirect
-	k8s.io/apimachinery v0.34.6 // indirect
-	k8s.io/apiserver v0.34.6 // indirect
-	k8s.io/client-go v0.34.6 // indirect
+	k8s.io/api v0.34.7 // indirect
+	k8s.io/apiextensions-apiserver v0.34.7 // indirect
+	k8s.io/apimachinery v0.34.7 // indirect
+	k8s.io/apiserver v0.34.7 // indirect
+	k8s.io/client-go v0.34.7 // indirect
 	k8s.io/cluster-bootstrap v0.34.2 // indirect
-	k8s.io/component-base v0.34.6 // indirect
+	k8s.io/component-base v0.34.7 // indirect
 	k8s.io/gengo v0.0.0-20201203183100-97869a43a9d9 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250604051438-85fd79dbfd9f // indirect
 	k8s.io/klog v0.2.0 // indirect
@@ -166,7 +166,7 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/release-sdk v0.11.0 // indirect
 	sigs.k8s.io/release-utils v0.8.1 // indirect
-	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
+	sigs.k8s.io/structured-merge-diff/v6 v6.4.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
