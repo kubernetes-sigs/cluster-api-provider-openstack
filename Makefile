@@ -40,7 +40,7 @@ BIN_DIR := bin
 TOOLS_DIR_DEPS := $(TOOLS_DIR)/go.sum $(TOOLS_DIR)/go.mod $(TOOLS_DIR)/Makefile
 TOOLS_BIN_DIR := $(TOOLS_DIR)/$(BIN_DIR)
 
-REPO_ROOT := $(shell git rev-parse --show-toplevel)
+REPO_ROOT = $(shell git rev-parse --show-toplevel)
 GH_REPO ?= kubernetes-sigs/cluster-api-provider-openstack
 TEST_E2E_DIR := test/e2e
 
@@ -58,7 +58,7 @@ GO_APIDIFF_PKG := github.com/joelanford/go-apidiff
 
 # golangci-lint
 GOLANGCI_LINT_BIN := golangci-lint
-GOLANGCI_LINT_VER := $(shell cd hack/tools && go list -m -f '{{.Version}}' github.com/golangci/golangci-lint/v2)
+GOLANGCI_LINT_VER = $(shell cd hack/tools && go list -m -f '{{.Version}}' github.com/golangci/golangci-lint/v2)
 GOLANGCI_LINT_PKG := github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
 # govulncheck
@@ -134,7 +134,7 @@ RBAC_ROOT ?= $(MANIFEST_ROOT)/rbac
 PULL_POLICY ?= Always
 
 # Set build time variables including version details
-LDFLAGS := $(shell source ./hack/version.sh; version::ldflags)
+LDFLAGS = $(shell source ./hack/version.sh; version::ldflags)
 
 # Extra arguments for govulncheck, e.g. "-show verbose"
 GOVULNCHECK_ARGS ?=
