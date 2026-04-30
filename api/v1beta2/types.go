@@ -738,7 +738,7 @@ type SecurityGroupStatus struct {
 
 // SecurityGroupRuleSpec represent the basic information of the associated OpenStack
 // Security Group Role.
-// For now this is only used for the allNodesSecurityGroupRules but when we add
+// For now this is only used for the clusterNodesSecurityGroupRules but when we add
 // other security groups, we'll need to add a validation because
 // Remote* fields are mutually exclusive.
 type SecurityGroupRuleSpec struct {

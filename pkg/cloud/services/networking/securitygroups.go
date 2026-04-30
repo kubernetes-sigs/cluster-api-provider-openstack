@@ -242,7 +242,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 
 	// For now, we do not create a separate security group for allNodes.
 	// Instead, we append the rules for allNodes to the control plane and worker security groups.
-	allNodesRules, err := getRulesFromSpecs(remoteManagedGroups, openStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules)
+	allNodesRules, err := getRulesFromSpecs(remoteManagedGroups, openStackCluster.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules)
 	if err != nil {
 		return nil, err
 	}

@@ -2071,7 +2071,11 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedSecurityGroups
   map:
     fields:
-    - name: allNodesSecurityGroupRules
+    - name: allowAllInClusterTraffic
+      type:
+        scalar: boolean
+      default: false
+    - name: clusterNodesSecurityGroupRules
       type:
         list:
           elementType:
@@ -2079,10 +2083,6 @@ var schemaYAML = typed.YAMLObject(`types:
           elementRelationship: associative
           keys:
           - name
-    - name: allowAllInClusterTraffic
-      type:
-        scalar: boolean
-      default: false
     - name: controlPlaneNodesSecurityGroupRules
       type:
         list:

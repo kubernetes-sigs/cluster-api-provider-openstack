@@ -158,8 +158,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 			oldObj.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 		}
 
-		oldObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
-		newObj.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		oldObj.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
+		newObj.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
 
 		oldObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
 		newObj.Spec.ManagedSecurityGroups.ControlPlaneNodesSecurityGroupRules = []infrav1.SecurityGroupRuleSpec{}
@@ -273,8 +273,8 @@ func securityGroupRemoteFields(r *infrav1.SecurityGroupRuleSpec) (bool, bool, bo
 func validateManagedSecurityGroupRules(msg *infrav1.ManagedSecurityGroups) field.ErrorList {
 	var allErrs field.ErrorList //nolint:prealloc // We can't know the number of errors upfront
 	allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusion(
-		msg.AllNodesSecurityGroupRules,
-		field.NewPath("spec", "managedSecurityGroups", "allNodesSecurityGroupRules"),
+		msg.ClusterNodesSecurityGroupRules,
+		field.NewPath("spec", "managedSecurityGroups", "clusterNodesSecurityGroupRules"),
 		securityGroupRemoteFields,
 	)...)
 	allErrs = append(allErrs, validateSecurityGroupRulesRemoteMutualExclusion(

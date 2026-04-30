@@ -23,8 +23,8 @@ package v1beta2
 //
 // ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.
 type ManagedSecurityGroupsApplyConfiguration struct {
-	// allNodesSecurityGroupRules defines the rules that should be applied to all nodes.
-	AllNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"allNodesSecurityGroupRules,omitempty"`
+	// clusterNodesSecurityGroupRules defines the rules that should be applied to all cluster nodes, excluding the bastion host.
+	ClusterNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"clusterNodesSecurityGroupRules,omitempty"`
 	// controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.
 	ControlPlaneNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"controlPlaneNodesSecurityGroupRules,omitempty"`
 	// workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.
@@ -39,15 +39,15 @@ func ManagedSecurityGroups() *ManagedSecurityGroupsApplyConfiguration {
 	return &ManagedSecurityGroupsApplyConfiguration{}
 }
 
-// WithAllNodesSecurityGroupRules adds the given value to the AllNodesSecurityGroupRules field in the declarative configuration
+// WithClusterNodesSecurityGroupRules adds the given value to the ClusterNodesSecurityGroupRules field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the AllNodesSecurityGroupRules field.
-func (b *ManagedSecurityGroupsApplyConfiguration) WithAllNodesSecurityGroupRules(values ...*SecurityGroupRuleSpecApplyConfiguration) *ManagedSecurityGroupsApplyConfiguration {
+// If called multiple times, values provided by each call will be appended to the ClusterNodesSecurityGroupRules field.
+func (b *ManagedSecurityGroupsApplyConfiguration) WithClusterNodesSecurityGroupRules(values ...*SecurityGroupRuleSpecApplyConfiguration) *ManagedSecurityGroupsApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
-			panic("nil value passed to WithAllNodesSecurityGroupRules")
+			panic("nil value passed to WithClusterNodesSecurityGroupRules")
 		}
-		b.AllNodesSecurityGroupRules = append(b.AllNodesSecurityGroupRules, *values[i])
+		b.ClusterNodesSecurityGroupRules = append(b.ClusterNodesSecurityGroupRules, *values[i])
 	}
 	return b
 }

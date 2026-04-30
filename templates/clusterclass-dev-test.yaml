@@ -486,7 +486,7 @@ spec:
         name: dev-test-cloud-config
         cloudName: ${OPENSTACK_CLOUD:=capo-e2e}
       managedSecurityGroups:
-        allNodesSecurityGroupRules:
+        clusterNodesSecurityGroupRules:
         - description: Created by cluster-api-provider-openstack - BGP (calico)
           direction: ingress
           etherType: IPv4

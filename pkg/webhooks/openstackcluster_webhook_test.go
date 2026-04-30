@@ -129,7 +129,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Changing security group rules on the OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules is allowed",
+			name: "Changing security group rules on the OpenStackCluster.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules is allowed",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
@@ -137,7 +137,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
-						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+						ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
 								Name:                "foobar",
 								Description:         ptr.To("foobar"),
@@ -157,7 +157,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
-						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+						ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
 								Name:                "foobar",
 								Description:         ptr.To("foobar"),
@@ -278,7 +278,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
-						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+						ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
 								Name:                "bad-rule",
 								Protocol:            ptr.To("tcp"),
@@ -1424,7 +1424,7 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules with correct spec on create",
+			name: "OpenStackCluster.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules with correct spec on create",
 			cluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
@@ -1432,7 +1432,7 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
-						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+						ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
 								Name:         "foobar",
 								Description:  ptr.To("foobar"),
@@ -1447,7 +1447,7 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "OpenStackCluster.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules with mutually exclusive fields on create",
+			name: "OpenStackCluster.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules with mutually exclusive fields on create",
 			cluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
@@ -1455,7 +1455,7 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
-						AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+						ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 							{
 								Name:                "foobar",
 								Description:         ptr.To("foobar"),

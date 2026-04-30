@@ -31,7 +31,7 @@ spec:
     dnsNameservers:
     - ${OPENSTACK_DNS_NAMESERVERS}
   managedSecurityGroups:
-    allNodesSecurityGroupRules:
+    clusterNodesSecurityGroupRules:
     - description: Created by cluster-api-provider-openstack - BGP (calico)
       direction: ingress
       etherType: IPv4
