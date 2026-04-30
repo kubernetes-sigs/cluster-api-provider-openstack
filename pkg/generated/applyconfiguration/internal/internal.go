@@ -2059,6 +2059,15 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: mtu
       type:
         scalar: numeric
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedRouter
+  map:
+    fields:
+    - name: externalIPs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ExternalRouterIPParam
+          elementRelationship: atomic
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedSecurityGroups
   map:
     fields:
@@ -2241,12 +2250,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: externalNetwork
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
-    - name: externalRouterIPs
-      type:
-        list:
-          elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ExternalRouterIPParam
-          elementRelationship: atomic
     - name: identityRef
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
@@ -2254,6 +2257,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: managedNetwork
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedNetwork
+    - name: managedRouter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedRouter
     - name: managedSecurityGroups
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedSecurityGroups

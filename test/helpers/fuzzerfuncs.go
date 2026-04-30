@@ -435,5 +435,25 @@ func InfraV1Beta2FuzzerFuncs() []any {
 				status.FailureDomains = unique
 			}
 		},
+
+		// ManagedRouter must have at least one ExternalIP if non-nil.
+		// This mirrors the CEL validation:
+		//   self == null || has(self.externalIPs)
+		// An empty ManagedRouter cannot survive a hub-spoke-hub round-trip because
+		// the conversion checks len(ExternalRouterIPs) > 0 before reconstructing it.
+		func(mr **infrav1.ManagedRouter, c randfill.Continue) {
+			if c.Bool() {
+				*mr = nil
+				return
+			}
+			m := &infrav1.ManagedRouter{}
+			c.Fill(m)
+			if len(m.ExternalIPs) == 0 {
+				ip := infrav1.ExternalRouterIPParam{}
+				c.Fill(&ip)
+				m.ExternalIPs = []infrav1.ExternalRouterIPParam{ip}
+			}
+			*mr = m
+		},
 	}
 }

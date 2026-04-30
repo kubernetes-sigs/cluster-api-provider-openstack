@@ -1460,7 +1460,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 	out.Network = (*v1beta2.NetworkParam)(unsafe.Pointer(in.Network))
 	out.Subnets = *(*[]v1beta2.SubnetParam)(unsafe.Pointer(&in.Subnets))
 	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
-	out.ExternalRouterIPs = *(*[]v1beta2.ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
+	// WARNING: in.ExternalRouterIPs requires manual conversion: does not exist in peer-type
 	out.ExternalNetwork = (*v1beta2.NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
 	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
 	out.APIServerLoadBalancer = (*v1beta2.APIServerLoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
@@ -1492,10 +1492,10 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 func autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *v1beta2.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	out.ManagedSubnets = *(*[]SubnetSpec)(unsafe.Pointer(&in.ManagedSubnets))
 	out.Subnets = *(*[]SubnetParam)(unsafe.Pointer(&in.Subnets))
+	// WARNING: in.ManagedRouter requires manual conversion: does not exist in peer-type
 	out.Router = (*RouterParam)(unsafe.Pointer(in.Router))
 	// WARNING: in.ManagedNetwork requires manual conversion: does not exist in peer-type
 	out.Network = (*NetworkParam)(unsafe.Pointer(in.Network))
-	out.ExternalRouterIPs = *(*[]ExternalRouterIPParam)(unsafe.Pointer(&in.ExternalRouterIPs))
 	out.ExternalNetwork = (*NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
 	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
 	out.APIServerLoadBalancer = (*APIServerLoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))

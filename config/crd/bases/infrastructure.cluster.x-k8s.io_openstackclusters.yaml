@@ -4109,107 +4109,6 @@ spec:
                     format: uuid
                     type: string
                 type: object
-              externalRouterIPs:
-                description: |-
-                  ExternalRouterIPs is an array of externalIPs on the respective subnets.
-                  This is necessary if the router needs a fixed ip in a specific subnet.
-                items:
-                  properties:
-                    fixedIP:
-                      description: The FixedIP in the corresponding subnet
-                      type: string
-                    subnet:
-                      description: The subnet in which the FixedIP is used for the
-                        Gateway of this router
-                      maxProperties: 1
-                      minProperties: 1
-                      properties:
-                        filter:
-                          description: Filter specifies a filter to select the subnet.
-                            It must match exactly one subnet.
-                          minProperties: 1
-                          properties:
-                            cidr:
-                              type: string
-                            description:
-                              type: string
-                            gatewayIP:
-                              type: string
-                            ipVersion:
-                              type: integer
-                            ipv6AddressMode:
-                              type: string
-                            ipv6RAMode:
-                              type: string
-                            name:
-                              type: string
-                            notTags:
-                              description: |-
-                                NotTags is a list of tags to filter by. If specified, resources which
-                                contain all of the given tags will be excluded from the result.
-                              items:
-                                description: |-
-                                  NeutronTag represents a tag on a Neutron resource.
-                                  It may not be empty and may not contain commas.
-                                minLength: 1
-                                pattern: ^[^,]+$
-                                type: string
-                              type: array
-                              x-kubernetes-list-type: set
-                            notTagsAny:
-                              description: |-
-                                NotTagsAny is a list of tags to filter by. If specified, resources
-                                which contain any of the given tags will be excluded from the result.
-                              items:
-                                description: |-
-                                  NeutronTag represents a tag on a Neutron resource.
-                                  It may not be empty and may not contain commas.
-                                minLength: 1
-                                pattern: ^[^,]+$
-                                type: string
-                              type: array
-                              x-kubernetes-list-type: set
-                            projectID:
-                              type: string
-                            tags:
-                              description: |-
-                                Tags is a list of tags to filter by. If specified, the resource must
-                                have all of the tags specified to be included in the result.
-                              items:
-                                description: |-
-                                  NeutronTag represents a tag on a Neutron resource.
-                                  It may not be empty and may not contain commas.
-                                minLength: 1
-                                pattern: ^[^,]+$
-                                type: string
-                              type: array
-                              x-kubernetes-list-type: set
-                            tagsAny:
-                              description: |-
-                                TagsAny is a list of tags to filter by. If specified, the resource
-                                must have at least one of the tags specified to be included in the
-                                result.
-                              items:
-                                description: |-
-                                  NeutronTag represents a tag on a Neutron resource.
-                                  It may not be empty and may not contain commas.
-                                minLength: 1
-                                pattern: ^[^,]+$
-                                type: string
-                              type: array
-                              x-kubernetes-list-type: set
-                          type: object
-                        id:
-                          description: ID is the uuid of the subnet. It will not be
-                            validated.
-                          format: uuid
-                          type: string
-                      type: object
-                  required:
-                  - subnet
-                  type: object
-                type: array
-                x-kubernetes-list-type: atomic
               identityRef:
                 description: |-
                   IdentityRef is a reference to a secret holding OpenStack credentials
@@ -4273,6 +4172,118 @@ spec:
                 x-kubernetes-validations:
                 - message: managedNetwork must not be empty if set
                   rule: self == null || has(self.mtu) || has(self.disablePortSecurity)
+              managedRouter:
+                description: |-
+                  ManagedRouter specifies attributes of the router. The values are used only
+                  if the Cluster actuator creates the router.
+                properties:
+                  externalIPs:
+                    description: |-
+                      ExternalIPs is a list of external IPs to assign to the router.
+                      This is necessary if the router needs a fixed ip in a specific subnet.
+                      Each entry specifies a fixed IP and the subnet it should be allocated from.
+                    items:
+                      properties:
+                        fixedIP:
+                          description: The FixedIP in the corresponding subnet
+                          type: string
+                        subnet:
+                          description: The subnet in which the FixedIP is used for
+                            the Gateway of this router
+                          maxProperties: 1
+                          minProperties: 1
+                          properties:
+                            filter:
+                              description: Filter specifies a filter to select the
+                                subnet. It must match exactly one subnet.
+                              minProperties: 1
+                              properties:
+                                cidr:
+                                  type: string
+                                description:
+                                  type: string
+                                gatewayIP:
+                                  type: string
+                                ipVersion:
+                                  type: integer
+                                ipv6AddressMode:
+                                  type: string
+                                ipv6RAMode:
+                                  type: string
+                                name:
+                                  type: string
+                                notTags:
+                                  description: |-
+                                    NotTags is a list of tags to filter by. If specified, resources which
+                                    contain all of the given tags will be excluded from the result.
+                                  items:
+                                    description: |-
+                                      NeutronTag represents a tag on a Neutron resource.
+                                      It may not be empty and may not contain commas.
+                                    minLength: 1
+                                    pattern: ^[^,]+$
+                                    type: string
+                                  type: array
+                                  x-kubernetes-list-type: set
+                                notTagsAny:
+                                  description: |-
+                                    NotTagsAny is a list of tags to filter by. If specified, resources
+                                    which contain any of the given tags will be excluded from the result.
+                                  items:
+                                    description: |-
+                                      NeutronTag represents a tag on a Neutron resource.
+                                      It may not be empty and may not contain commas.
+                                    minLength: 1
+                                    pattern: ^[^,]+$
+                                    type: string
+                                  type: array
+                                  x-kubernetes-list-type: set
+                                projectID:
+                                  type: string
+                                tags:
+                                  description: |-
+                                    Tags is a list of tags to filter by. If specified, the resource must
+                                    have all of the tags specified to be included in the result.
+                                  items:
+                                    description: |-
+                                      NeutronTag represents a tag on a Neutron resource.
+                                      It may not be empty and may not contain commas.
+                                    minLength: 1
+                                    pattern: ^[^,]+$
+                                    type: string
+                                  type: array
+                                  x-kubernetes-list-type: set
+                                tagsAny:
+                                  description: |-
+                                    TagsAny is a list of tags to filter by. If specified, the resource
+                                    must have at least one of the tags specified to be included in the
+                                    result.
+                                  items:
+                                    description: |-
+                                      NeutronTag represents a tag on a Neutron resource.
+                                      It may not be empty and may not contain commas.
+                                    minLength: 1
+                                    pattern: ^[^,]+$
+                                    type: string
+                                  type: array
+                                  x-kubernetes-list-type: set
+                              type: object
+                            id:
+                              description: ID is the uuid of the subnet. It will not
+                                be validated.
+                              format: uuid
+                              type: string
+                          type: object
+                      required:
+                      - subnet
+                      type: object
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: atomic
+                type: object
+                x-kubernetes-validations:
+                - message: managedRouter must not be empty if set
+                  rule: has(self.externalIPs)
               managedSecurityGroups:
                 description: |-
                   ManagedSecurityGroups determines whether OpenStack security groups for the cluster

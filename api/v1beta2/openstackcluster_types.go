@@ -51,6 +51,12 @@ type OpenStackClusterSpec struct {
 	// +optional
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 
+	// ManagedRouter specifies attributes of the router. The values are used only
+	// if the Cluster actuator creates the router.
+	// +kubebuilder:validation:XValidation:rule="has(self.externalIPs)",message="managedRouter must not be empty if set"
+	// +optional
+	ManagedRouter *ManagedRouter `json:"managedRouter,omitempty"`
+
 	// Router specifies an existing router to be used if ManagedSubnets are
 	// specified. If specified, no new router will be created.
 	// +optional
@@ -66,12 +72,6 @@ type OpenStackClusterSpec struct {
 	// are specified.
 	// +optional
 	Network *NetworkParam `json:"network,omitempty"`
-
-	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
-	// This is necessary if the router needs a fixed ip in a specific subnet.
-	// +listType=atomic
-	// +optional
-	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
 
 	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// This option is ignored if DisableExternalNetwork is set to true.
@@ -277,6 +277,17 @@ type OpenStackClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []OpenStackCluster `json:"items"`
+}
+
+// ManagedRouter specifies attributes of the router.
+type ManagedRouter struct {
+	// ExternalIPs is a list of external IPs to assign to the router.
+	// This is necessary if the router needs a fixed ip in a specific subnet.
+	// Each entry specifies a fixed IP and the subnet it should be allocated from.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	// +listType=atomic
+	ExternalIPs []ExternalRouterIPParam `json:"externalIPs,omitempty"`
 }
 
 // ManagedNetwork specifies attributes of the network.

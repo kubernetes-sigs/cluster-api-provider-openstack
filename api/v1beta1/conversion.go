@@ -381,6 +381,22 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 		}
 	}
 
+	// ExternalRouterIPs and ExternalRouterIPParam are structurally identical between versions,
+	// but the nested SubnetParam is a different Go type per package, preventing a direct cast.
+	// Loop and convert element-wise.
+	if len(in.ExternalRouterIPs) > 0 {
+		externalIPs := make([]infrav1.ExternalRouterIPParam, len(in.ExternalRouterIPs))
+		for i := range in.ExternalRouterIPs {
+			externalIPs[i].FixedIP = in.ExternalRouterIPs[i].FixedIP
+			if err := Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(&in.ExternalRouterIPs[i].Subnet, &externalIPs[i].Subnet, s); err != nil {
+				return err
+			}
+		}
+		out.ManagedRouter = &infrav1.ManagedRouter{
+			ExternalIPs: externalIPs,
+		}
+	}
+
 	return nil
 }
 
@@ -396,6 +412,19 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 	if in.ManagedNetwork != nil {
 		out.NetworkMTU = in.ManagedNetwork.MTU
 		out.DisablePortSecurity = in.ManagedNetwork.DisablePortSecurity
+	}
+
+	// ExternalRouterIPs and ExternalRouterIPParam are structurally identical between versions,
+	// but the nested SubnetParam is a different Go type per package, preventing a direct cast.
+	// Loop and convert element-wise.
+	if in.ManagedRouter != nil {
+		out.ExternalRouterIPs = make([]ExternalRouterIPParam, len(in.ManagedRouter.ExternalIPs))
+		for i := range in.ManagedRouter.ExternalIPs {
+			out.ExternalRouterIPs[i].FixedIP = in.ManagedRouter.ExternalIPs[i].FixedIP
+			if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(&in.ManagedRouter.ExternalIPs[i].Subnet, &out.ExternalRouterIPs[i].Subnet, s); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

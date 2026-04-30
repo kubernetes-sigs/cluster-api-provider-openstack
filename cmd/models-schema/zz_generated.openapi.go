@@ -431,6 +431,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineInitialization":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineInitialization(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineResources":                           schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineResources(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedNetwork(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter":                              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedRouter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurityGroups(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkFilter":                              schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkFilter(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkParam(ref),
@@ -23018,6 +23019,40 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedNetwork(
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedRouter(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ManagedRouter specifies attributes of the router.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"externalIPs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "ExternalIPs is a list of external IPs to assign to the router. This is necessary if the router needs a fixed ip in a specific subnet. Each entry specifies a fixed IP and the subnet it should be allocated from.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam"},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurityGroups(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -23514,6 +23549,12 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 					},
+					"managedRouter": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ManagedRouter specifies attributes of the router. The values are used only if the Cluster actuator creates the router.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter"),
+						},
+					},
 					"router": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Router specifies an existing router to be used if ManagedSubnets are specified. If specified, no new router will be created.",
@@ -23530,25 +23571,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 						SchemaProps: spec.SchemaProps{
 							Description: "Network specifies an existing network to use if no ManagedSubnets are specified.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
-						},
-					},
-					"externalRouterIPs": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "atomic",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "ExternalRouterIPs is an array of externalIPs on the respective subnets. This is necessary if the router needs a fixed ip in a specific subnet.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam"),
-									},
-								},
-							},
 						},
 					},
 					"externalNetwork": {
@@ -23675,7 +23697,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
 	}
 }
 
