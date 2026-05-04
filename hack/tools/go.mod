@@ -7,7 +7,7 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
 	github.com/golangci/golangci-lint/v2 v2.11.4
 	github.com/itchyny/gojq v0.12.19
-	github.com/onsi/ginkgo/v2 v2.28.1
+	github.com/onsi/ginkgo/v2 v2.28.2
 	go.uber.org/mock v0.6.0
 	k8s.io/code-generator v0.35.4
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
@@ -312,7 +312,7 @@ require (
 	k8s.io/apimachinery v0.35.4 // indirect
 	k8s.io/apiserver v0.35.4 // indirect
 	k8s.io/client-go v0.35.4 // indirect
-	k8s.io/cluster-bootstrap v0.35.3 // indirect
+	k8s.io/cluster-bootstrap v0.35.4 // indirect
 	k8s.io/component-base v0.35.4 // indirect
 	k8s.io/gengo v0.0.0-20201203183100-97869a43a9d9 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250922181213-ec3ebc5fd46b // indirect
@@ -324,7 +324,7 @@ require (
 	mvdan.cc/gofumpt v0.9.2 // indirect
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 // indirect
-	sigs.k8s.io/cluster-api v1.13.0 // indirect
+	sigs.k8s.io/cluster-api v1.13.1 // indirect
 	sigs.k8s.io/controller-runtime v0.23.3 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20211028165026-57688c578b5d // indirect
