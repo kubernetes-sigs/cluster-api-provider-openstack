@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/a8m/envsubst v1.4.3
-	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
+	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20251203005356-667b167b2ade
 	github.com/golangci/golangci-lint/v2 v2.11.4
 	github.com/itchyny/gojq v0.12.19
 	github.com/onsi/ginkgo/v2 v2.28.2
@@ -314,9 +314,7 @@ require (
 	k8s.io/client-go v0.35.4 // indirect
 	k8s.io/cluster-bootstrap v0.35.4 // indirect
 	k8s.io/component-base v0.35.4 // indirect
-	k8s.io/gengo v0.0.0-20201203183100-97869a43a9d9 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250922181213-ec3ebc5fd46b // indirect
-	k8s.io/klog v0.2.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250910181357-589584f1c912 // indirect
 	k8s.io/release v0.16.9 // indirect
