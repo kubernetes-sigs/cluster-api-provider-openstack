@@ -6,7 +6,7 @@ require (
 	github.com/a8m/envsubst v1.4.3
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20220420215017-3f29e6853552
 	github.com/itchyny/gojq v0.12.19
-	github.com/onsi/ginkgo/v2 v2.28.1
+	github.com/onsi/ginkgo/v2 v2.28.2
 	go.uber.org/mock v0.6.0
 	k8s.io/code-generator v0.33.11
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
