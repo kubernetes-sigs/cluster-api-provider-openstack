@@ -204,6 +204,7 @@ type OpenStackMachineStatus struct {
 	InstanceID optional.String `json:"instanceID,omitempty"`
 
 	// addresses contains the OpenStack instance associated addresses.
+	// +optional
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 
 	// instanceState is the state of the OpenStack instance for this machine.

@@ -3021,6 +3021,7 @@ LoadBalancer
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>failureDomains represent OpenStack availability zones</p>
 </td>
 </tr>
@@ -3850,6 +3851,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>addresses contains the OpenStack instance associated addresses.</p>
 </td>
 </tr>
