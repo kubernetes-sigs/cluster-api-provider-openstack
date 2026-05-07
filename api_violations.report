@@ -30,13 +30,10 @@ API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,MachineResources,Ports
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,NetworkStatus,Tags
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,NetworkStatusWithSubnets,Subnets
-API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackClusterStatus,Conditions
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackClusterStatus,FailureDomains
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineSpec,Ports
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineSpec,SecurityGroups
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineStatus,Addresses
-API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineStatus,Conditions
-API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,OpenStackMachineTemplateStatus,Conditions
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,ResolvedMachineSpec,Ports
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,ResolvedPortSpecFields,AllowedAddressPairs
 API rule violation: list_type_missing,sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2,Router,IPs

@@ -199,6 +199,15 @@ type ClusterInitialization struct {
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatus struct {
+	// conditions defines current service state of the OpenStackCluster.
+	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
+	// (both during initial provisioning and after the initial provisioning is completed).
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
 	// initialization contains information about the initialization status of the cluster.
 	// +optional
 	Initialization *ClusterInitialization `json:"initialization,omitempty"`
@@ -241,13 +250,6 @@ type OpenStackClusterStatus struct {
 	// bastion contains the information about the deployed bastion host
 	// +optional
 	Bastion *BastionStatus `json:"bastion,omitempty"`
-
-	// conditions defines current service state of the OpenStackCluster.
-	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
-	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
-	// (both during initial provisioning and after the initial provisioning is completed).
-	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +genclient

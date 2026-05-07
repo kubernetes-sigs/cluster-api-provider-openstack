@@ -29,6 +29,14 @@ type OpenStackMachineTemplateSpec struct {
 
 // OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateStatus struct {
+	// conditions defines current service state of the OpenStackMachineTemplate.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
+	// (both during initial provisioning and after the initial provisioning is completed).
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
 	// capacity defines the resource capacity for this machine.
 	// This value is used for autoscaling from zero operations as defined in:
 	// https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md
@@ -37,12 +45,6 @@ type OpenStackMachineTemplateStatus struct {
 	// nodeInfo contains information about the node's operating system.
 	// +optional
 	NodeInfo NodeInfo `json:"nodeInfo,omitempty,omitzero"`
-
-	// conditions defines current service state of the OpenStackMachineTemplate.
-	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
-	// (both during initial provisioning and after the initial provisioning is completed).
-	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // NodeInfo contains information about the node's architecture and operating system.

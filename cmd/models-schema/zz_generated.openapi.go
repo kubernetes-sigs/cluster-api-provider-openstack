@@ -23732,6 +23732,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 				Description: "OpenStackClusterStatus defines the observed state of OpenStackCluster.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions defines current service state of the OpenStackCluster. This field surfaces into Cluster's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster (both during initial provisioning and after the initial provisioning is completed).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref(metav1.Condition{}.OpenAPIModelName()),
+									},
+								},
+							},
+						},
+					},
 					"initialization": {
 						SchemaProps: spec.SchemaProps{
 							Description: "initialization contains information about the initialization status of the cluster.",
@@ -23798,20 +23820,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 						SchemaProps: spec.SchemaProps{
 							Description: "bastion contains the information about the deployed bastion host",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BastionStatus"),
-						},
-					},
-					"conditions": {
-						SchemaProps: spec.SchemaProps{
-							Description: "conditions defines current service state of the OpenStackCluster. This field surfaces into Cluster's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster (both during initial provisioning and after the initial provisioning is completed).",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref(metav1.Condition{}.OpenAPIModelName()),
-									},
-								},
-							},
 						},
 					},
 				},
@@ -24306,6 +24314,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 				Description: "OpenStackMachineStatus defines the observed state of OpenStackMachine.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions defines current service state of the OpenStackMachine. This field surfaces into Machine's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine (both during initial provisioning and after the initial provisioning is completed).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref(metav1.Condition{}.OpenAPIModelName()),
+									},
+								},
+							},
+						},
+					},
 					"initialization": {
 						SchemaProps: spec.SchemaProps{
 							Description: "initialization contains information about the initialization status of the machine.",
@@ -24350,20 +24380,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 						SchemaProps: spec.SchemaProps{
 							Description: "resources contains references to OpenStack resources created for the machine.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineResources"),
-						},
-					},
-					"conditions": {
-						SchemaProps: spec.SchemaProps{
-							Description: "conditions defines current service state of the OpenStackMachine. This field surfaces into Machine's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine (both during initial provisioning and after the initial provisioning is completed).",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref(metav1.Condition{}.OpenAPIModelName()),
-									},
-								},
-							},
 						},
 					},
 				},
@@ -24526,6 +24542,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 				Description: "OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions defines current service state of the OpenStackMachineTemplate. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate. (both during initial provisioning and after the initial provisioning is completed).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref(metav1.Condition{}.OpenAPIModelName()),
+									},
+								},
+							},
+						},
+					},
 					"capacity": {
 						SchemaProps: spec.SchemaProps{
 							Description: "capacity defines the resource capacity for this machine. This value is used for autoscaling from zero operations as defined in: https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md",
@@ -24545,20 +24583,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 							Description: "nodeInfo contains information about the node's operating system.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NodeInfo"),
-						},
-					},
-					"conditions": {
-						SchemaProps: spec.SchemaProps{
-							Description: "conditions defines current service state of the OpenStackMachineTemplate. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate. (both during initial provisioning and after the initial provisioning is completed).",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref(metav1.Condition{}.OpenAPIModelName()),
-									},
-								},
-							},
 						},
 					},
 				},

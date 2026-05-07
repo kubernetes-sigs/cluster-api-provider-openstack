@@ -186,6 +186,15 @@ type MachineInitialization struct {
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatus struct {
+	// conditions defines current service state of the OpenStackMachine.
+	// This field surfaces into Machine's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
+	// (both during initial provisioning and after the initial provisioning is completed).
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
 	// initialization contains information about the initialization status of the machine.
 	// +optional
 	Initialization *MachineInitialization `json:"initialization,omitempty"`
@@ -211,13 +220,6 @@ type OpenStackMachineStatus struct {
 	// resources contains references to OpenStack resources created for the machine.
 	// +optional
 	Resources *MachineResources `json:"resources,omitempty"`
-
-	// conditions defines current service state of the OpenStackMachine.
-	// This field surfaces into Machine's status.conditions[InfrastructureReady] condition.
-	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
-	// (both during initial provisioning and after the initial provisioning is completed).
-	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +genclient

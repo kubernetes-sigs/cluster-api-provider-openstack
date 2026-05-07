@@ -2928,6 +2928,23 @@ machines unless overridden in the machine spec.</p>
 <tbody>
 <tr>
 <td>
+<code>conditions</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
+[]Kubernetes meta/v1.Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>conditions defines current service state of the OpenStackCluster.
+This field surfaces into Cluster&rsquo;s status.conditions[InfrastructureReady] condition.
+The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
+(both during initial provisioning and after the initial provisioning is completed).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>initialization</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ClusterInitialization">
@@ -3065,23 +3082,6 @@ BastionStatus
 <td>
 <em>(Optional)</em>
 <p>bastion contains the information about the deployed bastion host</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>conditions</code><br/>
-<em>
-<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
-[]Kubernetes meta/v1.Condition
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>conditions defines current service state of the OpenStackCluster.
-This field surfaces into Cluster&rsquo;s status.conditions[InfrastructureReady] condition.
-The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
-(both during initial provisioning and after the initial provisioning is completed).</p>
 </td>
 </tr>
 </tbody>
@@ -3801,6 +3801,23 @@ such as specifying certain host aggregates or availability zones.</p>
 <tbody>
 <tr>
 <td>
+<code>conditions</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
+[]Kubernetes meta/v1.Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>conditions defines current service state of the OpenStackMachine.
+This field surfaces into Machine&rsquo;s status.conditions[InfrastructureReady] condition.
+The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
+(both during initial provisioning and after the initial provisioning is completed).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>initialization</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.MachineInitialization">
@@ -3879,23 +3896,6 @@ MachineResources
 <td>
 <em>(Optional)</em>
 <p>resources contains references to OpenStack resources created for the machine.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>conditions</code><br/>
-<em>
-<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
-[]Kubernetes meta/v1.Condition
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>conditions defines current service state of the OpenStackMachine.
-This field surfaces into Machine&rsquo;s status.conditions[InfrastructureReady] condition.
-The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
-(both during initial provisioning and after the initial provisioning is completed).</p>
 </td>
 </tr>
 </tbody>
@@ -4199,6 +4199,22 @@ OpenStackMachineTemplateResource
 <tbody>
 <tr>
 <td>
+<code>conditions</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
+[]Kubernetes meta/v1.Condition
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>conditions defines current service state of the OpenStackMachineTemplate.
+The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
+(both during initial provisioning and after the initial provisioning is completed).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>capacity</code><br/>
 <em>
 Kubernetes core/v1.ResourceList
@@ -4223,22 +4239,6 @@ NodeInfo
 <td>
 <em>(Optional)</em>
 <p>nodeInfo contains information about the node&rsquo;s operating system.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>conditions</code><br/>
-<em>
-<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Condition">
-[]Kubernetes meta/v1.Condition
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>conditions defines current service state of the OpenStackMachineTemplate.
-The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
-(both during initial provisioning and after the initial provisioning is completed).</p>
 </td>
 </tr>
 </tbody>

@@ -2304,7 +2304,9 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             namedType: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
-          elementRelationship: atomic
+          elementRelationship: associative
+          keys:
+          - type
     - name: controlPlaneSecurityGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
@@ -2489,7 +2491,9 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             namedType: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
-          elementRelationship: atomic
+          elementRelationship: associative
+          keys:
+          - type
     - name: initialization
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.MachineInitialization
@@ -2553,7 +2557,9 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             namedType: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
-          elementRelationship: atomic
+          elementRelationship: associative
+          keys:
+          - type
     - name: nodeInfo
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NodeInfo

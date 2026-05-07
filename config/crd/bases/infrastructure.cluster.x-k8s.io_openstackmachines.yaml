@@ -2326,6 +2326,9 @@ spec:
                   - type
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               initialization:
                 description: initialization contains information about the initialization
                   status of the machine.

@@ -28,6 +28,11 @@ import (
 //
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatusApplyConfiguration struct {
+	// conditions defines current service state of the OpenStackCluster.
+	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
+	// (both during initial provisioning and after the initial provisioning is completed).
+	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 	// initialization contains information about the initialization status of the cluster.
 	Initialization *ClusterInitializationApplyConfiguration `json:"initialization,omitempty"`
 	// network contains information about the created OpenStack Network.
@@ -52,17 +57,25 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	BastionSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"bastionSecurityGroup,omitempty"`
 	// bastion contains the information about the deployed bastion host
 	Bastion *BastionStatusApplyConfiguration `json:"bastion,omitempty"`
-	// conditions defines current service state of the OpenStackCluster.
-	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
-	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
-	// (both during initial provisioning and after the initial provisioning is completed).
-	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // OpenStackClusterStatusApplyConfiguration constructs a declarative configuration of the OpenStackClusterStatus type for use with
 // apply.
 func OpenStackClusterStatus() *OpenStackClusterStatusApplyConfiguration {
 	return &OpenStackClusterStatusApplyConfiguration{}
+}
+
+// WithConditions adds the given value to the Conditions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Conditions field.
+func (b *OpenStackClusterStatusApplyConfiguration) WithConditions(values ...*v1.ConditionApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConditions")
+		}
+		b.Conditions = append(b.Conditions, *values[i])
+	}
+	return b
 }
 
 // WithInitialization sets the Initialization field in the declarative configuration to the given value
@@ -144,18 +157,5 @@ func (b *OpenStackClusterStatusApplyConfiguration) WithBastionSecurityGroup(valu
 // If called multiple times, the Bastion field is set to the value of the last call.
 func (b *OpenStackClusterStatusApplyConfiguration) WithBastion(value *BastionStatusApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
 	b.Bastion = value
-	return b
-}
-
-// WithConditions adds the given value to the Conditions field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Conditions field.
-func (b *OpenStackClusterStatusApplyConfiguration) WithConditions(values ...*v1.ConditionApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithConditions")
-		}
-		b.Conditions = append(b.Conditions, *values[i])
-	}
 	return b
 }
