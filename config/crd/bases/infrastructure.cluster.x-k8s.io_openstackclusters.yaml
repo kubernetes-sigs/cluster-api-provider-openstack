@@ -2754,7 +2754,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: OpenStackClusterSpec defines the desired state of OpenStackCluster.
+            description: spec is the desired state of the OpenStackCluster.
             properties:
               apiServerFixedIP:
                 description: |-
@@ -2852,8 +2852,10 @@ spec:
                         minProperties: 1
                         properties:
                           description:
+                            description: description filters networks by description.
                             type: string
                           name:
+                            description: name filters networks by name.
                             type: string
                           notTags:
                             description: |-
@@ -2882,6 +2884,7 @@ spec:
                             type: array
                             x-kubernetes-list-type: set
                           projectID:
+                            description: projectID filters networks by project ID.
                             type: string
                           tags:
                             description: |-
@@ -2942,18 +2945,27 @@ spec:
                           minProperties: 1
                           properties:
                             cidr:
+                              description: cidr filters subnets by CIDR.
                               type: string
                             description:
+                              description: description filters subnets by description.
                               type: string
                             gatewayIP:
+                              description: gatewayIP filters subnets by gateway IP.
                               type: string
                             ipVersion:
+                              description: ipVersion filters subnets by IP version.
                               type: integer
                             ipv6AddressMode:
+                              description: ipv6AddressMode filters subnets by IPv6
+                                address mode.
                               type: string
                             ipv6RAMode:
+                              description: ipv6RAMode filters subnets by IPv6 Router
+                                Advertisement mode.
                               type: string
                             name:
+                              description: name filters subnets by name.
                               type: string
                             notTags:
                               description: |-
@@ -2982,6 +2994,7 @@ spec:
                               type: array
                               x-kubernetes-list-type: set
                             projectID:
+                              description: projectID filters subnets by project ID.
                               type: string
                             tags:
                               description: |-
@@ -3150,11 +3163,10 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       configDrive:
-                        description: Config Drive support
+                        description: configDrive enables config drive support.
                         type: boolean
                       flavor:
-                        description: FlavorParam describes a nova flavor. It can be
-                          specified by ID or filter
+                        description: flavor is the flavor to use for this machine.
                         maxProperties: 1
                         minProperties: 1
                         properties:
@@ -3163,7 +3175,7 @@ spec:
                             minProperties: 1
                             properties:
                               name:
-                                description: The name of the desired flavor.
+                                description: name is the name of the desired flavor.
                                 type: string
                             type: object
                           id:
@@ -3238,7 +3250,7 @@ spec:
                             == oldSelf.region
                       image:
                         description: |-
-                          The image to use for your server instance.
+                          image is the image to use for the server instance.
                           If the rootVolume is specified, this will be used when creating the root volume.
                         maxProperties: 1
                         minProperties: 1
@@ -3251,15 +3263,16 @@ spec:
                             minProperties: 1
                             properties:
                               name:
-                                description: The name of the desired image. If specified,
-                                  the combination of name and tags must return a single
-                                  matching image or an error will be raised.
+                                description: name is the name of the desired image.
+                                  If specified, the combination of name and tags must
+                                  return a single matching image or an error will
+                                  be raised.
                                 type: string
                               tags:
-                                description: The tags associated with the desired
-                                  image. If specified, the combination of name and
-                                  tags must return a single matching image or an error
-                                  will be raised.
+                                description: tags are the tags associated with the
+                                  desired image. If specified, the combination of
+                                  name and tags must return a single matching image
+                                  or an error will be raised.
                                 items:
                                   type: string
                                 type: array
@@ -3353,18 +3366,30 @@ spec:
                                         minProperties: 1
                                         properties:
                                           cidr:
+                                            description: cidr filters subnets by CIDR.
                                             type: string
                                           description:
+                                            description: description filters subnets
+                                              by description.
                                             type: string
                                           gatewayIP:
+                                            description: gatewayIP filters subnets
+                                              by gateway IP.
                                             type: string
                                           ipVersion:
+                                            description: ipVersion filters subnets
+                                              by IP version.
                                             type: integer
                                           ipv6AddressMode:
+                                            description: ipv6AddressMode filters subnets
+                                              by IPv6 address mode.
                                             type: string
                                           ipv6RAMode:
+                                            description: ipv6RAMode filters subnets
+                                              by IPv6 Router Advertisement mode.
                                             type: string
                                           name:
+                                            description: name filters subnets by name.
                                             type: string
                                           notTags:
                                             description: |-
@@ -3393,6 +3418,8 @@ spec:
                                             type: array
                                             x-kubernetes-list-type: set
                                           projectID:
+                                            description: projectID filters subnets
+                                              by project ID.
                                             type: string
                                           tags:
                                             description: |-
@@ -3458,8 +3485,11 @@ spec:
                                   minProperties: 1
                                   properties:
                                     description:
+                                      description: description filters networks by
+                                        description.
                                       type: string
                                     name:
+                                      description: name filters networks by name.
                                       type: string
                                     notTags:
                                       description: |-
@@ -3488,6 +3518,8 @@ spec:
                                       type: array
                                       x-kubernetes-list-type: set
                                     projectID:
+                                      description: projectID filters networks by project
+                                        ID.
                                       type: string
                                     tags:
                                       description: |-
@@ -3546,7 +3578,7 @@ spec:
                                   type: boolean
                               type: object
                             propagateUplinkStatus:
-                              description: PropageteUplinkStatus enables or disables
+                              description: propagateUplinkStatus enables or disables
                                 the propagate uplink status on the port.
                               type: boolean
                             securityGroups:
@@ -3567,8 +3599,12 @@ spec:
                                     minProperties: 1
                                     properties:
                                       description:
+                                        description: description filters security
+                                          groups by description.
                                         type: string
                                       name:
+                                        description: name filters security groups
+                                          by name.
                                         type: string
                                       notTags:
                                         description: |-
@@ -3597,6 +3633,8 @@ spec:
                                         type: array
                                         x-kubernetes-list-type: set
                                       projectID:
+                                        description: projectID filters security groups
+                                          by project ID.
                                         type: string
                                       tags:
                                         description: |-
@@ -3651,7 +3689,7 @@ spec:
                               type: boolean
                             valueSpecs:
                               description: |-
-                                Value specs are extra parameters to include in the API request with OpenStack.
+                                valueSpecs are extra parameters to include in the API request with OpenStack.
                                 This is an extension point for the API, so what they do and if they are supported,
                                 depends on the specific OpenStack implementation.
                               items:
@@ -3697,7 +3735,7 @@ spec:
                           by the cloud provider.
                         type: string
                       rootVolume:
-                        description: The volume metadata to boot from
+                        description: rootVolume is the volume metadata to boot from.
                         properties:
                           availabilityZone:
                             description: |-
@@ -3816,8 +3854,8 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       securityGroups:
-                        description: The names of the security groups to assign to
-                          the instance
+                        description: securityGroups is a list of security groups to
+                          assign to the instance.
                         items:
                           description: SecurityGroupParam specifies an OpenStack security
                             group. It may be specified by ID or filter, but not both.
@@ -3830,8 +3868,11 @@ spec:
                               minProperties: 1
                               properties:
                                 description:
+                                  description: description filters security groups
+                                    by description.
                                   type: string
                                 name:
+                                  description: name filters security groups by name.
                                   type: string
                                 notTags:
                                   description: |-
@@ -3860,6 +3901,8 @@ spec:
                                   type: array
                                   x-kubernetes-list-type: set
                                 projectID:
+                                  description: projectID filters security groups by
+                                    project ID.
                                   type: string
                                 tags:
                                   description: |-
@@ -3898,7 +3941,8 @@ spec:
                           type: object
                         type: array
                       serverGroup:
-                        description: The server group to assign the machine to.
+                        description: serverGroup is the server group to assign the
+                          machine to.
                         maxProperties: 1
                         minProperties: 1
                         properties:
@@ -3918,8 +3962,8 @@ spec:
                             type: string
                         type: object
                       serverMetadata:
-                        description: Metadata mapping. Allows you to create a map
-                          of key value pairs to add to the server instance.
+                        description: serverMetadata is a list of key/value pairs to
+                          add to the server instance.
                         items:
                           properties:
                             key:
@@ -3939,7 +3983,8 @@ spec:
                         - key
                         x-kubernetes-list-type: map
                       sshKeyName:
-                        description: The ssh key to inject in the instance
+                        description: sshKeyName is the name of the SSH key to inject
+                          in the instance.
                         type: string
                       tags:
                         description: |-
@@ -3952,8 +3997,8 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                       trunk:
-                        description: Whether the server instance is created on a trunk
-                          port or not.
+                        description: trunk specifies whether the server instance is
+                          created on a trunk port or not.
                         type: boolean
                     required:
                     - flavor
@@ -4044,8 +4089,10 @@ spec:
                     minProperties: 1
                     properties:
                       description:
+                        description: description filters networks by description.
                         type: string
                       name:
+                        description: name filters networks by name.
                         type: string
                       notTags:
                         description: |-
@@ -4074,6 +4121,7 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                       projectID:
+                        description: projectID filters networks by project ID.
                         type: string
                       tags:
                         description: |-
@@ -4185,11 +4233,12 @@ spec:
                     items:
                       properties:
                         fixedIP:
-                          description: The FixedIP in the corresponding subnet
+                          description: fixedIP is the FixedIP in the corresponding
+                            subnet.
                           type: string
                         subnet:
-                          description: The subnet in which the FixedIP is used for
-                            the Gateway of this router
+                          description: subnet is the subnet in which the FixedIP is
+                            used for the Gateway of this router.
                           maxProperties: 1
                           minProperties: 1
                           properties:
@@ -4199,18 +4248,28 @@ spec:
                               minProperties: 1
                               properties:
                                 cidr:
+                                  description: cidr filters subnets by CIDR.
                                   type: string
                                 description:
+                                  description: description filters subnets by description.
                                   type: string
                                 gatewayIP:
+                                  description: gatewayIP filters subnets by gateway
+                                    IP.
                                   type: string
                                 ipVersion:
+                                  description: ipVersion filters subnets by IP version.
                                   type: integer
                                 ipv6AddressMode:
+                                  description: ipv6AddressMode filters subnets by
+                                    IPv6 address mode.
                                   type: string
                                 ipv6RAMode:
+                                  description: ipv6RAMode filters subnets by IPv6
+                                    Router Advertisement mode.
                                   type: string
                                 name:
+                                  description: name filters subnets by name.
                                   type: string
                                 notTags:
                                   description: |-
@@ -4239,6 +4298,8 @@ spec:
                                   type: array
                                   x-kubernetes-list-type: set
                                 projectID:
+                                  description: projectID filters subnets by project
+                                    ID.
                                   type: string
                                 tags:
                                   description: |-
@@ -4604,8 +4665,10 @@ spec:
                     minProperties: 1
                     properties:
                       description:
+                        description: description filters networks by description.
                         type: string
                       name:
+                        description: name filters networks by name.
                         type: string
                       notTags:
                         description: |-
@@ -4634,6 +4697,7 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                       projectID:
+                        description: projectID filters networks by project ID.
                         type: string
                       tags:
                         description: |-
@@ -4682,8 +4746,10 @@ spec:
                     minProperties: 1
                     properties:
                       description:
+                        description: description filters routers by description.
                         type: string
                       name:
+                        description: name filters routers by name.
                         type: string
                       notTags:
                         description: |-
@@ -4712,6 +4778,7 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                       projectID:
+                        description: projectID filters routers by project ID.
                         type: string
                       tags:
                         description: |-
@@ -4766,18 +4833,27 @@ spec:
                       minProperties: 1
                       properties:
                         cidr:
+                          description: cidr filters subnets by CIDR.
                           type: string
                         description:
+                          description: description filters subnets by description.
                           type: string
                         gatewayIP:
+                          description: gatewayIP filters subnets by gateway IP.
                           type: string
                         ipVersion:
+                          description: ipVersion filters subnets by IP version.
                           type: integer
                         ipv6AddressMode:
+                          description: ipv6AddressMode filters subnets by IPv6 address
+                            mode.
                           type: string
                         ipv6RAMode:
+                          description: ipv6RAMode filters subnets by IPv6 Router Advertisement
+                            mode.
                           type: string
                         name:
+                          description: name filters subnets by name.
                           type: string
                         notTags:
                           description: |-
@@ -4806,6 +4882,7 @@ spec:
                           type: array
                           x-kubernetes-list-type: set
                         projectID:
+                          description: projectID filters subnets by project ID.
                           type: string
                         tags:
                           description: |-
@@ -4864,21 +4941,27 @@ spec:
                 ? has(self.disableAPIServerFloatingIP) && self.disableAPIServerFloatingIP
                 : true'
           status:
-            description: OpenStackClusterStatus defines the observed state of OpenStackCluster.
+            description: status is the observed state of the OpenStackCluster.
             properties:
               apiServerLoadBalancer:
                 description: apiServerLoadBalancer describes the api server load balancer
                   if one exists
                 properties:
                   allowedCIDRs:
+                    description: allowedCIDRs is a list of CIDRs that are allowed
+                      to access the load balancer.
                     items:
                       type: string
                     type: array
                   id:
+                    description: id is the unique identifier of the load balancer.
                     type: string
                   internalIP:
+                    description: internalIP is the internal IP address of the load
+                      balancer.
                     type: string
                   ip:
+                    description: ip is the IP address of the load balancer.
                     type: string
                   loadBalancerNetwork:
                     description: |-
@@ -4888,8 +4971,10 @@ spec:
                       subnet in the list is taken into account.
                     properties:
                       id:
+                        description: id is the unique identifier of the network.
                         type: string
                       name:
+                        description: name is the name of the network.
                         type: string
                       subnets:
                         description: subnets is a list of subnets associated with
@@ -4900,12 +4985,16 @@ spec:
                             associated OpenStack Neutron Subnet.
                           properties:
                             cidr:
+                              description: cidr is the CIDR of the subnet.
                               type: string
                             id:
+                              description: id is the unique identifier of the subnet.
                               type: string
                             name:
+                              description: name is the name of the subnet.
                               type: string
                             tags:
+                              description: tags is a list of tags on the subnet.
                               items:
                                 type: string
                               type: array
@@ -4916,6 +5005,7 @@ spec:
                           type: object
                         type: array
                       tags:
+                        description: tags is a list of tags on the network.
                         items:
                           type: string
                         type: array
@@ -4924,8 +5014,10 @@ spec:
                     - name
                     type: object
                   name:
+                    description: name is the name of the load balancer.
                     type: string
                   tags:
+                    description: tags is a list of tags on the load balancer.
                     items:
                       type: string
                     type: array
@@ -4940,12 +5032,16 @@ spec:
                   host
                 properties:
                   floatingIP:
+                    description: floatingIP is the floating IP address of the bastion.
                     type: string
                   id:
+                    description: id is the unique identifier of the bastion.
                     type: string
                   ip:
+                    description: ip is the IP address of the bastion.
                     type: string
                   name:
+                    description: name is the name of the bastion.
                     type: string
                   resolved:
                     description: |-
@@ -5020,8 +5116,8 @@ spec:
                                       address in any subnet of the port's network.
                                     type: string
                                   subnet:
-                                    description: SubnetID is the id of a subnet to
-                                      create the fixed IP of a port in.
+                                    description: subnet is the ID of a subnet to create
+                                      the fixed IP of a port in.
                                     type: string
                                 type: object
                               type: array
@@ -5064,7 +5160,7 @@ spec:
                                   type: boolean
                               type: object
                             propagateUplinkStatus:
-                              description: PropageteUplinkStatus enables or disables
+                              description: propagateUplinkStatus enables or disables
                                 the propagate uplink status on the port.
                               type: boolean
                             securityGroups:
@@ -5087,7 +5183,7 @@ spec:
                               type: boolean
                             valueSpecs:
                               description: |-
-                                Value specs are extra parameters to include in the API request with OpenStack.
+                                valueSpecs are extra parameters to include in the API request with OpenStack.
                                 This is an extension point for the API, so what they do and if they are supported,
                                 depends on the specific OpenStack implementation.
                               items:
@@ -5155,10 +5251,11 @@ spec:
                         type: array
                     type: object
                   sshKeyName:
+                    description: sshKeyName is the name of the SSH key used for the
+                      bastion.
                     type: string
                   state:
-                    description: InstanceState describes the state of an OpenStack
-                      instance.
+                    description: state is the current state of the bastion.
                     type: string
                 type: object
               bastionSecurityGroup:
@@ -5258,10 +5355,13 @@ spec:
                   network used for default ingress and egress traffic.
                 properties:
                   id:
+                    description: id is the unique identifier of the network.
                     type: string
                   name:
+                    description: name is the name of the network.
                     type: string
                   tags:
+                    description: tags is a list of tags on the network.
                     items:
                       type: string
                     type: array
@@ -5310,8 +5410,10 @@ spec:
                   Network.
                 properties:
                   id:
+                    description: id is the unique identifier of the network.
                     type: string
                   name:
+                    description: name is the name of the network.
                     type: string
                   subnets:
                     description: subnets is a list of subnets associated with the
@@ -5322,12 +5424,16 @@ spec:
                         OpenStack Neutron Subnet.
                       properties:
                         cidr:
+                          description: cidr is the CIDR of the subnet.
                           type: string
                         id:
+                          description: id is the unique identifier of the subnet.
                           type: string
                         name:
+                          description: name is the name of the subnet.
                           type: string
                         tags:
+                          description: tags is a list of tags on the subnet.
                           items:
                             type: string
                           type: array
@@ -5338,6 +5444,7 @@ spec:
                       type: object
                     type: array
                   tags:
+                    description: tags is a list of tags on the network.
                     items:
                       type: string
                     type: array
@@ -5349,14 +5456,18 @@ spec:
                 description: router describes the default cluster router
                 properties:
                   id:
+                    description: id is the unique identifier of the router.
                     type: string
                   ips:
+                    description: ips is a list of IP addresses assigned to the router.
                     items:
                       type: string
                     type: array
                   name:
+                    description: name is the name of the router.
                     type: string
                   tags:
+                    description: tags is a list of tags on the router.
                     items:
                       type: string
                     type: array

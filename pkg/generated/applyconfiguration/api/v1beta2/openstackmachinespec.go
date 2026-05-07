@@ -28,34 +28,35 @@ import (
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpecApplyConfiguration struct {
 	// providerID is the unique identifier as specified by the cloud provider.
-	ProviderID *string                        `json:"providerID,omitempty"`
-	Flavor     *FlavorParamApplyConfiguration `json:"flavor,omitempty"`
-	// The image to use for your server instance.
+	ProviderID *string `json:"providerID,omitempty"`
+	// flavor is the flavor to use for this machine.
+	Flavor *FlavorParamApplyConfiguration `json:"flavor,omitempty"`
+	// image is the image to use for the server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
 	Image *ImageParamApplyConfiguration `json:"image,omitempty"`
-	// The ssh key to inject in the instance
+	// sshKeyName is the name of the SSH key to inject in the instance.
 	SSHKeyName *string `json:"sshKeyName,omitempty"`
 	// ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
 	Ports []PortOptsApplyConfiguration `json:"ports,omitempty"`
-	// The names of the security groups to assign to the instance
+	// securityGroups is a list of security groups to assign to the instance.
 	SecurityGroups []SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
-	// Whether the server instance is created on a trunk port or not.
+	// trunk specifies whether the server instance is created on a trunk port or not.
 	Trunk *bool `json:"trunk,omitempty"`
 	// tags which will be added to the machine and all dependent resources
 	// which support them. These are in addition to Tags defined on the
 	// cluster.
 	// Requires Nova api 2.52 minimum!
 	Tags []string `json:"tags,omitempty"`
-	// Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.
+	// serverMetadata is a list of key/value pairs to add to the server instance.
 	ServerMetadata []ServerMetadataApplyConfiguration `json:"serverMetadata,omitempty"`
-	// Config Drive support
+	// configDrive enables config drive support.
 	ConfigDrive *bool `json:"configDrive,omitempty"`
-	// The volume metadata to boot from
+	// rootVolume is the volume metadata to boot from.
 	RootVolume *RootVolumeApplyConfiguration `json:"rootVolume,omitempty"`
 	// additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
 	AdditionalBlockDevices []AdditionalBlockDeviceApplyConfiguration `json:"additionalBlockDevices,omitempty"`
-	// The server group to assign the machine to.
+	// serverGroup is the server group to assign the machine to.
 	ServerGroup *ServerGroupParamApplyConfiguration `json:"serverGroup,omitempty"`
 	// identityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this machine. If not specified, the

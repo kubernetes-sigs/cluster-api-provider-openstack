@@ -1328,7 +1328,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: OpenStackMachineSpec defines the desired state of OpenStackMachine.
+            description: spec is the desired state of the OpenStackMachine.
             properties:
               additionalBlockDevices:
                 description: additionalBlockDevices is a list of specifications for
@@ -1417,11 +1417,10 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               configDrive:
-                description: Config Drive support
+                description: configDrive enables config drive support.
                 type: boolean
               flavor:
-                description: FlavorParam describes a nova flavor. It can be specified
-                  by ID or filter
+                description: flavor is the flavor to use for this machine.
                 maxProperties: 1
                 minProperties: 1
                 properties:
@@ -1430,7 +1429,7 @@ spec:
                     minProperties: 1
                     properties:
                       name:
-                        description: The name of the desired flavor.
+                        description: name is the name of the desired flavor.
                         type: string
                     type: object
                   id:
@@ -1505,7 +1504,7 @@ spec:
                     == oldSelf.region
               image:
                 description: |-
-                  The image to use for your server instance.
+                  image is the image to use for the server instance.
                   If the rootVolume is specified, this will be used when creating the root volume.
                 maxProperties: 1
                 minProperties: 1
@@ -1518,14 +1517,14 @@ spec:
                     minProperties: 1
                     properties:
                       name:
-                        description: The name of the desired image. If specified,
+                        description: name is the name of the desired image. If specified,
                           the combination of name and tags must return a single matching
                           image or an error will be raised.
                         type: string
                       tags:
-                        description: The tags associated with the desired image. If
-                          specified, the combination of name and tags must return
-                          a single matching image or an error will be raised.
+                        description: tags are the tags associated with the desired
+                          image. If specified, the combination of name and tags must
+                          return a single matching image or an error will be raised.
                         items:
                           type: string
                         type: array
@@ -1618,18 +1617,28 @@ spec:
                                 minProperties: 1
                                 properties:
                                   cidr:
+                                    description: cidr filters subnets by CIDR.
                                     type: string
                                   description:
+                                    description: description filters subnets by description.
                                     type: string
                                   gatewayIP:
+                                    description: gatewayIP filters subnets by gateway
+                                      IP.
                                     type: string
                                   ipVersion:
+                                    description: ipVersion filters subnets by IP version.
                                     type: integer
                                   ipv6AddressMode:
+                                    description: ipv6AddressMode filters subnets by
+                                      IPv6 address mode.
                                     type: string
                                   ipv6RAMode:
+                                    description: ipv6RAMode filters subnets by IPv6
+                                      Router Advertisement mode.
                                     type: string
                                   name:
+                                    description: name filters subnets by name.
                                     type: string
                                   notTags:
                                     description: |-
@@ -1658,6 +1667,8 @@ spec:
                                     type: array
                                     x-kubernetes-list-type: set
                                   projectID:
+                                    description: projectID filters subnets by project
+                                      ID.
                                     type: string
                                   tags:
                                     description: |-
@@ -1722,8 +1733,10 @@ spec:
                           minProperties: 1
                           properties:
                             description:
+                              description: description filters networks by description.
                               type: string
                             name:
+                              description: name filters networks by name.
                               type: string
                             notTags:
                               description: |-
@@ -1752,6 +1765,7 @@ spec:
                               type: array
                               x-kubernetes-list-type: set
                             projectID:
+                              description: projectID filters networks by project ID.
                               type: string
                             tags:
                               description: |-
@@ -1810,7 +1824,7 @@ spec:
                           type: boolean
                       type: object
                     propagateUplinkStatus:
-                      description: PropageteUplinkStatus enables or disables the propagate
+                      description: propagateUplinkStatus enables or disables the propagate
                         uplink status on the port.
                       type: boolean
                     securityGroups:
@@ -1829,8 +1843,11 @@ spec:
                             minProperties: 1
                             properties:
                               description:
+                                description: description filters security groups by
+                                  description.
                                 type: string
                               name:
+                                description: name filters security groups by name.
                                 type: string
                               notTags:
                                 description: |-
@@ -1859,6 +1876,8 @@ spec:
                                 type: array
                                 x-kubernetes-list-type: set
                               projectID:
+                                description: projectID filters security groups by
+                                  project ID.
                                 type: string
                               tags:
                                 description: |-
@@ -1913,7 +1932,7 @@ spec:
                       type: boolean
                     valueSpecs:
                       description: |-
-                        Value specs are extra parameters to include in the API request with OpenStack.
+                        valueSpecs are extra parameters to include in the API request with OpenStack.
                         This is an extension point for the API, so what they do and if they are supported,
                         depends on the specific OpenStack implementation.
                       items:
@@ -1958,7 +1977,7 @@ spec:
                   cloud provider.
                 type: string
               rootVolume:
-                description: The volume metadata to boot from
+                description: rootVolume is the volume metadata to boot from.
                 properties:
                   availabilityZone:
                     description: |-
@@ -2077,7 +2096,8 @@ spec:
                 - name
                 x-kubernetes-list-type: map
               securityGroups:
-                description: The names of the security groups to assign to the instance
+                description: securityGroups is a list of security groups to assign
+                  to the instance.
                 items:
                   description: SecurityGroupParam specifies an OpenStack security
                     group. It may be specified by ID or filter, but not both.
@@ -2090,8 +2110,10 @@ spec:
                       minProperties: 1
                       properties:
                         description:
+                          description: description filters security groups by description.
                           type: string
                         name:
+                          description: name filters security groups by name.
                           type: string
                         notTags:
                           description: |-
@@ -2120,6 +2142,8 @@ spec:
                           type: array
                           x-kubernetes-list-type: set
                         projectID:
+                          description: projectID filters security groups by project
+                            ID.
                           type: string
                         tags:
                           description: |-
@@ -2158,7 +2182,8 @@ spec:
                   type: object
                 type: array
               serverGroup:
-                description: The server group to assign the machine to.
+                description: serverGroup is the server group to assign the machine
+                  to.
                 maxProperties: 1
                 minProperties: 1
                 properties:
@@ -2177,8 +2202,8 @@ spec:
                     type: string
                 type: object
               serverMetadata:
-                description: Metadata mapping. Allows you to create a map of key value
-                  pairs to add to the server instance.
+                description: serverMetadata is a list of key/value pairs to add to
+                  the server instance.
                 items:
                   properties:
                     key:
@@ -2198,7 +2223,8 @@ spec:
                 - key
                 x-kubernetes-list-type: map
               sshKeyName:
-                description: The ssh key to inject in the instance
+                description: sshKeyName is the name of the SSH key to inject in the
+                  instance.
                 type: string
               tags:
                 description: |-
@@ -2211,15 +2237,15 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               trunk:
-                description: Whether the server instance is created on a trunk port
-                  or not.
+                description: trunk specifies whether the server instance is created
+                  on a trunk port or not.
                 type: boolean
             required:
             - flavor
             - image
             type: object
           status:
-            description: OpenStackMachineStatus defines the observed state of OpenStackMachine.
+            description: status is the observed state of the OpenStackMachine.
             properties:
               addresses:
                 description: addresses contains the OpenStack instance associated
@@ -2392,7 +2418,7 @@ spec:
                                   address in any subnet of the port's network.
                                 type: string
                               subnet:
-                                description: SubnetID is the id of a subnet to create
+                                description: subnet is the ID of a subnet to create
                                   the fixed IP of a port in.
                                 type: string
                             type: object
@@ -2435,7 +2461,7 @@ spec:
                               type: boolean
                           type: object
                         propagateUplinkStatus:
-                          description: PropageteUplinkStatus enables or disables the
+                          description: propagateUplinkStatus enables or disables the
                             propagate uplink status on the port.
                           type: boolean
                         securityGroups:
@@ -2458,7 +2484,7 @@ spec:
                           type: boolean
                         valueSpecs:
                           description: |-
-                            Value specs are extra parameters to include in the API request with OpenStack.
+                            valueSpecs are extra parameters to include in the API request with OpenStack.
                             This is an extension point for the API, so what they do and if they are supported,
                             depends on the specific OpenStack implementation.
                           items:

@@ -23,6 +23,7 @@ package v1beta2
 //
 // OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.
 type OpenStackClusterTemplateSpecApplyConfiguration struct {
+	// template is the OpenStackClusterTemplate resource data.
 	Template *OpenStackClusterTemplateResourceApplyConfiguration `json:"template,omitempty"`
 }
 

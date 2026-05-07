@@ -32,9 +32,11 @@ import (
 //
 // OpenStackClusterTemplate is the Schema for the openstackclustertemplates API.
 type OpenStackClusterTemplateApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	v1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata is the standard object metadata.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *OpenStackClusterTemplateSpecApplyConfiguration `json:"spec,omitempty"`
+	// spec is the desired state of the OpenStackClusterTemplate.
+	Spec *OpenStackClusterTemplateSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
 // OpenStackClusterTemplate constructs a declarative configuration of the OpenStackClusterTemplate type for use with

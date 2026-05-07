@@ -23,10 +23,14 @@ package v1beta2
 //
 // Router represents basic information about the associated OpenStack Neutron Router.
 type RouterApplyConfiguration struct {
-	Name *string  `json:"name,omitempty"`
-	ID   *string  `json:"id,omitempty"`
+	// name is the name of the router.
+	Name *string `json:"name,omitempty"`
+	// id is the unique identifier of the router.
+	ID *string `json:"id,omitempty"`
+	// tags is a list of tags on the router.
 	Tags []string `json:"tags,omitempty"`
-	IPs  []string `json:"ips,omitempty"`
+	// ips is a list of IP addresses assigned to the router.
+	IPs []string `json:"ips,omitempty"`
 }
 
 // RouterApplyConfiguration constructs a declarative configuration of the Router type for use with

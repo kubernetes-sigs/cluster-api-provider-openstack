@@ -22426,38 +22426,44 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BastionStatus(r
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "id is the unique identifier of the bastion.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "name is the name of the bastion.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"sshKeyName": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "sshKeyName is the name of the SSH key used for the bastion.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"state": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "state is the current state of the bastion.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"ip": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "ip is the IP address of the bastion.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"floatingIP": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "floatingIP is the floating IP address of the bastion.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"resolved": {
@@ -22604,14 +22610,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ExternalRouterI
 				Properties: map[string]spec.Schema{
 					"fixedIP": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The FixedIP in the corresponding subnet",
+							Description: "fixedIP is the FixedIP in the corresponding subnet.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"subnet": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The subnet in which the FixedIP is used for the Gateway of this router",
+							Description: "subnet is the subnet in which the FixedIP is used for the Gateway of this router.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam"),
 						},
@@ -22753,7 +22759,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorFilter(re
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The name of the desired flavor.",
+							Description: "name is the name of the desired flavor.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22801,7 +22807,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ImageFilter(ref
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.",
+							Description: "name is the name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22813,7 +22819,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ImageFilter(ref
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.",
+							Description: "tags are the tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22875,35 +22881,40 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "name is the name of the load balancer.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "id is the unique identifier of the load balancer.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"ip": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "ip is the IP address of the load balancer.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"internalIP": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "internalIP is the internal IP address of the load balancer.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"allowedCIDRs": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "allowedCIDRs is a list of CIDRs that are allowed to access the load balancer.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -22917,7 +22928,8 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 					},
 					"tags": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "tags is a list of tags on the load balancer.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -23158,20 +23170,23 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkFilter(r
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "name filters networks by name.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "description filters networks by description.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"projectID": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "projectID filters networks by project ID.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {
@@ -23297,21 +23312,24 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatus(r
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "name is the name of the network.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "id is the unique identifier of the network.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "tags is a list of tags on the network.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -23339,21 +23357,24 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatusWi
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "name is the name of the network.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "id is the unique identifier of the network.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "tags is a list of tags on the network.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -23431,20 +23452,23 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref(metav1.ObjectMeta{}.OpenAPIModelName()),
+							Description: "metadata is the standard object metadata.",
+							Default:     map[string]interface{}{},
+							Ref:         ref(metav1.ObjectMeta{}.OpenAPIModelName()),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterSpec"),
+							Description: "spec is the desired state of the OpenStackCluster.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterStatus"),
+							Description: "status is the observed state of the OpenStackCluster.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterStatus"),
 						},
 					},
 				},
@@ -23821,14 +23845,16 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref(metav1.ObjectMeta{}.OpenAPIModelName()),
+							Description: "metadata is the standard object metadata.",
+							Default:     map[string]interface{}{},
+							Ref:         ref(metav1.ObjectMeta{}.OpenAPIModelName()),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterTemplateSpec"),
+							Description: "spec is the desired state of the OpenStackClusterTemplate.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterTemplateSpec"),
 						},
 					},
 				},
@@ -23897,8 +23923,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 				Properties: map[string]spec.Schema{
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterSpec"),
+							Description: "spec is the desired state of the OpenStackCluster.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterSpec"),
 						},
 					},
 				},
@@ -23919,8 +23946,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 				Properties: map[string]spec.Schema{
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterTemplateResource"),
+							Description: "template is the OpenStackClusterTemplate resource data.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterTemplateResource"),
 						},
 					},
 				},
@@ -23999,20 +24027,23 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref(metav1.ObjectMeta{}.OpenAPIModelName()),
+							Description: "metadata is the standard object metadata.",
+							Default:     map[string]interface{}{},
+							Ref:         ref(metav1.ObjectMeta{}.OpenAPIModelName()),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineSpec"),
+							Description: "spec is the desired state of the OpenStackMachine.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineStatus"),
+							Description: "status is the observed state of the OpenStackMachine.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineStatus"),
 						},
 					},
 				},
@@ -24088,20 +24119,21 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorParam"),
+							Description: "flavor is the flavor to use for this machine.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorParam"),
 						},
 					},
 					"image": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The image to use for your server instance. If the rootVolume is specified, this will be used when creating the root volume.",
+							Description: "image is the image to use for the server instance. If the rootVolume is specified, this will be used when creating the root volume.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageParam"),
 						},
 					},
 					"sshKeyName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The ssh key to inject in the instance",
+							Description: "sshKeyName is the name of the SSH key to inject in the instance.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24122,7 +24154,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"securityGroups": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The names of the security groups to assign to the instance",
+							Description: "securityGroups is a list of security groups to assign to the instance.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24136,7 +24168,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"trunk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether the server instance is created on a trunk port or not.",
+							Description: "trunk specifies whether the server instance is created on a trunk port or not.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -24171,7 +24203,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.",
+							Description: "serverMetadata is a list of key/value pairs to add to the server instance.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24185,14 +24217,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"configDrive": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Config Drive support",
+							Description: "configDrive enables config drive support.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"rootVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The volume metadata to boot from",
+							Description: "rootVolume is the volume metadata to boot from.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RootVolume"),
 						},
 					},
@@ -24220,7 +24252,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"serverGroup": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The server group to assign the machine to.",
+							Description: "serverGroup is the server group to assign the machine to.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam"),
 						},
 					},
@@ -24365,20 +24397,23 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref(metav1.ObjectMeta{}.OpenAPIModelName()),
+							Description: "metadata is the standard object metadata.",
+							Default:     map[string]interface{}{},
+							Ref:         ref(metav1.ObjectMeta{}.OpenAPIModelName()),
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineTemplateSpec"),
+							Description: "spec is the desired state of the OpenStackMachineTemplate.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineTemplateSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineTemplateStatus"),
+							Description: "status is the observed state of the OpenStackMachineTemplate.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineTemplateStatus"),
 						},
 					},
 				},
@@ -24470,8 +24505,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 				Properties: map[string]spec.Schema{
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineTemplateResource"),
+							Description: "template is the OpenStackMachineTemplate resource data.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineTemplateResource"),
 						},
 					},
 				},
@@ -24506,8 +24542,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"nodeInfo": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NodeInfo"),
+							Description: "nodeInfo contains information about the node's operating system.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NodeInfo"),
 						},
 					},
 					"conditions": {
@@ -24680,7 +24717,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 					},
 					"propagateUplinkStatus": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
+							Description: "propagateUplinkStatus enables or disables the propagate uplink status on the port.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -24695,7 +24732,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
+							Description: "valueSpecs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24745,7 +24782,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedFixedIP
 				Properties: map[string]spec.Schema{
 					"subnet": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SubnetID is the id of a subnet to create the fixed IP of a port in.",
+							Description: "subnet is the ID of a subnet to create the fixed IP of a port in.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24967,7 +25004,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"propagateUplinkStatus": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
+							Description: "propagateUplinkStatus enables or disables the propagate uplink status on the port.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -24982,7 +25019,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
+							Description: "valueSpecs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25067,7 +25104,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"propagateUplinkStatus": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PropageteUplinkStatus enables or disables the propagate uplink status on the port.",
+							Description: "propagateUplinkStatus enables or disables the propagate uplink status on the port.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -25082,7 +25119,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Value specs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
+							Description: "valueSpecs are extra parameters to include in the API request with OpenStack. This is an extension point for the API, so what they do and if they are supported, depends on the specific OpenStack implementation.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25168,21 +25205,24 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Router(ref comm
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "name is the name of the router.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "id is the unique identifier of the router.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "tags is a list of tags on the router.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -25196,7 +25236,8 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Router(ref comm
 					},
 					"ips": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "ips is a list of IP addresses assigned to the router.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -25224,20 +25265,23 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RouterFilter(re
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "name filters routers by name.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "description filters routers by description.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"projectID": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "projectID filters routers by project ID.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {
@@ -25437,20 +25481,23 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupFi
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "name filters security groups by name.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "description filters security groups by description.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"projectID": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "projectID filters security groups by project ID.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {
@@ -25777,28 +25824,32 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "name is the name of the subnet.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "id is the unique identifier of the subnet.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"cidr": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Description: "cidr is the CIDR of the subnet.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "tags is a list of tags on the subnet.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -25826,50 +25877,58 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetFilter(re
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "name filters subnets by name.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "description filters subnets by description.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"projectID": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "projectID filters subnets by project ID.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"ipVersion": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Description: "ipVersion filters subnets by IP version.",
+							Type:        []string{"integer"},
+							Format:      "int32",
 						},
 					},
 					"gatewayIP": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "gatewayIP filters subnets by gateway IP.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"cidr": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "cidr filters subnets by CIDR.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"ipv6AddressMode": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "ipv6AddressMode filters subnets by IPv6 address mode.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"ipv6RAMode": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "ipv6RAMode filters subnets by IPv6 Router Advertisement mode.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"tags": {

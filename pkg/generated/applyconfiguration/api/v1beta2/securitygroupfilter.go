@@ -27,8 +27,11 @@ import (
 //
 // SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.
 type SecurityGroupFilterApplyConfiguration struct {
-	Name                                  *string `json:"name,omitempty"`
-	Description                           *string `json:"description,omitempty"`
+	// name filters security groups by name.
+	Name *string `json:"name,omitempty"`
+	// description filters security groups by description.
+	Description *string `json:"description,omitempty"`
+	// projectID filters security groups by project ID.
 	ProjectID                             *string `json:"projectID,omitempty"`
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }

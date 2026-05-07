@@ -54,8 +54,10 @@ spec:
                     minProperties: 1
                     properties:
                       description:
+                        description: description filters networks by description.
                         type: string
                       name:
+                        description: name filters networks by name.
                         type: string
                       notTags:
                         description: |-
@@ -84,6 +86,7 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                       projectID:
+                        description: projectID filters networks by project ID.
                         type: string
                       tags:
                         description: |-
@@ -263,10 +266,13 @@ spec:
                   used for floating ips
                 properties:
                   id:
+                    description: id is the unique identifier of the network.
                     type: string
                   name:
+                    description: name is the name of the network.
                     type: string
                   tags:
+                    description: tags is a list of tags on the network.
                     items:
                       type: string
                     type: array

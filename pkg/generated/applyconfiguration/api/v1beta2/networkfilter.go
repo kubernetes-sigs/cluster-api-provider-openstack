@@ -27,8 +27,11 @@ import (
 //
 // NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.
 type NetworkFilterApplyConfiguration struct {
-	Name                                  *string `json:"name,omitempty"`
-	Description                           *string `json:"description,omitempty"`
+	// name filters networks by name.
+	Name *string `json:"name,omitempty"`
+	// description filters networks by description.
+	Description *string `json:"description,omitempty"`
+	// projectID filters networks by project ID.
 	ProjectID                             *string `json:"projectID,omitempty"`
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }

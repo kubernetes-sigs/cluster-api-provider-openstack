@@ -60,11 +60,11 @@ type ImageParam struct {
 // ImageFilter describes a query for an image.
 // +kubebuilder:validation:MinProperties:=1
 type ImageFilter struct {
-	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// name is the name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +optional
 	Name optional.String `json:"name,omitempty"`
 
-	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// tags are the tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
@@ -95,7 +95,7 @@ type FlavorParam struct {
 // flavor, if not an error will be raised.
 // +kubebuilder:validation:MinProperties:=1
 type FlavorFilter struct {
-	// The name of the desired flavor.
+	// name is the name of the desired flavor.
 	// +optional
 	Name optional.String `json:"name,omitempty"`
 }
@@ -109,9 +109,9 @@ func (f *FlavorFilter) IsZero() bool {
 }
 
 type ExternalRouterIPParam struct {
-	// The FixedIP in the corresponding subnet
+	// fixedIP is the FixedIP in the corresponding subnet.
 	FixedIP string `json:"fixedIP,omitempty"`
-	// The subnet in which the FixedIP is used for the Gateway of this router
+	// subnet is the subnet in which the FixedIP is used for the Gateway of this router.
 	Subnet SubnetParam `json:"subnet"`
 }
 
@@ -169,9 +169,12 @@ type SecurityGroupParam struct {
 // SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.
 // +kubebuilder:validation:MinProperties:=1
 type SecurityGroupFilter struct {
-	Name        string `json:"name,omitempty"`
+	// name filters security groups by name.
+	Name string `json:"name,omitempty"`
+	// description filters security groups by description.
 	Description string `json:"description,omitempty"`
-	ProjectID   string `json:"projectID,omitempty"`
+	// projectID filters security groups by project ID.
+	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
@@ -203,9 +206,12 @@ type NetworkParam struct {
 // NetworkFilter specifies a query to select an OpenStack network. At least one property must be set.
 // +kubebuilder:validation:MinProperties:=1
 type NetworkFilter struct {
-	Name        string `json:"name,omitempty"`
+	// name filters networks by name.
+	Name string `json:"name,omitempty"`
+	// description filters networks by description.
 	Description string `json:"description,omitempty"`
-	ProjectID   string `json:"projectID,omitempty"`
+	// projectID filters networks by project ID.
+	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
@@ -237,14 +243,22 @@ type SubnetParam struct {
 // SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.
 // +kubebuilder:validation:MinProperties:=1
 type SubnetFilter struct {
-	Name            string `json:"name,omitempty"`
-	Description     string `json:"description,omitempty"`
-	ProjectID       string `json:"projectID,omitempty"`
-	IPVersion       int    `json:"ipVersion,omitempty"`
-	GatewayIP       string `json:"gatewayIP,omitempty"`
-	CIDR            string `json:"cidr,omitempty"`
+	// name filters subnets by name.
+	Name string `json:"name,omitempty"`
+	// description filters subnets by description.
+	Description string `json:"description,omitempty"`
+	// projectID filters subnets by project ID.
+	ProjectID string `json:"projectID,omitempty"`
+	// ipVersion filters subnets by IP version.
+	IPVersion int `json:"ipVersion,omitempty"`
+	// gatewayIP filters subnets by gateway IP.
+	GatewayIP string `json:"gatewayIP,omitempty"`
+	// cidr filters subnets by CIDR.
+	CIDR string `json:"cidr,omitempty"`
+	// ipv6AddressMode filters subnets by IPv6 address mode.
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
-	IPv6RAMode      string `json:"ipv6RAMode,omitempty"`
+	// ipv6RAMode filters subnets by IPv6 Router Advertisement mode.
+	IPv6RAMode string `json:"ipv6RAMode,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
@@ -280,9 +294,12 @@ type RouterParam struct {
 // RouterFilter specifies a query to select an OpenStack router. At least one property must be set.
 // +kubebuilder:validation:MinProperties:=1
 type RouterFilter struct {
-	Name        string `json:"name,omitempty"`
+	// name filters routers by name.
+	Name string `json:"name,omitempty"`
+	// description filters routers by description.
 	Description string `json:"description,omitempty"`
-	ProjectID   string `json:"projectID,omitempty"`
+	// projectID filters routers by project ID.
+	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
 }
@@ -412,11 +429,11 @@ type ResolvedPortSpecFields struct {
 	// +optional
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
 
-	// PropageteUplinkStatus enables or disables the propagate uplink status on the port.
+	// propagateUplinkStatus enables or disables the propagate uplink status on the port.
 	// +optional
 	PropagateUplinkStatus *bool `json:"propagateUplinkStatus,omitempty"`
 
-	// Value specs are extra parameters to include in the API request with OpenStack.
+	// valueSpecs are extra parameters to include in the API request with OpenStack.
 	// This is an extension point for the API, so what they do and if they are supported,
 	// depends on the specific OpenStack implementation.
 	// +optional
@@ -492,7 +509,7 @@ type FixedIP struct {
 
 // ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.
 type ResolvedFixedIP struct {
-	// SubnetID is the id of a subnet to create the fixed IP of a port in.
+	// subnet is the ID of a subnet to create the fixed IP of a port in.
 	// +optional
 	SubnetID optional.String `json:"subnet,omitempty"`
 
@@ -518,12 +535,18 @@ type AddressPair struct {
 }
 
 type BastionStatus struct {
-	ID         string        `json:"id,omitempty"`
-	Name       string        `json:"name,omitempty"`
-	SSHKeyName string        `json:"sshKeyName,omitempty"`
-	State      InstanceState `json:"state,omitempty"`
-	IP         string        `json:"ip,omitempty"`
-	FloatingIP string        `json:"floatingIP,omitempty"`
+	// id is the unique identifier of the bastion.
+	ID string `json:"id,omitempty"`
+	// name is the name of the bastion.
+	Name string `json:"name,omitempty"`
+	// sshKeyName is the name of the SSH key used for the bastion.
+	SSHKeyName string `json:"sshKeyName,omitempty"`
+	// state is the current state of the bastion.
+	State InstanceState `json:"state,omitempty"`
+	// ip is the IP address of the bastion.
+	IP string `json:"ip,omitempty"`
+	// floatingIP is the floating IP address of the bastion.
+	FloatingIP string `json:"floatingIP,omitempty"`
 
 	// resolved contains parts of the bastion's machine spec with all
 	// external references fully resolved.
@@ -670,10 +693,13 @@ const (
 
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
+	// name is the name of the network.
 	Name string `json:"name"`
-	ID   string `json:"id"`
+	// id is the unique identifier of the network.
+	ID string `json:"id"`
 
-	//+optional
+	// tags is a list of tags on the network.
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -687,34 +713,48 @@ type NetworkStatusWithSubnets struct {
 
 // Subnet represents basic information about the associated OpenStack Neutron Subnet.
 type Subnet struct {
+	// name is the name of the subnet.
 	Name string `json:"name"`
-	ID   string `json:"id"`
+	// id is the unique identifier of the subnet.
+	ID string `json:"id"`
 
+	// cidr is the CIDR of the subnet.
 	CIDR string `json:"cidr"`
 
-	//+optional
+	// tags is a list of tags on the subnet.
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
 
 // Router represents basic information about the associated OpenStack Neutron Router.
 type Router struct {
+	// name is the name of the router.
 	Name string `json:"name"`
-	ID   string `json:"id"`
-	//+optional
+	// id is the unique identifier of the router.
+	ID string `json:"id"`
+	// tags is a list of tags on the router.
+	// +optional
 	Tags []string `json:"tags,omitempty"`
-	//+optional
+	// ips is a list of IP addresses assigned to the router.
+	// +optional
 	IPs []string `json:"ips,omitempty"`
 }
 
 // LoadBalancer represents basic information about the associated OpenStack LoadBalancer.
 type LoadBalancer struct {
-	Name       string `json:"name"`
-	ID         string `json:"id"`
-	IP         string `json:"ip"`
+	// name is the name of the load balancer.
+	Name string `json:"name"`
+	// id is the unique identifier of the load balancer.
+	ID string `json:"id"`
+	// ip is the IP address of the load balancer.
+	IP string `json:"ip"`
+	// internalIP is the internal IP address of the load balancer.
 	InternalIP string `json:"internalIP"`
-	//+optional
+	// allowedCIDRs is a list of CIDRs that are allowed to access the load balancer.
+	// +optional
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
-	//+optional
+	// tags is a list of tags on the load balancer.
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// loadBalancerNetwork contains information about network and/or subnets which the
 	// loadbalancer is allocated on.

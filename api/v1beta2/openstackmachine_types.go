@@ -93,25 +93,26 @@ type OpenStackMachineSpec struct {
 	// providerID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
 
+	// flavor is the flavor to use for this machine.
 	// +required
 	Flavor FlavorParam `json:"flavor"`
 
-	// The image to use for your server instance.
+	// image is the image to use for the server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
 	// +required
 	Image ImageParam `json:"image"`
 
-	// The ssh key to inject in the instance
+	// sshKeyName is the name of the SSH key to inject in the instance.
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 
 	// ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
 	Ports []PortOpts `json:"ports,omitempty"`
 
-	// The names of the security groups to assign to the instance
+	// securityGroups is a list of security groups to assign to the instance.
 	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
-	// Whether the server instance is created on a trunk port or not.
+	// trunk specifies whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`
 
 	// tags which will be added to the machine and all dependent resources
@@ -121,15 +122,15 @@ type OpenStackMachineSpec struct {
 	// +listType=set
 	Tags []string `json:"tags,omitempty"`
 
-	// Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.
+	// serverMetadata is a list of key/value pairs to add to the server instance.
 	// +listType=map
 	// +listMapKey=key
 	ServerMetadata []ServerMetadata `json:"serverMetadata,omitempty"`
 
-	// Config Drive support
+	// configDrive enables config drive support.
 	ConfigDrive *bool `json:"configDrive,omitempty"`
 
-	// The volume metadata to boot from
+	// rootVolume is the volume metadata to boot from.
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 
 	// additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
@@ -138,7 +139,7 @@ type OpenStackMachineSpec struct {
 	// +optional
 	AdditionalBlockDevices []AdditionalBlockDevice `json:"additionalBlockDevices,omitempty"`
 
-	// The server group to assign the machine to.
+	// serverGroup is the server group to assign the machine to.
 	// +optional
 	ServerGroup *ServerGroupParam `json:"serverGroup,omitempty"`
 
@@ -231,10 +232,13 @@ type OpenStackMachineStatus struct {
 
 // OpenStackMachine is the Schema for the openstackmachines API.
 type OpenStackMachine struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// metadata is the standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   OpenStackMachineSpec   `json:"spec,omitempty"`
+	// spec is the desired state of the OpenStackMachine.
+	Spec OpenStackMachineSpec `json:"spec,omitempty"`
+	// status is the observed state of the OpenStackMachine.
 	Status OpenStackMachineStatus `json:"status,omitempty"`
 }
 

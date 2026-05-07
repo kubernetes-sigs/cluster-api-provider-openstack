@@ -57,9 +57,9 @@ type ResolvedPortSpecFieldsApplyConfiguration struct {
 	// disablePortSecurity enables or disables the port security when set.
 	// When not set, it takes the value of the corresponding field at the network level.
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
-	// PropageteUplinkStatus enables or disables the propagate uplink status on the port.
+	// propagateUplinkStatus enables or disables the propagate uplink status on the port.
 	PropagateUplinkStatus *bool `json:"propagateUplinkStatus,omitempty"`
-	// Value specs are extra parameters to include in the API request with OpenStack.
+	// valueSpecs are extra parameters to include in the API request with OpenStack.
 	// This is an extension point for the API, so what they do and if they are supported,
 	// depends on the specific OpenStack implementation.
 	ValueSpecs []ValueSpecApplyConfiguration `json:"valueSpecs,omitempty"`

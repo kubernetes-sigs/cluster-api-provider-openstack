@@ -27,13 +27,21 @@ import (
 //
 // SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.
 type SubnetFilterApplyConfiguration struct {
-	Name                                  *string `json:"name,omitempty"`
-	Description                           *string `json:"description,omitempty"`
-	ProjectID                             *string `json:"projectID,omitempty"`
-	IPVersion                             *int    `json:"ipVersion,omitempty"`
-	GatewayIP                             *string `json:"gatewayIP,omitempty"`
-	CIDR                                  *string `json:"cidr,omitempty"`
-	IPv6AddressMode                       *string `json:"ipv6AddressMode,omitempty"`
+	// name filters subnets by name.
+	Name *string `json:"name,omitempty"`
+	// description filters subnets by description.
+	Description *string `json:"description,omitempty"`
+	// projectID filters subnets by project ID.
+	ProjectID *string `json:"projectID,omitempty"`
+	// ipVersion filters subnets by IP version.
+	IPVersion *int `json:"ipVersion,omitempty"`
+	// gatewayIP filters subnets by gateway IP.
+	GatewayIP *string `json:"gatewayIP,omitempty"`
+	// cidr filters subnets by CIDR.
+	CIDR *string `json:"cidr,omitempty"`
+	// ipv6AddressMode filters subnets by IPv6 address mode.
+	IPv6AddressMode *string `json:"ipv6AddressMode,omitempty"`
+	// ipv6RAMode filters subnets by IPv6 Router Advertisement mode.
 	IPv6RAMode                            *string `json:"ipv6RAMode,omitempty"`
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }

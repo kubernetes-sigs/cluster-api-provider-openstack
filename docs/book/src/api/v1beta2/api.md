@@ -50,6 +50,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -64,6 +65,7 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
+<p>spec is the desired state of the OpenStackCluster.</p>
 <br/>
 <br/>
 <table>
@@ -404,6 +406,7 @@ OpenStackClusterStatus
 </em>
 </td>
 <td>
+<p>status is the observed state of the OpenStackCluster.</p>
 </td>
 </tr>
 </tbody>
@@ -446,6 +449,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -460,6 +464,7 @@ OpenStackClusterTemplateSpec
 </em>
 </td>
 <td>
+<p>spec is the desired state of the OpenStackClusterTemplate.</p>
 <br/>
 <br/>
 <table>
@@ -473,6 +478,7 @@ OpenStackClusterTemplateResource
 </em>
 </td>
 <td>
+<p>template is the OpenStackClusterTemplate resource data.</p>
 </td>
 </tr>
 </table>
@@ -518,6 +524,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -532,6 +539,7 @@ OpenStackMachineSpec
 </em>
 </td>
 <td>
+<p>spec is the desired state of the OpenStackMachine.</p>
 <br/>
 <br/>
 <table>
@@ -556,6 +564,7 @@ FlavorParam
 </em>
 </td>
 <td>
+<p>flavor is the flavor to use for this machine.</p>
 </td>
 </tr>
 <tr>
@@ -568,7 +577,7 @@ ImageParam
 </em>
 </td>
 <td>
-<p>The image to use for your server instance.
+<p>image is the image to use for the server instance.
 If the rootVolume is specified, this will be used when creating the root volume.</p>
 </td>
 </tr>
@@ -580,7 +589,7 @@ string
 </em>
 </td>
 <td>
-<p>The ssh key to inject in the instance</p>
+<p>sshKeyName is the name of the SSH key to inject in the instance.</p>
 </td>
 </tr>
 <tr>
@@ -607,7 +616,7 @@ If not specified a default port will be added for the default cluster network.</
 </em>
 </td>
 <td>
-<p>The names of the security groups to assign to the instance</p>
+<p>securityGroups is a list of security groups to assign to the instance.</p>
 </td>
 </tr>
 <tr>
@@ -618,7 +627,7 @@ bool
 </em>
 </td>
 <td>
-<p>Whether the server instance is created on a trunk port or not.</p>
+<p>trunk specifies whether the server instance is created on a trunk port or not.</p>
 </td>
 </tr>
 <tr>
@@ -645,7 +654,7 @@ Requires Nova api 2.52 minimum!</p>
 </em>
 </td>
 <td>
-<p>Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.</p>
+<p>serverMetadata is a list of key/value pairs to add to the server instance.</p>
 </td>
 </tr>
 <tr>
@@ -656,7 +665,7 @@ bool
 </em>
 </td>
 <td>
-<p>Config Drive support</p>
+<p>configDrive enables config drive support.</p>
 </td>
 </tr>
 <tr>
@@ -669,7 +678,7 @@ RootVolume
 </em>
 </td>
 <td>
-<p>The volume metadata to boot from</p>
+<p>rootVolume is the volume metadata to boot from.</p>
 </td>
 </tr>
 <tr>
@@ -697,7 +706,7 @@ ServerGroupParam
 </td>
 <td>
 <em>(Optional)</em>
-<p>The server group to assign the machine to.</p>
+<p>serverGroup is the server group to assign the machine to.</p>
 </td>
 </tr>
 <tr>
@@ -759,6 +768,7 @@ OpenStackMachineStatus
 </em>
 </td>
 <td>
+<p>status is the observed state of the OpenStackMachine.</p>
 </td>
 </tr>
 </tbody>
@@ -801,6 +811,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -815,6 +826,7 @@ OpenStackMachineTemplateSpec
 </em>
 </td>
 <td>
+<p>spec is the desired state of the OpenStackMachineTemplate.</p>
 <br/>
 <br/>
 <table>
@@ -828,6 +840,7 @@ OpenStackMachineTemplateResource
 </em>
 </td>
 <td>
+<p>template is the OpenStackMachineTemplate resource data.</p>
 </td>
 </tr>
 </table>
@@ -843,6 +856,7 @@ OpenStackMachineTemplateStatus
 </em>
 </td>
 <td>
+<p>status is the observed state of the OpenStackMachineTemplate.</p>
 </td>
 </tr>
 </tbody>
@@ -1302,6 +1316,7 @@ string
 </em>
 </td>
 <td>
+<p>id is the unique identifier of the bastion.</p>
 </td>
 </tr>
 <tr>
@@ -1312,6 +1327,7 @@ string
 </em>
 </td>
 <td>
+<p>name is the name of the bastion.</p>
 </td>
 </tr>
 <tr>
@@ -1322,6 +1338,7 @@ string
 </em>
 </td>
 <td>
+<p>sshKeyName is the name of the SSH key used for the bastion.</p>
 </td>
 </tr>
 <tr>
@@ -1334,6 +1351,7 @@ InstanceState
 </em>
 </td>
 <td>
+<p>state is the current state of the bastion.</p>
 </td>
 </tr>
 <tr>
@@ -1344,6 +1362,7 @@ string
 </em>
 </td>
 <td>
+<p>ip is the IP address of the bastion.</p>
 </td>
 </tr>
 <tr>
@@ -1354,6 +1373,7 @@ string
 </em>
 </td>
 <td>
+<p>floatingIP is the floating IP address of the bastion.</p>
 </td>
 </tr>
 <tr>
@@ -1609,7 +1629,7 @@ string
 </em>
 </td>
 <td>
-<p>The FixedIP in the corresponding subnet</p>
+<p>fixedIP is the FixedIP in the corresponding subnet.</p>
 </td>
 </tr>
 <tr>
@@ -1622,7 +1642,7 @@ SubnetParam
 </em>
 </td>
 <td>
-<p>The subnet in which the FixedIP is used for the Gateway of this router</p>
+<p>subnet is the subnet in which the FixedIP is used for the Gateway of this router.</p>
 </td>
 </tr>
 </tbody>
@@ -1785,7 +1805,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the desired flavor.</p>
+<p>name is the name of the desired flavor.</p>
 </td>
 </tr>
 </tbody>
@@ -1866,7 +1886,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
+<p>name is the name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
 </td>
 </tr>
 <tr>
@@ -1878,7 +1898,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
+<p>tags are the tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.</p>
 </td>
 </tr>
 </tbody>
@@ -1981,6 +2001,7 @@ string
 </em>
 </td>
 <td>
+<p>name is the name of the load balancer.</p>
 </td>
 </tr>
 <tr>
@@ -1991,6 +2012,7 @@ string
 </em>
 </td>
 <td>
+<p>id is the unique identifier of the load balancer.</p>
 </td>
 </tr>
 <tr>
@@ -2001,6 +2023,7 @@ string
 </em>
 </td>
 <td>
+<p>ip is the IP address of the load balancer.</p>
 </td>
 </tr>
 <tr>
@@ -2011,6 +2034,7 @@ string
 </em>
 </td>
 <td>
+<p>internalIP is the internal IP address of the load balancer.</p>
 </td>
 </tr>
 <tr>
@@ -2022,6 +2046,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>allowedCIDRs is a list of CIDRs that are allowed to access the load balancer.</p>
 </td>
 </tr>
 <tr>
@@ -2033,6 +2058,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>tags is a list of tags on the load balancer.</p>
 </td>
 </tr>
 <tr>
@@ -2306,6 +2332,7 @@ string
 </em>
 </td>
 <td>
+<p>name filters networks by name.</p>
 </td>
 </tr>
 <tr>
@@ -2316,6 +2343,7 @@ string
 </em>
 </td>
 <td>
+<p>description filters networks by description.</p>
 </td>
 </tr>
 <tr>
@@ -2326,6 +2354,7 @@ string
 </em>
 </td>
 <td>
+<p>projectID filters networks by project ID.</p>
 </td>
 </tr>
 <tr>
@@ -2418,6 +2447,7 @@ string
 </em>
 </td>
 <td>
+<p>name is the name of the network.</p>
 </td>
 </tr>
 <tr>
@@ -2428,6 +2458,7 @@ string
 </em>
 </td>
 <td>
+<p>id is the unique identifier of the network.</p>
 </td>
 </tr>
 <tr>
@@ -2439,6 +2470,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>tags is a list of tags on the network.</p>
 </td>
 </tr>
 </tbody>
@@ -3081,6 +3113,7 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
+<p>spec is the desired state of the OpenStackCluster.</p>
 <br/>
 <br/>
 <table>
@@ -3440,6 +3473,7 @@ OpenStackClusterTemplateResource
 </em>
 </td>
 <td>
+<p>template is the OpenStackClusterTemplate resource data.</p>
 </td>
 </tr>
 </tbody>
@@ -3555,6 +3589,7 @@ FlavorParam
 </em>
 </td>
 <td>
+<p>flavor is the flavor to use for this machine.</p>
 </td>
 </tr>
 <tr>
@@ -3567,7 +3602,7 @@ ImageParam
 </em>
 </td>
 <td>
-<p>The image to use for your server instance.
+<p>image is the image to use for the server instance.
 If the rootVolume is specified, this will be used when creating the root volume.</p>
 </td>
 </tr>
@@ -3579,7 +3614,7 @@ string
 </em>
 </td>
 <td>
-<p>The ssh key to inject in the instance</p>
+<p>sshKeyName is the name of the SSH key to inject in the instance.</p>
 </td>
 </tr>
 <tr>
@@ -3606,7 +3641,7 @@ If not specified a default port will be added for the default cluster network.</
 </em>
 </td>
 <td>
-<p>The names of the security groups to assign to the instance</p>
+<p>securityGroups is a list of security groups to assign to the instance.</p>
 </td>
 </tr>
 <tr>
@@ -3617,7 +3652,7 @@ bool
 </em>
 </td>
 <td>
-<p>Whether the server instance is created on a trunk port or not.</p>
+<p>trunk specifies whether the server instance is created on a trunk port or not.</p>
 </td>
 </tr>
 <tr>
@@ -3644,7 +3679,7 @@ Requires Nova api 2.52 minimum!</p>
 </em>
 </td>
 <td>
-<p>Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.</p>
+<p>serverMetadata is a list of key/value pairs to add to the server instance.</p>
 </td>
 </tr>
 <tr>
@@ -3655,7 +3690,7 @@ bool
 </em>
 </td>
 <td>
-<p>Config Drive support</p>
+<p>configDrive enables config drive support.</p>
 </td>
 </tr>
 <tr>
@@ -3668,7 +3703,7 @@ RootVolume
 </em>
 </td>
 <td>
-<p>The volume metadata to boot from</p>
+<p>rootVolume is the volume metadata to boot from.</p>
 </td>
 </tr>
 <tr>
@@ -3696,7 +3731,7 @@ ServerGroupParam
 </td>
 <td>
 <em>(Optional)</em>
-<p>The server group to assign the machine to.</p>
+<p>serverGroup is the server group to assign the machine to.</p>
 </td>
 </tr>
 <tr>
@@ -3917,6 +3952,7 @@ FlavorParam
 </em>
 </td>
 <td>
+<p>flavor is the flavor to use for this machine.</p>
 </td>
 </tr>
 <tr>
@@ -3929,7 +3965,7 @@ ImageParam
 </em>
 </td>
 <td>
-<p>The image to use for your server instance.
+<p>image is the image to use for the server instance.
 If the rootVolume is specified, this will be used when creating the root volume.</p>
 </td>
 </tr>
@@ -3941,7 +3977,7 @@ string
 </em>
 </td>
 <td>
-<p>The ssh key to inject in the instance</p>
+<p>sshKeyName is the name of the SSH key to inject in the instance.</p>
 </td>
 </tr>
 <tr>
@@ -3968,7 +4004,7 @@ If not specified a default port will be added for the default cluster network.</
 </em>
 </td>
 <td>
-<p>The names of the security groups to assign to the instance</p>
+<p>securityGroups is a list of security groups to assign to the instance.</p>
 </td>
 </tr>
 <tr>
@@ -3979,7 +4015,7 @@ bool
 </em>
 </td>
 <td>
-<p>Whether the server instance is created on a trunk port or not.</p>
+<p>trunk specifies whether the server instance is created on a trunk port or not.</p>
 </td>
 </tr>
 <tr>
@@ -4006,7 +4042,7 @@ Requires Nova api 2.52 minimum!</p>
 </em>
 </td>
 <td>
-<p>Metadata mapping. Allows you to create a map of key value pairs to add to the server instance.</p>
+<p>serverMetadata is a list of key/value pairs to add to the server instance.</p>
 </td>
 </tr>
 <tr>
@@ -4017,7 +4053,7 @@ bool
 </em>
 </td>
 <td>
-<p>Config Drive support</p>
+<p>configDrive enables config drive support.</p>
 </td>
 </tr>
 <tr>
@@ -4030,7 +4066,7 @@ RootVolume
 </em>
 </td>
 <td>
-<p>The volume metadata to boot from</p>
+<p>rootVolume is the volume metadata to boot from.</p>
 </td>
 </tr>
 <tr>
@@ -4058,7 +4094,7 @@ ServerGroupParam
 </td>
 <td>
 <em>(Optional)</em>
-<p>The server group to assign the machine to.</p>
+<p>serverGroup is the server group to assign the machine to.</p>
 </td>
 </tr>
 <tr>
@@ -4139,6 +4175,7 @@ OpenStackMachineTemplateResource
 </em>
 </td>
 <td>
+<p>template is the OpenStackMachineTemplate resource data.</p>
 </td>
 </tr>
 </tbody>
@@ -4185,6 +4222,7 @@ NodeInfo
 </td>
 <td>
 <em>(Optional)</em>
+<p>nodeInfo contains information about the node&rsquo;s operating system.</p>
 </td>
 </tr>
 <tr>
@@ -4387,7 +4425,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>SubnetID is the id of a subnet to create the fixed IP of a port in.</p>
+<p>subnet is the ID of a subnet to create the fixed IP of a port in.</p>
 </td>
 </tr>
 <tr>
@@ -4729,7 +4767,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>PropageteUplinkStatus enables or disables the propagate uplink status on the port.</p>
+<p>propagateUplinkStatus enables or disables the propagate uplink status on the port.</p>
 </td>
 </tr>
 <tr>
@@ -4743,7 +4781,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Value specs are extra parameters to include in the API request with OpenStack.
+<p>valueSpecs are extra parameters to include in the API request with OpenStack.
 This is an extension point for the API, so what they do and if they are supported,
 depends on the specific OpenStack implementation.</p>
 </td>
@@ -4848,6 +4886,7 @@ string
 </em>
 </td>
 <td>
+<p>name is the name of the router.</p>
 </td>
 </tr>
 <tr>
@@ -4858,6 +4897,7 @@ string
 </em>
 </td>
 <td>
+<p>id is the unique identifier of the router.</p>
 </td>
 </tr>
 <tr>
@@ -4869,6 +4909,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>tags is a list of tags on the router.</p>
 </td>
 </tr>
 <tr>
@@ -4880,6 +4921,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>ips is a list of IP addresses assigned to the router.</p>
 </td>
 </tr>
 </tbody>
@@ -4909,6 +4951,7 @@ string
 </em>
 </td>
 <td>
+<p>name filters routers by name.</p>
 </td>
 </tr>
 <tr>
@@ -4919,6 +4962,7 @@ string
 </em>
 </td>
 <td>
+<p>description filters routers by description.</p>
 </td>
 </tr>
 <tr>
@@ -4929,6 +4973,7 @@ string
 </em>
 </td>
 <td>
+<p>projectID filters routers by project ID.</p>
 </td>
 </tr>
 <tr>
@@ -5158,6 +5203,7 @@ string
 </em>
 </td>
 <td>
+<p>name filters security groups by name.</p>
 </td>
 </tr>
 <tr>
@@ -5168,6 +5214,7 @@ string
 </em>
 </td>
 <td>
+<p>description filters security groups by description.</p>
 </td>
 </tr>
 <tr>
@@ -5178,6 +5225,7 @@ string
 </em>
 </td>
 <td>
+<p>projectID filters security groups by project ID.</p>
 </td>
 </tr>
 <tr>
@@ -5577,6 +5625,7 @@ string
 </em>
 </td>
 <td>
+<p>name is the name of the subnet.</p>
 </td>
 </tr>
 <tr>
@@ -5587,6 +5636,7 @@ string
 </em>
 </td>
 <td>
+<p>id is the unique identifier of the subnet.</p>
 </td>
 </tr>
 <tr>
@@ -5597,6 +5647,7 @@ string
 </em>
 </td>
 <td>
+<p>cidr is the CIDR of the subnet.</p>
 </td>
 </tr>
 <tr>
@@ -5608,6 +5659,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>tags is a list of tags on the subnet.</p>
 </td>
 </tr>
 </tbody>
@@ -5637,6 +5689,7 @@ string
 </em>
 </td>
 <td>
+<p>name filters subnets by name.</p>
 </td>
 </tr>
 <tr>
@@ -5647,6 +5700,7 @@ string
 </em>
 </td>
 <td>
+<p>description filters subnets by description.</p>
 </td>
 </tr>
 <tr>
@@ -5657,6 +5711,7 @@ string
 </em>
 </td>
 <td>
+<p>projectID filters subnets by project ID.</p>
 </td>
 </tr>
 <tr>
@@ -5667,6 +5722,7 @@ int
 </em>
 </td>
 <td>
+<p>ipVersion filters subnets by IP version.</p>
 </td>
 </tr>
 <tr>
@@ -5677,6 +5733,7 @@ string
 </em>
 </td>
 <td>
+<p>gatewayIP filters subnets by gateway IP.</p>
 </td>
 </tr>
 <tr>
@@ -5687,6 +5744,7 @@ string
 </em>
 </td>
 <td>
+<p>cidr filters subnets by CIDR.</p>
 </td>
 </tr>
 <tr>
@@ -5697,6 +5755,7 @@ string
 </em>
 </td>
 <td>
+<p>ipv6AddressMode filters subnets by IPv6 address mode.</p>
 </td>
 </tr>
 <tr>
@@ -5707,6 +5766,7 @@ string
 </em>
 </td>
 <td>
+<p>ipv6RAMode filters subnets by IPv6 Router Advertisement mode.</p>
 </td>
 </tr>
 <tr>

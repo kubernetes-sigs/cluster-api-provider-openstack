@@ -238,14 +238,14 @@ spec:
                     minProperties: 1
                     properties:
                       name:
-                        description: The name of the desired image. If specified,
+                        description: name is the name of the desired image. If specified,
                           the combination of name and tags must return a single matching
                           image or an error will be raised.
                         type: string
                       tags:
-                        description: The tags associated with the desired image. If
-                          specified, the combination of name and tags must return
-                          a single matching image or an error will be raised.
+                        description: tags are the tags associated with the desired
+                          image. If specified, the combination of name and tags must
+                          return a single matching image or an error will be raised.
                         items:
                           type: string
                         type: array
@@ -336,18 +336,28 @@ spec:
                                 minProperties: 1
                                 properties:
                                   cidr:
+                                    description: cidr filters subnets by CIDR.
                                     type: string
                                   description:
+                                    description: description filters subnets by description.
                                     type: string
                                   gatewayIP:
+                                    description: gatewayIP filters subnets by gateway
+                                      IP.
                                     type: string
                                   ipVersion:
+                                    description: ipVersion filters subnets by IP version.
                                     type: integer
                                   ipv6AddressMode:
+                                    description: ipv6AddressMode filters subnets by
+                                      IPv6 address mode.
                                     type: string
                                   ipv6RAMode:
+                                    description: ipv6RAMode filters subnets by IPv6
+                                      Router Advertisement mode.
                                     type: string
                                   name:
+                                    description: name filters subnets by name.
                                     type: string
                                   notTags:
                                     description: |-
@@ -376,6 +386,8 @@ spec:
                                     type: array
                                     x-kubernetes-list-type: set
                                   projectID:
+                                    description: projectID filters subnets by project
+                                      ID.
                                     type: string
                                   tags:
                                     description: |-
@@ -440,8 +452,10 @@ spec:
                           minProperties: 1
                           properties:
                             description:
+                              description: description filters networks by description.
                               type: string
                             name:
+                              description: name filters networks by name.
                               type: string
                             notTags:
                               description: |-
@@ -470,6 +484,7 @@ spec:
                               type: array
                               x-kubernetes-list-type: set
                             projectID:
+                              description: projectID filters networks by project ID.
                               type: string
                             tags:
                               description: |-
@@ -528,7 +543,7 @@ spec:
                           type: boolean
                       type: object
                     propagateUplinkStatus:
-                      description: PropageteUplinkStatus enables or disables the propagate
+                      description: propagateUplinkStatus enables or disables the propagate
                         uplink status on the port.
                       type: boolean
                     securityGroups:
@@ -547,8 +562,11 @@ spec:
                             minProperties: 1
                             properties:
                               description:
+                                description: description filters security groups by
+                                  description.
                                 type: string
                               name:
+                                description: name filters security groups by name.
                                 type: string
                               notTags:
                                 description: |-
@@ -577,6 +595,8 @@ spec:
                                 type: array
                                 x-kubernetes-list-type: set
                               projectID:
+                                description: projectID filters security groups by
+                                  project ID.
                                 type: string
                               tags:
                                 description: |-
@@ -631,7 +651,7 @@ spec:
                       type: boolean
                     valueSpecs:
                       description: |-
-                        Value specs are extra parameters to include in the API request with OpenStack.
+                        valueSpecs are extra parameters to include in the API request with OpenStack.
                         This is an extension point for the API, so what they do and if they are supported,
                         depends on the specific OpenStack implementation.
                       items:
@@ -806,8 +826,10 @@ spec:
                       minProperties: 1
                       properties:
                         description:
+                          description: description filters security groups by description.
                           type: string
                         name:
+                          description: name filters security groups by name.
                           type: string
                         notTags:
                           description: |-
@@ -836,6 +858,8 @@ spec:
                           type: array
                           x-kubernetes-list-type: set
                         projectID:
+                          description: projectID filters security groups by project
+                            ID.
                           type: string
                         tags:
                           description: |-
@@ -1117,7 +1141,7 @@ spec:
                                   address in any subnet of the port's network.
                                 type: string
                               subnet:
-                                description: SubnetID is the id of a subnet to create
+                                description: subnet is the ID of a subnet to create
                                   the fixed IP of a port in.
                                 type: string
                             type: object
@@ -1160,7 +1184,7 @@ spec:
                               type: boolean
                           type: object
                         propagateUplinkStatus:
-                          description: PropageteUplinkStatus enables or disables the
+                          description: propagateUplinkStatus enables or disables the
                             propagate uplink status on the port.
                           type: boolean
                         securityGroups:
@@ -1183,7 +1207,7 @@ spec:
                           type: boolean
                         valueSpecs:
                           description: |-
-                            Value specs are extra parameters to include in the API request with OpenStack.
+                            valueSpecs are extra parameters to include in the API request with OpenStack.
                             This is an extension point for the API, so what they do and if they are supported,
                             depends on the specific OpenStack implementation.
                           items:

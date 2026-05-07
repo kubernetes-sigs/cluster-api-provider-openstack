@@ -263,10 +263,13 @@ type OpenStackClusterStatus struct {
 
 // OpenStackCluster is the Schema for the openstackclusters API.
 type OpenStackCluster struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// metadata is the standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   OpenStackClusterSpec   `json:"spec,omitempty"`
+	// spec is the desired state of the OpenStackCluster.
+	Spec OpenStackClusterSpec `json:"spec,omitempty"`
+	// status is the observed state of the OpenStackCluster.
 	Status OpenStackClusterStatus `json:"status,omitempty"`
 }
 

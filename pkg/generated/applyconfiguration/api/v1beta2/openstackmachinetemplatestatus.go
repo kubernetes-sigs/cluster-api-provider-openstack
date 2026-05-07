@@ -31,7 +31,8 @@ type OpenStackMachineTemplateStatusApplyConfiguration struct {
 	// capacity defines the resource capacity for this machine.
 	// This value is used for autoscaling from zero operations as defined in:
 	// https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md
-	Capacity *v1.ResourceList            `json:"capacity,omitempty"`
+	Capacity *v1.ResourceList `json:"capacity,omitempty"`
+	// nodeInfo contains information about the node's operating system.
 	NodeInfo *NodeInfoApplyConfiguration `json:"nodeInfo,omitempty"`
 	// conditions defines current service state of the OpenStackMachineTemplate.
 	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
