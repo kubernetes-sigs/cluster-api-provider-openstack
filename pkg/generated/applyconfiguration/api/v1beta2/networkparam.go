@@ -23,9 +23,9 @@ package v1beta2
 //
 // NetworkParam specifies an OpenStack network. It may be specified by either ID or Filter, but not both.
 type NetworkParamApplyConfiguration struct {
-	// ID is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// id is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
 	ID *string `json:"id,omitempty"`
-	// Filter specifies a filter to select an OpenStack network. If provided, cannot be empty.
+	// filter specifies a filter to select an OpenStack network. If provided, cannot be empty.
 	Filter *NetworkFilterApplyConfiguration `json:"filter,omitempty"`
 }
 

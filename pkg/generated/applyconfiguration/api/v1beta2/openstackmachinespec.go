@@ -27,7 +27,7 @@ import (
 //
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpecApplyConfiguration struct {
-	// ProviderID is the unique identifier as specified by the cloud provider.
+	// providerID is the unique identifier as specified by the cloud provider.
 	ProviderID *string                        `json:"providerID,omitempty"`
 	Flavor     *FlavorParamApplyConfiguration `json:"flavor,omitempty"`
 	// The image to use for your server instance.
@@ -35,14 +35,14 @@ type OpenStackMachineSpecApplyConfiguration struct {
 	Image *ImageParamApplyConfiguration `json:"image,omitempty"`
 	// The ssh key to inject in the instance
 	SSHKeyName *string `json:"sshKeyName,omitempty"`
-	// Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
+	// ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
 	Ports []PortOptsApplyConfiguration `json:"ports,omitempty"`
 	// The names of the security groups to assign to the instance
 	SecurityGroups []SecurityGroupParamApplyConfiguration `json:"securityGroups,omitempty"`
 	// Whether the server instance is created on a trunk port or not.
 	Trunk *bool `json:"trunk,omitempty"`
-	// Tags which will be added to the machine and all dependent resources
+	// tags which will be added to the machine and all dependent resources
 	// which support them. These are in addition to Tags defined on the
 	// cluster.
 	// Requires Nova api 2.52 minimum!
@@ -53,11 +53,11 @@ type OpenStackMachineSpecApplyConfiguration struct {
 	ConfigDrive *bool `json:"configDrive,omitempty"`
 	// The volume metadata to boot from
 	RootVolume *RootVolumeApplyConfiguration `json:"rootVolume,omitempty"`
-	// AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
+	// additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
 	AdditionalBlockDevices []AdditionalBlockDeviceApplyConfiguration `json:"additionalBlockDevices,omitempty"`
 	// The server group to assign the machine to.
 	ServerGroup *ServerGroupParamApplyConfiguration `json:"serverGroup,omitempty"`
-	// IdentityRef is a reference to a secret holding OpenStack credentials
+	// identityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this machine. If not specified, the
 	// credentials specified in the cluster will be used.
 	IdentityRef *OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`
@@ -65,7 +65,7 @@ type OpenStackMachineSpecApplyConfiguration struct {
 	// to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
 	// will be assigned to the OpenStackMachine.
 	FloatingIPPoolRef *v1.TypedLocalObjectReference `json:"floatingIPPoolRef,omitempty"`
-	// SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+	// schedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
 	// to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
 	// such as specifying certain host aggregates or availability zones.
 	SchedulerHintAdditionalProperties []SchedulerHintAdditionalPropertyApplyConfiguration `json:"schedulerHintAdditionalProperties,omitempty"`

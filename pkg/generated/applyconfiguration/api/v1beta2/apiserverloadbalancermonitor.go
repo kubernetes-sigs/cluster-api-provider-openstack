@@ -23,13 +23,13 @@ package v1beta2
 //
 // APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
 type APIServerLoadBalancerMonitorApplyConfiguration struct {
-	// Delay is the time in seconds between sending probes to members.
+	// delay is the time in seconds between sending probes to members.
 	Delay *int `json:"delay,omitempty"`
-	// Timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
+	// timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
 	Timeout *int `json:"timeout,omitempty"`
-	// MaxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
+	// maxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
 	MaxRetries *int `json:"maxRetries,omitempty"`
-	// MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
+	// maxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
 	MaxRetriesDown *int `json:"maxRetriesDown,omitempty"`
 }
 

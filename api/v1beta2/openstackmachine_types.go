@@ -49,23 +49,23 @@ const (
 // +kubebuilder:validation:XValidation:rule="has(self.type) && self.type == 'String' ? has(self.string) : !has(self.string)",message="string is required when type is String, and forbidden otherwise"
 // +union.
 type SchedulerHintAdditionalValue struct {
-	// Type represents the type of the value.
+	// type represents the type of the value.
 	// Valid values are Bool, String, and Number.
 	// +kubebuilder:validation:Required
 	// +unionDiscriminator
 	Type SchedulerHintValueType `json:"type"`
 
-	// Bool is the boolean value of the scheduler hint, used when Type is "Bool".
+	// bool is the boolean value of the scheduler hint, used when Type is "Bool".
 	// This field is required if type is 'Bool', and must not be set otherwise.
 	// +unionMember,optional
 	Bool *bool `json:"bool,omitempty"`
 
-	// Number is the integer value of the scheduler hint, used when Type is "Number".
+	// number is the integer value of the scheduler hint, used when Type is "Number".
 	// This field is required if type is 'Number', and must not be set otherwise.
 	// +unionMember,optional
 	Number *int `json:"number,omitempty"`
 
-	// String is the string value of the scheduler hint, used when Type is "String".
+	// string is the string value of the scheduler hint, used when Type is "String".
 	// This field is required if type is 'String', and must not be set otherwise.
 	// +unionMember,optional
 	// +kubebuilder:validation:MinLength:=1
@@ -76,13 +76,13 @@ type SchedulerHintAdditionalValue struct {
 // SchedulerHintAdditionalProperty represents a single additional property for a scheduler hint.
 // It includes a Name to identify the property and a Value that can be of various types.
 type SchedulerHintAdditionalProperty struct {
-	// Name is the name of the scheduler hint property.
+	// name is the name of the scheduler hint property.
 	// It is a unique identifier for the property.
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
-	// Value is the value of the scheduler hint property, which can be of various types
+	// value is the value of the scheduler hint property, which can be of various types
 	// (e.g., bool, string, int). The type is indicated by the Value.Type field.
 	// +kubebuilder:validation:Required
 	Value SchedulerHintAdditionalValue `json:"value"`
@@ -90,7 +90,7 @@ type SchedulerHintAdditionalProperty struct {
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpec struct {
-	// ProviderID is the unique identifier as specified by the cloud provider.
+	// providerID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// +required
@@ -104,7 +104,7 @@ type OpenStackMachineSpec struct {
 	// The ssh key to inject in the instance
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 
-	// Ports to be attached to the server instance. They are created if a port with the given name does not already exist.
+	// ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
 	Ports []PortOpts `json:"ports,omitempty"`
 
@@ -114,7 +114,7 @@ type OpenStackMachineSpec struct {
 	// Whether the server instance is created on a trunk port or not.
 	Trunk bool `json:"trunk,omitempty"`
 
-	// Tags which will be added to the machine and all dependent resources
+	// tags which will be added to the machine and all dependent resources
 	// which support them. These are in addition to Tags defined on the
 	// cluster.
 	// Requires Nova api 2.52 minimum!
@@ -132,7 +132,7 @@ type OpenStackMachineSpec struct {
 	// The volume metadata to boot from
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 
-	// AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
+	// additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
 	// +listType=map
 	// +listMapKey=name
 	// +optional
@@ -142,7 +142,7 @@ type OpenStackMachineSpec struct {
 	// +optional
 	ServerGroup *ServerGroupParam `json:"serverGroup,omitempty"`
 
-	// IdentityRef is a reference to a secret holding OpenStack credentials
+	// identityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this machine. If not specified, the
 	// credentials specified in the cluster will be used.
 	// +optional
@@ -154,7 +154,7 @@ type OpenStackMachineSpec struct {
 	// +optional
 	FloatingIPPoolRef *corev1.TypedLocalObjectReference `json:"floatingIPPoolRef,omitempty"`
 
-	// SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
+	// schedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
 	// to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
 	// such as specifying certain host aggregates or availability zones.
 	// +optional
@@ -164,12 +164,12 @@ type OpenStackMachineSpec struct {
 }
 
 type ServerMetadata struct {
-	// Key is the server metadata key
+	// key is the server metadata key
 	// +kubebuilder:validation:MaxLength:=255
 	// +kubebuilder:validation:Required
 	Key string `json:"key"`
 
-	// Value is the server metadata value
+	// value is the server metadata value
 	// +kubebuilder:validation:MaxLength:=255
 	// +kubebuilder:validation:Required
 	Value string `json:"value"`
@@ -177,7 +177,7 @@ type ServerMetadata struct {
 
 // MachineInitialization contains information about the initialization status of the machine.
 type MachineInitialization struct {
-	// Provisioned is set to true when the initial provisioning of the machine infrastructure is completed.
+	// provisioned is set to true when the initial provisioning of the machine infrastructure is completed.
 	// The value of this field is never updated after provisioning is completed.
 	// +optional
 	Provisioned bool `json:"provisioned,omitempty"`
@@ -185,33 +185,33 @@ type MachineInitialization struct {
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatus struct {
-	// Initialization contains information about the initialization status of the machine.
+	// initialization contains information about the initialization status of the machine.
 	// +optional
 	Initialization *MachineInitialization `json:"initialization,omitempty"`
 
-	// InstanceID is the OpenStack instance ID for this machine.
+	// instanceID is the OpenStack instance ID for this machine.
 	// +optional
 	InstanceID optional.String `json:"instanceID,omitempty"`
 
-	// Addresses contains the OpenStack instance associated addresses.
+	// addresses contains the OpenStack instance associated addresses.
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 
-	// InstanceState is the state of the OpenStack instance for this machine.
+	// instanceState is the state of the OpenStack instance for this machine.
 	// This field is not set anymore by the OpenStackMachine controller.
 	// Instead, it's set by the OpenStackServer controller.
 	// +optional
 	InstanceState *InstanceState `json:"instanceState,omitempty"`
 
-	// Resolved contains parts of the machine spec with all external
+	// resolved contains parts of the machine spec with all external
 	// references fully resolved.
 	// +optional
 	Resolved *ResolvedMachineSpec `json:"resolved,omitempty"`
 
-	// Resources contains references to OpenStack resources created for the machine.
+	// resources contains references to OpenStack resources created for the machine.
 	// +optional
 	Resources *MachineResources `json:"resources,omitempty"`
 
-	// Conditions defines current service state of the OpenStackMachine.
+	// conditions defines current service state of the OpenStackMachine.
 	// This field surfaces into Machine's status.conditions[InfrastructureReady] condition.
 	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
 	// (both during initial provisioning and after the initial provisioning is completed).

@@ -23,13 +23,13 @@ package v1beta2
 //
 // ResolvedMachineSpec contains resolved references to resources required by the machine.
 type ResolvedMachineSpecApplyConfiguration struct {
-	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
+	// serverGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	ServerGroupID *string `json:"serverGroupID,omitempty"`
-	// ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
+	// imageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
 	ImageID *string `json:"imageID,omitempty"`
-	// FlavorID is the ID of the flavor to use.
+	// flavorID is the ID of the flavor to use.
 	FlavorID *string `json:"flavorID,omitempty"`
-	// Ports is the fully resolved list of ports to create for the machine.
+	// ports is the fully resolved list of ports to create for the machine.
 	Ports []ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
 }
 

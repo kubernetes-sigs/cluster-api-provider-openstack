@@ -23,7 +23,7 @@ package v1beta2
 //
 // ClusterInitialization represents the initialization status of the cluster.
 type ClusterInitializationApplyConfiguration struct {
-	// Provisioned is set to true when the initial provisioning of the cluster infrastructure is completed.
+	// provisioned is set to true when the initial provisioning of the cluster infrastructure is completed.
 	// The value of this field is never updated after provisioning is completed.
 	Provisioned *bool `json:"provisioned,omitempty"`
 }

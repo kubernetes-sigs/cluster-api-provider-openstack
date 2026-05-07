@@ -31,10 +31,10 @@ type BastionStatusApplyConfiguration struct {
 	State      *apiv1beta2.InstanceState `json:"state,omitempty"`
 	IP         *string                   `json:"ip,omitempty"`
 	FloatingIP *string                   `json:"floatingIP,omitempty"`
-	// Resolved contains parts of the bastion's machine spec with all
+	// resolved contains parts of the bastion's machine spec with all
 	// external references fully resolved.
 	Resolved *ResolvedMachineSpecApplyConfiguration `json:"resolved,omitempty"`
-	// Resources contains references to OpenStack resources created for the bastion.
+	// resources contains references to OpenStack resources created for the bastion.
 	Resources *MachineResourcesApplyConfiguration `json:"resources,omitempty"`
 }
 

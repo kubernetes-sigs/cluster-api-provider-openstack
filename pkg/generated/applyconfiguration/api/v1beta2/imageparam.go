@@ -24,13 +24,13 @@ package v1beta2
 // ImageParam describes a glance image. It can be specified by ID, filter, or a
 // reference to an ORC Image.
 type ImageParamApplyConfiguration struct {
-	// ID is the uuid of the image. ID will not be validated before use.
+	// id is the uuid of the image. ID will not be validated before use.
 	ID *string `json:"id,omitempty"`
-	// Filter describes a query for an image. If specified, the combination
+	// filter describes a query for an image. If specified, the combination
 	// of name and tags must return a single matching image or an error will
 	// be raised.
 	Filter *ImageFilterApplyConfiguration `json:"filter,omitempty"`
-	// ImageRef is a reference to an ORC Image in the same namespace as the
+	// imageRef is a reference to an ORC Image in the same namespace as the
 	// referring object.
 	ImageRef *ResourceReferenceApplyConfiguration `json:"imageRef,omitempty"`
 }

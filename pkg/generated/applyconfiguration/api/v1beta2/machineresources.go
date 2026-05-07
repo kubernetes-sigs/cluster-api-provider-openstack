@@ -21,7 +21,7 @@ package v1beta2
 // MachineResourcesApplyConfiguration represents a declarative configuration of the MachineResources type for use
 // with apply.
 type MachineResourcesApplyConfiguration struct {
-	// Ports is the status of the ports created for the machine.
+	// ports is the status of the ports created for the machine.
 	Ports []PortStatusApplyConfiguration `json:"ports,omitempty"`
 }
 

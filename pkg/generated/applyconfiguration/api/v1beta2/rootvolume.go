@@ -21,7 +21,7 @@ package v1beta2
 // RootVolumeApplyConfiguration represents a declarative configuration of the RootVolume type for use
 // with apply.
 type RootVolumeApplyConfiguration struct {
-	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// sizeGiB is the size of the block device in gibibytes (GiB).
 	SizeGiB                             *int `json:"sizeGiB,omitempty"`
 	BlockDeviceVolumeApplyConfiguration `json:",inline"`
 }

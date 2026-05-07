@@ -26,12 +26,12 @@ import (
 
 // OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.
 type OpenStackMachineTemplateResource struct {
-	// Spec is the specification of the desired behavior of the machine.
+	// spec is the specification of the desired behavior of the machine.
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
 type ResourceReference struct {
-	// Name is the name of the referenced resource
+	// name is the name of the referenced resource
 	Name string `json:"name"`
 }
 
@@ -40,18 +40,18 @@ type ResourceReference struct {
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type ImageParam struct {
-	// ID is the uuid of the image. ID will not be validated before use.
+	// id is the uuid of the image. ID will not be validated before use.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
 
-	// Filter describes a query for an image. If specified, the combination
+	// filter describes a query for an image. If specified, the combination
 	// of name and tags must return a single matching image or an error will
 	// be raised.
 	// +optional
 	Filter *ImageFilter `json:"filter,omitempty"`
 
-	// ImageRef is a reference to an ORC Image in the same namespace as the
+	// imageRef is a reference to an ORC Image in the same namespace as the
 	// referring object.
 	// +optional
 	ImageRef *ResourceReference `json:"imageRef,omitempty"`
@@ -81,11 +81,11 @@ func (f *ImageFilter) IsZero() bool {
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type FlavorParam struct {
-	// ID is the uuid of the flavor. ID will not be validated before use.
+	// id is the uuid of the flavor. ID will not be validated before use.
 	// +optional
 	ID optional.String `json:"id,omitempty"`
 
-	// Filter describes a query for a flavor.
+	// filter describes a query for a flavor.
 	// +optional
 	Filter *FlavorFilter `json:"filter,omitempty"`
 }
@@ -122,26 +122,26 @@ type ExternalRouterIPParam struct {
 type NeutronTag string
 
 type FilterByNeutronTags struct {
-	// Tags is a list of tags to filter by. If specified, the resource must
+	// tags is a list of tags to filter by. If specified, the resource must
 	// have all of the tags specified to be included in the result.
 	// +listType=set
 	// +optional
 	Tags []NeutronTag `json:"tags,omitempty"`
 
-	// TagsAny is a list of tags to filter by. If specified, the resource
+	// tagsAny is a list of tags to filter by. If specified, the resource
 	// must have at least one of the tags specified to be included in the
 	// result.
 	// +listType=set
 	// +optional
 	TagsAny []NeutronTag `json:"tagsAny,omitempty"`
 
-	// NotTags is a list of tags to filter by. If specified, resources which
+	// notTags is a list of tags to filter by. If specified, resources which
 	// contain all of the given tags will be excluded from the result.
 	// +listType=set
 	// +optional
 	NotTags []NeutronTag `json:"notTags,omitempty"`
 
-	// NotTagsAny is a list of tags to filter by. If specified, resources
+	// notTagsAny is a list of tags to filter by. If specified, resources
 	// which contain any of the given tags will be excluded from the result.
 	// +listType=set
 	// +optional
@@ -156,12 +156,12 @@ func (f *FilterByNeutronTags) IsZero() bool {
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type SecurityGroupParam struct {
-	// ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// id is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
 
-	// Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.
+	// filter specifies a query to select an OpenStack security group. If provided, cannot be empty.
 	// +optional
 	Filter *SecurityGroupFilter `json:"filter,omitempty"`
 }
@@ -190,12 +190,12 @@ func (f *SecurityGroupFilter) IsZero() bool {
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type NetworkParam struct {
-	// ID is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// id is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
 
-	// Filter specifies a filter to select an OpenStack network. If provided, cannot be empty.
+	// filter specifies a filter to select an OpenStack network. If provided, cannot be empty.
 	// +optional
 	Filter *NetworkFilter `json:"filter,omitempty"`
 }
@@ -224,12 +224,12 @@ func (networkFilter *NetworkFilter) IsZero() bool {
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type SubnetParam struct {
-	// ID is the uuid of the subnet. It will not be validated.
+	// id is the uuid of the subnet. It will not be validated.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
 
-	// Filter specifies a filter to select the subnet. It must match exactly one subnet.
+	// filter specifies a filter to select the subnet. It must match exactly one subnet.
 	// +optional
 	Filter *SubnetFilter `json:"filter,omitempty"`
 }
@@ -268,12 +268,12 @@ func (subnetFilter *SubnetFilter) IsZero() bool {
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type RouterParam struct {
-	// ID is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// id is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
 	// +kubebuilder:validation:Format:=uuid
 	// +optional
 	ID optional.String `json:"id,omitempty"`
 
-	// Filter specifies a filter to select an OpenStack router. If provided, cannot be empty.
+	// filter specifies a filter to select an OpenStack router. If provided, cannot be empty.
 	Filter *RouterFilter `json:"filter,omitempty"`
 }
 
@@ -298,62 +298,62 @@ func (f *RouterFilter) IsZero() bool {
 }
 
 type SubnetSpec struct {
-	// CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
+	// cidr is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
 	// This field is required when defining a subnet.
 	// +required
 	CIDR string `json:"cidr"`
 
-	// DNSNameservers holds a list of DNS server addresses that will be provided when creating
+	// dnsNameservers holds a list of DNS server addresses that will be provided when creating
 	// the subnet. These addresses need to have the same IP version as CIDR.
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 
-	// AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
+	// allocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
 	// If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
 	// outside of these ranges manually.
 	AllocationPools []AllocationPool `json:"allocationPools,omitempty"`
 }
 
 type AllocationPool struct {
-	// Start represents the start of the AllocationPool, that is the lowest IP of the pool.
+	// start represents the start of the AllocationPool, that is the lowest IP of the pool.
 	// +required
 	Start string `json:"start"`
 
-	// End represents the end of the AlloctionPool, that is the highest IP of the pool.
+	// end represents the end of the AlloctionPool, that is the highest IP of the pool.
 	// +required
 	End string `json:"end"`
 }
 
 type PortOpts struct {
-	// Network is a query for an openstack network that the port will be created or discovered on.
+	// network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
 	// +optional
 	Network *NetworkParam `json:"network,omitempty"`
 
-	// Description is a human-readable description for the port.
+	// description is a human-readable description for the port.
 	// +optional
 	Description optional.String `json:"description,omitempty"`
 
-	// NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
+	// nameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.
 	// +optional
 	NameSuffix optional.String `json:"nameSuffix,omitempty"`
 
-	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	// fixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
 	// +optional
 	// +listType=atomic
 	FixedIPs []FixedIP `json:"fixedIPs,omitempty"`
 
-	// SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
+	// securityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.
 	// +optional
 	// +listType=atomic
 	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
-	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// These tags are applied in addition to the instance's tags, which will also be applied to the port.
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 
-	// Trunk specifies whether trunking is enabled at the port level. If not
+	// trunk specifies whether trunking is enabled at the port level. If not
 	// provided the value is inherited from the machine, or false for a
 	// bastion host.
 	// +optional
@@ -366,15 +366,15 @@ type PortOpts struct {
 // PortOpts which don't contain references which need to be resolved, and can
 // therefore be shared with ResolvedPortSpec.
 type ResolvedPortSpecFields struct {
-	// AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
+	// adminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.
 	// +optional
 	AdminStateUp *bool `json:"adminStateUp,omitempty"`
 
-	// MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
+	// macAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.
 	// +optional
 	MACAddress optional.String `json:"macAddress,omitempty"`
 
-	// AllowedAddressPairs is a list of address pairs which Neutron will
+	// allowedAddressPairs is a list of address pairs which Neutron will
 	// allow the port to send traffic from in addition to the port's
 	// addresses. If not specified, the MAC Address will be the MAC Address
 	// of the port. Depending on the configuration of Neutron, it may be
@@ -382,11 +382,11 @@ type ResolvedPortSpecFields struct {
 	// +optional
 	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
 
-	// HostID specifies the ID of the host where the port resides.
+	// hostID specifies the ID of the host where the port resides.
 	// +optional
 	HostID optional.String `json:"hostID,omitempty"`
 
-	// VNICType specifies the type of vNIC which this port should be
+	// vnicType specifies the type of vNIC which this port should be
 	// attached to. This is used to determine which mechanism driver(s) to
 	// be used to bind the port. The valid values are normal, macvtap,
 	// direct, baremetal, direct-physical, virtio-forwarder, smart-nic and
@@ -397,7 +397,7 @@ type ResolvedPortSpecFields struct {
 	// +optional
 	VNICType optional.String `json:"vnicType,omitempty"`
 
-	// Profile is a set of key-value pairs that are used for binding
+	// profile is a set of key-value pairs that are used for binding
 	// details. We intentionally don't expose this as a map[string]string
 	// because we only want to enable the users to set the values of the
 	// keys that are known to work in OpenStack Networking API.  See
@@ -407,7 +407,7 @@ type ResolvedPortSpecFields struct {
 	// +optional
 	Profile *BindingProfile `json:"profile,omitempty"`
 
-	// DisablePortSecurity enables or disables the port security when set.
+	// disablePortSecurity enables or disables the port security when set.
 	// When not set, it takes the value of the corresponding field at the network level.
 	// +optional
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
@@ -427,30 +427,30 @@ type ResolvedPortSpecFields struct {
 
 // ResolvedPortSpec is a PortOpts with all contained references fully resolved.
 type ResolvedPortSpec struct {
-	// Name is the name of the port.
+	// name is the name of the port.
 	Name string `json:"name"`
 
-	// Description is a human-readable description for the port.
+	// description is a human-readable description for the port.
 	Description string `json:"description"`
 
-	// NetworkID is the ID of the network the port will be created in.
+	// networkID is the ID of the network the port will be created in.
 	NetworkID string `json:"networkID"`
 
-	// Tags applied to the port (and corresponding trunk, if a trunk is configured.)
+	// tags applied to the port (and corresponding trunk, if a trunk is configured.)
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 
-	// Trunk specifies whether trunking is enabled at the port level.
+	// trunk specifies whether trunking is enabled at the port level.
 	// +optional
 	Trunk optional.Bool `json:"trunk,omitempty"`
 
-	// FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
+	// fixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.
 	// +optional
 	// +listType=atomic
 	FixedIPs []ResolvedFixedIP `json:"fixedIPs,omitempty"`
 
-	// SecurityGroups is a list of security group IDs to assign to the port.
+	// securityGroups is a list of security group IDs to assign to the port.
 	// +optional
 	// +listType=atomic
 	SecurityGroups []string `json:"securityGroups,omitempty"`
@@ -459,30 +459,30 @@ type ResolvedPortSpec struct {
 }
 
 type PortStatus struct {
-	// ID is the unique identifier of the port.
+	// id is the unique identifier of the port.
 	// +required
 	ID string `json:"id"`
 }
 
 type BindingProfile struct {
-	// OVSHWOffload enables or disables the OVS hardware offload feature.
+	// ovsHWOffload enables or disables the OVS hardware offload feature.
 	// This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached.
 	// See: https://bugs.launchpad.net/nova/+bug/2020813
 	// +optional
 	OVSHWOffload *bool `json:"ovsHWOffload,omitempty"`
 
-	// TrustedVF enables or disables the “trusted mode” for the VF.
+	// trustedVF enables or disables the “trusted mode” for the VF.
 	// +optional
 	TrustedVF *bool `json:"trustedVF,omitempty"`
 }
 
 type FixedIP struct {
-	// Subnet is an openstack subnet query that will return the id of a subnet to create
+	// subnet is an openstack subnet query that will return the id of a subnet to create
 	// the fixed IP of a port in. This query must not return more than one subnet.
 	// +optional
 	Subnet *SubnetParam `json:"subnet,omitempty"`
 
-	// IPAddress is a specific IP address to assign to the port. If Subnet
+	// ipAddress is a specific IP address to assign to the port. If Subnet
 	// is also specified, IPAddress must be a valid IP address in the
 	// subnet. If Subnet is not specified, IPAddress must be a valid IP
 	// address in any subnet of the port's network.
@@ -496,7 +496,7 @@ type ResolvedFixedIP struct {
 	// +optional
 	SubnetID optional.String `json:"subnet,omitempty"`
 
-	// IPAddress is a specific IP address to assign to the port. If SubnetID
+	// ipAddress is a specific IP address to assign to the port. If SubnetID
 	// is also specified, IPAddress must be a valid IP address in the
 	// subnet. If Subnet is not specified, IPAddress must be a valid IP
 	// address in any subnet of the port's network.
@@ -505,13 +505,13 @@ type ResolvedFixedIP struct {
 }
 
 type AddressPair struct {
-	// IPAddress is the IP address of the allowed address pair. Depending on
+	// ipAddress is the IP address of the allowed address pair. Depending on
 	// the configuration of Neutron, it may be supported to specify a CIDR
 	// instead of a specific IP address.
 	// +kubebuilder:validation:Required
 	IPAddress string `json:"ipAddress"`
 
-	// MACAddress is the MAC address of the allowed address pair. If not
+	// macAddress is the MAC address of the allowed address pair. If not
 	// specified, the MAC address will be the MAC address of the port.
 	// +optional
 	MACAddress optional.String `json:"macAddress,omitempty"`
@@ -525,18 +525,18 @@ type BastionStatus struct {
 	IP         string        `json:"ip,omitempty"`
 	FloatingIP string        `json:"floatingIP,omitempty"`
 
-	// Resolved contains parts of the bastion's machine spec with all
+	// resolved contains parts of the bastion's machine spec with all
 	// external references fully resolved.
 	// +optional
 	Resolved *ResolvedMachineSpec `json:"resolved,omitempty"`
 
-	// Resources contains references to OpenStack resources created for the bastion.
+	// resources contains references to OpenStack resources created for the bastion.
 	// +optional
 	Resources *MachineResources `json:"resources,omitempty"`
 }
 
 type RootVolume struct {
-	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// sizeGiB is the size of the block device in gibibytes (GiB).
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum:=1
 	SizeGiB int `json:"sizeGiB"`
@@ -550,12 +550,12 @@ type RootVolume struct {
 //
 //nolint:godot
 type BlockDeviceStorage struct {
-	// Type is the type of block device to create.
+	// type is the type of block device to create.
 	// This can be either "Volume" or "Local".
 	// +unionDiscriminator
 	Type BlockDeviceType `json:"type"`
 
-	// Volume contains additional storage options for a volume block device.
+	// volume contains additional storage options for a volume block device.
 	// +optional
 	// +unionMember,optional
 	Volume *BlockDeviceVolume `json:"volume,omitempty"`
@@ -563,13 +563,13 @@ type BlockDeviceStorage struct {
 
 // BlockDeviceVolume contains additional storage options for a volume block device.
 type BlockDeviceVolume struct {
-	// Type is the Cinder volume type of the volume.
+	// type is the Cinder volume type of the volume.
 	// If omitted, the default Cinder volume type that is configured in the OpenStack cloud
 	// will be used.
 	// +optional
 	Type string `json:"type,omitempty"`
 
-	// AvailabilityZone is the volume availability zone to create the volume
+	// availabilityZone is the volume availability zone to create the volume
 	// in. If not specified, the volume will be created without an explicit
 	// availability zone.
 	// +optional
@@ -593,7 +593,7 @@ type VolumeAZName string
 // VolumeAvailabilityZone specifies the availability zone for a volume.
 // +kubebuilder:validation:XValidation:rule="!has(self.from) || self.from == 'Name' ? has(self.name) : !has(self.name)",message="name is required when from is 'Name' or default"
 type VolumeAvailabilityZone struct {
-	// From specifies where we will obtain the availability zone for the
+	// from specifies where we will obtain the availability zone for the
 	// volume. The options are "Name" and "Machine". If "Name" is specified
 	// then the Name field must also be specified. If "Machine" is specified
 	// the volume will use the value of FailureDomain, if any, from the
@@ -602,7 +602,7 @@ type VolumeAvailabilityZone struct {
 	// +optional
 	From VolumeAZSource `json:"from,omitempty"`
 
-	// Name is the name of a volume availability zone to use. It is required
+	// name is the name of a volume availability zone to use. It is required
 	// if From is "Name". The volume availability zone name may not contain
 	// spaces.
 	// +optional
@@ -611,7 +611,7 @@ type VolumeAvailabilityZone struct {
 
 // AdditionalBlockDevice is a block device to attach to the server.
 type AdditionalBlockDevice struct {
-	// Name of the block device in the context of a machine.
+	// name of the block device in the context of a machine.
 	// If the block device is a volume, the Cinder volume will be named
 	// as a combination of the machine name and this name.
 	// Also, this name will be used for tagging the block device.
@@ -621,12 +621,12 @@ type AdditionalBlockDevice struct {
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
-	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// sizeGiB is the size of the block device in gibibytes (GiB).
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum:=1
 	SizeGiB int `json:"sizeGiB"`
 
-	// Storage specifies the storage type of the block device and
+	// storage specifies the storage type of the block device and
 	// additional storage options.
 	Storage BlockDeviceStorage `json:"storage"`
 }
@@ -635,18 +635,18 @@ type AdditionalBlockDevice struct {
 // +kubebuilder:validation:MaxProperties:=1
 // +kubebuilder:validation:MinProperties:=1
 type ServerGroupParam struct {
-	// ID is the ID of the server group to use.
+	// id is the ID of the server group to use.
 	// +kubebuilder:validation:Format:=uuid
 	ID optional.String `json:"id,omitempty"`
 
-	// Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.
+	// filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.
 	Filter *ServerGroupFilter `json:"filter,omitempty"`
 }
 
 // ServerGroupFilter specifies a query to select an OpenStack server group. At least one property must be set.
 // +kubebuilder:validation:MinProperties:=1
 type ServerGroupFilter struct {
-	// Name is the name of a server group to look for.
+	// name is the name of a server group to look for.
 	Name optional.String `json:"name,omitempty"`
 }
 
@@ -681,7 +681,7 @@ type NetworkStatus struct {
 type NetworkStatusWithSubnets struct {
 	NetworkStatus `json:",inline"`
 
-	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	// subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
 	Subnets []Subnet `json:"subnets,omitempty"`
 }
 
@@ -716,7 +716,7 @@ type LoadBalancer struct {
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	//+optional
 	Tags []string `json:"tags,omitempty"`
-	// LoadBalancerNetwork contains information about network and/or subnets which the
+	// loadBalancerNetwork contains information about network and/or subnets which the
 	// loadbalancer is allocated on.
 	// If subnets are specified within the LoadBalancerNetwork currently only the first
 	// subnet in the list is taken into account.
@@ -837,7 +837,7 @@ var (
 // Bastion represents basic information about the bastion node. If you enable bastion, the spec has to be specified.
 // +kubebuilder:validation:XValidation:rule="!self.enabled || has(self.spec)",message="spec is required if bastion is enabled"
 type Bastion struct {
-	// Enabled means that bastion is enabled. The bastion is enabled by
+	// enabled means that bastion is enabled. The bastion is enabled by
 	// default if this field is not specified. Set this field to false to disable the
 	// bastion.
 	//
@@ -848,14 +848,14 @@ type Bastion struct {
 	// +optional
 	Enabled *bool `json:"enabled,omitempty"`
 
-	// Spec for the bastion itself
+	// spec for the bastion itself
 	Spec *OpenStackMachineSpec `json:"spec,omitempty"`
 
-	// AvailabilityZone is the failure domain that will be used to create the Bastion Spec.
+	// availabilityZone is the failure domain that will be used to create the Bastion Spec.
 	//+optional
 	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 
-	// FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
+	// floatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
 	// The floating IP should already exist and should not be associated with a port. If FIP of this address does not
 	// exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
 	//+optional
@@ -871,7 +871,7 @@ func (b *Bastion) IsEnabled() bool {
 }
 
 type APIServerLoadBalancer struct {
-	// Enabled defines whether a load balancer should be created. This value
+	// enabled defines whether a load balancer should be created. This value
 	// defaults to true if an APIServerLoadBalancer is given.
 	//
 	// There is no reason to set this to false. To disable creation of the
@@ -882,27 +882,27 @@ type APIServerLoadBalancer struct {
 	// +kubebuilder:default:=true
 	Enabled *bool `json:"enabled"`
 
-	// AdditionalPorts adds additional tcp ports to the load balancer.
+	// additionalPorts adds additional tcp ports to the load balancer.
 	// +optional
 	// +listType=set
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
 
-	// AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
+	// allowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
 	// +optional
 	// +listType=set
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 
-	// Provider specifies name of a specific Octavia provider to use for the
+	// provider specifies name of a specific Octavia provider to use for the
 	// API load balancer. The Octavia default will be used if it is not
 	// specified.
 	// +optional
 	Provider optional.String `json:"provider,omitempty"`
 
-	// Network defines which network should the load balancer be allocated on.
+	// network defines which network should the load balancer be allocated on.
 	//+optional
 	Network *NetworkParam `json:"network,omitempty"`
 
-	// Subnets define which subnets should the load balancer be allocated on.
+	// subnets define which subnets should the load balancer be allocated on.
 	// It is expected that subnets are located on the network specified in this resource.
 	// Only the first element is taken into account.
 	// +optional
@@ -910,41 +910,41 @@ type APIServerLoadBalancer struct {
 	// kubebuilder:validation:MaxLength:=2
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 
-	// AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
+	// availabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
 	//+optional
 	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 
-	// Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
+	// flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
 	//+optional
 	Flavor optional.String `json:"flavor,omitempty"`
 
-	// Monitor contains configuration for the load balancer health monitor.
+	// monitor contains configuration for the load balancer health monitor.
 	//+optional
 	Monitor *APIServerLoadBalancerMonitor `json:"monitor,omitempty"`
 }
 
 // APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
 type APIServerLoadBalancerMonitor struct {
-	// Delay is the time in seconds between sending probes to members.
+	// delay is the time in seconds between sending probes to members.
 	//+optional
 	//+kubebuilder:validation:Minimum=0
 	//+kubebuilder:default:10
 	Delay int `json:"delay,omitempty"`
 
-	// Timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
+	// timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
 	//+optional
 	//+kubebuilder:validation:Minimum=0
 	//+kubebuilder:default:5
 	Timeout int `json:"timeout,omitempty"`
 
-	// MaxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
+	// maxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
 	//+optional
 	//+kubebuilder:validation:Minimum=0
 	//+kubebuilder:validation:Maximum=10
 	//+kubebuilder:default:5
 	MaxRetries int `json:"maxRetries,omitempty"`
 
-	// MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
+	// maxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
 	//+optional
 	//+kubebuilder:validation:Minimum=1
 	//+kubebuilder:validation:Maximum=10
@@ -963,39 +963,39 @@ func (s *APIServerLoadBalancer) IsEnabled() bool {
 
 // ResolvedMachineSpec contains resolved references to resources required by the machine.
 type ResolvedMachineSpec struct {
-	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
+	// serverGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	// +optional
 	ServerGroupID string `json:"serverGroupID,omitempty"`
 
-	// ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
+	// imageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
 	// +optional
 	ImageID string `json:"imageID,omitempty"`
 
-	// FlavorID is the ID of the flavor to use.
+	// flavorID is the ID of the flavor to use.
 	// +optional
 	FlavorID string `json:"flavorID,omitempty"`
 
-	// Ports is the fully resolved list of ports to create for the machine.
+	// ports is the fully resolved list of ports to create for the machine.
 	// +optional
 	Ports []ResolvedPortSpec `json:"ports,omitempty"`
 }
 
 type MachineResources struct {
-	// Ports is the status of the ports created for the machine.
+	// ports is the status of the ports created for the machine.
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`
 }
 
 // ValueSpec represents a single value_spec key-value pair.
 type ValueSpec struct {
-	// Name is the name of the key-value pair.
+	// name is the name of the key-value pair.
 	// This is just for identifying the pair and will not be sent to the OpenStack API.
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
-	// Key is the key in the key-value pair.
+	// key is the key in the key-value pair.
 	// +kubebuilder:validation:Required
 	Key string `json:"key"`
-	// Value is the value in the key-value pair.
+	// value is the value in the key-value pair.
 	// +kubebuilder:validation:Required
 	Value string `json:"value"`
 }

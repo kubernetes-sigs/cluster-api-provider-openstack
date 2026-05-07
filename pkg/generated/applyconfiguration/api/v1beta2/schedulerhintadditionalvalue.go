@@ -29,16 +29,16 @@ import (
 // The value can be of various types: Bool, String, or Number.
 // The Type field indicates the type of the value being used.
 type SchedulerHintAdditionalValueApplyConfiguration struct {
-	// Type represents the type of the value.
+	// type represents the type of the value.
 	// Valid values are Bool, String, and Number.
 	Type *apiv1beta2.SchedulerHintValueType `json:"type,omitempty"`
-	// Bool is the boolean value of the scheduler hint, used when Type is "Bool".
+	// bool is the boolean value of the scheduler hint, used when Type is "Bool".
 	// This field is required if type is 'Bool', and must not be set otherwise.
 	Bool *bool `json:"bool,omitempty"`
-	// Number is the integer value of the scheduler hint, used when Type is "Number".
+	// number is the integer value of the scheduler hint, used when Type is "Number".
 	// This field is required if type is 'Number', and must not be set otherwise.
 	Number *int `json:"number,omitempty"`
-	// String is the string value of the scheduler hint, used when Type is "String".
+	// string is the string value of the scheduler hint, used when Type is "String".
 	// This field is required if type is 'String', and must not be set otherwise.
 	String *string `json:"string,omitempty"`
 }

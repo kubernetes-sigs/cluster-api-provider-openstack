@@ -29,7 +29,7 @@ type LoadBalancerApplyConfiguration struct {
 	InternalIP   *string  `json:"internalIP,omitempty"`
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	Tags         []string `json:"tags,omitempty"`
-	// LoadBalancerNetwork contains information about network and/or subnets which the
+	// loadBalancerNetwork contains information about network and/or subnets which the
 	// loadbalancer is allocated on.
 	// If subnets are specified within the LoadBalancerNetwork currently only the first
 	// subnet in the list is taken into account.

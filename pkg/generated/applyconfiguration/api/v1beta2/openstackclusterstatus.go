@@ -28,31 +28,31 @@ import (
 //
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatusApplyConfiguration struct {
-	// Initialization contains information about the initialization status of the cluster.
+	// initialization contains information about the initialization status of the cluster.
 	Initialization *ClusterInitializationApplyConfiguration `json:"initialization,omitempty"`
-	// Network contains information about the created OpenStack Network.
+	// network contains information about the created OpenStack Network.
 	Network *NetworkStatusWithSubnetsApplyConfiguration `json:"network,omitempty"`
-	// ExternalNetwork contains information about the external network used for default ingress and egress traffic.
+	// externalNetwork contains information about the external network used for default ingress and egress traffic.
 	ExternalNetwork *NetworkStatusApplyConfiguration `json:"externalNetwork,omitempty"`
-	// Router describes the default cluster router
+	// router describes the default cluster router
 	Router *RouterApplyConfiguration `json:"router,omitempty"`
-	// APIServerLoadBalancer describes the api server load balancer if one exists
+	// apiServerLoadBalancer describes the api server load balancer if one exists
 	APIServerLoadBalancer *LoadBalancerApplyConfiguration `json:"apiServerLoadBalancer,omitempty"`
-	// FailureDomains represent OpenStack availability zones
+	// failureDomains represent OpenStack availability zones
 	FailureDomains []corev1beta2.FailureDomain `json:"failureDomains,omitempty"`
-	// ControlPlaneSecurityGroup contains the information about the
+	// controlPlaneSecurityGroup contains the information about the
 	// OpenStack Security Group that needs to be applied to control plane
 	// nodes.
 	ControlPlaneSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"controlPlaneSecurityGroup,omitempty"`
-	// WorkerSecurityGroup contains the information about the OpenStack
+	// workerSecurityGroup contains the information about the OpenStack
 	// Security Group that needs to be applied to worker nodes.
 	WorkerSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"workerSecurityGroup,omitempty"`
-	// BastionSecurityGroup contains the information about the OpenStack
+	// bastionSecurityGroup contains the information about the OpenStack
 	// Security Group that needs to be applied to worker nodes.
 	BastionSecurityGroup *SecurityGroupStatusApplyConfiguration `json:"bastionSecurityGroup,omitempty"`
-	// Bastion contains the information about the deployed bastion host
+	// bastion contains the information about the deployed bastion host
 	Bastion *BastionStatusApplyConfiguration `json:"bastion,omitempty"`
-	// Conditions defines current service state of the OpenStackCluster.
+	// conditions defines current service state of the OpenStackCluster.
 	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
 	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
 	// (both during initial provisioning and after the initial provisioning is completed).

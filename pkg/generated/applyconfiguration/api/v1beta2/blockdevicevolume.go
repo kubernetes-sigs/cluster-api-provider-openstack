@@ -23,11 +23,11 @@ package v1beta2
 //
 // BlockDeviceVolume contains additional storage options for a volume block device.
 type BlockDeviceVolumeApplyConfiguration struct {
-	// Type is the Cinder volume type of the volume.
+	// type is the Cinder volume type of the volume.
 	// If omitted, the default Cinder volume type that is configured in the OpenStack cloud
 	// will be used.
 	Type *string `json:"type,omitempty"`
-	// AvailabilityZone is the volume availability zone to create the volume
+	// availabilityZone is the volume availability zone to create the volume
 	// in. If not specified, the volume will be created without an explicit
 	// availability zone.
 	AvailabilityZone *VolumeAvailabilityZoneApplyConfiguration `json:"availabilityZone,omitempty"`

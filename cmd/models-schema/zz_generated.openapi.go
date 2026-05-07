@@ -22133,7 +22133,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 				Properties: map[string]spec.Schema{
 					"enabled": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Enabled defines whether a load balancer should be created. This value defaults to true if an APIServerLoadBalancer is given.\n\nThere is no reason to set this to false. To disable creation of the API server loadbalancer, omit the APIServerLoadBalancer field in the cluster spec instead.",
+							Description: "enabled defines whether a load balancer should be created. This value defaults to true if an APIServerLoadBalancer is given.\n\nThere is no reason to set this to false. To disable creation of the API server loadbalancer, omit the APIServerLoadBalancer field in the cluster spec instead.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -22145,7 +22145,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalPorts adds additional tcp ports to the load balancer.",
+							Description: "additionalPorts adds additional tcp ports to the load balancer.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22165,7 +22165,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "AllowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.",
+							Description: "allowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22180,14 +22180,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 					},
 					"provider": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Provider specifies name of a specific Octavia provider to use for the API load balancer. The Octavia default will be used if it is not specified.",
+							Description: "provider specifies name of a specific Octavia provider to use for the API load balancer. The Octavia default will be used if it is not specified.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"network": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Network defines which network should the load balancer be allocated on.",
+							Description: "network defines which network should the load balancer be allocated on.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
@@ -22198,7 +22198,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Subnets define which subnets should the load balancer be allocated on. It is expected that subnets are located on the network specified in this resource. Only the first element is taken into account. kubebuilder:validation:MaxLength:=2",
+							Description: "subnets define which subnets should the load balancer be allocated on. It is expected that subnets are located on the network specified in this resource. Only the first element is taken into account. kubebuilder:validation:MaxLength:=2",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22212,21 +22212,21 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 					},
 					"availabilityZone": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AvailabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.",
+							Description: "availabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"flavor": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.",
+							Description: "flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"monitor": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Monitor contains configuration for the load balancer health monitor.",
+							Description: "monitor contains configuration for the load balancer health monitor.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancerMonitor"),
 						},
 					},
@@ -22248,28 +22248,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 				Properties: map[string]spec.Schema{
 					"delay": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Delay is the time in seconds between sending probes to members.",
+							Description: "delay is the time in seconds between sending probes to members.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"timeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.",
+							Description: "timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxRetries": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRetries is the number of successful checks before changing the operating status of the member to ONLINE.",
+							Description: "maxRetries is the number of successful checks before changing the operating status of the member to ONLINE.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxRetriesDown": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.",
+							Description: "maxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -22289,7 +22289,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AdditionalBlock
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name of the block device in the context of a machine. If the block device is a volume, the Cinder volume will be named as a combination of the machine name and this name. Also, this name will be used for tagging the block device. Information about the block device tag can be obtained from the OpenStack metadata API or the config drive. Name cannot be 'root', which is reserved for the root volume.",
+							Description: "name of the block device in the context of a machine. If the block device is a volume, the Cinder volume will be named as a combination of the machine name and this name. Also, this name will be used for tagging the block device. Information about the block device tag can be obtained from the OpenStack metadata API or the config drive. Name cannot be 'root', which is reserved for the root volume.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -22297,7 +22297,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AdditionalBlock
 					},
 					"sizeGiB": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SizeGiB is the size of the block device in gibibytes (GiB).",
+							Description: "sizeGiB is the size of the block device in gibibytes (GiB).",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -22305,7 +22305,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AdditionalBlock
 					},
 					"storage": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Storage specifies the storage type of the block device and additional storage options.",
+							Description: "storage specifies the storage type of the block device and additional storage options.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BlockDeviceStorage"),
 						},
@@ -22327,7 +22327,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AddressPair(ref
 				Properties: map[string]spec.Schema{
 					"ipAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IPAddress is the IP address of the allowed address pair. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Description: "ipAddress is the IP address of the allowed address pair. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -22335,7 +22335,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AddressPair(ref
 					},
 					"macAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MACAddress is the MAC address of the allowed address pair. If not specified, the MAC address will be the MAC address of the port.",
+							Description: "macAddress is the MAC address of the allowed address pair. If not specified, the MAC address will be the MAC address of the port.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22355,7 +22355,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AllocationPool(
 				Properties: map[string]spec.Schema{
 					"start": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Start represents the start of the AllocationPool, that is the lowest IP of the pool.",
+							Description: "start represents the start of the AllocationPool, that is the lowest IP of the pool.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -22363,7 +22363,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AllocationPool(
 					},
 					"end": {
 						SchemaProps: spec.SchemaProps{
-							Description: "End represents the end of the AlloctionPool, that is the highest IP of the pool.",
+							Description: "end represents the end of the AlloctionPool, that is the highest IP of the pool.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -22385,27 +22385,27 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Bastion(ref com
 				Properties: map[string]spec.Schema{
 					"enabled": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Enabled means that bastion is enabled. The bastion is enabled by default if this field is not specified. Set this field to false to disable the bastion.\n\nIt is not currently possible to remove the bastion from the cluster spec without first disabling it by setting this field to false and waiting until the bastion has been deleted.",
+							Description: "enabled means that bastion is enabled. The bastion is enabled by default if this field is not specified. Set this field to false to disable the bastion.\n\nIt is not currently possible to remove the bastion from the cluster spec without first disabling it by setting this field to false and waiting until the bastion has been deleted.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Spec for the bastion itself",
+							Description: "spec for the bastion itself",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineSpec"),
 						},
 					},
 					"availabilityZone": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AvailabilityZone is the failure domain that will be used to create the Bastion Spec.",
+							Description: "availabilityZone is the failure domain that will be used to create the Bastion Spec.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"floatingIP": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FloatingIP which will be associated to the bastion machine. It's the IP address, not UUID. The floating IP should already exist and should not be associated with a port. If FIP of this address does not exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.",
+							Description: "floatingIP which will be associated to the bastion machine. It's the IP address, not UUID. The floating IP should already exist and should not be associated with a port. If FIP of this address does not exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22462,13 +22462,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BastionStatus(r
 					},
 					"resolved": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resolved contains parts of the bastion's machine spec with all external references fully resolved.",
+							Description: "resolved contains parts of the bastion's machine spec with all external references fully resolved.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ResolvedMachineSpec"),
 						},
 					},
 					"resources": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resources contains references to OpenStack resources created for the bastion.",
+							Description: "resources contains references to OpenStack resources created for the bastion.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineResources"),
 						},
 					},
@@ -22488,14 +22488,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BindingProfile(
 				Properties: map[string]spec.Schema{
 					"ovsHWOffload": {
 						SchemaProps: spec.SchemaProps{
-							Description: "OVSHWOffload enables or disables the OVS hardware offload feature. This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached. See: https://bugs.launchpad.net/nova/+bug/2020813",
+							Description: "ovsHWOffload enables or disables the OVS hardware offload feature. This flag is not required on OpenStack clouds since Yoga as Nova will set it automatically when the port is attached. See: https://bugs.launchpad.net/nova/+bug/2020813",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"trustedVF": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TrustedVF enables or disables the “trusted mode” for the VF.",
+							Description: "trustedVF enables or disables the “trusted mode” for the VF.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -22515,7 +22515,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BlockDeviceStor
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type is the type of block device to create. This can be either \"Volume\" or \"Local\".",
+							Description: "type is the type of block device to create. This can be either \"Volume\" or \"Local\".",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -22523,7 +22523,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BlockDeviceStor
 					},
 					"volume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Volume contains additional storage options for a volume block device.",
+							Description: "volume contains additional storage options for a volume block device.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BlockDeviceVolume"),
 						},
 					},
@@ -22557,14 +22557,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BlockDeviceVolu
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type is the Cinder volume type of the volume. If omitted, the default Cinder volume type that is configured in the OpenStack cloud will be used.",
+							Description: "type is the Cinder volume type of the volume. If omitted, the default Cinder volume type that is configured in the OpenStack cloud will be used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"availabilityZone": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AvailabilityZone is the volume availability zone to create the volume in. If not specified, the volume will be created without an explicit availability zone.",
+							Description: "availabilityZone is the volume availability zone to create the volume in. If not specified, the volume will be created without an explicit availability zone.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone"),
 						},
 					},
@@ -22585,7 +22585,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ClusterInitiali
 				Properties: map[string]spec.Schema{
 					"provisioned": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Provisioned is set to true when the initial provisioning of the cluster infrastructure is completed. The value of this field is never updated after provisioning is completed.",
+							Description: "provisioned is set to true when the initial provisioning of the cluster infrastructure is completed. The value of this field is never updated after provisioning is completed.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -22638,7 +22638,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FilterByNeutron
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Description: "tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22658,7 +22658,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FilterByNeutron
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Description: "tagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22678,7 +22678,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FilterByNeutron
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Description: "notTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22698,7 +22698,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FilterByNeutron
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Description: "notTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22725,13 +22725,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FixedIP(ref com
 				Properties: map[string]spec.Schema{
 					"subnet": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Subnet is an openstack subnet query that will return the id of a subnet to create the fixed IP of a port in. This query must not return more than one subnet.",
+							Description: "subnet is an openstack subnet query that will return the id of a subnet to create the fixed IP of a port in. This query must not return more than one subnet.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam"),
 						},
 					},
 					"ipAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IPAddress is a specific IP address to assign to the port. If Subnet is also specified, IPAddress must be a valid IP address in the subnet. If Subnet is not specified, IPAddress must be a valid IP address in any subnet of the port's network.",
+							Description: "ipAddress is a specific IP address to assign to the port. If Subnet is also specified, IPAddress must be a valid IP address in the subnet. If Subnet is not specified, IPAddress must be a valid IP address in any subnet of the port's network.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22773,14 +22773,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorParam(ref
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the uuid of the flavor. ID will not be validated before use.",
+							Description: "id is the uuid of the flavor. ID will not be validated before use.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter describes a query for a flavor.",
+							Description: "filter describes a query for a flavor.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorFilter"),
 						},
 					},
@@ -22841,20 +22841,20 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ImageParam(ref 
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the uuid of the image. ID will not be validated before use.",
+							Description: "id is the uuid of the image. ID will not be validated before use.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter describes a query for an image. If specified, the combination of name and tags must return a single matching image or an error will be raised.",
+							Description: "filter describes a query for an image. If specified, the combination of name and tags must return a single matching image or an error will be raised.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageFilter"),
 						},
 					},
 					"imageRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ImageRef is a reference to an ORC Image in the same namespace as the referring object.",
+							Description: "imageRef is a reference to an ORC Image in the same namespace as the referring object.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ResourceReference"),
 						},
 					},
@@ -22931,7 +22931,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 					},
 					"loadBalancerNetwork": {
 						SchemaProps: spec.SchemaProps{
-							Description: "LoadBalancerNetwork contains information about network and/or subnets which the loadbalancer is allocated on. If subnets are specified within the LoadBalancerNetwork currently only the first subnet in the list is taken into account.",
+							Description: "loadBalancerNetwork contains information about network and/or subnets which the loadbalancer is allocated on. If subnets are specified within the LoadBalancerNetwork currently only the first subnet in the list is taken into account.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatusWithSubnets"),
 						},
 					},
@@ -22953,7 +22953,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineInitiali
 				Properties: map[string]spec.Schema{
 					"provisioned": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Provisioned is set to true when the initial provisioning of the machine infrastructure is completed. The value of this field is never updated after provisioning is completed.",
+							Description: "provisioned is set to true when the initial provisioning of the machine infrastructure is completed. The value of this field is never updated after provisioning is completed.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -22972,7 +22972,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineResource
 				Properties: map[string]spec.Schema{
 					"ports": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ports is the status of the ports created for the machine.",
+							Description: "ports is the status of the ports created for the machine.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23001,14 +23001,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedNetwork(
 				Properties: map[string]spec.Schema{
 					"mtu": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID. This value will be used only if the Cluster actuator creates the network. If left empty, the network will have the default MTU defined in Openstack network service. To use this field, the Openstack installation requires the net-mtu neutron API extension.",
+							Description: "mtu sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID. This value will be used only if the Cluster actuator creates the network. If left empty, the network will have the default MTU defined in Openstack network service. To use this field, the Openstack installation requires the net-mtu neutron API extension.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"disablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
+							Description: "disablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -23033,7 +23033,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedRouter(r
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ExternalIPs is a list of external IPs to assign to the router. This is necessary if the router needs a fixed ip in a specific subnet. Each entry specifies a fixed IP and the subnet it should be allocated from.",
+							Description: "externalIPs is a list of external IPs to assign to the router. This is necessary if the router needs a fixed ip in a specific subnet. Each entry specifies a fixed IP and the subnet it should be allocated from.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23134,7 +23134,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurity
 					},
 					"allowAllInClusterTraffic": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.",
+							Description: "allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -23181,7 +23181,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkFilter(r
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Description: "tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23201,7 +23201,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkFilter(r
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Description: "tagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23221,7 +23221,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkFilter(r
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Description: "notTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23241,7 +23241,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkFilter(r
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Description: "notTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23269,14 +23269,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkParam(re
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.",
+							Description: "id is the ID of the network to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter specifies a filter to select an OpenStack network. If provided, cannot be empty.",
+							Description: "filter specifies a filter to select an OpenStack network. If provided, cannot be empty.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkFilter"),
 						},
 					},
@@ -23367,7 +23367,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatusWi
 					},
 					"subnets": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.",
+							Description: "subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23518,7 +23518,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network, subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4 subnet is supported. If you leave this empty, no network will be created.",
+							Description: "managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network, subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4 subnet is supported. If you leave this empty, no network will be created.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23537,7 +23537,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Subnets specifies existing subnets to use if not ManagedSubnets are specified. All subnets must be in the network specified by Network. There can be zero, one, or two subnets. If no subnets are specified, all subnets in Network will be used. If 2 subnets are specified, one must be IPv4 and the other IPv6.",
+							Description: "subnets specifies existing subnets to use if not ManagedSubnets are specified. All subnets must be in the network specified by Network. There can be zero, one, or two subnets. If no subnets are specified, all subnets in Network will be used. If 2 subnets are specified, one must be IPv4 and the other IPv6.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23551,78 +23551,78 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					},
 					"managedRouter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagedRouter specifies attributes of the router. The values are used only if the Cluster actuator creates the router.",
+							Description: "managedRouter specifies attributes of the router. The values are used only if the Cluster actuator creates the router.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter"),
 						},
 					},
 					"router": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Router specifies an existing router to be used if ManagedSubnets are specified. If specified, no new router will be created.",
+							Description: "router specifies an existing router to be used if ManagedSubnets are specified. If specified, no new router will be created.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam"),
 						},
 					},
 					"managedNetwork": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagedNetwork specifies attributes of the network. The values are used only if the Cluster actuator creates the network.",
+							Description: "managedNetwork specifies attributes of the network. The values are used only if the Cluster actuator creates the network.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork"),
 						},
 					},
 					"network": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Network specifies an existing network to use if no ManagedSubnets are specified.",
+							Description: "network specifies an existing network to use if no ManagedSubnets are specified.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
 					"externalNetwork": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs. This option is ignored if DisableExternalNetwork is set to true.\n\nIf ExternalNetwork is defined it must refer to exactly one external network.\n\nIf ExternalNetwork is not defined or is empty the controller will use any existing external network as long as there is only one. It is an error if ExternalNetwork is not defined and there are multiple external networks unless DisableExternalNetwork is also set.\n\nIf ExternalNetwork is not defined and there are no external networks the controller will proceed as though DisableExternalNetwork was set.",
+							Description: "externalNetwork is the OpenStack Network to be used to get public internet to the VMs. This option is ignored if DisableExternalNetwork is set to true.\n\nIf ExternalNetwork is defined it must refer to exactly one external network.\n\nIf ExternalNetwork is not defined or is empty the controller will use any existing external network as long as there is only one. It is an error if ExternalNetwork is not defined and there are multiple external networks unless DisableExternalNetwork is also set.\n\nIf ExternalNetwork is not defined and there are no external networks the controller will proceed as though DisableExternalNetwork was set.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
 					"disableExternalNetwork": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DisableExternalNetwork specifies whether or not to attempt to connect the cluster to an external network. This allows for the creation of clusters when connecting to an external network is not possible or desirable, e.g. if using a provider network.",
+							Description: "disableExternalNetwork specifies whether or not to attempt to connect the cluster to an external network. This allows for the creation of clusters when connecting to an external network is not possible or desirable, e.g. if using a provider network.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"apiServerLoadBalancer": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIServerLoadBalancer configures the optional LoadBalancer for the APIServer. If not specified, no load balancer will be created for the API server.",
+							Description: "apiServerLoadBalancer configures the optional LoadBalancer for the APIServer. If not specified, no load balancer will be created for the API server.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer"),
 						},
 					},
 					"disableAPIServerFloatingIP": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating IP to the API server. This allows for the creation of clusters when attaching a floating IP to the API server (and hence, in many cases, exposing the API server to the internet) is not possible or desirable, e.g. if using a shared VLAN for communication between management and workload clusters or when the management cluster is inside the project network. This option requires that the API server use a VIP on the cluster network so that the underlying machines can change without changing ControlPlaneEndpoint.Host. When using a managed load balancer, this VIP will be managed automatically. If not using a managed load balancer, cluster configuration will fail without additional configuration to manage the VIP on the control plane machines, which falls outside of the scope of this controller.",
+							Description: "disableAPIServerFloatingIP determines whether or not to attempt to attach a floating IP to the API server. This allows for the creation of clusters when attaching a floating IP to the API server (and hence, in many cases, exposing the API server to the internet) is not possible or desirable, e.g. if using a shared VLAN for communication between management and workload clusters or when the management cluster is inside the project network. This option requires that the API server use a VIP on the cluster network so that the underlying machines can change without changing ControlPlaneEndpoint.Host. When using a managed load balancer, this VIP will be managed automatically. If not using a managed load balancer, cluster configuration will fail without additional configuration to manage the VIP on the control plane machines, which falls outside of the scope of this controller.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"apiServerFloatingIP": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFloatingIP is the floatingIP which will be associated with the API server. The floatingIP will be created if it does not already exist. If not specified, a new floatingIP is allocated. This field is not used if DisableAPIServerFloatingIP is set to true.",
+							Description: "apiServerFloatingIP is the floatingIP which will be associated with the API server. The floatingIP will be created if it does not already exist. If not specified, a new floatingIP is allocated. This field is not used if DisableAPIServerFloatingIP is set to true.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiServerFixedIP": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIServerFixedIP is the fixed IP which will be associated with the API server. In the case where the API server has a floating IP but not a managed load balancer, this field is not used. If a managed load balancer is used and this field is not specified, a fixed IP will be dynamically allocated for the load balancer. If a managed load balancer is not used AND the API server floating IP is disabled, this field MUST be specified and should correspond to a pre-allocated port that holds the fixed IP to be used as a VIP.",
+							Description: "apiServerFixedIP is the fixed IP which will be associated with the API server. In the case where the API server has a floating IP but not a managed load balancer, this field is not used. If a managed load balancer is used and this field is not specified, a fixed IP will be dynamically allocated for the load balancer. If a managed load balancer is not used AND the API server floating IP is disabled, this field MUST be specified and should correspond to a pre-allocated port that holds the fixed IP to be used as a VIP.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiServerPort": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIServerPort is the port on which the listener on the APIServer will be created. If specified, it must be an integer between 0 and 65535.",
+							Description: "apiServerPort is the port on which the listener on the APIServer will be created. If specified, it must be an integer between 0 and 65535.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"managedSecurityGroups": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagedSecurityGroups determines whether OpenStack security groups for the cluster will be managed by the OpenStack provider or whether pre-existing security groups will be specified as part of the configuration. By default, the managed security groups have rules that allow the Kubelet, etcd, and the Kubernetes API server to function correctly. It's possible to add additional rules to the managed security groups. When defined to an empty struct, the managed security groups will be created with the default rules.",
+							Description: "managedSecurityGroups determines whether OpenStack security groups for the cluster will be managed by the OpenStack provider or whether pre-existing security groups will be specified as part of the configuration. By default, the managed security groups have rules that allow the Kubelet, etcd, and the Kubernetes API server to function correctly. It's possible to add additional rules to the managed security groups. When defined to an empty struct, the managed security groups will be created with the default rules.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups"),
 						},
 					},
@@ -23633,7 +23633,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags to set on all resources in cluster which support tags",
+							Description: "tags to set on all resources in cluster which support tags",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23648,7 +23648,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					},
 					"controlPlaneEndpoint": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneEndpoint represents the endpoint used to communicate with the control plane. It is normally populated automatically by the OpenStackCluster controller during cluster provisioning. If it is set on creation the control plane endpoint will use the values set here in preference to values set elsewhere. ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.",
+							Description: "controlPlaneEndpoint represents the endpoint used to communicate with the control plane. It is normally populated automatically by the OpenStackCluster controller during cluster provisioning. If it is set on creation the control plane endpoint will use the values set here in preference to values set elsewhere. ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.",
 							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"),
 						},
 					},
@@ -23659,7 +23659,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneAvailabilityZones is the set of availability zones which control plane machines may be deployed to.",
+							Description: "controlPlaneAvailabilityZones is the set of availability zones which control plane machines may be deployed to.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23674,20 +23674,20 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					},
 					"controlPlaneOmitAvailabilityZone": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneOmitAvailabilityZone causes availability zone to be omitted when creating control plane nodes, allowing the Nova scheduler to make a decision on which availability zone to use based on other scheduling constraints",
+							Description: "controlPlaneOmitAvailabilityZone causes availability zone to be omitted when creating control plane nodes, allowing the Nova scheduler to make a decision on which availability zone to use based on other scheduling constraints",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"bastion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bastion is the OpenStack instance to login the nodes\n\nAs a rolling update is not ideal during a bastion host session, we prevent changes to a running bastion configuration. To make changes, it's required to first set `enabled: false` which will remove the bastion and then changes can be made.",
+							Description: "bastion is the OpenStack instance to login the nodes\n\nAs a rolling update is not ideal during a bastion host session, we prevent changes to a running bastion configuration. To make changes, it's required to first set `enabled: false` which will remove the bastion and then changes can be made.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion"),
 						},
 					},
 					"identityRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a secret holding OpenStack credentials to be used when reconciling this cluster. It is also to reconcile machines unless overridden in the machine spec.",
+							Description: "identityRef is a reference to a secret holding OpenStack credentials to be used when reconciling this cluster. It is also to reconcile machines unless overridden in the machine spec.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference"),
 						},
@@ -23710,37 +23710,37 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 				Properties: map[string]spec.Schema{
 					"initialization": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Initialization contains information about the initialization status of the cluster.",
+							Description: "initialization contains information about the initialization status of the cluster.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ClusterInitialization"),
 						},
 					},
 					"network": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Network contains information about the created OpenStack Network.",
+							Description: "network contains information about the created OpenStack Network.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatusWithSubnets"),
 						},
 					},
 					"externalNetwork": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ExternalNetwork contains information about the external network used for default ingress and egress traffic.",
+							Description: "externalNetwork contains information about the external network used for default ingress and egress traffic.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatus"),
 						},
 					},
 					"router": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Router describes the default cluster router",
+							Description: "router describes the default cluster router",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Router"),
 						},
 					},
 					"apiServerLoadBalancer": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIServerLoadBalancer describes the api server load balancer if one exists",
+							Description: "apiServerLoadBalancer describes the api server load balancer if one exists",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.LoadBalancer"),
 						},
 					},
 					"failureDomains": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FailureDomains represent OpenStack availability zones",
+							Description: "failureDomains represent OpenStack availability zones",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23754,31 +23754,31 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					},
 					"controlPlaneSecurityGroup": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ControlPlaneSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to control plane nodes.",
+							Description: "controlPlaneSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to control plane nodes.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupStatus"),
 						},
 					},
 					"workerSecurityGroup": {
 						SchemaProps: spec.SchemaProps{
-							Description: "WorkerSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to worker nodes.",
+							Description: "workerSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to worker nodes.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupStatus"),
 						},
 					},
 					"bastionSecurityGroup": {
 						SchemaProps: spec.SchemaProps{
-							Description: "BastionSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to worker nodes.",
+							Description: "bastionSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to worker nodes.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupStatus"),
 						},
 					},
 					"bastion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bastion contains the information about the deployed bastion host",
+							Description: "bastion contains the information about the deployed bastion host",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BastionStatus"),
 						},
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the OpenStackCluster. This field surfaces into Cluster's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster (both during initial provisioning and after the initial provisioning is completed).",
+							Description: "conditions defines current service state of the OpenStackCluster. This field surfaces into Cluster's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster (both during initial provisioning and after the initial provisioning is completed).",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23941,14 +23941,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackIdenti
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type specifies the identity reference type. Defaults to Secret for backward compatibility.",
+							Description: "type specifies the identity reference type. Defaults to Secret for backward compatibility.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned, or the name of an OpenStackClusterIdentity (type=ClusterIdentity). The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file. The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.",
+							Description: "name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned, or the name of an OpenStackClusterIdentity (type=ClusterIdentity). The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file. The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -23956,7 +23956,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackIdenti
 					},
 					"cloudName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "CloudName specifies the name of the entry in the clouds.yaml file to use.",
+							Description: "cloudName specifies the name of the entry in the clouds.yaml file to use.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -23964,7 +23964,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackIdenti
 					},
 					"region": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Region specifies an OpenStack region to use. If specified, it overrides any value in clouds.yaml. If specified for an OpenStackMachine, its value will be included in providerID.",
+							Description: "region specifies an OpenStack region to use. If specified, it overrides any value in clouds.yaml. If specified for an OpenStackMachine, its value will be included in providerID.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24081,7 +24081,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 				Properties: map[string]spec.Schema{
 					"providerID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ProviderID is the unique identifier as specified by the cloud provider.",
+							Description: "providerID is the unique identifier as specified by the cloud provider.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24108,7 +24108,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"ports": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ports to be attached to the server instance. They are created if a port with the given name does not already exist. If not specified a default port will be added for the default cluster network.",
+							Description: "ports to be attached to the server instance. They are created if a port with the given name does not already exist. If not specified a default port will be added for the default cluster network.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24148,7 +24148,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags which will be added to the machine and all dependent resources which support them. These are in addition to Tags defined on the cluster. Requires Nova api 2.52 minimum!",
+							Description: "tags which will be added to the machine and all dependent resources which support them. These are in addition to Tags defined on the cluster. Requires Nova api 2.52 minimum!",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24206,7 +24206,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "AdditionalBlockDevices is a list of specifications for additional block devices to attach to the server instance",
+							Description: "additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24226,7 +24226,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"identityRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IdentityRef is a reference to a secret holding OpenStack credentials to be used when reconciling this machine. If not specified, the credentials specified in the cluster will be used.",
+							Description: "identityRef is a reference to a secret holding OpenStack credentials to be used when reconciling this machine. If not specified, the credentials specified in the cluster will be used.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference"),
 						},
 					},
@@ -24246,7 +24246,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "SchedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure, such as specifying certain host aggregates or availability zones.",
+							Description: "schedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure, such as specifying certain host aggregates or availability zones.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24276,20 +24276,20 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 				Properties: map[string]spec.Schema{
 					"initialization": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Initialization contains information about the initialization status of the machine.",
+							Description: "initialization contains information about the initialization status of the machine.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineInitialization"),
 						},
 					},
 					"instanceID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InstanceID is the OpenStack instance ID for this machine.",
+							Description: "instanceID is the OpenStack instance ID for this machine.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"addresses": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Addresses contains the OpenStack instance associated addresses.",
+							Description: "addresses contains the OpenStack instance associated addresses.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24303,26 +24303,26 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"instanceState": {
 						SchemaProps: spec.SchemaProps{
-							Description: "InstanceState is the state of the OpenStack instance for this machine. This field is not set anymore by the OpenStackMachine controller. Instead, it's set by the OpenStackServer controller.",
+							Description: "instanceState is the state of the OpenStack instance for this machine. This field is not set anymore by the OpenStackMachine controller. Instead, it's set by the OpenStackServer controller.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"resolved": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resolved contains parts of the machine spec with all external references fully resolved.",
+							Description: "resolved contains parts of the machine spec with all external references fully resolved.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ResolvedMachineSpec"),
 						},
 					},
 					"resources": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Resources contains references to OpenStack resources created for the machine.",
+							Description: "resources contains references to OpenStack resources created for the machine.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.MachineResources"),
 						},
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the OpenStackMachine. This field surfaces into Machine's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine (both during initial provisioning and after the initial provisioning is completed).",
+							Description: "conditions defines current service state of the OpenStackMachine. This field surfaces into Machine's status.conditions[InfrastructureReady] condition. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine (both during initial provisioning and after the initial provisioning is completed).",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24447,7 +24447,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 				Properties: map[string]spec.Schema{
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Spec is the specification of the desired behavior of the machine.",
+							Description: "spec is the specification of the desired behavior of the machine.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineSpec"),
 						},
@@ -24492,7 +24492,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 				Properties: map[string]spec.Schema{
 					"capacity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Capacity defines the resource capacity for this machine. This value is used for autoscaling from zero operations as defined in: https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md",
+							Description: "capacity defines the resource capacity for this machine. This value is used for autoscaling from zero operations as defined in: https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -24512,7 +24512,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					},
 					"conditions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Conditions defines current service state of the OpenStackMachineTemplate. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate. (both during initial provisioning and after the initial provisioning is completed).",
+							Description: "conditions defines current service state of the OpenStackMachineTemplate. The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate. (both during initial provisioning and after the initial provisioning is completed).",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24540,20 +24540,20 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 				Properties: map[string]spec.Schema{
 					"network": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
+							Description: "network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Description is a human-readable description for the port.",
+							Description: "description is a human-readable description for the port.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"nameSuffix": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.",
+							Description: "nameSuffix will be appended to the name of the port if specified. If unspecified, instead the 0-based index of the port in the list is used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24565,7 +24565,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
+							Description: "fixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24584,7 +24584,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "SecurityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.",
+							Description: "securityGroups is a list of the names, uuids, filters or any combination these of the security groups to assign to the instance.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24603,7 +24603,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.) These tags are applied in addition to the instance's tags, which will also be applied to the port.",
+							Description: "tags applied to the port (and corresponding trunk, if a trunk is configured.) These tags are applied in addition to the instance's tags, which will also be applied to the port.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24618,28 +24618,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 					},
 					"trunk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Trunk specifies whether trunking is enabled at the port level. If not provided the value is inherited from the machine, or false for a bastion host.",
+							Description: "trunk specifies whether trunking is enabled at the port level. If not provided the value is inherited from the machine, or false for a bastion host.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"adminStateUp": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
+							Description: "adminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"macAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
+							Description: "macAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"allowedAddressPairs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AllowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Description: "allowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24653,27 +24653,27 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 					},
 					"hostID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "HostID specifies the ID of the host where the port resides.",
+							Description: "hostID specifies the ID of the host where the port resides.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"vnicType": {
 						SchemaProps: spec.SchemaProps{
-							Description: "VNICType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
+							Description: "vnicType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"profile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
+							Description: "profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BindingProfile"),
 						},
 					},
 					"disablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Description: "disablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -24723,7 +24723,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortStatus(ref 
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the unique identifier of the port.",
+							Description: "id is the unique identifier of the port.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -24752,7 +24752,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedFixedIP
 					},
 					"ipAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IPAddress is a specific IP address to assign to the port. If SubnetID is also specified, IPAddress must be a valid IP address in the subnet. If Subnet is not specified, IPAddress must be a valid IP address in any subnet of the port's network.",
+							Description: "ipAddress is a specific IP address to assign to the port. If SubnetID is also specified, IPAddress must be a valid IP address in the subnet. If Subnet is not specified, IPAddress must be a valid IP address in any subnet of the port's network.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24772,28 +24772,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedMachine
 				Properties: map[string]spec.Schema{
 					"serverGroupID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.",
+							Description: "serverGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"imageID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.",
+							Description: "imageID is the ID of the image to use for the machine and is calculated based on ImageFilter.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"flavorID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FlavorID is the ID of the flavor to use.",
+							Description: "flavorID is the ID of the flavor to use.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"ports": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ports is the fully resolved list of ports to create for the machine.",
+							Description: "ports is the fully resolved list of ports to create for the machine.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24822,7 +24822,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the port.",
+							Description: "name is the name of the port.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -24830,7 +24830,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Description is a human-readable description for the port.",
+							Description: "description is a human-readable description for the port.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -24838,7 +24838,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"networkID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NetworkID is the ID of the network the port will be created in.",
+							Description: "networkID is the ID of the network the port will be created in.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -24851,7 +24851,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags applied to the port (and corresponding trunk, if a trunk is configured.)",
+							Description: "tags applied to the port (and corresponding trunk, if a trunk is configured.)",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24866,7 +24866,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"trunk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Trunk specifies whether trunking is enabled at the port level.",
+							Description: "trunk specifies whether trunking is enabled at the port level.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -24878,7 +24878,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "FixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
+							Description: "fixedIPs is a list of pairs of subnet and/or IP address to assign to the port. If specified, these must be subnets of the port's network.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24897,7 +24897,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "SecurityGroups is a list of security group IDs to assign to the port.",
+							Description: "securityGroups is a list of security group IDs to assign to the port.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24912,21 +24912,21 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"adminStateUp": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
+							Description: "adminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"macAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
+							Description: "macAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"allowedAddressPairs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AllowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Description: "allowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24940,27 +24940,27 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"hostID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "HostID specifies the ID of the host where the port resides.",
+							Description: "hostID specifies the ID of the host where the port resides.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"vnicType": {
 						SchemaProps: spec.SchemaProps{
-							Description: "VNICType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
+							Description: "vnicType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"profile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
+							Description: "profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BindingProfile"),
 						},
 					},
 					"disablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Description: "disablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -25012,21 +25012,21 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 				Properties: map[string]spec.Schema{
 					"adminStateUp": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AdminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
+							Description: "adminStateUp specifies whether the port should be created in the up (true) or down (false) state. The default is up.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"macAddress": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MACAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
+							Description: "macAddress specifies the MAC address of the port. If not specified, the MAC address will be generated.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"allowedAddressPairs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AllowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
+							Description: "allowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25040,27 +25040,27 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					},
 					"hostID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "HostID specifies the ID of the host where the port resides.",
+							Description: "hostID specifies the ID of the host where the port resides.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"vnicType": {
 						SchemaProps: spec.SchemaProps{
-							Description: "VNICType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
+							Description: "vnicType specifies the type of vNIC which this port should be attached to. This is used to determine which mechanism driver(s) to be used to bind the port. The valid values are normal, macvtap, direct, baremetal, direct-physical, virtio-forwarder, smart-nic and remote-managed, although these values will not be validated in this API to ensure compatibility with future neutron changes or custom implementations. What type of vNIC is actually available depends on deployments. If not specified, the Neutron default value is used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"profile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
+							Description: "profile is a set of key-value pairs that are used for binding details. We intentionally don't expose this as a map[string]string because we only want to enable the users to set the values of the keys that are known to work in OpenStack Networking API.  See https://docs.openstack.org/api-ref/network/v2/index.html?expanded=create-port-detail#create-port To set profiles, your tenant needs permissions rule:create_port, and rule:create_port:binding:profile",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BindingProfile"),
 						},
 					},
 					"disablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DisablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Description: "disablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -25110,7 +25110,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResourceReferen
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the referenced resource",
+							Description: "name is the name of the referenced resource",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -25131,7 +25131,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RootVolume(ref 
 				Properties: map[string]spec.Schema{
 					"sizeGiB": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SizeGiB is the size of the block device in gibibytes (GiB).",
+							Description: "sizeGiB is the size of the block device in gibibytes (GiB).",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -25139,14 +25139,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RootVolume(ref 
 					},
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type is the Cinder volume type of the volume. If omitted, the default Cinder volume type that is configured in the OpenStack cloud will be used.",
+							Description: "type is the Cinder volume type of the volume. If omitted, the default Cinder volume type that is configured in the OpenStack cloud will be used.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"availabilityZone": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AvailabilityZone is the volume availability zone to create the volume in. If not specified, the volume will be created without an explicit availability zone.",
+							Description: "availabilityZone is the volume availability zone to create the volume in. If not specified, the volume will be created without an explicit availability zone.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone"),
 						},
 					},
@@ -25247,7 +25247,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RouterFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Description: "tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25267,7 +25267,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RouterFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Description: "tagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25287,7 +25287,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RouterFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Description: "notTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25307,7 +25307,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RouterFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Description: "notTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25335,14 +25335,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RouterParam(ref
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.",
+							Description: "id is the ID of the router to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter specifies a filter to select an OpenStack router. If provided, cannot be empty.",
+							Description: "filter specifies a filter to select an OpenStack router. If provided, cannot be empty.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterFilter"),
 						},
 					},
@@ -25363,7 +25363,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SchedulerHintAd
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the scheduler hint property. It is a unique identifier for the property.",
+							Description: "name is the name of the scheduler hint property. It is a unique identifier for the property.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -25371,7 +25371,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SchedulerHintAd
 					},
 					"value": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Value is the value of the scheduler hint property, which can be of various types (e.g., bool, string, int). The type is indicated by the Value.Type field.",
+							Description: "value is the value of the scheduler hint property, which can be of various types (e.g., bool, string, int). The type is indicated by the Value.Type field.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SchedulerHintAdditionalValue"),
 						},
@@ -25394,7 +25394,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SchedulerHintAd
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type represents the type of the value. Valid values are Bool, String, and Number.",
+							Description: "type represents the type of the value. Valid values are Bool, String, and Number.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -25402,21 +25402,21 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SchedulerHintAd
 					},
 					"bool": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bool is the boolean value of the scheduler hint, used when Type is \"Bool\". This field is required if type is 'Bool', and must not be set otherwise.",
+							Description: "bool is the boolean value of the scheduler hint, used when Type is \"Bool\". This field is required if type is 'Bool', and must not be set otherwise.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"number": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Number is the integer value of the scheduler hint, used when Type is \"Number\". This field is required if type is 'Number', and must not be set otherwise.",
+							Description: "number is the integer value of the scheduler hint, used when Type is \"Number\". This field is required if type is 'Number', and must not be set otherwise.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"string": {
 						SchemaProps: spec.SchemaProps{
-							Description: "String is the string value of the scheduler hint, used when Type is \"String\". This field is required if type is 'String', and must not be set otherwise.",
+							Description: "string is the string value of the scheduler hint, used when Type is \"String\". This field is required if type is 'String', and must not be set otherwise.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25460,7 +25460,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupFi
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Description: "tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25480,7 +25480,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupFi
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Description: "tagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25500,7 +25500,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupFi
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Description: "notTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25520,7 +25520,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupFi
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Description: "notTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25548,14 +25548,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupPa
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.",
+							Description: "id is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.",
+							Description: "filter specifies a query to select an OpenStack security group. If provided, cannot be empty.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupFilter"),
 						},
 					},
@@ -25700,7 +25700,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ServerGroupFilt
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of a server group to look for.",
+							Description: "name is the name of a server group to look for.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25720,14 +25720,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ServerGroupPara
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the ID of the server group to use.",
+							Description: "id is the ID of the server group to use.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.",
+							Description: "filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupFilter"),
 						},
 					},
@@ -25747,7 +25747,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ServerMetadata(
 				Properties: map[string]spec.Schema{
 					"key": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Key is the server metadata key",
+							Description: "key is the server metadata key",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -25755,7 +25755,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ServerMetadata(
 					},
 					"value": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Value is the server metadata value",
+							Description: "value is the server metadata value",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -25879,7 +25879,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
+							Description: "tags is a list of tags to filter by. If specified, the resource must have all of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25899,7 +25899,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "TagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
+							Description: "tagsAny is a list of tags to filter by. If specified, the resource must have at least one of the tags specified to be included in the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25919,7 +25919,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
+							Description: "notTags is a list of tags to filter by. If specified, resources which contain all of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25939,7 +25939,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetFilter(re
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NotTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
+							Description: "notTagsAny is a list of tags to filter by. If specified, resources which contain any of the given tags will be excluded from the result.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25967,14 +25967,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetParam(ref
 				Properties: map[string]spec.Schema{
 					"id": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ID is the uuid of the subnet. It will not be validated.",
+							Description: "id is the uuid of the subnet. It will not be validated.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Filter specifies a filter to select the subnet. It must match exactly one subnet.",
+							Description: "filter specifies a filter to select the subnet. It must match exactly one subnet.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetFilter"),
 						},
 					},
@@ -25994,7 +25994,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetSpec(ref 
 				Properties: map[string]spec.Schema{
 					"cidr": {
 						SchemaProps: spec.SchemaProps{
-							Description: "CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24. This field is required when defining a subnet.",
+							Description: "cidr is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24. This field is required when defining a subnet.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26002,7 +26002,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetSpec(ref 
 					},
 					"dnsNameservers": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DNSNameservers holds a list of DNS server addresses that will be provided when creating the subnet. These addresses need to have the same IP version as CIDR.",
+							Description: "dnsNameservers holds a list of DNS server addresses that will be provided when creating the subnet. These addresses need to have the same IP version as CIDR.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26017,7 +26017,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetSpec(ref 
 					},
 					"allocationPools": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created. If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from outside of these ranges manually.",
+							Description: "allocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created. If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from outside of these ranges manually.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26047,7 +26047,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ValueSpec(ref c
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the key-value pair. This is just for identifying the pair and will not be sent to the OpenStack API.",
+							Description: "name is the name of the key-value pair. This is just for identifying the pair and will not be sent to the OpenStack API.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26055,7 +26055,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ValueSpec(ref c
 					},
 					"key": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Key is the key in the key-value pair.",
+							Description: "key is the key in the key-value pair.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26063,7 +26063,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ValueSpec(ref c
 					},
 					"value": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Value is the value in the key-value pair.",
+							Description: "value is the value in the key-value pair.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26085,14 +26085,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_VolumeAvailabil
 				Properties: map[string]spec.Schema{
 					"from": {
 						SchemaProps: spec.SchemaProps{
-							Description: "From specifies where we will obtain the availability zone for the volume. The options are \"Name\" and \"Machine\". If \"Name\" is specified then the Name field must also be specified. If \"Machine\" is specified the volume will use the value of FailureDomain, if any, from the associated Machine.",
+							Description: "from specifies where we will obtain the availability zone for the volume. The options are \"Name\" and \"Machine\". If \"Name\" is specified then the Name field must also be specified. If \"Machine\" is specified the volume will use the value of FailureDomain, if any, from the associated Machine.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of a volume availability zone to use. It is required if From is \"Name\". The volume availability zone name may not contain spaces.",
+							Description: "name is the name of a volume availability zone to use. It is required if From is \"Name\". The volume availability zone name may not contain spaces.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

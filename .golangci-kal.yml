@@ -14,7 +14,7 @@ linters:
         settings:
           linters:
             enable:
-            # - "commentstart" # Ensure comments start with the serialized version of the field name.
+            - "commentstart" # Ensure comments start with the serialized version of the field name.
             # - "conditions" # Ensure conditions have the correct json tags and markers.
             # - "conflictingmarkers" # Ensure there are no conflicting markers.
             - "duplicatemarkers" # Ensure there are no exact duplicate markers for types and fields.
