@@ -233,7 +233,7 @@ Depending on the CNI that will be deployed on the cluster, you may need to add s
  spec:
     ...
     managedSecurityGroups:
-      allNodesSecurityGroupRules:
+      clusterNodesSecurityGroupRules:
       - remoteManagedGroups:
         - controlplane
         - worker
@@ -600,8 +600,8 @@ between cluster nodes on all ports and protocols (API server and node port traff
 permitted from anywhere, as with the default rules).
 
 We can add additional security group rules that authorize traffic between nodes and/or from the outside
-world using `allNodesSecurityGroupRules`, `controlPlaneNodesSecurityGroupRules` and `workerNodesSecurityGroupRules`.
-These properties take a list of security group rules that should be applied to all nodes, control plane nodes only
+world using `clusterNodesSecurityGroupRules`, `controlPlaneNodesSecurityGroupRules` and `workerNodesSecurityGroupRules`.
+These properties take a list of security group rules that should be applied to all cluster nodes, control plane nodes only
 or worker nodes only respectively.
 
 In a rule definition, the fields `remoteManagedGroups`, `remoteGroupID` and `remoteIPPrefix` are mutually exclusive.
@@ -613,7 +613,7 @@ For example, to apply a security group rule to all nodes to permit BGP traffic b
 
 ```yaml
 managedSecurityGroups:
-  allNodesSecurityGroupRules:
+  clusterNodesSecurityGroupRules:
   - remoteManagedGroups:
     - controlplane
     - worker

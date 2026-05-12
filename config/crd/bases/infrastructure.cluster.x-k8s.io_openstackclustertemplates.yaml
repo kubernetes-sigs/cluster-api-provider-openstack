@@ -3762,14 +3762,21 @@ spec:
                           It's possible to add additional rules to the managed security groups.
                           When defined to an empty struct, the managed security groups will be created with the default rules.
                         properties:
-                          allNodesSecurityGroupRules:
-                            description: allNodesSecurityGroupRules defines the rules
-                              that should be applied to all nodes.
+                          allowAllInClusterTraffic:
+                            default: false
+                            description: AllowAllInClusterTraffic allows all ingress
+                              and egress traffic between cluster nodes when set to
+                              true.
+                            type: boolean
+                          clusterNodesSecurityGroupRules:
+                            description: clusterNodesSecurityGroupRules defines the
+                              rules that should be applied to all cluster nodes, excluding
+                              the bastion host.
                             items:
                               description: |-
                                 SecurityGroupRuleSpec represent the basic information of the associated OpenStack
                                 Security Group Role.
-                                For now this is only used for the allNodesSecurityGroupRules but when we add
+                                For now this is only used for the clusterNodesSecurityGroupRules but when we add
                                 other security groups, we'll need to add a validation because
                                 Remote* fields are mutually exclusive.
                               properties:
@@ -3843,12 +3850,6 @@ spec:
                             x-kubernetes-list-map-keys:
                             - name
                             x-kubernetes-list-type: map
-                          allowAllInClusterTraffic:
-                            default: false
-                            description: AllowAllInClusterTraffic allows all ingress
-                              and egress traffic between cluster nodes when set to
-                              true.
-                            type: boolean
                           controlPlaneNodesSecurityGroupRules:
                             description: controlPlaneNodesSecurityGroupRules defines
                               the rules that should be applied to control plane nodes.
@@ -3856,7 +3857,7 @@ spec:
                               description: |-
                                 SecurityGroupRuleSpec represent the basic information of the associated OpenStack
                                 Security Group Role.
-                                For now this is only used for the allNodesSecurityGroupRules but when we add
+                                For now this is only used for the clusterNodesSecurityGroupRules but when we add
                                 other security groups, we'll need to add a validation because
                                 Remote* fields are mutually exclusive.
                               properties:
@@ -3937,7 +3938,7 @@ spec:
                               description: |-
                                 SecurityGroupRuleSpec represent the basic information of the associated OpenStack
                                 Security Group Role.
-                                For now this is only used for the allNodesSecurityGroupRules but when we add
+                                For now this is only used for the clusterNodesSecurityGroupRules but when we add
                                 other security groups, we'll need to add a validation because
                                 Remote* fields are mutually exclusive.
                               properties:

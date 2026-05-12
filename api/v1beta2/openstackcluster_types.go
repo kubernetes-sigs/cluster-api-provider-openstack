@@ -307,13 +307,13 @@ type ManagedNetwork struct {
 
 // ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.
 type ManagedSecurityGroups struct {
-	// allNodesSecurityGroupRules defines the rules that should be applied to all nodes.
+	// clusterNodesSecurityGroupRules defines the rules that should be applied to all cluster nodes, excluding the bastion host.
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	// +listType=map
 	// +listMapKey=name
 	// +optional
-	AllNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"allNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	ClusterNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"clusterNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
 	// controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.
 	// +patchMergeKey=name

@@ -1195,7 +1195,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			DisableAPIServerFloatingIP: ptr.To(true),
 			APIServerFixedIP:           ptr.To("192.168.0.10"),
 			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
-				AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+				ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 					{
 						Direction: "ingress",
 						Protocol:  ptr.To("tcp"),
@@ -1271,7 +1271,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			DisableAPIServerFloatingIP: ptr.To(true),
 			APIServerFixedIP:           ptr.To("192.168.0.10"),
 			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
-				AllNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
+				ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 					{
 						Direction: "ingress",
 						Protocol:  ptr.To("tcp"),

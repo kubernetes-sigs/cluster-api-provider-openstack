@@ -8,6 +8,7 @@
     - [Flavor field restructure](#flavor-field-restructure)
     - [Network management fields restructure](#network-management-fields-restructure)
     - [External router IPs restructure](#external-router-ips-restructure)
+    - [Managed security group rules rename](#managed-security-group-rules-rename)
     - [Conditions format change](#conditions-format-change)
     - [Removal of deprecated status fields](#removal-of-deprecated-status-fields)
     - [FailureDomains representation change](#failuredomains-representation-change)
@@ -85,6 +86,25 @@ least one entry. This applies to `OpenStackCluster` and `OpenStackClusterTemplat
 ```
 
 For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.managedRouter`.
+
+### Managed security group rules rename
+
+`spec.managedSecurityGroups.allNodesSecurityGroupRules` has been renamed to
+`spec.managedSecurityGroups.clusterNodesSecurityGroupRules` to clarify that these
+rules apply only to cluster nodes (control plane and workers), and not to other
+managed resources such as the bastion host.
+
+```diff
+ spec:
+   managedSecurityGroups:
+-    allNodesSecurityGroupRules:
++    clusterNodesSecurityGroupRules:
+     - name: 
+       direction: 
+```
+
+For `OpenStackClusterTemplate` the same change applies under
+`spec.template.spec.managedSecurityGroups.clusterNodesSecurityGroupRules`.
 
 ### Conditions format change
 

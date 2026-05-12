@@ -23060,7 +23060,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurity
 				Description: "ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"allNodesSecurityGroupRules": {
+					"clusterNodesSecurityGroupRules": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
 								"x-kubernetes-list-map-keys": []interface{}{
@@ -23072,7 +23072,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurity
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "allNodesSecurityGroupRules defines the rules that should be applied to all nodes.",
+							Description: "clusterNodesSecurityGroupRules defines the rules that should be applied to all cluster nodes, excluding the bastion host.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -25571,7 +25571,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupRu
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "SecurityGroupRuleSpec represent the basic information of the associated OpenStack Security Group Role. For now this is only used for the allNodesSecurityGroupRules but when we add other security groups, we'll need to add a validation because Remote* fields are mutually exclusive.",
+				Description: "SecurityGroupRuleSpec represent the basic information of the associated OpenStack Security Group Role. For now this is only used for the clusterNodesSecurityGroupRules but when we add other security groups, we'll need to add a validation because Remote* fields are mutually exclusive.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {

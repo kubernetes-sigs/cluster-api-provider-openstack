@@ -430,6 +430,46 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 	return nil
 }
 
+func Convert_v1beta1_ManagedSecurityGroups_To_v1beta2_ManagedSecurityGroups(
+	in *ManagedSecurityGroups,
+	out *infrav1.ManagedSecurityGroups,
+	s apiconversion.Scope,
+) error {
+	if err := autoConvert_v1beta1_ManagedSecurityGroups_To_v1beta2_ManagedSecurityGroups(in, out, s); err != nil {
+		return err
+	}
+
+	if len(in.AllNodesSecurityGroupRules) > 0 {
+		out.ClusterNodesSecurityGroupRules = make([]infrav1.SecurityGroupRuleSpec, len(in.AllNodesSecurityGroupRules))
+		for i := range in.AllNodesSecurityGroupRules {
+			if err := Convert_v1beta1_SecurityGroupRuleSpec_To_v1beta2_SecurityGroupRuleSpec(&in.AllNodesSecurityGroupRules[i], &out.ClusterNodesSecurityGroupRules[i], s); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func Convert_v1beta2_ManagedSecurityGroups_To_v1beta1_ManagedSecurityGroups(
+	in *infrav1.ManagedSecurityGroups,
+	out *ManagedSecurityGroups,
+	s apiconversion.Scope,
+) error {
+	if err := autoConvert_v1beta2_ManagedSecurityGroups_To_v1beta1_ManagedSecurityGroups(in, out, s); err != nil {
+		return err
+	}
+
+	if len(in.ClusterNodesSecurityGroupRules) > 0 {
+		out.AllNodesSecurityGroupRules = make([]SecurityGroupRuleSpec, len(in.ClusterNodesSecurityGroupRules))
+		for i := range in.ClusterNodesSecurityGroupRules {
+			if err := Convert_v1beta2_SecurityGroupRuleSpec_To_v1beta1_SecurityGroupRuleSpec(&in.ClusterNodesSecurityGroupRules[i], &out.AllNodesSecurityGroupRules[i], s); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // LegacyCalicoSecurityGroupRules returns a list of security group rules for calico
 // that need to be applied to the control plane and worker security groups when
 // managed security groups are enabled and upgrading to v1beta1.

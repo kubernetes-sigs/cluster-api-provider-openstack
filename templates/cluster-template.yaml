@@ -116,7 +116,7 @@ spec:
     cloudName: ${OPENSTACK_CLOUD}
     name: ${CLUSTER_NAME}-cloud-config
   managedSecurityGroups:
-    allNodesSecurityGroupRules:
+    clusterNodesSecurityGroupRules:
     - description: Created by cluster-api-provider-openstack - BGP (calico)
       direction: ingress
       etherType: IPv4

@@ -2228,7 +2228,7 @@ Each entry specifies a fixed IP and the subnet it should be allocated from.</p>
 <tbody>
 <tr>
 <td>
-<code>allNodesSecurityGroupRules</code><br/>
+<code>clusterNodesSecurityGroupRules</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SecurityGroupRuleSpec">
 []SecurityGroupRuleSpec
@@ -2237,7 +2237,7 @@ Each entry specifies a fixed IP and the subnet it should be allocated from.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>allNodesSecurityGroupRules defines the rules that should be applied to all nodes.</p>
+<p>clusterNodesSecurityGroupRules defines the rules that should be applied to all cluster nodes, excluding the bastion host.</p>
 </td>
 </tr>
 <tr>
@@ -5252,7 +5252,7 @@ SecurityGroupFilter
 <p>
 <p>SecurityGroupRuleSpec represent the basic information of the associated OpenStack
 Security Group Role.
-For now this is only used for the allNodesSecurityGroupRules but when we add
+For now this is only used for the clusterNodesSecurityGroupRules but when we add
 other security groups, we&rsquo;ll need to add a validation because
 Remote* fields are mutually exclusive.</p>
 </p>

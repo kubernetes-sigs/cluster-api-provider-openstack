@@ -1115,3 +1115,104 @@ func TestOpenStackCluster_RoundTrip_ManagedRouter(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenStackCluster_RoundTrip_ManagedSecurityGroups_ClusterNodesRules(t *testing.T) {
+	tests := []struct {
+		name string
+		in   OpenStackCluster
+	}{
+		{
+			name: "single rule",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{
+								Name:      "allow-http",
+								Direction: "ingress",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple rules",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{
+								Name:      "allow-http",
+								Direction: "ingress",
+							},
+							{
+								Name:      "allow-https",
+								Direction: "ingress",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "mixed with other node rules",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{Name: "all-nodes-rule", Direction: "ingress"},
+						},
+						ControlPlaneNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{Name: "cp-rule", Direction: "egress"},
+						},
+						WorkerNodesSecurityGroupRules: []SecurityGroupRuleSpec{
+							{Name: "worker-rule", Direction: "ingress"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "no AllNodesSecurityGroupRules — field stays nil",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					ManagedSecurityGroups: &ManagedSecurityGroups{
+						AllowAllInClusterTraffic: true,
+					},
+				},
+			},
+		},
+		{
+			name: "no ManagedSecurityGroups at all",
+			in:   OpenStackCluster{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackCluster{}
+			g.Expect(tt.in.ConvertTo(hub)).To(Succeed())
+
+			// Verify intermediate v1beta2 state
+			if tt.in.Spec.ManagedSecurityGroups == nil {
+				g.Expect(hub.Spec.ManagedSecurityGroups).To(BeNil())
+			} else {
+				g.Expect(hub.Spec.ManagedSecurityGroups).NotTo(BeNil())
+				g.Expect(hub.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules).To(HaveLen(len(tt.in.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules)))
+				for i, rule := range tt.in.Spec.ManagedSecurityGroups.AllNodesSecurityGroupRules {
+					g.Expect(hub.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules[i].Name).To(Equal(rule.Name))
+					g.Expect(hub.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules[i].Direction).To(Equal(rule.Direction))
+				}
+			}
+
+			restored := &OpenStackCluster{}
+			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
+
+			// Verify full round-trip
+			g.Expect(restored.Spec.ManagedSecurityGroups).To(Equal(tt.in.Spec.ManagedSecurityGroups))
+		})
+	}
+}
