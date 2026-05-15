@@ -66,6 +66,8 @@ const (
 	FlavorCapiV1Beta1          = "capi-v1beta1"
 	FlavorClusterIdentity      = "cluster-identity"
 	FlavorTopologyAutoscaler   = "topology-autoscaler"
+	FlavorTopologyUbuntu       = "topology-ubuntu"
+	FlavorTopologyBastion      = "topology-bastion"
 )
 
 // DefaultScheme returns the default scheme to use for testing.

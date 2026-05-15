@@ -165,6 +165,8 @@ providers:
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-without-lb.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-cluster-identity.yaml"
     - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-topology-autoscaler.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-topology-ubuntu.yaml"
+    - sourcePath: "./infrastructure-openstack-no-artifact/cluster-template-topology-bastion.yaml"
     - sourcePath: "../../../templates/clusterclass-dev-test.yaml"
     replacements:
     - old: gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:dev

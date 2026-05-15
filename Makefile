@@ -207,7 +207,9 @@ e2e-templates: $(addprefix $(E2E_NO_ARTIFACT_TEMPLATES_DIR)/, \
 		 cluster-template-health-monitor.yaml \
 		 cluster-template-capi-v1beta1.yaml \
 		 cluster-template-cluster-identity.yaml \
-		 cluster-template-topology-autoscaler.yaml)
+		 cluster-template-topology-autoscaler.yaml \
+		 cluster-template-topology-ubuntu.yaml \
+		 cluster-template-topology-bastion.yaml)
 # Currently no templates that require CI artifacts
 # $(addprefix $(E2E_TEMPLATES_DIR)/, add-templates-here.yaml) \
 

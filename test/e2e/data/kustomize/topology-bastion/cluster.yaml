@@ -1,0 +1,39 @@
+# Topology cluster using a standard ubuntu image with bastion enabled.
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+spec:
+  topology:
+    classRef:
+      name: dev-test
+    version: ${KUBERNETES_VERSION}
+    controlPlane:
+      replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+    workers:
+      machineDeployments:
+      - class: default-worker
+        name: md-0
+        replicas: ${WORKER_MACHINE_COUNT}
+    variables:
+    - name: identityRef
+      value:
+        name: ${CLUSTER_NAME}-cloud-config
+        cloudName: ${OPENSTACK_CLOUD}
+    - name: imageRef
+      value: node-image
+    - name: addImageVersion
+      value: false
+    - name: injectIgnitionSysext
+      value: false
+    - name: allowedCIDRs
+      value: ${OPENSTACK_API_SERVER_ALLOWED_CIDRS:=[]}
+    - name: bastion
+      value:
+        enabled: true
+        spec:
+          flavor: ${OPENSTACK_BASTION_FLAVOR:=m1.small}
+          image:
+            imageRef:
+              name: bastion-image
+          sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
