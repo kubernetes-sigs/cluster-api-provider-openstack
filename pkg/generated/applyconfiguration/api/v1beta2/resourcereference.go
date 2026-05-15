@@ -21,7 +21,7 @@ package v1beta2
 // ResourceReferenceApplyConfiguration represents a declarative configuration of the ResourceReference type for use
 // with apply.
 type ResourceReferenceApplyConfiguration struct {
-	// Name is the name of the referenced resource
+	// name is the name of the referenced resource
 	Name *string `json:"name,omitempty"`
 }
 

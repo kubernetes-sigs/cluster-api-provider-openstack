@@ -23,12 +23,12 @@ package v1beta2
 //
 // ManagedNetwork specifies attributes of the network.
 type ManagedNetworkApplyConfiguration struct {
-	// MTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
+	// mtu sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
 	// This value will be used only if the Cluster actuator creates the network.
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	MTU *int `json:"mtu,omitempty"`
-	// DisablePortSecurity disables the port security of the network created for the
+	// disablePortSecurity disables the port security of the network created for the
 	// Kubernetes cluster, which also disables SecurityGroups
 	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
 }

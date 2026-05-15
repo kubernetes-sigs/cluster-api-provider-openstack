@@ -1558,16 +1558,6 @@ func autoConvert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatu
 }
 
 func autoConvert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in *v1beta2.OpenStackClusterStatus, out *OpenStackClusterStatus, s conversion.Scope) error {
-	out.Initialization = (*ClusterInitialization)(unsafe.Pointer(in.Initialization))
-	out.Network = (*NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
-	out.Router = (*Router)(unsafe.Pointer(in.Router))
-	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
-	// WARNING: in.FailureDomains requires manual conversion: inconvertible types ([]sigs.k8s.io/cluster-api/api/core/v1beta2.FailureDomain vs sigs.k8s.io/cluster-api/api/core/v1beta1.FailureDomains)
-	out.ControlPlaneSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
-	out.WorkerSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
-	out.BastionSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*BastionStatus)(unsafe.Pointer(in.Bastion))
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make(corev1beta1.Conditions, len(*in))
@@ -1579,6 +1569,16 @@ func autoConvert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatu
 	} else {
 		out.Conditions = nil
 	}
+	out.Initialization = (*ClusterInitialization)(unsafe.Pointer(in.Initialization))
+	out.Network = (*NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
+	out.ExternalNetwork = (*NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
+	out.Router = (*Router)(unsafe.Pointer(in.Router))
+	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+	// WARNING: in.FailureDomains requires manual conversion: inconvertible types ([]sigs.k8s.io/cluster-api/api/core/v1beta2.FailureDomain vs sigs.k8s.io/cluster-api/api/core/v1beta1.FailureDomains)
+	out.ControlPlaneSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
+	out.WorkerSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
+	out.BastionSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
+	out.Bastion = (*BastionStatus)(unsafe.Pointer(in.Bastion))
 	return nil
 }
 
@@ -1868,12 +1868,6 @@ func autoConvert_v1beta1_OpenStackMachineStatus_To_v1beta2_OpenStackMachineStatu
 }
 
 func autoConvert_v1beta2_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(in *v1beta2.OpenStackMachineStatus, out *OpenStackMachineStatus, s conversion.Scope) error {
-	out.Initialization = (*MachineInitialization)(unsafe.Pointer(in.Initialization))
-	out.InstanceID = (optional.String)(unsafe.Pointer(in.InstanceID))
-	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
-	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
-	out.Resolved = (*ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
-	out.Resources = (*MachineResources)(unsafe.Pointer(in.Resources))
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make(corev1beta1.Conditions, len(*in))
@@ -1885,6 +1879,12 @@ func autoConvert_v1beta2_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatu
 	} else {
 		out.Conditions = nil
 	}
+	out.Initialization = (*MachineInitialization)(unsafe.Pointer(in.Initialization))
+	out.InstanceID = (optional.String)(unsafe.Pointer(in.InstanceID))
+	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
+	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
+	out.Resolved = (*ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
+	out.Resources = (*MachineResources)(unsafe.Pointer(in.Resources))
 	return nil
 }
 
@@ -2035,10 +2035,6 @@ func Convert_v1beta1_OpenStackMachineTemplateStatus_To_v1beta2_OpenStackMachineT
 }
 
 func autoConvert_v1beta2_OpenStackMachineTemplateStatus_To_v1beta1_OpenStackMachineTemplateStatus(in *v1beta2.OpenStackMachineTemplateStatus, out *OpenStackMachineTemplateStatus, s conversion.Scope) error {
-	out.Capacity = *(*corev1.ResourceList)(unsafe.Pointer(&in.Capacity))
-	if err := Convert_v1beta2_NodeInfo_To_v1beta1_NodeInfo(&in.NodeInfo, &out.NodeInfo, s); err != nil {
-		return err
-	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make(corev1beta1.Conditions, len(*in))
@@ -2049,6 +2045,10 @@ func autoConvert_v1beta2_OpenStackMachineTemplateStatus_To_v1beta1_OpenStackMach
 		}
 	} else {
 		out.Conditions = nil
+	}
+	out.Capacity = *(*corev1.ResourceList)(unsafe.Pointer(&in.Capacity))
+	if err := Convert_v1beta2_NodeInfo_To_v1beta1_NodeInfo(&in.NodeInfo, &out.NodeInfo, s); err != nil {
+		return err
 	}
 	return nil
 }

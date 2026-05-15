@@ -23,24 +23,28 @@ import (
 
 // OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateSpec struct {
+	// template is the OpenStackMachineTemplate resource data.
 	Template OpenStackMachineTemplateResource `json:"template"`
 }
 
 // OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateStatus struct {
-	// Capacity defines the resource capacity for this machine.
+	// conditions defines current service state of the OpenStackMachineTemplate.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
+	// (both during initial provisioning and after the initial provisioning is completed).
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// capacity defines the resource capacity for this machine.
 	// This value is used for autoscaling from zero operations as defined in:
 	// https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md
 	// +optional
 	Capacity corev1.ResourceList `json:"capacity,omitempty"`
+	// nodeInfo contains information about the node's operating system.
 	// +optional
 	NodeInfo NodeInfo `json:"nodeInfo,omitempty,omitzero"`
-
-	// Conditions defines current service state of the OpenStackMachineTemplate.
-	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
-	// (both during initial provisioning and after the initial provisioning is completed).
-	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // NodeInfo contains information about the node's architecture and operating system.
@@ -60,10 +64,13 @@ type NodeInfo struct {
 
 // OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.
 type OpenStackMachineTemplate struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// metadata is the standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   OpenStackMachineTemplateSpec   `json:"spec,omitempty"`
+	// spec is the desired state of the OpenStackMachineTemplate.
+	Spec OpenStackMachineTemplateSpec `json:"spec,omitempty"`
+	// status is the observed state of the OpenStackMachineTemplate.
 	Status OpenStackMachineTemplateStatus `json:"status,omitempty"`
 }
 

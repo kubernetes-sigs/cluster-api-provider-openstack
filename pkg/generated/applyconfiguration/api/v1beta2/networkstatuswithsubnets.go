@@ -24,7 +24,7 @@ package v1beta2
 // NetworkStatusWithSubnets represents basic information about an existing neutron network and an associated set of subnets.
 type NetworkStatusWithSubnetsApplyConfiguration struct {
 	NetworkStatusApplyConfiguration `json:",inline"`
-	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	// subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
 	Subnets []SubnetApplyConfiguration `json:"subnets,omitempty"`
 }
 

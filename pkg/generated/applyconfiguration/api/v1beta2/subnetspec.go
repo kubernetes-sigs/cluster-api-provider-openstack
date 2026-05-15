@@ -21,13 +21,13 @@ package v1beta2
 // SubnetSpecApplyConfiguration represents a declarative configuration of the SubnetSpec type for use
 // with apply.
 type SubnetSpecApplyConfiguration struct {
-	// CIDR is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
+	// cidr is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
 	// This field is required when defining a subnet.
 	CIDR *string `json:"cidr,omitempty"`
-	// DNSNameservers holds a list of DNS server addresses that will be provided when creating
+	// dnsNameservers holds a list of DNS server addresses that will be provided when creating
 	// the subnet. These addresses need to have the same IP version as CIDR.
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
-	// AllocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
+	// allocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
 	// If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
 	// outside of these ranges manually.
 	AllocationPools []AllocationPoolApplyConfiguration `json:"allocationPools,omitempty"`

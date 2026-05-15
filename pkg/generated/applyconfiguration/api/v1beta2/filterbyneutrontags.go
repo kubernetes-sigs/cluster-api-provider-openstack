@@ -25,17 +25,17 @@ import (
 // FilterByNeutronTagsApplyConfiguration represents a declarative configuration of the FilterByNeutronTags type for use
 // with apply.
 type FilterByNeutronTagsApplyConfiguration struct {
-	// Tags is a list of tags to filter by. If specified, the resource must
+	// tags is a list of tags to filter by. If specified, the resource must
 	// have all of the tags specified to be included in the result.
 	Tags []apiv1beta2.NeutronTag `json:"tags,omitempty"`
-	// TagsAny is a list of tags to filter by. If specified, the resource
+	// tagsAny is a list of tags to filter by. If specified, the resource
 	// must have at least one of the tags specified to be included in the
 	// result.
 	TagsAny []apiv1beta2.NeutronTag `json:"tagsAny,omitempty"`
-	// NotTags is a list of tags to filter by. If specified, resources which
+	// notTags is a list of tags to filter by. If specified, resources which
 	// contain all of the given tags will be excluded from the result.
 	NotTags []apiv1beta2.NeutronTag `json:"notTags,omitempty"`
-	// NotTagsAny is a list of tags to filter by. If specified, resources
+	// notTagsAny is a list of tags to filter by. If specified, resources
 	// which contain any of the given tags will be excluded from the result.
 	NotTagsAny []apiv1beta2.NeutronTag `json:"notTagsAny,omitempty"`
 }

@@ -23,9 +23,13 @@ package v1beta2
 //
 // Subnet represents basic information about the associated OpenStack Neutron Subnet.
 type SubnetApplyConfiguration struct {
-	Name *string  `json:"name,omitempty"`
-	ID   *string  `json:"id,omitempty"`
-	CIDR *string  `json:"cidr,omitempty"`
+	// name is the name of the subnet.
+	Name *string `json:"name,omitempty"`
+	// id is the unique identifier of the subnet.
+	ID *string `json:"id,omitempty"`
+	// cidr is the CIDR of the subnet.
+	CIDR *string `json:"cidr,omitempty"`
+	// tags is a list of tags on the subnet.
 	Tags []string `json:"tags,omitempty"`
 }
 

@@ -23,9 +23,9 @@ package v1beta2
 //
 // SecurityGroupParam specifies an OpenStack security group. It may be specified by ID or filter, but not both.
 type SecurityGroupParamApplyConfiguration struct {
-	// ID is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
+	// id is the ID of the security group to use. If ID is provided, the other filters cannot be provided. Must be in UUID format.
 	ID *string `json:"id,omitempty"`
-	// Filter specifies a query to select an OpenStack security group. If provided, cannot be empty.
+	// filter specifies a query to select an OpenStack security group. If provided, cannot be empty.
 	Filter *SecurityGroupFilterApplyConfiguration `json:"filter,omitempty"`
 }
 

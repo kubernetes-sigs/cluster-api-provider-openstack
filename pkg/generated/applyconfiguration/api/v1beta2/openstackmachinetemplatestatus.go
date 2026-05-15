@@ -19,8 +19,8 @@ limitations under the License.
 package v1beta2
 
 import (
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // OpenStackMachineTemplateStatusApplyConfiguration represents a declarative configuration of the OpenStackMachineTemplateStatus type for use
@@ -28,15 +28,16 @@ import (
 //
 // OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateStatusApplyConfiguration struct {
-	// Capacity defines the resource capacity for this machine.
-	// This value is used for autoscaling from zero operations as defined in:
-	// https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md
-	Capacity *v1.ResourceList            `json:"capacity,omitempty"`
-	NodeInfo *NodeInfoApplyConfiguration `json:"nodeInfo,omitempty"`
-	// Conditions defines current service state of the OpenStackMachineTemplate.
+	// conditions defines current service state of the OpenStackMachineTemplate.
 	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
 	// (both during initial provisioning and after the initial provisioning is completed).
-	Conditions []metav1.ConditionApplyConfiguration `json:"conditions,omitempty"`
+	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
+	// capacity defines the resource capacity for this machine.
+	// This value is used for autoscaling from zero operations as defined in:
+	// https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/proposals/20210310-opt-in-autoscaling-from-zero.md
+	Capacity *corev1.ResourceList `json:"capacity,omitempty"`
+	// nodeInfo contains information about the node's operating system.
+	NodeInfo *NodeInfoApplyConfiguration `json:"nodeInfo,omitempty"`
 }
 
 // OpenStackMachineTemplateStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineTemplateStatus type for use with
@@ -45,10 +46,23 @@ func OpenStackMachineTemplateStatus() *OpenStackMachineTemplateStatusApplyConfig
 	return &OpenStackMachineTemplateStatusApplyConfiguration{}
 }
 
+// WithConditions adds the given value to the Conditions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Conditions field.
+func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithConditions(values ...*v1.ConditionApplyConfiguration) *OpenStackMachineTemplateStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConditions")
+		}
+		b.Conditions = append(b.Conditions, *values[i])
+	}
+	return b
+}
+
 // WithCapacity sets the Capacity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Capacity field is set to the value of the last call.
-func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithCapacity(value v1.ResourceList) *OpenStackMachineTemplateStatusApplyConfiguration {
+func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithCapacity(value corev1.ResourceList) *OpenStackMachineTemplateStatusApplyConfiguration {
 	b.Capacity = &value
 	return b
 }
@@ -58,18 +72,5 @@ func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithCapacity(value v1
 // If called multiple times, the NodeInfo field is set to the value of the last call.
 func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithNodeInfo(value *NodeInfoApplyConfiguration) *OpenStackMachineTemplateStatusApplyConfiguration {
 	b.NodeInfo = value
-	return b
-}
-
-// WithConditions adds the given value to the Conditions field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Conditions field.
-func (b *OpenStackMachineTemplateStatusApplyConfiguration) WithConditions(values ...*metav1.ConditionApplyConfiguration) *OpenStackMachineTemplateStatusApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithConditions")
-		}
-		b.Conditions = append(b.Conditions, *values[i])
-	}
 	return b
 }

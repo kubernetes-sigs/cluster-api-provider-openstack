@@ -23,7 +23,7 @@ package v1beta2
 //
 // ManagedRouter specifies attributes of the router.
 type ManagedRouterApplyConfiguration struct {
-	// ExternalIPs is a list of external IPs to assign to the router.
+	// externalIPs is a list of external IPs to assign to the router.
 	// This is necessary if the router needs a fixed ip in a specific subnet.
 	// Each entry specifies a fixed IP and the subnet it should be allocated from.
 	ExternalIPs []ExternalRouterIPParamApplyConfiguration `json:"externalIPs,omitempty"`

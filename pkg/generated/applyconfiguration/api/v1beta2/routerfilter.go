@@ -27,8 +27,11 @@ import (
 //
 // RouterFilter specifies a query to select an OpenStack router. At least one property must be set.
 type RouterFilterApplyConfiguration struct {
-	Name                                  *string `json:"name,omitempty"`
-	Description                           *string `json:"description,omitempty"`
+	// name filters routers by name.
+	Name *string `json:"name,omitempty"`
+	// description filters routers by description.
+	Description *string `json:"description,omitempty"`
+	// projectID filters routers by project ID.
 	ProjectID                             *string `json:"projectID,omitempty"`
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }

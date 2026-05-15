@@ -19,8 +19,8 @@ limitations under the License.
 package v1beta2
 
 import (
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	apiv1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
@@ -29,32 +29,45 @@ import (
 //
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
 type OpenStackMachineStatusApplyConfiguration struct {
-	// Initialization contains information about the initialization status of the machine.
-	Initialization *MachineInitializationApplyConfiguration `json:"initialization,omitempty"`
-	// InstanceID is the OpenStack instance ID for this machine.
-	InstanceID *string `json:"instanceID,omitempty"`
-	// Addresses contains the OpenStack instance associated addresses.
-	Addresses []v1.NodeAddress `json:"addresses,omitempty"`
-	// InstanceState is the state of the OpenStack instance for this machine.
-	// This field is not set anymore by the OpenStackMachine controller.
-	// Instead, it's set by the OpenStackServer controller.
-	InstanceState *apiv1beta2.InstanceState `json:"instanceState,omitempty"`
-	// Resolved contains parts of the machine spec with all external
-	// references fully resolved.
-	Resolved *ResolvedMachineSpecApplyConfiguration `json:"resolved,omitempty"`
-	// Resources contains references to OpenStack resources created for the machine.
-	Resources *MachineResourcesApplyConfiguration `json:"resources,omitempty"`
-	// Conditions defines current service state of the OpenStackMachine.
+	// conditions defines current service state of the OpenStackMachine.
 	// This field surfaces into Machine's status.conditions[InfrastructureReady] condition.
 	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachine
 	// (both during initial provisioning and after the initial provisioning is completed).
-	Conditions []metav1.ConditionApplyConfiguration `json:"conditions,omitempty"`
+	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
+	// initialization contains information about the initialization status of the machine.
+	Initialization *MachineInitializationApplyConfiguration `json:"initialization,omitempty"`
+	// instanceID is the OpenStack instance ID for this machine.
+	InstanceID *string `json:"instanceID,omitempty"`
+	// addresses contains the OpenStack instance associated addresses.
+	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
+	// instanceState is the state of the OpenStack instance for this machine.
+	// This field is not set anymore by the OpenStackMachine controller.
+	// Instead, it's set by the OpenStackServer controller.
+	InstanceState *apiv1beta2.InstanceState `json:"instanceState,omitempty"`
+	// resolved contains parts of the machine spec with all external
+	// references fully resolved.
+	Resolved *ResolvedMachineSpecApplyConfiguration `json:"resolved,omitempty"`
+	// resources contains references to OpenStack resources created for the machine.
+	Resources *MachineResourcesApplyConfiguration `json:"resources,omitempty"`
 }
 
 // OpenStackMachineStatusApplyConfiguration constructs a declarative configuration of the OpenStackMachineStatus type for use with
 // apply.
 func OpenStackMachineStatus() *OpenStackMachineStatusApplyConfiguration {
 	return &OpenStackMachineStatusApplyConfiguration{}
+}
+
+// WithConditions adds the given value to the Conditions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Conditions field.
+func (b *OpenStackMachineStatusApplyConfiguration) WithConditions(values ...*v1.ConditionApplyConfiguration) *OpenStackMachineStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConditions")
+		}
+		b.Conditions = append(b.Conditions, *values[i])
+	}
+	return b
 }
 
 // WithInitialization sets the Initialization field in the declarative configuration to the given value
@@ -76,7 +89,7 @@ func (b *OpenStackMachineStatusApplyConfiguration) WithInstanceID(value string) 
 // WithAddresses adds the given value to the Addresses field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Addresses field.
-func (b *OpenStackMachineStatusApplyConfiguration) WithAddresses(values ...v1.NodeAddress) *OpenStackMachineStatusApplyConfiguration {
+func (b *OpenStackMachineStatusApplyConfiguration) WithAddresses(values ...corev1.NodeAddress) *OpenStackMachineStatusApplyConfiguration {
 	for i := range values {
 		b.Addresses = append(b.Addresses, values[i])
 	}
@@ -104,18 +117,5 @@ func (b *OpenStackMachineStatusApplyConfiguration) WithResolved(value *ResolvedM
 // If called multiple times, the Resources field is set to the value of the last call.
 func (b *OpenStackMachineStatusApplyConfiguration) WithResources(value *MachineResourcesApplyConfiguration) *OpenStackMachineStatusApplyConfiguration {
 	b.Resources = value
-	return b
-}
-
-// WithConditions adds the given value to the Conditions field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Conditions field.
-func (b *OpenStackMachineStatusApplyConfiguration) WithConditions(values ...*metav1.ConditionApplyConfiguration) *OpenStackMachineStatusApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithConditions")
-		}
-		b.Conditions = append(b.Conditions, *values[i])
-	}
 	return b
 }

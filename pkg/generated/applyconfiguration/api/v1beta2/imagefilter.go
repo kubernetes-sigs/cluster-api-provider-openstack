@@ -23,9 +23,9 @@ package v1beta2
 //
 // ImageFilter describes a query for an image.
 type ImageFilterApplyConfiguration struct {
-	// The name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// name is the name of the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	Name *string `json:"name,omitempty"`
-	// The tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
+	// tags are the tags associated with the desired image. If specified, the combination of name and tags must return a single matching image or an error will be raised.
 	Tags []string `json:"tags,omitempty"`
 }
 

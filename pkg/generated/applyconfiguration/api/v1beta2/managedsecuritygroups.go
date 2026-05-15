@@ -29,7 +29,7 @@ type ManagedSecurityGroupsApplyConfiguration struct {
 	ControlPlaneNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"controlPlaneNodesSecurityGroupRules,omitempty"`
 	// workerNodesSecurityGroupRules defines the rules that should be applied to worker nodes.
 	WorkerNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"workerNodesSecurityGroupRules,omitempty"`
-	// AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
+	// allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
 	AllowAllInClusterTraffic *bool `json:"allowAllInClusterTraffic,omitempty"`
 }
 

@@ -23,9 +23,9 @@ package v1beta2
 //
 // SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.
 type SubnetParamApplyConfiguration struct {
-	// ID is the uuid of the subnet. It will not be validated.
+	// id is the uuid of the subnet. It will not be validated.
 	ID *string `json:"id,omitempty"`
-	// Filter specifies a filter to select the subnet. It must match exactly one subnet.
+	// filter specifies a filter to select the subnet. It must match exactly one subnet.
 	Filter *SubnetFilterApplyConfiguration `json:"filter,omitempty"`
 }
 

@@ -32,10 +32,13 @@ import (
 //
 // OpenStackMachine is the Schema for the openstackmachines API.
 type OpenStackMachineApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	v1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata is the standard object metadata.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *OpenStackMachineSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                           *OpenStackMachineStatusApplyConfiguration `json:"status,omitempty"`
+	// spec is the desired state of the OpenStackMachine.
+	Spec *OpenStackMachineSpecApplyConfiguration `json:"spec,omitempty"`
+	// status is the observed state of the OpenStackMachine.
+	Status *OpenStackMachineStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // OpenStackMachine constructs a declarative configuration of the OpenStackMachine type for use with

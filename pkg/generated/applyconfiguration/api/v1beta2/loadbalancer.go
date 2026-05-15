@@ -23,13 +23,19 @@ package v1beta2
 //
 // LoadBalancer represents basic information about the associated OpenStack LoadBalancer.
 type LoadBalancerApplyConfiguration struct {
-	Name         *string  `json:"name,omitempty"`
-	ID           *string  `json:"id,omitempty"`
-	IP           *string  `json:"ip,omitempty"`
-	InternalIP   *string  `json:"internalIP,omitempty"`
+	// name is the name of the load balancer.
+	Name *string `json:"name,omitempty"`
+	// id is the unique identifier of the load balancer.
+	ID *string `json:"id,omitempty"`
+	// ip is the IP address of the load balancer.
+	IP *string `json:"ip,omitempty"`
+	// internalIP is the internal IP address of the load balancer.
+	InternalIP *string `json:"internalIP,omitempty"`
+	// allowedCIDRs is a list of CIDRs that are allowed to access the load balancer.
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
-	Tags         []string `json:"tags,omitempty"`
-	// LoadBalancerNetwork contains information about network and/or subnets which the
+	// tags is a list of tags on the load balancer.
+	Tags []string `json:"tags,omitempty"`
+	// loadBalancerNetwork contains information about network and/or subnets which the
 	// loadbalancer is allocated on.
 	// If subnets are specified within the LoadBalancerNetwork currently only the first
 	// subnet in the list is taken into account.

@@ -23,9 +23,9 @@ package v1beta2
 //
 // ResolvedFixedIP is a FixedIP with the Subnet resolved to an ID.
 type ResolvedFixedIPApplyConfiguration struct {
-	// SubnetID is the id of a subnet to create the fixed IP of a port in.
+	// subnet is the ID of a subnet to create the fixed IP of a port in.
 	SubnetID *string `json:"subnet,omitempty"`
-	// IPAddress is a specific IP address to assign to the port. If SubnetID
+	// ipAddress is a specific IP address to assign to the port. If SubnetID
 	// is also specified, IPAddress must be a valid IP address in the
 	// subnet. If Subnet is not specified, IPAddress must be a valid IP
 	// address in any subnet of the port's network.

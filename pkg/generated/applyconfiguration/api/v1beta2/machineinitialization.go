@@ -23,7 +23,7 @@ package v1beta2
 //
 // MachineInitialization contains information about the initialization status of the machine.
 type MachineInitializationApplyConfiguration struct {
-	// Provisioned is set to true when the initial provisioning of the machine infrastructure is completed.
+	// provisioned is set to true when the initial provisioning of the machine infrastructure is completed.
 	// The value of this field is never updated after provisioning is completed.
 	Provisioned *bool `json:"provisioned,omitempty"`
 }

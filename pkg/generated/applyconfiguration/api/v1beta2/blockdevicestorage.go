@@ -28,10 +28,10 @@ import (
 // BlockDeviceStorage is the storage type of a block device to create and
 // contains additional storage options.
 type BlockDeviceStorageApplyConfiguration struct {
-	// Type is the type of block device to create.
+	// type is the type of block device to create.
 	// This can be either "Volume" or "Local".
 	Type *apiv1beta2.BlockDeviceType `json:"type,omitempty"`
-	// Volume contains additional storage options for a volume block device.
+	// volume contains additional storage options for a volume block device.
 	Volume *BlockDeviceVolumeApplyConfiguration `json:"volume,omitempty"`
 }
 

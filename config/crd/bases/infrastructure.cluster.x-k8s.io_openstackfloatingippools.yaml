@@ -49,17 +49,19 @@ spec:
                 minProperties: 1
                 properties:
                   filter:
-                    description: Filter specifies a filter to select an OpenStack
+                    description: filter specifies a filter to select an OpenStack
                       network. If provided, cannot be empty.
                     minProperties: 1
                     properties:
                       description:
+                        description: description filters networks by description.
                         type: string
                       name:
+                        description: name filters networks by name.
                         type: string
                       notTags:
                         description: |-
-                          NotTags is a list of tags to filter by. If specified, resources which
+                          notTags is a list of tags to filter by. If specified, resources which
                           contain all of the given tags will be excluded from the result.
                         items:
                           description: |-
@@ -72,7 +74,7 @@ spec:
                         x-kubernetes-list-type: set
                       notTagsAny:
                         description: |-
-                          NotTagsAny is a list of tags to filter by. If specified, resources
+                          notTagsAny is a list of tags to filter by. If specified, resources
                           which contain any of the given tags will be excluded from the result.
                         items:
                           description: |-
@@ -84,10 +86,11 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                       projectID:
+                        description: projectID filters networks by project ID.
                         type: string
                       tags:
                         description: |-
-                          Tags is a list of tags to filter by. If specified, the resource must
+                          tags is a list of tags to filter by. If specified, the resource must
                           have all of the tags specified to be included in the result.
                         items:
                           description: |-
@@ -100,7 +103,7 @@ spec:
                         x-kubernetes-list-type: set
                       tagsAny:
                         description: |-
-                          TagsAny is a list of tags to filter by. If specified, the resource
+                          tagsAny is a list of tags to filter by. If specified, the resource
                           must have at least one of the tags specified to be included in the
                           result.
                         items:
@@ -114,7 +117,7 @@ spec:
                         x-kubernetes-list-type: set
                     type: object
                   id:
-                    description: ID is the ID of the network to use. If ID is provided,
+                    description: id is the ID of the network to use. If ID is provided,
                       the other filters cannot be provided. Must be in UUID format.
                     format: uuid
                     type: string
@@ -124,13 +127,13 @@ spec:
                   reconciling this pool.
                 properties:
                   cloudName:
-                    description: CloudName specifies the name of the entry in the
+                    description: cloudName specifies the name of the entry in the
                       clouds.yaml file to use.
                     minLength: 1
                     type: string
                   name:
                     description: |-
-                      Name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned,
+                      name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned,
                       or the name of an OpenStackClusterIdentity (type=ClusterIdentity).
                       The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file.
                       The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
@@ -138,13 +141,13 @@ spec:
                     type: string
                   region:
                     description: |-
-                      Region specifies an OpenStack region to use. If specified, it overrides
+                      region specifies an OpenStack region to use. If specified, it overrides
                       any value in clouds.yaml. If specified for an OpenStackMachine, its
                       value will be included in providerID.
                     type: string
                   type:
                     default: Secret
-                    description: Type specifies the identity reference type. Defaults
+                    description: type specifies the identity reference type. Defaults
                       to Secret for backward compatibility.
                     enum:
                     - Secret
@@ -263,10 +266,13 @@ spec:
                   used for floating ips
                 properties:
                   id:
+                    description: id is the unique identifier of the network.
                     type: string
                   name:
+                    description: name is the name of the network.
                     type: string
                   tags:
+                    description: tags is a list of tags on the network.
                     items:
                       type: string
                     type: array

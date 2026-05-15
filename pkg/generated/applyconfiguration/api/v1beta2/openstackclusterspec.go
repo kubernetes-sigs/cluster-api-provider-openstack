@@ -27,29 +27,29 @@ import (
 //
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
 type OpenStackClusterSpecApplyConfiguration struct {
-	// ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
+	// managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 	// subnet is supported. If you leave this empty, no network will be created.
 	ManagedSubnets []SubnetSpecApplyConfiguration `json:"managedSubnets,omitempty"`
-	// Subnets specifies existing subnets to use if not ManagedSubnets are
+	// subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.
 	// There can be zero, one, or two subnets. If no subnets are specified,
 	// all subnets in Network will be used. If 2 subnets are specified, one
 	// must be IPv4 and the other IPv6.
 	Subnets []SubnetParamApplyConfiguration `json:"subnets,omitempty"`
-	// ManagedRouter specifies attributes of the router. The values are used only
+	// managedRouter specifies attributes of the router. The values are used only
 	// if the Cluster actuator creates the router.
 	ManagedRouter *ManagedRouterApplyConfiguration `json:"managedRouter,omitempty"`
-	// Router specifies an existing router to be used if ManagedSubnets are
+	// router specifies an existing router to be used if ManagedSubnets are
 	// specified. If specified, no new router will be created.
 	Router *RouterParamApplyConfiguration `json:"router,omitempty"`
-	// ManagedNetwork specifies attributes of the network. The values are used only
+	// managedNetwork specifies attributes of the network. The values are used only
 	// if the Cluster actuator creates the network.
 	ManagedNetwork *ManagedNetworkApplyConfiguration `json:"managedNetwork,omitempty"`
-	// Network specifies an existing network to use if no ManagedSubnets
+	// network specifies an existing network to use if no ManagedSubnets
 	// are specified.
 	Network *NetworkParamApplyConfiguration `json:"network,omitempty"`
-	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+	// externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// This option is ignored if DisableExternalNetwork is set to true.
 	//
 	// If ExternalNetwork is defined it must refer to exactly one external network.
@@ -62,14 +62,14 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// If ExternalNetwork is not defined and there are no external networks
 	// the controller will proceed as though DisableExternalNetwork was set.
 	ExternalNetwork *NetworkParamApplyConfiguration `json:"externalNetwork,omitempty"`
-	// DisableExternalNetwork specifies whether or not to attempt to connect the cluster
+	// disableExternalNetwork specifies whether or not to attempt to connect the cluster
 	// to an external network. This allows for the creation of clusters when connecting
 	// to an external network is not possible or desirable, e.g. if using a provider network.
 	DisableExternalNetwork *bool `json:"disableExternalNetwork,omitempty"`
-	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
+	// apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
 	// If not specified, no load balancer will be created for the API server.
 	APIServerLoadBalancer *APIServerLoadBalancerApplyConfiguration `json:"apiServerLoadBalancer,omitempty"`
-	// DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating
+	// disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
 	// IP to the API server. This allows for the creation of clusters when attaching a floating
 	// IP to the API server (and hence, in many cases, exposing the API server to the internet)
 	// is not possible or desirable, e.g. if using a shared VLAN for communication between
@@ -82,12 +82,12 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// configuration to manage the VIP on the control plane machines, which falls outside of
 	// the scope of this controller.
 	DisableAPIServerFloatingIP *bool `json:"disableAPIServerFloatingIP,omitempty"`
-	// APIServerFloatingIP is the floatingIP which will be associated with the API server.
+	// apiServerFloatingIP is the floatingIP which will be associated with the API server.
 	// The floatingIP will be created if it does not already exist.
 	// If not specified, a new floatingIP is allocated.
 	// This field is not used if DisableAPIServerFloatingIP is set to true.
 	APIServerFloatingIP *string `json:"apiServerFloatingIP,omitempty"`
-	// APIServerFixedIP is the fixed IP which will be associated with the API server.
+	// apiServerFixedIP is the fixed IP which will be associated with the API server.
 	// In the case where the API server has a floating IP but not a managed load balancer,
 	// this field is not used.
 	// If a managed load balancer is used and this field is not specified, a fixed IP will
@@ -96,10 +96,10 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// this field MUST be specified and should correspond to a pre-allocated port that
 	// holds the fixed IP to be used as a VIP.
 	APIServerFixedIP *string `json:"apiServerFixedIP,omitempty"`
-	// APIServerPort is the port on which the listener on the APIServer
+	// apiServerPort is the port on which the listener on the APIServer
 	// will be created. If specified, it must be an integer between 0 and 65535.
 	APIServerPort *uint16 `json:"apiServerPort,omitempty"`
-	// ManagedSecurityGroups determines whether OpenStack security groups for the cluster
+	// managedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will
 	// be specified as part of the configuration.
 	// By default, the managed security groups have rules that allow the Kubelet, etcd, and the
@@ -107,30 +107,30 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// It's possible to add additional rules to the managed security groups.
 	// When defined to an empty struct, the managed security groups will be created with the default rules.
 	ManagedSecurityGroups *ManagedSecurityGroupsApplyConfiguration `json:"managedSecurityGroups,omitempty"`
-	// Tags to set on all resources in cluster which support tags
+	// tags to set on all resources in cluster which support tags
 	Tags []string `json:"tags,omitempty"`
-	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+	// controlPlaneEndpoint represents the endpoint used to communicate with the control plane.
 	// It is normally populated automatically by the OpenStackCluster
 	// controller during cluster provisioning. If it is set on creation the
 	// control plane endpoint will use the values set here in preference to
 	// values set elsewhere.
 	// ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.
 	ControlPlaneEndpoint *corev1beta2.APIEndpoint `json:"controlPlaneEndpoint,omitempty"`
-	// ControlPlaneAvailabilityZones is the set of availability zones which
+	// controlPlaneAvailabilityZones is the set of availability zones which
 	// control plane machines may be deployed to.
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
-	// ControlPlaneOmitAvailabilityZone causes availability zone to be
+	// controlPlaneOmitAvailabilityZone causes availability zone to be
 	// omitted when creating control plane nodes, allowing the Nova
 	// scheduler to make a decision on which availability zone to use based
 	// on other scheduling constraints
 	ControlPlaneOmitAvailabilityZone *bool `json:"controlPlaneOmitAvailabilityZone,omitempty"`
-	// Bastion is the OpenStack instance to login the nodes
+	// bastion is the OpenStack instance to login the nodes
 	//
 	// As a rolling update is not ideal during a bastion host session, we
 	// prevent changes to a running bastion configuration. To make changes, it's required
 	// to first set `enabled: false` which will remove the bastion and then changes can be made.
 	Bastion *BastionApplyConfiguration `json:"bastion,omitempty"`
-	// IdentityRef is a reference to a secret holding OpenStack credentials
+	// identityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this cluster. It is also to reconcile
 	// machines unless overridden in the machine spec.
 	IdentityRef *OpenStackIdentityReferenceApplyConfiguration `json:"identityRef,omitempty"`

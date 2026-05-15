@@ -25,7 +25,7 @@ package v1beta2
 // the combination of attributes should return exactly one
 // flavor, if not an error will be raised.
 type FlavorFilterApplyConfiguration struct {
-	// The name of the desired flavor.
+	// name is the name of the desired flavor.
 	Name *string `json:"name,omitempty"`
 }
 

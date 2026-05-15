@@ -21,9 +21,9 @@ package v1beta2
 // ServerMetadataApplyConfiguration represents a declarative configuration of the ServerMetadata type for use
 // with apply.
 type ServerMetadataApplyConfiguration struct {
-	// Key is the server metadata key
+	// key is the server metadata key
 	Key *string `json:"key,omitempty"`
-	// Value is the server metadata value
+	// value is the server metadata value
 	Value *string `json:"value,omitempty"`
 }
 

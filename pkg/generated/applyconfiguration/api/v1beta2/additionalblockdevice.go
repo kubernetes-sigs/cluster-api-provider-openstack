@@ -23,7 +23,7 @@ package v1beta2
 //
 // AdditionalBlockDevice is a block device to attach to the server.
 type AdditionalBlockDeviceApplyConfiguration struct {
-	// Name of the block device in the context of a machine.
+	// name of the block device in the context of a machine.
 	// If the block device is a volume, the Cinder volume will be named
 	// as a combination of the machine name and this name.
 	// Also, this name will be used for tagging the block device.
@@ -31,9 +31,9 @@ type AdditionalBlockDeviceApplyConfiguration struct {
 	// metadata API or the config drive.
 	// Name cannot be 'root', which is reserved for the root volume.
 	Name *string `json:"name,omitempty"`
-	// SizeGiB is the size of the block device in gibibytes (GiB).
+	// sizeGiB is the size of the block device in gibibytes (GiB).
 	SizeGiB *int `json:"sizeGiB,omitempty"`
-	// Storage specifies the storage type of the block device and
+	// storage specifies the storage type of the block device and
 	// additional storage options.
 	Storage *BlockDeviceStorageApplyConfiguration `json:"storage,omitempty"`
 }

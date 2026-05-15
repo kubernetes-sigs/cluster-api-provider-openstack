@@ -23,9 +23,9 @@ package v1beta2
 //
 // FlavorParam describes a nova flavor. It can be specified by ID or filter
 type FlavorParamApplyConfiguration struct {
-	// ID is the uuid of the flavor. ID will not be validated before use.
+	// id is the uuid of the flavor. ID will not be validated before use.
 	ID *string `json:"id,omitempty"`
-	// Filter describes a query for a flavor.
+	// filter describes a query for a flavor.
 	Filter *FlavorFilterApplyConfiguration `json:"filter,omitempty"`
 }
 

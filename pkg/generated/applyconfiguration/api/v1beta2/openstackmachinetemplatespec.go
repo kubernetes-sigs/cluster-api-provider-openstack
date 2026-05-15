@@ -23,6 +23,7 @@ package v1beta2
 //
 // OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateSpecApplyConfiguration struct {
+	// template is the OpenStackMachineTemplate resource data.
 	Template *OpenStackMachineTemplateResourceApplyConfiguration `json:"template,omitempty"`
 }
 

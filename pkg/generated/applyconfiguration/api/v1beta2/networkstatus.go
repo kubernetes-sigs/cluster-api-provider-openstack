@@ -23,8 +23,11 @@ package v1beta2
 //
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatusApplyConfiguration struct {
-	Name *string  `json:"name,omitempty"`
-	ID   *string  `json:"id,omitempty"`
+	// name is the name of the network.
+	Name *string `json:"name,omitempty"`
+	// id is the unique identifier of the network.
+	ID *string `json:"id,omitempty"`
+	// tags is a list of tags on the network.
 	Tags []string `json:"tags,omitempty"`
 }
 
