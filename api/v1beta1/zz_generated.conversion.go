@@ -1453,11 +1453,11 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 	// WARNING: in.ExternalRouterIPs requires manual conversion: does not exist in peer-type
 	out.ExternalNetwork = (*v1beta2.NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
 	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
-	out.APIServerLoadBalancer = (*v1beta2.APIServerLoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
-	out.DisableAPIServerFloatingIP = (optional.Bool)(unsafe.Pointer(in.DisableAPIServerFloatingIP))
-	out.APIServerFloatingIP = (optional.String)(unsafe.Pointer(in.APIServerFloatingIP))
-	out.APIServerFixedIP = (optional.String)(unsafe.Pointer(in.APIServerFixedIP))
-	out.APIServerPort = (optional.UInt16)(unsafe.Pointer(in.APIServerPort))
+	// WARNING: in.APIServerLoadBalancer requires manual conversion: does not exist in peer-type
+	// WARNING: in.DisableAPIServerFloatingIP requires manual conversion: does not exist in peer-type
+	// WARNING: in.APIServerFloatingIP requires manual conversion: does not exist in peer-type
+	// WARNING: in.APIServerFixedIP requires manual conversion: does not exist in peer-type
+	// WARNING: in.APIServerPort requires manual conversion: does not exist in peer-type
 	if in.ManagedSecurityGroups != nil {
 		in, out := &in.ManagedSecurityGroups, &out.ManagedSecurityGroups
 		*out = new(v1beta2.ManagedSecurityGroups)
@@ -1496,11 +1496,7 @@ func autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in
 	out.Network = (*NetworkParam)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
 	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
-	out.APIServerLoadBalancer = (*APIServerLoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
-	out.DisableAPIServerFloatingIP = (optional.Bool)(unsafe.Pointer(in.DisableAPIServerFloatingIP))
-	out.APIServerFloatingIP = (optional.String)(unsafe.Pointer(in.APIServerFloatingIP))
-	out.APIServerFixedIP = (optional.String)(unsafe.Pointer(in.APIServerFixedIP))
-	out.APIServerPort = (optional.UInt16)(unsafe.Pointer(in.APIServerPort))
+	// WARNING: in.APIServer requires manual conversion: does not exist in peer-type
 	if in.ManagedSecurityGroups != nil {
 		in, out := &in.ManagedSecurityGroups, &out.ManagedSecurityGroups
 		*out = new(ManagedSecurityGroups)

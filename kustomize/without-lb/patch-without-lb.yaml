@@ -3,8 +3,9 @@ kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
 spec:
-  apiServerLoadBalancer:
-    $patch: delete
+  apiServer:
+    managedLoadBalancer:
+      $patch: delete
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane

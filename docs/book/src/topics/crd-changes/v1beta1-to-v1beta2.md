@@ -5,6 +5,7 @@
 - [v1beta1 compared to v1beta2](#v1beta1-compared-to-v1beta2)
   - [Migration](#migration)
   - [API Changes](#api-changes)
+    - [API server fields restructure](#api-server-fields-restructure)
     - [Flavor field restructure](#flavor-field-restructure)
     - [Network management fields restructure](#network-management-fields-restructure)
     - [External router IPs restructure](#external-router-ips-restructure)
@@ -28,6 +29,36 @@ The v1beta2 API introduces **no removals** to spec fields. All existing spec fie
 ## API Changes
 
 This only documents backwards incompatible changes. Fields that were added to v1beta2 are not listed here.
+
+### API server fields restructure
+
+`spec.apiServerFloatingIP`, `spec.apiServerFixedIP`, `spec.apiServerPort`,
+`spec.disableAPIServerFloatingIP`, and `spec.apiServerLoadBalancer` have been consolidated
+into a single structured `spec.apiServer` object. This applies to `OpenStackCluster` and
+`OpenStackClusterTemplate`.
+
+```diff
+ spec:
+-  apiServerFloatingIP: 1.2.3.4
+-  apiServerFixedIP: 10.0.0.1
+-  apiServerPort: 6443
+-  disableAPIServerFloatingIP: true
+-  apiServerLoadBalancer:
+-    enabled: true
+-    allowedCIDRs:
+-    - 0.0.0.0/0
++  apiServer:
++    floatingIP: 1.2.3.4
++    fixedIP: 10.0.0.1
++    port: 6443
++    disableFloatingIP: true
++    managedLoadBalancer:
++      enabled: true
++      allowedCIDRs:
++      - 0.0.0.0/0
+```
+
+For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.apiServer`.
 
 ### Flavor field restructure
 

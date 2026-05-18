@@ -1108,16 +1108,16 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			openStackCluster, err := shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(openStackCluster.Spec.APIServerLoadBalancer).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Delay).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Delay).To(Equal(15))
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Timeout).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.Timeout).To(Equal(10))
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries).To(Equal(3))
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetriesDown).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetriesDown).To(Equal(2))
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay).To(Equal(15))
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Timeout).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Timeout).To(Equal(10))
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries).To(Equal(3))
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetriesDown).ToNot(BeNil())
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetriesDown).To(Equal(2))
 
 			shared.Logf("Looking for load balancer for cluster %s", clusterName)
 			expectedLBName := fmt.Sprintf("k8s-clusterapi-cluster-%s-%s-kubeapi", namespace.Name, clusterName)
@@ -1168,8 +1168,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				if err != nil {
 					return err
 				}
-				openStackCluster.Spec.APIServerLoadBalancer.Monitor.Delay = 20
-				openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries = 4
+				openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay = 20
+				openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries = 4
 				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
 			}, "30s", "1s").Should(Succeed())
 
@@ -1194,7 +1194,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				if err != nil {
 					return err
 				}
-				openStackCluster.Spec.APIServerLoadBalancer.Monitor = nil
+				openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor = nil
 				if openStackCluster.Annotations == nil {
 					openStackCluster.Annotations = make(map[string]string)
 				}

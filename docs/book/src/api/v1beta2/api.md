@@ -201,87 +201,17 @@ to an external network is not possible or desirable, e.g. if using a provider ne
 </tr>
 <tr>
 <td>
-<code>apiServerLoadBalancer</code><br/>
+<code>apiServer</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServerLoadBalancer">
-APIServerLoadBalancer
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServer">
+APIServer
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-If not specified, no load balancer will be created for the API server.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>disableAPIServerFloatingIP</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
-IP to the API server. This allows for the creation of clusters when attaching a floating
-IP to the API server (and hence, in many cases, exposing the API server to the internet)
-is not possible or desirable, e.g. if using a shared VLAN for communication between
-management and workload clusters or when the management cluster is inside the
-project network.
-This option requires that the API server use a VIP on the cluster network so that the
-underlying machines can change without changing ControlPlaneEndpoint.Host.
-When using a managed load balancer, this VIP will be managed automatically.
-If not using a managed load balancer, cluster configuration will fail without additional
-configuration to manage the VIP on the control plane machines, which falls outside of
-the scope of this controller.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerFloatingIP</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerFloatingIP is the floatingIP which will be associated with the API server.
-The floatingIP will be created if it does not already exist.
-If not specified, a new floatingIP is allocated.
-This field is not used if DisableAPIServerFloatingIP is set to true.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerFixedIP</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerFixedIP is the fixed IP which will be associated with the API server.
-In the case where the API server has a floating IP but not a managed load balancer,
-this field is not used.
-If a managed load balancer is used and this field is not specified, a fixed IP will
-be dynamically allocated for the load balancer.
-If a managed load balancer is not used AND the API server floating IP is disabled,
-this field MUST be specified and should correspond to a pre-allocated port that
-holds the fixed IP to be used as a VIP.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerPort</code><br/>
-<em>
-uint16
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerPort is the port on which the listener on the APIServer
-will be created. If specified, it must be an integer between 0 and 65535.</p>
+<p>apiServer configures the API server endpoint and its associated
+load balancer and floating IP.</p>
 </td>
 </tr>
 <tr>
@@ -861,11 +791,104 @@ OpenStackMachineTemplateStatus
 </tr>
 </tbody>
 </table>
-<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.APIServerLoadBalancer">APIServerLoadBalancer
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.APIServer">APIServer
 </h3>
 <p>
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+uint16
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>port is the port on which the API server listener will be created.
+If specified, it must be an integer between 0 and 65535.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fixedIP</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fixedIP is the fixed IP which will be associated with the API server.
+In the case where the API server has a floating IP but not a managed
+load balancer, this field is not used.
+If a managed load balancer is used and this field is not specified, a
+fixed IP will be dynamically allocated for the load balancer.
+If a managed load balancer is not used AND the floating IP is disabled,
+this field MUST be specified and should correspond to a pre-allocated
+port that holds the fixed IP to be used as a VIP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>floatingIP</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>floatingIP is the floating IP which will be associated with the API server.
+The floating IP will be created if it does not already exist.
+If not specified, a new floating IP is allocated.
+This field is not used if DisableFloatingIP is set to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>disableFloatingIP</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>disableFloatingIP determines whether or not to attempt to attach a
+floating IP to the API server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>managedLoadBalancer</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServerLoadBalancer">
+APIServerLoadBalancer
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>managedLoadBalancer configures the optional LoadBalancer for the API server.
+If not specified, no load balancer will be created.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.APIServerLoadBalancer">APIServerLoadBalancer
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServer">APIServer</a>)
 </p>
 <p>
 </p>
@@ -2715,87 +2738,17 @@ to an external network is not possible or desirable, e.g. if using a provider ne
 </tr>
 <tr>
 <td>
-<code>apiServerLoadBalancer</code><br/>
+<code>apiServer</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServerLoadBalancer">
-APIServerLoadBalancer
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServer">
+APIServer
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-If not specified, no load balancer will be created for the API server.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>disableAPIServerFloatingIP</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
-IP to the API server. This allows for the creation of clusters when attaching a floating
-IP to the API server (and hence, in many cases, exposing the API server to the internet)
-is not possible or desirable, e.g. if using a shared VLAN for communication between
-management and workload clusters or when the management cluster is inside the
-project network.
-This option requires that the API server use a VIP on the cluster network so that the
-underlying machines can change without changing ControlPlaneEndpoint.Host.
-When using a managed load balancer, this VIP will be managed automatically.
-If not using a managed load balancer, cluster configuration will fail without additional
-configuration to manage the VIP on the control plane machines, which falls outside of
-the scope of this controller.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerFloatingIP</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerFloatingIP is the floatingIP which will be associated with the API server.
-The floatingIP will be created if it does not already exist.
-If not specified, a new floatingIP is allocated.
-This field is not used if DisableAPIServerFloatingIP is set to true.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerFixedIP</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerFixedIP is the fixed IP which will be associated with the API server.
-In the case where the API server has a floating IP but not a managed load balancer,
-this field is not used.
-If a managed load balancer is used and this field is not specified, a fixed IP will
-be dynamically allocated for the load balancer.
-If a managed load balancer is not used AND the API server floating IP is disabled,
-this field MUST be specified and should correspond to a pre-allocated port that
-holds the fixed IP to be used as a VIP.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerPort</code><br/>
-<em>
-uint16
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerPort is the port on which the listener on the APIServer
-will be created. If specified, it must be an integer between 0 and 65535.</p>
+<p>apiServer configures the API server endpoint and its associated
+load balancer and floating IP.</p>
 </td>
 </tr>
 <tr>
@@ -3250,87 +3203,17 @@ to an external network is not possible or desirable, e.g. if using a provider ne
 </tr>
 <tr>
 <td>
-<code>apiServerLoadBalancer</code><br/>
+<code>apiServer</code><br/>
 <em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServerLoadBalancer">
-APIServerLoadBalancer
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServer">
+APIServer
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-If not specified, no load balancer will be created for the API server.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>disableAPIServerFloatingIP</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
-IP to the API server. This allows for the creation of clusters when attaching a floating
-IP to the API server (and hence, in many cases, exposing the API server to the internet)
-is not possible or desirable, e.g. if using a shared VLAN for communication between
-management and workload clusters or when the management cluster is inside the
-project network.
-This option requires that the API server use a VIP on the cluster network so that the
-underlying machines can change without changing ControlPlaneEndpoint.Host.
-When using a managed load balancer, this VIP will be managed automatically.
-If not using a managed load balancer, cluster configuration will fail without additional
-configuration to manage the VIP on the control plane machines, which falls outside of
-the scope of this controller.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerFloatingIP</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerFloatingIP is the floatingIP which will be associated with the API server.
-The floatingIP will be created if it does not already exist.
-If not specified, a new floatingIP is allocated.
-This field is not used if DisableAPIServerFloatingIP is set to true.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerFixedIP</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerFixedIP is the fixed IP which will be associated with the API server.
-In the case where the API server has a floating IP but not a managed load balancer,
-this field is not used.
-If a managed load balancer is used and this field is not specified, a fixed IP will
-be dynamically allocated for the load balancer.
-If a managed load balancer is not used AND the API server floating IP is disabled,
-this field MUST be specified and should correspond to a pre-allocated port that
-holds the fixed IP to be used as a VIP.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServerPort</code><br/>
-<em>
-uint16
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServerPort is the port on which the listener on the APIServer
-will be created. If specified, it must be an integer between 0 and 65535.</p>
+<p>apiServer configures the API server endpoint and its associated
+load balancer and floating IP.</p>
 </td>
 </tr>
 <tr>

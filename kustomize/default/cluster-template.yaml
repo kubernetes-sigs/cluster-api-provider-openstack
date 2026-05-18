@@ -24,8 +24,9 @@ spec:
   identityRef:
     name: ${CLUSTER_NAME}-cloud-config
     cloudName: ${OPENSTACK_CLOUD}
-  apiServerLoadBalancer:
-    enabled: true
+  apiServer:
+    managedLoadBalancer:
+      enabled: true
   managedSubnets:
   - cidr: 10.6.0.0/24
     dnsNameservers:

@@ -2199,299 +2199,313 @@ spec:
                   spec:
                     description: spec is the desired state of the OpenStackCluster.
                     properties:
-                      apiServerFixedIP:
+                      apiServer:
                         description: |-
-                          apiServerFixedIP is the fixed IP which will be associated with the API server.
-                          In the case where the API server has a floating IP but not a managed load balancer,
-                          this field is not used.
-                          If a managed load balancer is used and this field is not specified, a fixed IP will
-                          be dynamically allocated for the load balancer.
-                          If a managed load balancer is not used AND the API server floating IP is disabled,
-                          this field MUST be specified and should correspond to a pre-allocated port that
-                          holds the fixed IP to be used as a VIP.
-                        type: string
-                      apiServerFloatingIP:
-                        description: |-
-                          apiServerFloatingIP is the floatingIP which will be associated with the API server.
-                          The floatingIP will be created if it does not already exist.
-                          If not specified, a new floatingIP is allocated.
-                          This field is not used if DisableAPIServerFloatingIP is set to true.
-                        type: string
-                      apiServerLoadBalancer:
-                        description: |-
-                          apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-                          If not specified, no load balancer will be created for the API server.
+                          apiServer configures the API server endpoint and its associated
+                          load balancer and floating IP.
                         properties:
-                          additionalPorts:
-                            description: additionalPorts adds additional tcp ports
-                              to the load balancer.
-                            items:
-                              type: integer
-                            type: array
-                            x-kubernetes-list-type: set
-                          allowedCIDRs:
-                            description: allowedCIDRs restrict access to all API-Server
-                              listeners to the given address CIDRs.
-                            items:
-                              type: string
-                            type: array
-                            x-kubernetes-list-type: set
-                          availabilityZone:
-                            description: availabilityZone is the failure domain that
-                              will be used to create the APIServerLoadBalancer Spec.
-                            type: string
-                          enabled:
-                            default: true
+                          disableFloatingIP:
                             description: |-
-                              enabled defines whether a load balancer should be created. This value
-                              defaults to true if an APIServerLoadBalancer is given.
-
-                              There is no reason to set this to false. To disable creation of the
-                              API server loadbalancer, omit the APIServerLoadBalancer field in the
-                              cluster spec instead.
+                              disableFloatingIP determines whether or not to attempt to attach a
+                              floating IP to the API server.
                             type: boolean
-                          flavor:
-                            description: flavor is the flavor name that will be used
-                              to create the APIServerLoadBalancer Spec.
+                          fixedIP:
+                            description: |-
+                              fixedIP is the fixed IP which will be associated with the API server.
+                              In the case where the API server has a floating IP but not a managed
+                              load balancer, this field is not used.
+                              If a managed load balancer is used and this field is not specified, a
+                              fixed IP will be dynamically allocated for the load balancer.
+                              If a managed load balancer is not used AND the floating IP is disabled,
+                              this field MUST be specified and should correspond to a pre-allocated
+                              port that holds the fixed IP to be used as a VIP.
                             type: string
-                          monitor:
-                            description: monitor contains configuration for the load
-                              balancer health monitor.
+                          floatingIP:
+                            description: |-
+                              floatingIP is the floating IP which will be associated with the API server.
+                              The floating IP will be created if it does not already exist.
+                              If not specified, a new floating IP is allocated.
+                              This field is not used if DisableFloatingIP is set to true.
+                            type: string
+                          managedLoadBalancer:
+                            description: |-
+                              managedLoadBalancer configures the optional LoadBalancer for the API server.
+                              If not specified, no load balancer will be created.
                             properties:
-                              delay:
-                                description: delay is the time in seconds between
-                                  sending probes to members.
-                                minimum: 0
-                                type: integer
-                              maxRetries:
-                                description: maxRetries is the number of successful
-                                  checks before changing the operating status of the
-                                  member to ONLINE.
-                                maximum: 10
-                                minimum: 0
-                                type: integer
-                              maxRetriesDown:
-                                description: maxRetriesDown is the number of allowed
-                                  check failures before changing the operating status
-                                  of the member to ERROR.
-                                maximum: 10
-                                minimum: 1
-                                type: integer
-                              timeout:
-                                description: timeout is the maximum time in seconds
-                                  for a monitor to wait for a connection to be established
-                                  before it times out.
-                                minimum: 0
-                                type: integer
-                            type: object
-                          network:
-                            description: network defines which network should the
-                              load balancer be allocated on.
-                            maxProperties: 1
-                            minProperties: 1
-                            properties:
-                              filter:
-                                description: filter specifies a filter to select an
-                                  OpenStack network. If provided, cannot be empty.
+                              additionalPorts:
+                                description: additionalPorts adds additional tcp ports
+                                  to the load balancer.
+                                items:
+                                  type: integer
+                                type: array
+                                x-kubernetes-list-type: set
+                              allowedCIDRs:
+                                description: allowedCIDRs restrict access to all API-Server
+                                  listeners to the given address CIDRs.
+                                items:
+                                  type: string
+                                type: array
+                                x-kubernetes-list-type: set
+                              availabilityZone:
+                                description: availabilityZone is the failure domain
+                                  that will be used to create the APIServerLoadBalancer
+                                  Spec.
+                                type: string
+                              enabled:
+                                default: true
+                                description: |-
+                                  enabled defines whether a load balancer should be created. This value
+                                  defaults to true if an APIServerLoadBalancer is given.
+
+                                  There is no reason to set this to false. To disable creation of the
+                                  API server loadbalancer, omit the APIServerLoadBalancer field in the
+                                  cluster spec instead.
+                                type: boolean
+                              flavor:
+                                description: flavor is the flavor name that will be
+                                  used to create the APIServerLoadBalancer Spec.
+                                type: string
+                              monitor:
+                                description: monitor contains configuration for the
+                                  load balancer health monitor.
+                                properties:
+                                  delay:
+                                    description: delay is the time in seconds between
+                                      sending probes to members.
+                                    minimum: 0
+                                    type: integer
+                                  maxRetries:
+                                    description: maxRetries is the number of successful
+                                      checks before changing the operating status
+                                      of the member to ONLINE.
+                                    maximum: 10
+                                    minimum: 0
+                                    type: integer
+                                  maxRetriesDown:
+                                    description: maxRetriesDown is the number of allowed
+                                      check failures before changing the operating
+                                      status of the member to ERROR.
+                                    maximum: 10
+                                    minimum: 1
+                                    type: integer
+                                  timeout:
+                                    description: timeout is the maximum time in seconds
+                                      for a monitor to wait for a connection to be
+                                      established before it times out.
+                                    minimum: 0
+                                    type: integer
+                                type: object
+                              network:
+                                description: network defines which network should
+                                  the load balancer be allocated on.
+                                maxProperties: 1
                                 minProperties: 1
                                 properties:
-                                  description:
-                                    description: description filters networks by description.
+                                  filter:
+                                    description: filter specifies a filter to select
+                                      an OpenStack network. If provided, cannot be
+                                      empty.
+                                    minProperties: 1
+                                    properties:
+                                      description:
+                                        description: description filters networks
+                                          by description.
+                                        type: string
+                                      name:
+                                        description: name filters networks by name.
+                                        type: string
+                                      notTags:
+                                        description: |-
+                                          notTags is a list of tags to filter by. If specified, resources which
+                                          contain all of the given tags will be excluded from the result.
+                                        items:
+                                          description: |-
+                                            NeutronTag represents a tag on a Neutron resource.
+                                            It may not be empty and may not contain commas.
+                                          minLength: 1
+                                          pattern: ^[^,]+$
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: set
+                                      notTagsAny:
+                                        description: |-
+                                          notTagsAny is a list of tags to filter by. If specified, resources
+                                          which contain any of the given tags will be excluded from the result.
+                                        items:
+                                          description: |-
+                                            NeutronTag represents a tag on a Neutron resource.
+                                            It may not be empty and may not contain commas.
+                                          minLength: 1
+                                          pattern: ^[^,]+$
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: set
+                                      projectID:
+                                        description: projectID filters networks by
+                                          project ID.
+                                        type: string
+                                      tags:
+                                        description: |-
+                                          tags is a list of tags to filter by. If specified, the resource must
+                                          have all of the tags specified to be included in the result.
+                                        items:
+                                          description: |-
+                                            NeutronTag represents a tag on a Neutron resource.
+                                            It may not be empty and may not contain commas.
+                                          minLength: 1
+                                          pattern: ^[^,]+$
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: set
+                                      tagsAny:
+                                        description: |-
+                                          tagsAny is a list of tags to filter by. If specified, the resource
+                                          must have at least one of the tags specified to be included in the
+                                          result.
+                                        items:
+                                          description: |-
+                                            NeutronTag represents a tag on a Neutron resource.
+                                            It may not be empty and may not contain commas.
+                                          minLength: 1
+                                          pattern: ^[^,]+$
+                                          type: string
+                                        type: array
+                                        x-kubernetes-list-type: set
+                                    type: object
+                                  id:
+                                    description: id is the ID of the network to use.
+                                      If ID is provided, the other filters cannot
+                                      be provided. Must be in UUID format.
+                                    format: uuid
                                     type: string
-                                  name:
-                                    description: name filters networks by name.
-                                    type: string
-                                  notTags:
-                                    description: |-
-                                      notTags is a list of tags to filter by. If specified, resources which
-                                      contain all of the given tags will be excluded from the result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  notTagsAny:
-                                    description: |-
-                                      notTagsAny is a list of tags to filter by. If specified, resources
-                                      which contain any of the given tags will be excluded from the result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  projectID:
-                                    description: projectID filters networks by project
-                                      ID.
-                                    type: string
-                                  tags:
-                                    description: |-
-                                      tags is a list of tags to filter by. If specified, the resource must
-                                      have all of the tags specified to be included in the result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  tagsAny:
-                                    description: |-
-                                      tagsAny is a list of tags to filter by. If specified, the resource
-                                      must have at least one of the tags specified to be included in the
-                                      result.
-                                    items:
-                                      description: |-
-                                        NeutronTag represents a tag on a Neutron resource.
-                                        It may not be empty and may not contain commas.
-                                      minLength: 1
-                                      pattern: ^[^,]+$
-                                      type: string
-                                    type: array
-                                    x-kubernetes-list-type: set
                                 type: object
-                              id:
-                                description: id is the ID of the network to use. If
-                                  ID is provided, the other filters cannot be provided.
-                                  Must be in UUID format.
-                                format: uuid
+                              provider:
+                                description: |-
+                                  provider specifies name of a specific Octavia provider to use for the
+                                  API load balancer. The Octavia default will be used if it is not
+                                  specified.
                                 type: string
-                            type: object
-                          provider:
-                            description: |-
-                              provider specifies name of a specific Octavia provider to use for the
-                              API load balancer. The Octavia default will be used if it is not
-                              specified.
-                            type: string
-                          subnets:
-                            description: |-
-                              subnets define which subnets should the load balancer be allocated on.
-                              It is expected that subnets are located on the network specified in this resource.
-                              Only the first element is taken into account.
-                              kubebuilder:validation:MaxLength:=2
-                            items:
-                              description: SubnetParam specifies an OpenStack subnet
-                                to use. It may be specified by either ID or filter,
-                                but not both.
-                              maxProperties: 1
-                              minProperties: 1
-                              properties:
-                                filter:
-                                  description: filter specifies a filter to select
-                                    the subnet. It must match exactly one subnet.
+                              subnets:
+                                description: |-
+                                  subnets define which subnets should the load balancer be allocated on.
+                                  It is expected that subnets are located on the network specified in this resource.
+                                  Only the first element is taken into account.
+                                  kubebuilder:validation:MaxLength:=2
+                                items:
+                                  description: SubnetParam specifies an OpenStack
+                                    subnet to use. It may be specified by either ID
+                                    or filter, but not both.
+                                  maxProperties: 1
                                   minProperties: 1
                                   properties:
-                                    cidr:
-                                      description: cidr filters subnets by CIDR.
+                                    filter:
+                                      description: filter specifies a filter to select
+                                        the subnet. It must match exactly one subnet.
+                                      minProperties: 1
+                                      properties:
+                                        cidr:
+                                          description: cidr filters subnets by CIDR.
+                                          type: string
+                                        description:
+                                          description: description filters subnets
+                                            by description.
+                                          type: string
+                                        gatewayIP:
+                                          description: gatewayIP filters subnets by
+                                            gateway IP.
+                                          type: string
+                                        ipVersion:
+                                          description: ipVersion filters subnets by
+                                            IP version.
+                                          type: integer
+                                        ipv6AddressMode:
+                                          description: ipv6AddressMode filters subnets
+                                            by IPv6 address mode.
+                                          type: string
+                                        ipv6RAMode:
+                                          description: ipv6RAMode filters subnets
+                                            by IPv6 Router Advertisement mode.
+                                          type: string
+                                        name:
+                                          description: name filters subnets by name.
+                                          type: string
+                                        notTags:
+                                          description: |-
+                                            notTags is a list of tags to filter by. If specified, resources which
+                                            contain all of the given tags will be excluded from the result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        notTagsAny:
+                                          description: |-
+                                            notTagsAny is a list of tags to filter by. If specified, resources
+                                            which contain any of the given tags will be excluded from the result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        projectID:
+                                          description: projectID filters subnets by
+                                            project ID.
+                                          type: string
+                                        tags:
+                                          description: |-
+                                            tags is a list of tags to filter by. If specified, the resource must
+                                            have all of the tags specified to be included in the result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        tagsAny:
+                                          description: |-
+                                            tagsAny is a list of tags to filter by. If specified, the resource
+                                            must have at least one of the tags specified to be included in the
+                                            result.
+                                          items:
+                                            description: |-
+                                              NeutronTag represents a tag on a Neutron resource.
+                                              It may not be empty and may not contain commas.
+                                            minLength: 1
+                                            pattern: ^[^,]+$
+                                            type: string
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    id:
+                                      description: id is the uuid of the subnet. It
+                                        will not be validated.
+                                      format: uuid
                                       type: string
-                                    description:
-                                      description: description filters subnets by
-                                        description.
-                                      type: string
-                                    gatewayIP:
-                                      description: gatewayIP filters subnets by gateway
-                                        IP.
-                                      type: string
-                                    ipVersion:
-                                      description: ipVersion filters subnets by IP
-                                        version.
-                                      type: integer
-                                    ipv6AddressMode:
-                                      description: ipv6AddressMode filters subnets
-                                        by IPv6 address mode.
-                                      type: string
-                                    ipv6RAMode:
-                                      description: ipv6RAMode filters subnets by IPv6
-                                        Router Advertisement mode.
-                                      type: string
-                                    name:
-                                      description: name filters subnets by name.
-                                      type: string
-                                    notTags:
-                                      description: |-
-                                        notTags is a list of tags to filter by. If specified, resources which
-                                        contain all of the given tags will be excluded from the result.
-                                      items:
-                                        description: |-
-                                          NeutronTag represents a tag on a Neutron resource.
-                                          It may not be empty and may not contain commas.
-                                        minLength: 1
-                                        pattern: ^[^,]+$
-                                        type: string
-                                      type: array
-                                      x-kubernetes-list-type: set
-                                    notTagsAny:
-                                      description: |-
-                                        notTagsAny is a list of tags to filter by. If specified, resources
-                                        which contain any of the given tags will be excluded from the result.
-                                      items:
-                                        description: |-
-                                          NeutronTag represents a tag on a Neutron resource.
-                                          It may not be empty and may not contain commas.
-                                        minLength: 1
-                                        pattern: ^[^,]+$
-                                        type: string
-                                      type: array
-                                      x-kubernetes-list-type: set
-                                    projectID:
-                                      description: projectID filters subnets by project
-                                        ID.
-                                      type: string
-                                    tags:
-                                      description: |-
-                                        tags is a list of tags to filter by. If specified, the resource must
-                                        have all of the tags specified to be included in the result.
-                                      items:
-                                        description: |-
-                                          NeutronTag represents a tag on a Neutron resource.
-                                          It may not be empty and may not contain commas.
-                                        minLength: 1
-                                        pattern: ^[^,]+$
-                                        type: string
-                                      type: array
-                                      x-kubernetes-list-type: set
-                                    tagsAny:
-                                      description: |-
-                                        tagsAny is a list of tags to filter by. If specified, the resource
-                                        must have at least one of the tags specified to be included in the
-                                        result.
-                                      items:
-                                        description: |-
-                                          NeutronTag represents a tag on a Neutron resource.
-                                          It may not be empty and may not contain commas.
-                                        minLength: 1
-                                        pattern: ^[^,]+$
-                                        type: string
-                                      type: array
-                                      x-kubernetes-list-type: set
                                   type: object
-                                id:
-                                  description: id is the uuid of the subnet. It will
-                                    not be validated.
-                                  format: uuid
-                                  type: string
-                              type: object
-                            type: array
-                            x-kubernetes-list-type: atomic
-                        required:
-                        - enabled
+                                type: array
+                                x-kubernetes-list-type: atomic
+                            required:
+                            - enabled
+                            type: object
+                          port:
+                            description: |-
+                              port is the port on which the API server listener will be created.
+                              If specified, it must be an integer between 0 and 65535.
+                            maximum: 65535
+                            minimum: 0
+                            type: integer
                         type: object
-                      apiServerPort:
-                        description: |-
-                          apiServerPort is the port on which the listener on the APIServer
-                          will be created. If specified, it must be an integer between 0 and 65535.
-                        maximum: 65535
-                        minimum: 0
-                        type: integer
                       bastion:
                         description: |-
                           bastion is the OpenStack instance to login the nodes
@@ -3521,21 +3535,6 @@ spec:
                           scheduler to make a decision on which availability zone to use based
                           on other scheduling constraints
                         type: boolean
-                      disableAPIServerFloatingIP:
-                        description: |-
-                          disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
-                          IP to the API server. This allows for the creation of clusters when attaching a floating
-                          IP to the API server (and hence, in many cases, exposing the API server to the internet)
-                          is not possible or desirable, e.g. if using a shared VLAN for communication between
-                          management and workload clusters or when the management cluster is inside the
-                          project network.
-                          This option requires that the API server use a VIP on the cluster network so that the
-                          underlying machines can change without changing ControlPlaneEndpoint.Host.
-                          When using a managed load balancer, this VIP will be managed automatically.
-                          If not using a managed load balancer, cluster configuration will fail without additional
-                          configuration to manage the VIP on the control plane machines, which falls outside of
-                          the scope of this controller.
-                        type: boolean
                       disableExternalNetwork:
                         description: |-
                           disableExternalNetwork specifies whether or not to attempt to connect the cluster
@@ -4425,11 +4424,11 @@ spec:
                         is true
                       rule: 'has(self.disableExternalNetwork) && self.disableExternalNetwork
                         ? !has(self.bastion) || !has(self.bastion.floatingIP) : true'
-                    - message: disableAPIServerFloatingIP cannot be false when disableExternalNetwork
+                    - message: apiServer.disableFloatingIP cannot be false when disableExternalNetwork
                         is true
                       rule: 'has(self.disableExternalNetwork) && self.disableExternalNetwork
-                        ? has(self.disableAPIServerFloatingIP) && self.disableAPIServerFloatingIP
-                        : true'
+                        ? has(self.apiServer) && has(self.apiServer.disableFloatingIP)
+                        && self.apiServer.disableFloatingIP : true'
                 required:
                 - spec
                 type: object

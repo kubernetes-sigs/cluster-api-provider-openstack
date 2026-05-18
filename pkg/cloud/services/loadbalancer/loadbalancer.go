@@ -80,7 +80,7 @@ var lookupHost = func(host string) (*string, error) {
 
 // ReconcileLoadBalancer reconciles the load balancer for the given cluster.
 func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, apiServerPort int) (bool, error) {
-	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
+	lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer()
 	if !lbSpec.IsEnabled() {
 		return false, nil
 	}
@@ -116,7 +116,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		}
 	}
 
-	if !ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) {
+	if !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) {
 		floatingIPAddress, err := getAPIServerFloatingIP(openStackCluster)
 		if err != nil {
 			return false, err
@@ -173,11 +173,11 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 		return &openStackCluster.Status.APIServerLoadBalancer.InternalIP, nil
 
 	// Explicit fixed IP in the cluster spec
-	case openStackCluster.Spec.APIServerFixedIP != nil:
-		return openStackCluster.Spec.APIServerFixedIP, nil
+	case openStackCluster.Spec.APIServer.GetFixedIP() != nil:
+		return openStackCluster.Spec.APIServer.GetFixedIP(), nil
 
-	// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
-	case ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+		// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
+	case ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		fixedIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)
@@ -197,8 +197,8 @@ func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (*string
 		return &openStackCluster.Status.APIServerLoadBalancer.IP, nil
 
 	// Explicit floating IP in the cluster spec
-	case openStackCluster.Spec.APIServerFloatingIP != nil:
-		return openStackCluster.Spec.APIServerFloatingIP, nil
+	case openStackCluster.Spec.APIServer.GetFloatingIP() != nil:
+		return openStackCluster.Spec.APIServer.GetFloatingIP(), nil
 
 	// An IP address is specified explicitly in the control plane endpoint
 	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
@@ -218,8 +218,8 @@ func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (*string
 func getCanonicalAllowedCIDRs(openStackCluster *infrav1.OpenStackCluster) []string {
 	allowedCIDRs := []string{}
 
-	if openStackCluster.Spec.APIServerLoadBalancer != nil && len(openStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs) > 0 {
-		allowedCIDRs = append(allowedCIDRs, openStackCluster.Spec.APIServerLoadBalancer.AllowedCIDRs...)
+	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil && len(lbSpec.AllowedCIDRs) > 0 {
+		allowedCIDRs = append(allowedCIDRs, lbSpec.AllowedCIDRs...)
 
 		// In the first reconciliation loop, only the Ready field is set in openStackCluster.Status
 		// All other fields are empty/nil
@@ -329,20 +329,20 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	lbProvider := ""
 	lbFlavorID := ""
 	var availabilityZone *string
-	if openStackCluster.Spec.APIServerLoadBalancer != nil {
-		if openStackCluster.Spec.APIServerLoadBalancer.Provider != nil {
+	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil {
+		if lbSpec.Provider != nil {
 			for _, v := range providers {
-				if v.Name == *openStackCluster.Spec.APIServerLoadBalancer.Provider {
+				if v.Name == *lbSpec.Provider {
 					lbProvider = v.Name
 					break
 				}
 			}
 			if lbProvider == "" {
 				record.Warnf(openStackCluster, "OctaviaProviderNotFound", "Provider specified for Octavia not found.")
-				record.Eventf(openStackCluster, "OctaviaProviderNotFound", "Provider %s specified for Octavia not found, using the default provider.", openStackCluster.Spec.APIServerLoadBalancer.Provider)
+				record.Eventf(openStackCluster, "OctaviaProviderNotFound", "Provider %s specified for Octavia not found, using the default provider.", lbSpec.Provider)
 			}
 		}
-		if openStackCluster.Spec.APIServerLoadBalancer.Flavor != nil {
+		if lbSpec.Flavor != nil {
 			// Gophercloud does not support filtering loadbalancer flavors by name and status (enabled) so we have to get all available flavors
 			// and filter them localy. There is a feature request in Gophercloud to implement this functionality:
 			// https://github.com/gophercloud/gophercloud/v2/issues/3049
@@ -352,17 +352,17 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 			}
 
 			for _, v := range flavors {
-				if v.Enabled && v.Name == *openStackCluster.Spec.APIServerLoadBalancer.Flavor {
+				if v.Enabled && v.Name == *lbSpec.Flavor {
 					lbFlavorID = v.ID
 					break
 				}
 			}
 			if lbFlavorID == "" {
-				record.Warnf(openStackCluster, "OctaviaFlavorNotFound", "Flavor %s specified for Octavia not found, using the default flavor.", *openStackCluster.Spec.APIServerLoadBalancer.Flavor)
+				record.Warnf(openStackCluster, "OctaviaFlavorNotFound", "Flavor %s specified for Octavia not found, using the default flavor.", *lbSpec.Flavor)
 			}
 		}
 
-		availabilityZone = openStackCluster.Spec.APIServerLoadBalancer.AvailabilityZone
+		availabilityZone = lbSpec.AvailabilityZone
 	}
 
 	vipAddress, err := getAPIServerVIPAddress(openStackCluster)
@@ -544,8 +544,8 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, monitorName, poolID, lbID string) error {
 	var cfg infrav1.APIServerLoadBalancerMonitor
 
-	if openStackCluster.Spec.APIServerLoadBalancer.Monitor != nil {
-		cfg = *openStackCluster.Spec.APIServerLoadBalancer.Monitor
+	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil && lbSpec.Monitor != nil {
+		cfg = *lbSpec.Monitor
 	}
 
 	cfg.Delay = cmp.Or(cfg.Delay, defaultMonitorDelay)
@@ -658,8 +658,8 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	if openStackCluster.Spec.ControlPlaneEndpoint != nil {
 		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
 	}
-	if openStackCluster.Spec.APIServerLoadBalancer != nil {
-		portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil {
+		portList = append(portList, lbSpec.AdditionalPorts...)
 	}
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
@@ -766,7 +766,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 			}
 
 			// If the floating is user-provider (BYO floating IP), don't delete it.
-			if openStackCluster.Spec.APIServerFloatingIP == nil || *openStackCluster.Spec.APIServerFloatingIP != fip.FloatingIP {
+			if floatingIP := openStackCluster.Spec.APIServer.GetFloatingIP(); floatingIP == nil || *floatingIP != fip.FloatingIP {
 				if err = s.networkingService.DeleteFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
 					return nil, err
 				}
@@ -814,8 +814,8 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 	if openStackCluster.Spec.ControlPlaneEndpoint != nil {
 		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
 	}
-	if openStackCluster.Spec.APIServerLoadBalancer != nil {
-		portList = append(portList, openStackCluster.Spec.APIServerLoadBalancer.AdditionalPorts...)
+	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil {
+		portList = append(portList, lbSpec.AdditionalPorts...)
 	}
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)

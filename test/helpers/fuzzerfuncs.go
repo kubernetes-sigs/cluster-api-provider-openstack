@@ -234,6 +234,51 @@ func InfraV1beta1FuzzerFuncs() []any {
 	}
 }
 
+func fuzzManagedNetwork(mn **infrav1.ManagedNetwork, c randfill.Continue) {
+	if c.Bool() {
+		*mn = nil
+		return
+	}
+	m := &infrav1.ManagedNetwork{}
+	c.Fill(m)
+	if m.MTU == nil && m.DisablePortSecurity == nil {
+		m.MTU = ptr.To(int(c.Int31()))
+	}
+	*mn = m
+}
+
+func fuzzManagedRouter(mr **infrav1.ManagedRouter, c randfill.Continue) {
+	if c.Bool() {
+		*mr = nil
+		return
+	}
+	m := &infrav1.ManagedRouter{}
+	c.Fill(m)
+	if len(m.ExternalIPs) == 0 {
+		ip := infrav1.ExternalRouterIPParam{}
+		c.Fill(&ip)
+		m.ExternalIPs = []infrav1.ExternalRouterIPParam{ip}
+	}
+	*mr = m
+}
+
+func fuzzAPIServer(as **infrav1.APIServer, c randfill.Continue) {
+	if c.Bool() {
+		*as = nil
+		return
+	}
+	a := &infrav1.APIServer{}
+	c.Fill(a)
+	if a.FloatingIP == nil &&
+		a.FixedIP == nil &&
+		a.Port == nil &&
+		a.DisableFloatingIP == nil &&
+		a.ManagedLoadBalancer == nil {
+		a.FloatingIP = ptr.To(nonEmptyString(c))
+	}
+	*as = a
+}
+
 // InfraV1Beta2FuzzerFuncs returns fuzzer funcs for v1beta2 OpenStack types which:
 // * Constrain the output in ways which are validated by the API server
 // * Constrain fields that are not preserved during v1beta2 <-> v1beta1 round-trip conversion
@@ -350,22 +395,6 @@ func InfraV1Beta2FuzzerFuncs() []any {
 			filter.NotTagsAny = filterInvalidTags(filter.NotTagsAny)
 		},
 
-		// ManagedNetwork must have at least one field set if non-nil.
-		// This mirrors the CEL validation:
-		//   self == null || has(self.mtu) || has(self.disablePortSecurity)
-		func(mn **infrav1.ManagedNetwork, c randfill.Continue) {
-			if c.Bool() {
-				*mn = nil
-				return
-			}
-			m := &infrav1.ManagedNetwork{}
-			c.Fill(m)
-			if m.MTU == nil && m.DisablePortSecurity == nil {
-				m.MTU = ptr.To(int(c.Int31()))
-			}
-			*mn = m
-		},
-
 		// v1beta2 filter params contain exactly one of ID or filter
 		func(param *infrav1.NetworkParam, c randfill.Continue) {
 			fuzzFilterParam(&param.ID, &param.Filter, c)
@@ -436,24 +465,16 @@ func InfraV1Beta2FuzzerFuncs() []any {
 			}
 		},
 
-		// ManagedRouter must have at least one ExternalIP if non-nil.
-		// This mirrors the CEL validation:
-		//   self == null || has(self.externalIPs)
-		// An empty ManagedRouter cannot survive a hub-spoke-hub round-trip because
-		// the conversion checks len(ExternalRouterIPs) > 0 before reconstructing it.
+		func(mn **infrav1.ManagedNetwork, c randfill.Continue) {
+			fuzzManagedNetwork(mn, c)
+		},
+		// ...
 		func(mr **infrav1.ManagedRouter, c randfill.Continue) {
-			if c.Bool() {
-				*mr = nil
-				return
-			}
-			m := &infrav1.ManagedRouter{}
-			c.Fill(m)
-			if len(m.ExternalIPs) == 0 {
-				ip := infrav1.ExternalRouterIPParam{}
-				c.Fill(&ip)
-				m.ExternalIPs = []infrav1.ExternalRouterIPParam{ip}
-			}
-			*mr = m
+			fuzzManagedRouter(mr, c)
+		},
+		// ...
+		func(as **infrav1.APIServer, c randfill.Continue) {
+			fuzzAPIServer(as, c)
 		},
 	}
 }

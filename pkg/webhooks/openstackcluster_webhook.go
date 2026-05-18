@@ -126,14 +126,16 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	}
 
 	// Allow APIServerFixedIP to be set for the first time when floating IP is disabled.
-	if ptr.Deref(oldObj.Spec.DisableAPIServerFloatingIP, false) && ptr.Deref(oldObj.Spec.APIServerFixedIP, "") == "" {
-		oldObj.Spec.APIServerFixedIP = nil
-		newObj.Spec.APIServerFixedIP = nil
-	}
+	if oldObj.Spec.APIServer != nil && newObj.Spec.APIServer != nil {
+		if ptr.Deref(oldObj.Spec.APIServer.DisableFloatingIP, false) && ptr.Deref(oldObj.Spec.APIServer.FixedIP, "") == "" {
+			oldObj.Spec.APIServer.FixedIP = nil
+			newObj.Spec.APIServer.FixedIP = nil
+		}
 
-	// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
-	if ptr.Deref(oldObj.Spec.DisableAPIServerFloatingIP, false) && oldObj.Spec.APIServerPort == nil && newObj.Spec.APIServerPort != nil {
-		newObj.Spec.APIServerPort = nil
+		// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
+		if ptr.Deref(oldObj.Spec.APIServer.GetDisableFloatingIP(), false) && oldObj.Spec.APIServer.GetPort() == nil && newObj.Spec.APIServer.GetPort() != nil {
+			newObj.Spec.APIServer.Port = nil
+		}
 	}
 
 	// Allow to remove the bastion spec only if it was disabled before.
@@ -209,16 +211,14 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 		}
 	}
 
-	// Allow changes on AllowedCIDRs
-	if newObj.Spec.APIServerLoadBalancer != nil && oldObj.Spec.APIServerLoadBalancer != nil {
-		oldObj.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
-		newObj.Spec.APIServerLoadBalancer.AllowedCIDRs = []string{}
-	}
-
-	// Allow changes on APIServerLB monitors
-	if newObj.Spec.APIServerLoadBalancer != nil && oldObj.Spec.APIServerLoadBalancer != nil {
-		oldObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
-		newObj.Spec.APIServerLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
+	// Allow changes on AllowedCIDRs and APIServerLB monitors
+	if oldLbSpec := oldObj.Spec.APIServer.GetManagedLoadBalancer(); oldLbSpec != nil {
+		if newLbSpec := newObj.Spec.APIServer.GetManagedLoadBalancer(); newLbSpec != nil {
+			oldLbSpec.AllowedCIDRs = []string{}
+			newLbSpec.AllowedCIDRs = []string{}
+			oldLbSpec.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
+			newLbSpec.Monitor = &infrav1.APIServerLoadBalancerMonitor{}
+		}
 	}
 
 	// Allow changes to the availability zones.
@@ -230,10 +230,23 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	oldObj.Spec.ControlPlaneOmitAvailabilityZone = nil
 	newObj.Spec.ControlPlaneOmitAvailabilityZone = nil
 
-	// Allow change on the spec.APIServerFloatingIP only if it matches the current api server loadbalancer IP.
-	if oldObj.Status.APIServerLoadBalancer != nil && ptr.Deref(newObj.Spec.APIServerFloatingIP, "") == oldObj.Status.APIServerLoadBalancer.IP {
-		newObj.Spec.APIServerFloatingIP = nil
-		oldObj.Spec.APIServerFloatingIP = nil
+	// Allow change on the spec.APIServer.FloatingIP only if it matches the current api server loadbalancer IP.
+	if oldObj.Status.APIServerLoadBalancer != nil &&
+		ptr.Deref(newObj.Spec.APIServer.GetFloatingIP(), "") == oldObj.Status.APIServerLoadBalancer.IP {
+		if newObj.Spec.APIServer != nil {
+			newObj.Spec.APIServer.FloatingIP = nil
+			// If APIServer is now empty after zeroing FloatingIP, nil it out
+			// entirely so it compares equal to a nil APIServer on the old object.
+			if reflect.DeepEqual(newObj.Spec.APIServer, &infrav1.APIServer{}) {
+				newObj.Spec.APIServer = nil
+			}
+		}
+		if oldObj.Spec.APIServer != nil {
+			oldObj.Spec.APIServer.FloatingIP = nil
+			if reflect.DeepEqual(oldObj.Spec.APIServer, &infrav1.APIServer{}) {
+				oldObj.Spec.APIServer = nil
+			}
+		}
 	}
 
 	// Allow transitioning spec.network from filter to id and spec.subnets from

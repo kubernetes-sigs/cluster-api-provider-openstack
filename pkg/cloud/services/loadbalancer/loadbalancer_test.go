@@ -67,10 +67,12 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 	openStackCluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
-			APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-				Enabled: ptr.To(true),
+			APIServer: &infrav1.APIServer{
+				ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+					Enabled: ptr.To(true),
+				},
+				DisableFloatingIP: ptr.To(true),
 			},
-			DisableAPIServerFloatingIP: ptr.To(true),
 			ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 				Host: apiHostname,
 				Port: 6443,
@@ -181,16 +183,18 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			name: "should update monitor when values are different than defaults",
 			clusterSpec: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Enabled: ptr.To(true),
-						Monitor: &infrav1.APIServerLoadBalancerMonitor{
-							Delay:          15,
-							Timeout:        8,
-							MaxRetries:     6,
-							MaxRetriesDown: 4,
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							Enabled: ptr.To(true),
+							Monitor: &infrav1.APIServerLoadBalancerMonitor{
+								Delay:          15,
+								Timeout:        8,
+								MaxRetries:     6,
+								MaxRetriesDown: 4,
+							},
 						},
+						DisableFloatingIP: ptr.To(true),
 					},
-					DisableAPIServerFloatingIP: ptr.To(true),
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
@@ -282,16 +286,18 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			name: "should report error when monitor update fails",
 			clusterSpec: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Enabled: ptr.To(true),
-						Monitor: &infrav1.APIServerLoadBalancerMonitor{
-							Delay:          15,
-							Timeout:        8,
-							MaxRetries:     6,
-							MaxRetriesDown: 4,
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							Enabled: ptr.To(true),
+							Monitor: &infrav1.APIServerLoadBalancerMonitor{
+								Delay:          15,
+								Timeout:        8,
+								MaxRetries:     6,
+								MaxRetriesDown: 4,
+							},
 						},
+						DisableFloatingIP: ptr.To(true),
 					},
-					DisableAPIServerFloatingIP: ptr.To(true),
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
@@ -375,16 +381,18 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			name: "should create monitor when it doesn't exist",
 			clusterSpec: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Enabled: ptr.To(true),
-						Monitor: &infrav1.APIServerLoadBalancerMonitor{
-							Delay:          15,
-							Timeout:        8,
-							MaxRetries:     6,
-							MaxRetriesDown: 4,
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							Enabled: ptr.To(true),
+							Monitor: &infrav1.APIServerLoadBalancerMonitor{
+								Delay:          15,
+								Timeout:        8,
+								MaxRetries:     6,
+								MaxRetriesDown: 4,
+							},
 						},
+						DisableFloatingIP: ptr.To(true),
 					},
-					DisableAPIServerFloatingIP: ptr.To(true),
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
@@ -531,7 +539,9 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP is API Server Fixed IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFixedIP: ptr.To("1.2.3.4"),
+					APIServer: &infrav1.APIServer{
+						FixedIP: ptr.To("1.2.3.4"),
+					},
 				},
 			},
 			want:      ptr.To("1.2.3.4"),
@@ -541,7 +551,9 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP with valid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: ptr.To(true),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(true),
+					},
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
 						Port: 6443,
@@ -555,7 +567,9 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP with invalid control plane endpoint",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: ptr.To(true),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(true),
+					},
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
 						Port: 6443,
@@ -620,7 +634,9 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 			name: "API server FIP is API Server Floating IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerFloatingIP: ptr.To("1.2.3.4"),
+					APIServer: &infrav1.APIServer{
+						FloatingIP: ptr.To("1.2.3.4"),
+					},
 				},
 			},
 			want:      ptr.To("1.2.3.4"),
@@ -683,8 +699,10 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						AllowedCIDRs: []string{"1.2.3.4/32"},
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							AllowedCIDRs: []string{"1.2.3.4/32"},
+						},
 					},
 				},
 			},
@@ -694,8 +712,10 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with bastion",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						AllowedCIDRs: []string{"1.2.3.4/32"},
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							AllowedCIDRs: []string{"1.2.3.4/32"},
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
@@ -711,8 +731,10 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						AllowedCIDRs: []string{"1.2.3.4/32"},
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							AllowedCIDRs: []string{"1.2.3.4/32"},
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
@@ -731,8 +753,10 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 			name: "allowed CIDRs are set with network status and router IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						AllowedCIDRs: []string{"1.2.3.4/32"},
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							AllowedCIDRs: []string{"1.2.3.4/32"},
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
@@ -876,8 +900,10 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			name: "loadbalancer with specified flavor created",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Flavor: ptr.To("flavorName"),
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							Flavor: ptr.To("flavorName"),
+						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
@@ -953,14 +979,16 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 	makeCluster := func(provider *string, lbNetworkID string) *infrav1.OpenStackCluster {
 		return &infrav1.OpenStackCluster{
 			Spec: infrav1.OpenStackClusterSpec{
-				APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-					Enabled:  ptr.To(true),
-					Provider: provider,
-					Network: &infrav1.NetworkParam{
-						ID: &lbNetworkID,
+				APIServer: &infrav1.APIServer{
+					ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+						Enabled:  ptr.To(true),
+						Provider: provider,
+						Network: &infrav1.NetworkParam{
+							ID: &lbNetworkID,
+						},
 					},
+					DisableFloatingIP: ptr.To(true),
 				},
-				DisableAPIServerFloatingIP: ptr.To(true),
 				ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 					Host: apiHostname,
 					Port: port,

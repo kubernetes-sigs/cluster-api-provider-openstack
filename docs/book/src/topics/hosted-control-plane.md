@@ -188,7 +188,9 @@ metadata:
 spec:
   template:
     spec:
-      flavor: m1.medium
+      flavor: 
+        filter:
+          name: m1.medium
       identityRef:
         cloudName: openstack
         name: openstack-cloud-config
