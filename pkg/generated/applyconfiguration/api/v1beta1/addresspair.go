@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,12 @@ package v1beta1
 // AddressPairApplyConfiguration represents a declarative configuration of the AddressPair type for use
 // with apply.
 type AddressPairApplyConfiguration struct {
-	IPAddress  *string `json:"ipAddress,omitempty"`
+	// IPAddress is the IP address of the allowed address pair. Depending on
+	// the configuration of Neutron, it may be supported to specify a CIDR
+	// instead of a specific IP address.
+	IPAddress *string `json:"ipAddress,omitempty"`
+	// MACAddress is the MAC address of the allowed address pair. If not
+	// specified, the MAC address will be the MAC address of the port.
 	MACAddress *string `json:"macAddress,omitempty"`
 }
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,11 @@ package v1beta1
 
 // NodeInfoApplyConfiguration represents a declarative configuration of the NodeInfo type for use
 // with apply.
+//
+// NodeInfo contains information about the node's architecture and operating system.
 type NodeInfoApplyConfiguration struct {
+	// operatingSystem is a string representing the operating system of the node.
+	// This may be a string like 'linux' or 'windows'.
 	OperatingSystem *string `json:"operatingSystem,omitempty"`
 }
 

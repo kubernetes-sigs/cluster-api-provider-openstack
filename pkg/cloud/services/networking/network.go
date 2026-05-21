@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/utils/ptr"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/metrics"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
@@ -118,12 +118,14 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		Name:         networkName,
 	}
 
-	if ptr.Deref(openStackCluster.Spec.DisablePortSecurity, false) {
-		opts.PortSecurityEnabled = gophercloud.Disabled
-	}
+	if openStackCluster.Spec.ManagedNetwork != nil {
+		if ptr.Deref(openStackCluster.Spec.ManagedNetwork.DisablePortSecurity, false) {
+			opts.PortSecurityEnabled = gophercloud.Disabled
+		}
 
-	if openStackCluster.Spec.NetworkMTU != nil {
-		opts.MTU = openStackCluster.Spec.NetworkMTU
+		if openStackCluster.Spec.ManagedNetwork.MTU != nil {
+			opts.MTU = openStackCluster.Spec.ManagedNetwork.MTU
+		}
 	}
 
 	network, err := s.client.CreateNetwork(opts)

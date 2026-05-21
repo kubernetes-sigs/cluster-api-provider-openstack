@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ package v1beta1
 
 // OpenStackClusterTemplateSpecApplyConfiguration represents a declarative configuration of the OpenStackClusterTemplateSpec type for use
 // with apply.
+//
+// OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.
 type OpenStackClusterTemplateSpecApplyConfiguration struct {
 	Template *OpenStackClusterTemplateResourceApplyConfiguration `json:"template,omitempty"`
 }

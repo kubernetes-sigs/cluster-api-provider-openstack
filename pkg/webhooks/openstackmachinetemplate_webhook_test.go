@@ -20,31 +20,35 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/onsi/gomega" //nolint:revive
+	. "github.com/onsi/gomega"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 func TestOpenStackMachineTemplate_ValidateCreate(t *testing.T) {
 	tests := []struct {
 		name     string
-		template *infrav1beta2.OpenStackMachineTemplate
+		template *infrav1.OpenStackMachineTemplate
 		wantErr  bool
 	}{
 		{
 			name: "ProviderID is forbidden on create",
-			template: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("m1.small"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			template: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("m1.small"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("ubuntu"),
 								},
 							},
@@ -57,13 +61,17 @@ func TestOpenStackMachineTemplate_ValidateCreate(t *testing.T) {
 		},
 		{
 			name: "Valid template on create",
-			template: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("m1.small"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			template: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("m1.small"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("ubuntu"),
 								},
 							},
@@ -96,20 +104,24 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		oldTemplate *infrav1beta2.OpenStackMachineTemplate
-		newTemplate *infrav1beta2.OpenStackMachineTemplate
+		oldTemplate *infrav1.OpenStackMachineTemplate
+		newTemplate *infrav1.OpenStackMachineTemplate
 		req         *admission.Request
 		wantErr     bool
 	}{
 		{
 			name: "OpenStackMachineTemplate with immutable spec",
-			oldTemplate: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("bar"),
 								},
 							},
@@ -117,13 +129,17 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("NewImage"),
 								},
 							},
@@ -136,13 +152,17 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "OpenStackMachineTemplate with mutable metadata",
-			oldTemplate: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("bar"),
 								},
 							},
@@ -153,13 +173,17 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					Name: "foo",
 				},
 			},
-			newTemplate: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("bar"),
 								},
 							},
@@ -174,13 +198,17 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "don't allow modification, dry run, no skip immutability annotation set",
-			oldTemplate: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("bar"),
 								},
 							},
@@ -188,13 +216,17 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("NewImage"),
 								},
 							},
@@ -207,13 +239,17 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 		},
 		{
 			name: "allow modification, dry run, skip immutability annotation set",
-			oldTemplate: &infrav1beta2.OpenStackMachineTemplate{
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+			oldTemplate: &infrav1.OpenStackMachineTemplate{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("bar"),
 								},
 							},
@@ -221,18 +257,22 @@ func TestOpenStackMachineTemplate_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			newTemplate: &infrav1beta2.OpenStackMachineTemplate{
+			newTemplate: &infrav1.OpenStackMachineTemplate{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						clusterv1.TopologyDryRunAnnotation: "",
 					},
 				},
-				Spec: infrav1beta2.OpenStackMachineTemplateSpec{
-					Template: infrav1beta2.OpenStackMachineTemplateResource{
-						Spec: infrav1beta2.OpenStackMachineSpec{
-							Flavor: ptr.To("foo"),
-							Image: infrav1beta2.ImageParam{
-								Filter: &infrav1beta2.ImageFilter{
+				Spec: infrav1.OpenStackMachineTemplateSpec{
+					Template: infrav1.OpenStackMachineTemplateResource{
+						Spec: infrav1.OpenStackMachineSpec{
+							Flavor: infrav1.FlavorParam{
+								Filter: &infrav1.FlavorFilter{
+									Name: ptr.To("foo"),
+								},
+							},
+							Image: infrav1.ImageParam{
+								Filter: &infrav1.ImageFilter{
 									Name: ptr.To("NewImage"),
 								},
 							},

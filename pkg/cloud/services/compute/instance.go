@@ -37,7 +37,7 @@ import (
 
 	orcv1alpha1 "github.com/k-orc/openstack-resource-controller/v2/api/v1alpha1"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
@@ -426,14 +426,12 @@ func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Cl
 	return nil, nil
 }
 
-// Helper to resolve a flavor ID.
-// TODO: needs a breaking CRD change so it works like images.
-func (s *Service) GetFlavorID(flavorID, flavorName *string) (string, error) {
-	if flavorID != nil {
-		return *flavorID, nil
+func (s *Service) GetFlavorID(flavorParam infrav1.FlavorParam) (string, error) {
+	if flavorParam.ID != nil {
+		return *flavorParam.ID, nil
 	}
 
-	if flavorName == nil {
+	if flavorParam.Filter == nil || flavorParam.Filter.Name == nil {
 		return "", fmt.Errorf("no flavors were found: no name set")
 	}
 
@@ -443,12 +441,12 @@ func (s *Service) GetFlavorID(flavorID, flavorName *string) (string, error) {
 	}
 
 	for _, flavor := range allFlavors {
-		if flavor.Name == *flavorName {
+		if flavor.Name == *flavorParam.Filter.Name {
 			return flavor.ID, nil
 		}
 	}
 
-	return "", fmt.Errorf("no flavors were found: name=%v", *flavorName)
+	return "", fmt.Errorf("no flavors were found: name=%v", *flavorParam.Filter.Name)
 }
 
 func (s *Service) GetFlavor(flavorID string) (*flavors.Flavor, error) {

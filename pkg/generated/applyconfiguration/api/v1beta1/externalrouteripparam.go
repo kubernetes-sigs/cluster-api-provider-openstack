@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@ package v1beta1
 // ExternalRouterIPParamApplyConfiguration represents a declarative configuration of the ExternalRouterIPParam type for use
 // with apply.
 type ExternalRouterIPParamApplyConfiguration struct {
-	FixedIP *string                        `json:"fixedIP,omitempty"`
-	Subnet  *SubnetParamApplyConfiguration `json:"subnet,omitempty"`
+	// The FixedIP in the corresponding subnet
+	FixedIP *string `json:"fixedIP,omitempty"`
+	// The subnet in which the FixedIP is used for the Gateway of this router
+	Subnet *SubnetParamApplyConfiguration `json:"subnet,omitempty"`
 }
 
 // ExternalRouterIPParamApplyConfiguration constructs a declarative configuration of the ExternalRouterIPParam type for use with

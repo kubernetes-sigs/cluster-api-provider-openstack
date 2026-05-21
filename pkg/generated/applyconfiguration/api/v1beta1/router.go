@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ package v1beta1
 
 // RouterApplyConfiguration represents a declarative configuration of the Router type for use
 // with apply.
+//
+// Router represents basic information about the associated OpenStack Neutron Router.
 type RouterApplyConfiguration struct {
 	Name *string  `json:"name,omitempty"`
 	ID   *string  `json:"id,omitempty"`

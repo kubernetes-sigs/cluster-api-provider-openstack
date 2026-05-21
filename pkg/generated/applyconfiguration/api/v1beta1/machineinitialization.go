@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,11 @@ package v1beta1
 
 // MachineInitializationApplyConfiguration represents a declarative configuration of the MachineInitialization type for use
 // with apply.
+//
+// MachineInitialization contains information about the initialization status of the machine.
 type MachineInitializationApplyConfiguration struct {
+	// Provisioned is set to true when the initial provisioning of the machine infrastructure is completed.
+	// The value of this field is never updated after provisioning is completed.
 	Provisioned *bool `json:"provisioned,omitempty"`
 }
 

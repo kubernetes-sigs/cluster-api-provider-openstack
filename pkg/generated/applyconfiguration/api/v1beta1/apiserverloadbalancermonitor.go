@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,10 +20,16 @@ package v1beta1
 
 // APIServerLoadBalancerMonitorApplyConfiguration represents a declarative configuration of the APIServerLoadBalancerMonitor type for use
 // with apply.
+//
+// APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
 type APIServerLoadBalancerMonitorApplyConfiguration struct {
-	Delay          *int `json:"delay,omitempty"`
-	Timeout        *int `json:"timeout,omitempty"`
-	MaxRetries     *int `json:"maxRetries,omitempty"`
+	// Delay is the time in seconds between sending probes to members.
+	Delay *int `json:"delay,omitempty"`
+	// Timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
+	Timeout *int `json:"timeout,omitempty"`
+	// MaxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
+	MaxRetries *int `json:"maxRetries,omitempty"`
+	// MaxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
 	MaxRetriesDown *int `json:"maxRetriesDown,omitempty"`
 }
 

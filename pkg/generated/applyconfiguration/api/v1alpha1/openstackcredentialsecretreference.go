@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,8 +20,12 @@ package v1alpha1
 
 // OpenStackCredentialSecretReferenceApplyConfiguration represents a declarative configuration of the OpenStackCredentialSecretReference type for use
 // with apply.
+//
+// OpenStackCredentialSecretReference references a Secret containing OpenStack credentials.
 type OpenStackCredentialSecretReferenceApplyConfiguration struct {
-	Name      *string `json:"name,omitempty"`
+	// Name of the Secret which contains a `clouds.yaml` key (and optionally `cacert`).
+	Name *string `json:"name,omitempty"`
+	// Namespace where the Secret resides.
 	Namespace *string `json:"namespace,omitempty"`
 }
 

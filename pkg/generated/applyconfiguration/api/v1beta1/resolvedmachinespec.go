@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,11 +20,17 @@ package v1beta1
 
 // ResolvedMachineSpecApplyConfiguration represents a declarative configuration of the ResolvedMachineSpec type for use
 // with apply.
+//
+// ResolvedMachineSpec contains resolved references to resources required by the machine.
 type ResolvedMachineSpecApplyConfiguration struct {
-	ServerGroupID *string                              `json:"serverGroupID,omitempty"`
-	ImageID       *string                              `json:"imageID,omitempty"`
-	FlavorID      *string                              `json:"flavorID,omitempty"`
-	Ports         []ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
+	// ServerGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
+	ServerGroupID *string `json:"serverGroupID,omitempty"`
+	// ImageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
+	ImageID *string `json:"imageID,omitempty"`
+	// FlavorID is the ID of the flavor to use.
+	FlavorID *string `json:"flavorID,omitempty"`
+	// Ports is the fully resolved list of ports to create for the machine.
+	Ports []ResolvedPortSpecApplyConfiguration `json:"ports,omitempty"`
 }
 
 // ResolvedMachineSpecApplyConfiguration constructs a declarative configuration of the ResolvedMachineSpec type for use with

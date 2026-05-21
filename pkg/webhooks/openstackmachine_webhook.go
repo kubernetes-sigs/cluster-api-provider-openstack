@@ -27,32 +27,26 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	infrav1beta2 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackmachine,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,versions=v1beta2,name=validation.openstackmachine.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
 
 func SetupOpenStackMachineWebhook(mgr manager.Manager) error {
-	return builder.WebhookManagedBy(mgr).
-		For(&infrav1beta2.OpenStackMachine{}).
+	return builder.WebhookManagedBy(mgr, &infrav1.OpenStackMachine{}).
 		WithValidator(&openStackMachineWebhook{}).
 		Complete()
 }
 
 type openStackMachineWebhook struct{}
 
-var _ webhook.CustomValidator = &openStackMachineWebhook{}
+var _ admission.Validator[*infrav1.OpenStackMachine] = &openStackMachineWebhook{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime.Object) (admission.Warnings, error) {
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackMachineWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackMachine) (admission.Warnings, error) {
 	var allErrs field.ErrorList
-	newObj, err := castToOpenStackMachine(objRaw)
-	if err != nil {
-		return nil, err
-	}
 
 	if newObj.Spec.RootVolume != nil && newObj.Spec.AdditionalBlockDevices != nil {
 		for _, device := range newObj.Spec.AdditionalBlockDevices {
@@ -71,22 +65,17 @@ func (*openStackMachineWebhook) ValidateCreate(_ context.Context, objRaw runtime
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, newObjRaw runtime.Object) (admission.Warnings, error) {
-	newObj, err := castToOpenStackMachine(newObjRaw)
-	if err != nil {
-		return nil, err
-	}
-
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
+func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObj, newObj *infrav1.OpenStackMachine) (admission.Warnings, error) {
 	newOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(newObj)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert new OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
-	oldOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(oldObjRaw)
+	oldOpenStackMachine, err := runtime.DefaultUnstructuredConverter.ToUnstructured(oldObj)
 	if err != nil {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("failed to convert old OpenStackMachine to unstructured object: %w", err)),
 		})
 	}
@@ -95,13 +84,13 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 
 	newOpenStackMachineSpec, ok := newOpenStackMachine["spec"].(map[string]interface{})
 	if !ok {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("new OpenStackMachine spec is not a map")),
 		})
 	}
 	oldOpenStackMachineSpec, ok := oldOpenStackMachine["spec"].(map[string]interface{})
 	if !ok {
-		return nil, apierrors.NewInvalid(infrav1beta2.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine").GroupKind(), newObj.Name, field.ErrorList{
 			field.InternalError(nil, fmt.Errorf("old OpenStackMachine spec is not a map")),
 		})
 	}
@@ -122,6 +111,10 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	delete(oldOpenStackMachineSpec, "identityRef")
 	delete(newOpenStackMachineSpec, "identityRef")
 
+	// allowedAddressPairs is mutable: zero it out in ports before comparison
+	clearAllowedAddressPairsInPorts(oldOpenStackMachineSpec)
+	clearAllowedAddressPairsInPorts(newOpenStackMachineSpec)
+
 	if !reflect.DeepEqual(oldOpenStackMachineSpec, newOpenStackMachineSpec) {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
@@ -129,15 +122,23 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObjRaw, new
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type.
-func (*openStackMachineWebhook) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type.
+func (*openStackMachineWebhook) ValidateDelete(_ context.Context, _ *infrav1.OpenStackMachine) (admission.Warnings, error) {
 	return nil, nil
 }
 
-func castToOpenStackMachine(obj runtime.Object) (*infrav1beta2.OpenStackMachine, error) {
-	cast, ok := obj.(*infrav1beta2.OpenStackMachine)
+// clearAllowedAddressPairsInPorts removes allowedAddressPairs from each port entry
+// in an unstructured spec map so changes to that field do not trigger immutability rejection.
+func clearAllowedAddressPairsInPorts(spec map[string]interface{}) {
+	ports, ok := spec["ports"].([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("expected an OpenStackMachine but got a %T", obj)
+		return
 	}
-	return cast, nil
+	for _, p := range ports {
+		port, ok := p.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		delete(port, "allowedAddressPairs")
+	}
 }

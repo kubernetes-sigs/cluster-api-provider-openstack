@@ -36,9 +36,10 @@ spec:
       value:
         enabled: ${OPENSTACK_BASTION_ENABLED:=false}
         spec:
-          flavor: ${OPENSTACK_BASTION_FLAVOR:=m1.small}
+          flavor:
+            filter:
+              name: ${OPENSTACK_BASTION_FLAVOR:=m1.small}
           image:
             imageRef:
               name: bastion-image
           sshKeyName: ${OPENSTACK_SSH_KEY_NAME:=""}
-

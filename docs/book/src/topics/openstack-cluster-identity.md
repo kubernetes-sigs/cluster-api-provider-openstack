@@ -57,7 +57,7 @@ spec:
 ## Reference the identity from OpenStackCluster
 - Use `type: ClusterIdentity`, specify the identity `name`, and the `cloudName` to select the clouds.yaml entry.
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackCluster
 metadata:
   name: cluster-a

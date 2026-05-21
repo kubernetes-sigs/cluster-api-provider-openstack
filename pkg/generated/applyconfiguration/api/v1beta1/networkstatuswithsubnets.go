@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,9 +20,12 @@ package v1beta1
 
 // NetworkStatusWithSubnetsApplyConfiguration represents a declarative configuration of the NetworkStatusWithSubnets type for use
 // with apply.
+//
+// NetworkStatusWithSubnets represents basic information about an existing neutron network and an associated set of subnets.
 type NetworkStatusWithSubnetsApplyConfiguration struct {
 	NetworkStatusApplyConfiguration `json:",inline"`
-	Subnets                         []SubnetApplyConfiguration `json:"subnets,omitempty"`
+	// Subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	Subnets []SubnetApplyConfiguration `json:"subnets,omitempty"`
 }
 
 // NetworkStatusWithSubnetsApplyConfiguration constructs a declarative configuration of the NetworkStatusWithSubnets type for use with

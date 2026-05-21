@@ -27,13 +27,14 @@ import (
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsbinding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portstrustedvif"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
@@ -240,13 +241,32 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		builder = portSecurityOpts
 	}
 
+	// Determine if port_trusted_vif extension is available when TrustedVF is requested.
+	// If available, we use the dedicated port attribute instead of binding:profile.
+	var usePortTrustedVIF bool
+	if portSpec.Profile != nil && ptr.Deref(portSpec.Profile.TrustedVF, false) {
+		usePortTrustedVIF, err = s.HasPortTrustedVIFExtension()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	portsBindingOpts := portsbinding.CreateOptsExt{
 		CreateOptsBuilder: builder,
 		HostID:            ptr.Deref(portSpec.HostID, ""),
 		VNICType:          ptr.Deref(portSpec.VNICType, ""),
-		Profile:           getPortProfile(portSpec.Profile),
+		Profile:           getPortProfile(portSpec.Profile, usePortTrustedVIF),
 	}
 	builder = portsBindingOpts
+
+	// If the port_trusted_vif extension is available, set trusted mode via the
+	// dedicated port attribute rather than through binding:profile.
+	if usePortTrustedVIF {
+		builder = portstrustedvif.PortCreateOptsExt{
+			CreateOptsBuilder: builder,
+			PortTrustedVIF:    portSpec.Profile.TrustedVF,
+		}
+	}
 
 	port, err := s.client.CreatePort(builder)
 	if err != nil {
@@ -262,7 +282,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 	return port, nil
 }
 
-func getPortProfile(p *infrav1.BindingProfile) map[string]interface{} {
+func getPortProfile(p *infrav1.BindingProfile, usePortTrustedVIF bool) map[string]interface{} {
 	if p == nil {
 		return nil
 	}
@@ -274,7 +294,10 @@ func getPortProfile(p *infrav1.BindingProfile) map[string]interface{} {
 	if ptr.Deref(p.OVSHWOffload, false) {
 		portProfile["capabilities"] = []string{"switchdev"}
 	}
-	if ptr.Deref(p.TrustedVF, false) {
+	// Only set trusted in binding:profile if the port_trusted_vif extension
+	// is not available. When the extension is available, trusted mode is set
+	// via the dedicated port attribute instead.
+	if !usePortTrustedVIF && ptr.Deref(p.TrustedVF, false) {
 		portProfile["trusted"] = true
 	}
 
@@ -607,6 +630,24 @@ func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
 	return true, nil
 }
 
+// HasPortTrustedVIFExtension checks whether the Neutron port_trusted_vif
+// extension is available. When this extension is present, trusted VF mode
+// should be set via the dedicated port attribute rather than through
+// binding:profile.
+func (s *Service) HasPortTrustedVIFExtension() (bool, error) {
+	allExts, err := s.client.ListExtensions()
+	if err != nil {
+		return false, err
+	}
+
+	for _, ext := range allExts {
+		if ext.Alias == "port-trusted-vif" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // AdoptPortsServer looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
 // A port matches if it has the same name and network ID as the desired port.
 // TODO(emilien): remove this function: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/2071
@@ -669,4 +710,19 @@ func uniqueSortedTags(tags []string) []string {
 	}
 	slices.Sort(uniqueTags)
 	return uniqueTags
+}
+
+// UpdateAllowedAddressPairs updates the allowedAddressPairs on an existing Neutron port.
+func (s *Service) UpdateAllowedAddressPairs(portID string, pairs []infrav1.AddressPair) error {
+	addressPairs := make([]ports.AddressPair, len(pairs))
+	for i, ap := range pairs {
+		addressPairs[i] = ports.AddressPair{
+			IPAddress:  ap.IPAddress,
+			MACAddress: ptr.Deref(ap.MACAddress, ""),
+		}
+	}
+	_, err := s.client.UpdatePort(portID, ports.UpdateOpts{
+		AllowedAddressPairs: &addressPairs,
+	})
+	return err
 }

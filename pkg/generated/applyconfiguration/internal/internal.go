@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,18 +39,24 @@ func Parser() *typed.Parser {
 var parserOnce sync.Once
 var parser *typed.Parser
 var schemaYAML = typed.YAMLObject(`types:
-- name: io.k8s.api.core.v1.LocalObjectReference
+- name: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
   map:
     fields:
-    - name: name
+    - name: lastTransitionTime
+      type:
+        namedType: Time.v1.meta.apis.pkg.apimachinery.k8s.io
+    - name: message
       type:
         scalar: string
       default: ""
-    elementRelationship: atomic
-- name: io.k8s.api.core.v1.NodeAddress
-  map:
-    fields:
-    - name: address
+    - name: observedGeneration
+      type:
+        scalar: numeric
+    - name: reason
+      type:
+        scalar: string
+      default: ""
+    - name: status
       type:
         scalar: string
       default: ""
@@ -58,24 +64,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
-- name: io.k8s.api.core.v1.TypedLocalObjectReference
-  map:
-    fields:
-    - name: apiGroup
-      type:
-        scalar: string
-    - name: kind
-      type:
-        scalar: string
-      default: ""
-    - name: name
-      type:
-        scalar: string
-      default: ""
-    elementRelationship: atomic
-- name: io.k8s.apimachinery.pkg.api.resource.Quantity
-  scalar: untyped
-- name: io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1
+- name: FieldsV1.v1.meta.apis.pkg.apimachinery.k8s.io
   map:
     elementType:
       scalar: untyped
@@ -87,14 +76,14 @@ var schemaYAML = typed.YAMLObject(`types:
         elementType:
           namedType: __untyped_deduced_
         elementRelationship: separable
-- name: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+- name: LabelSelector.v1.meta.apis.pkg.apimachinery.k8s.io
   map:
     fields:
     - name: matchExpressions
       type:
         list:
           elementType:
-            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement
+            namedType: LabelSelectorRequirement.v1.meta.apis.pkg.apimachinery.k8s.io
           elementRelationship: atomic
     - name: matchLabels
       type:
@@ -102,7 +91,7 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
     elementRelationship: atomic
-- name: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement
+- name: LabelSelectorRequirement.v1.meta.apis.pkg.apimachinery.k8s.io
   map:
     fields:
     - name: key
@@ -119,7 +108,15 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
-- name: io.k8s.apimachinery.pkg.apis.meta.v1.ManagedFieldsEntry
+- name: LocalObjectReference.v1.core.api.k8s.io
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    elementRelationship: atomic
+- name: ManagedFieldsEntry.v1.meta.apis.pkg.apimachinery.k8s.io
   map:
     fields:
     - name: apiVersion
@@ -130,7 +127,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: fieldsV1
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1
+        namedType: FieldsV1.v1.meta.apis.pkg.apimachinery.k8s.io
     - name: manager
       type:
         scalar: string
@@ -142,8 +139,19 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: time
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Time
-- name: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+        namedType: Time.v1.meta.apis.pkg.apimachinery.k8s.io
+- name: NodeAddress.v1.core.api.k8s.io
+  map:
+    fields:
+    - name: address
+      type:
+        scalar: string
+      default: ""
+    - name: type
+      type:
+        scalar: string
+      default: ""
+- name: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
   map:
     fields:
     - name: annotations
@@ -153,13 +161,13 @@ var schemaYAML = typed.YAMLObject(`types:
             scalar: string
     - name: creationTimestamp
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Time
+        namedType: Time.v1.meta.apis.pkg.apimachinery.k8s.io
     - name: deletionGracePeriodSeconds
       type:
         scalar: numeric
     - name: deletionTimestamp
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Time
+        namedType: Time.v1.meta.apis.pkg.apimachinery.k8s.io
     - name: finalizers
       type:
         list:
@@ -181,7 +189,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ManagedFieldsEntry
+            namedType: ManagedFieldsEntry.v1.meta.apis.pkg.apimachinery.k8s.io
           elementRelationship: atomic
     - name: name
       type:
@@ -193,7 +201,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference
+            namedType: OwnerReference.v1.meta.apis.pkg.apimachinery.k8s.io
           elementRelationship: associative
           keys:
           - uid
@@ -206,7 +214,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: uid
       type:
         scalar: string
-- name: io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference
+- name: OwnerReference.v1.meta.apis.pkg.apimachinery.k8s.io
   map:
     fields:
     - name: apiVersion
@@ -232,8 +240,25 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
       default: ""
     elementRelationship: atomic
-- name: io.k8s.apimachinery.pkg.apis.meta.v1.Time
+- name: Quantity.resource.api.pkg.apimachinery.k8s.io
+  scalar: string
+- name: Time.v1.meta.apis.pkg.apimachinery.k8s.io
   scalar: untyped
+- name: TypedLocalObjectReference.v1.core.api.k8s.io
+  map:
+    fields:
+    - name: apiGroup
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+      default: ""
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    elementRelationship: atomic
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackClusterIdentity
   map:
     fields:
@@ -245,7 +270,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: metadata
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
       default: {}
     - name: spec
       type:
@@ -256,7 +281,7 @@ var schemaYAML = typed.YAMLObject(`types:
     fields:
     - name: namespaceSelector
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+        namedType: LabelSelector.v1.meta.apis.pkg.apimachinery.k8s.io
     - name: secretRef
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackCredentialSecretReference
@@ -283,7 +308,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: metadata
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
       default: {}
     - name: spec
       type:
@@ -300,7 +325,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.AdditionalBlockDevice
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AdditionalBlockDevice
           elementRelationship: associative
           keys:
           - name
@@ -318,29 +343,29 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: floatingIPPoolRef
       type:
-        namedType: io.k8s.api.core.v1.TypedLocalObjectReference
+        namedType: TypedLocalObjectReference.v1.core.api.k8s.io
     - name: identityRef
       type:
-        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.OpenStackIdentityReference
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
       default: {}
     - name: image
       type:
-        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ImageParam
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageParam
       default: {}
     - name: ports
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.PortOpts
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.PortOpts
           elementRelationship: atomic
     - name: rootVolume
       type:
-        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.RootVolume
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RootVolume
     - name: schedulerHintAdditionalProperties
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SchedulerHintAdditionalProperty
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SchedulerHintAdditionalProperty
           elementRelationship: associative
           keys:
           - name
@@ -348,16 +373,16 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SecurityGroupParam
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupParam
           elementRelationship: atomic
     - name: serverGroup
       type:
-        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerGroupParam
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupParam
     - name: serverMetadata
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ServerMetadata
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerMetadata
           elementRelationship: associative
           keys:
           - key
@@ -376,7 +401,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: boolean
     - name: userDataRef
       type:
-        namedType: io.k8s.api.core.v1.LocalObjectReference
+        namedType: LocalObjectReference.v1.core.api.k8s.io
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1alpha1.OpenStackServerStatus
   map:
     fields:
@@ -384,13 +409,13 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.api.core.v1.NodeAddress
+            namedType: NodeAddress.v1.core.api.k8s.io
           elementRelationship: atomic
     - name: conditions
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api.api.core.v1beta1.Condition
+            namedType: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
           elementRelationship: atomic
     - name: instanceID
       type:
@@ -421,7 +446,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.ResolvedPortSpec
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedPortSpec
           elementRelationship: atomic
     - name: serverGroupID
       type:
@@ -433,7 +458,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.PortStatus
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.PortStatus
           elementRelationship: atomic
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.APIServerLoadBalancer
   map:
@@ -831,7 +856,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: metadata
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
       default: {}
     - name: spec
       type:
@@ -985,7 +1010,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: metadata
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
       default: {}
     - name: spec
       type:
@@ -1033,7 +1058,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: metadata
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
       default: {}
     - name: spec
       type:
@@ -1065,7 +1090,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: floatingIPPoolRef
       type:
-        namedType: io.k8s.api.core.v1.TypedLocalObjectReference
+        namedType: TypedLocalObjectReference.v1.core.api.k8s.io
     - name: identityRef
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.OpenStackIdentityReference
@@ -1129,7 +1154,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         list:
           elementType:
-            namedType: io.k8s.api.core.v1.NodeAddress
+            namedType: NodeAddress.v1.core.api.k8s.io
           elementRelationship: atomic
     - name: conditions
       type:
@@ -1173,7 +1198,7 @@ var schemaYAML = typed.YAMLObject(`types:
         scalar: string
     - name: metadata
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
       default: {}
     - name: spec
       type:
@@ -1204,7 +1229,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         map:
           elementType:
-            namedType: io.k8s.apimachinery.pkg.api.resource.Quantity
+            namedType: Quantity.resource.api.pkg.apimachinery.k8s.io
     - name: conditions
       type:
         list:
@@ -1747,6 +1772,1330 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServerLoadBalancer
+  map:
+    fields:
+    - name: additionalPorts
+      type:
+        list:
+          elementType:
+            scalar: numeric
+          elementRelationship: associative
+    - name: allowedCIDRs
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: availabilityZone
+      type:
+        scalar: string
+    - name: enabled
+      type:
+        scalar: boolean
+    - name: flavor
+      type:
+        scalar: string
+    - name: monitor
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServerLoadBalancerMonitor
+    - name: network
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+    - name: provider
+      type:
+        scalar: string
+    - name: subnets
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServerLoadBalancerMonitor
+  map:
+    fields:
+    - name: delay
+      type:
+        scalar: numeric
+    - name: maxRetries
+      type:
+        scalar: numeric
+    - name: maxRetriesDown
+      type:
+        scalar: numeric
+    - name: timeout
+      type:
+        scalar: numeric
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AdditionalBlockDevice
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: sizeGiB
+      type:
+        scalar: numeric
+      default: 0
+    - name: storage
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BlockDeviceStorage
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AddressPair
+  map:
+    fields:
+    - name: ipAddress
+      type:
+        scalar: string
+      default: ""
+    - name: macAddress
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AllocationPool
+  map:
+    fields:
+    - name: end
+      type:
+        scalar: string
+      default: ""
+    - name: start
+      type:
+        scalar: string
+      default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Bastion
+  map:
+    fields:
+    - name: availabilityZone
+      type:
+        scalar: string
+    - name: enabled
+      type:
+        scalar: boolean
+    - name: floatingIP
+      type:
+        scalar: string
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineSpec
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BastionStatus
+  map:
+    fields:
+    - name: floatingIP
+      type:
+        scalar: string
+    - name: id
+      type:
+        scalar: string
+    - name: ip
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+    - name: resolved
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedMachineSpec
+    - name: resources
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.MachineResources
+    - name: sshKeyName
+      type:
+        scalar: string
+    - name: state
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BindingProfile
+  map:
+    fields:
+    - name: ovsHWOffload
+      type:
+        scalar: boolean
+    - name: trustedVF
+      type:
+        scalar: boolean
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BlockDeviceStorage
+  map:
+    fields:
+    - name: type
+      type:
+        scalar: string
+      default: ""
+    - name: volume
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BlockDeviceVolume
+    unions:
+    - discriminator: type
+      fields:
+      - fieldName: volume
+        discriminatorValue: Volume
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BlockDeviceVolume
+  map:
+    fields:
+    - name: availabilityZone
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeAvailabilityZone
+    - name: type
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ClusterInitialization
+  map:
+    fields:
+    - name: provisioned
+      type:
+        scalar: boolean
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ExternalRouterIPParam
+  map:
+    fields:
+    - name: fixedIP
+      type:
+        scalar: string
+    - name: subnet
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FixedIP
+  map:
+    fields:
+    - name: ipAddress
+      type:
+        scalar: string
+    - name: subnet
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorFilter
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorFilter
+    - name: id
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageFilter
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageFilter
+    - name: id
+      type:
+        scalar: string
+    - name: imageRef
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResourceReference
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.LoadBalancer
+  map:
+    fields:
+    - name: allowedCIDRs
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+    - name: id
+      type:
+        scalar: string
+      default: ""
+    - name: internalIP
+      type:
+        scalar: string
+      default: ""
+    - name: ip
+      type:
+        scalar: string
+      default: ""
+    - name: loadBalancerNetwork
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatusWithSubnets
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.MachineInitialization
+  map:
+    fields:
+    - name: provisioned
+      type:
+        scalar: boolean
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.MachineResources
+  map:
+    fields:
+    - name: ports
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.PortStatus
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedNetwork
+  map:
+    fields:
+    - name: disablePortSecurity
+      type:
+        scalar: boolean
+    - name: mtu
+      type:
+        scalar: numeric
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedRouter
+  map:
+    fields:
+    - name: externalIPs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ExternalRouterIPParam
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedSecurityGroups
+  map:
+    fields:
+    - name: allowAllInClusterTraffic
+      type:
+        scalar: boolean
+      default: false
+    - name: clusterNodesSecurityGroupRules
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupRuleSpec
+          elementRelationship: associative
+          keys:
+          - name
+    - name: controlPlaneNodesSecurityGroupRules
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupRuleSpec
+          elementRelationship: associative
+          keys:
+          - name
+    - name: workerNodesSecurityGroupRules
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupRuleSpec
+          elementRelationship: associative
+          keys:
+          - name
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkFilter
+  map:
+    fields:
+    - name: description
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+    - name: notTags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: notTagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: projectID
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: tagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkFilter
+    - name: id
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatus
+  map:
+    fields:
+    - name: id
+      type:
+        scalar: string
+      default: ""
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatusWithSubnets
+  map:
+    fields:
+    - name: id
+      type:
+        scalar: string
+      default: ""
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: subnets
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Subnet
+          elementRelationship: atomic
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NodeInfo
+  map:
+    fields:
+    - name: operatingSystem
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackCluster
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
+      default: {}
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterSpec
+      default: {}
+    - name: status
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterStatus
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterSpec
+  map:
+    fields:
+    - name: apiServerFixedIP
+      type:
+        scalar: string
+    - name: apiServerFloatingIP
+      type:
+        scalar: string
+    - name: apiServerLoadBalancer
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServerLoadBalancer
+    - name: apiServerPort
+      type:
+        scalar: numeric
+    - name: bastion
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Bastion
+    - name: controlPlaneAvailabilityZones
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: controlPlaneEndpoint
+      type:
+        namedType: io.k8s.sigs.cluster-api.api.core.v1beta2.APIEndpoint
+    - name: controlPlaneOmitAvailabilityZone
+      type:
+        scalar: boolean
+    - name: disableAPIServerFloatingIP
+      type:
+        scalar: boolean
+    - name: disableExternalNetwork
+      type:
+        scalar: boolean
+    - name: externalNetwork
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+    - name: identityRef
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
+      default: {}
+    - name: managedNetwork
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedNetwork
+    - name: managedRouter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedRouter
+    - name: managedSecurityGroups
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedSecurityGroups
+    - name: managedSubnets
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetSpec
+          elementRelationship: atomic
+    - name: network
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+    - name: router
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterParam
+    - name: subnets
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+          elementRelationship: atomic
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterStatus
+  map:
+    fields:
+    - name: apiServerLoadBalancer
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.LoadBalancer
+    - name: bastion
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BastionStatus
+    - name: bastionSecurityGroup
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
+          elementRelationship: associative
+          keys:
+          - type
+    - name: controlPlaneSecurityGroup
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
+    - name: externalNetwork
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatus
+    - name: failureDomains
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api.api.core.v1beta2.FailureDomain
+          elementRelationship: atomic
+    - name: initialization
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ClusterInitialization
+    - name: network
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatusWithSubnets
+    - name: router
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Router
+    - name: workerSecurityGroup
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplate
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
+      default: {}
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplateSpec
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplateResource
+  map:
+    fields:
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterSpec
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplateSpec
+  map:
+    fields:
+    - name: template
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplateResource
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
+  map:
+    fields:
+    - name: cloudName
+      type:
+        scalar: string
+      default: ""
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: region
+      type:
+        scalar: string
+    - name: type
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachine
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
+      default: {}
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineSpec
+      default: {}
+    - name: status
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineStatus
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineSpec
+  map:
+    fields:
+    - name: additionalBlockDevices
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AdditionalBlockDevice
+          elementRelationship: associative
+          keys:
+          - name
+    - name: configDrive
+      type:
+        scalar: boolean
+    - name: flavor
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorParam
+      default: {}
+    - name: floatingIPPoolRef
+      type:
+        namedType: TypedLocalObjectReference.v1.core.api.k8s.io
+    - name: identityRef
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
+    - name: image
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageParam
+      default: {}
+    - name: ports
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.PortOpts
+          elementRelationship: atomic
+    - name: providerID
+      type:
+        scalar: string
+    - name: rootVolume
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RootVolume
+    - name: schedulerHintAdditionalProperties
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SchedulerHintAdditionalProperty
+          elementRelationship: associative
+          keys:
+          - name
+    - name: securityGroups
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupParam
+          elementRelationship: atomic
+    - name: serverGroup
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupParam
+    - name: serverMetadata
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerMetadata
+          elementRelationship: associative
+          keys:
+          - key
+    - name: sshKeyName
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: trunk
+      type:
+        scalar: boolean
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineStatus
+  map:
+    fields:
+    - name: addresses
+      type:
+        list:
+          elementType:
+            namedType: NodeAddress.v1.core.api.k8s.io
+          elementRelationship: atomic
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
+          elementRelationship: associative
+          keys:
+          - type
+    - name: initialization
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.MachineInitialization
+    - name: instanceID
+      type:
+        scalar: string
+    - name: instanceState
+      type:
+        scalar: string
+    - name: resolved
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedMachineSpec
+    - name: resources
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.MachineResources
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineTemplate
+  map:
+    fields:
+    - name: apiVersion
+      type:
+        scalar: string
+    - name: kind
+      type:
+        scalar: string
+    - name: metadata
+      type:
+        namedType: ObjectMeta.v1.meta.apis.pkg.apimachinery.k8s.io
+      default: {}
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineTemplateSpec
+      default: {}
+    - name: status
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineTemplateStatus
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineTemplateResource
+  map:
+    fields:
+    - name: spec
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineSpec
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineTemplateSpec
+  map:
+    fields:
+    - name: template
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineTemplateResource
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineTemplateStatus
+  map:
+    fields:
+    - name: capacity
+      type:
+        map:
+          elementType:
+            namedType: Quantity.resource.api.pkg.apimachinery.k8s.io
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: Condition.v1.meta.apis.pkg.apimachinery.k8s.io
+          elementRelationship: associative
+          keys:
+          - type
+    - name: nodeInfo
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NodeInfo
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.PortOpts
+  map:
+    fields:
+    - name: adminStateUp
+      type:
+        scalar: boolean
+    - name: allowedAddressPairs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AddressPair
+          elementRelationship: atomic
+    - name: description
+      type:
+        scalar: string
+    - name: disablePortSecurity
+      type:
+        scalar: boolean
+    - name: fixedIPs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FixedIP
+          elementRelationship: atomic
+    - name: hostID
+      type:
+        scalar: string
+    - name: macAddress
+      type:
+        scalar: string
+    - name: nameSuffix
+      type:
+        scalar: string
+    - name: network
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+    - name: profile
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BindingProfile
+    - name: propagateUplinkStatus
+      type:
+        scalar: boolean
+    - name: securityGroups
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupParam
+          elementRelationship: atomic
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: trunk
+      type:
+        scalar: boolean
+    - name: valueSpecs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ValueSpec
+          elementRelationship: associative
+          keys:
+          - name
+    - name: vnicType
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.PortStatus
+  map:
+    fields:
+    - name: id
+      type:
+        scalar: string
+      default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedFixedIP
+  map:
+    fields:
+    - name: ipAddress
+      type:
+        scalar: string
+    - name: subnet
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedMachineSpec
+  map:
+    fields:
+    - name: flavorID
+      type:
+        scalar: string
+    - name: imageID
+      type:
+        scalar: string
+    - name: ports
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedPortSpec
+          elementRelationship: atomic
+    - name: serverGroupID
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedPortSpec
+  map:
+    fields:
+    - name: adminStateUp
+      type:
+        scalar: boolean
+    - name: allowedAddressPairs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AddressPair
+          elementRelationship: atomic
+    - name: description
+      type:
+        scalar: string
+      default: ""
+    - name: disablePortSecurity
+      type:
+        scalar: boolean
+    - name: fixedIPs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedFixedIP
+          elementRelationship: atomic
+    - name: hostID
+      type:
+        scalar: string
+    - name: macAddress
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: networkID
+      type:
+        scalar: string
+      default: ""
+    - name: profile
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BindingProfile
+    - name: propagateUplinkStatus
+      type:
+        scalar: boolean
+    - name: securityGroups
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: trunk
+      type:
+        scalar: boolean
+    - name: valueSpecs
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ValueSpec
+          elementRelationship: associative
+          keys:
+          - name
+    - name: vnicType
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResourceReference
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RootVolume
+  map:
+    fields:
+    - name: availabilityZone
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeAvailabilityZone
+    - name: sizeGiB
+      type:
+        scalar: numeric
+      default: 0
+    - name: type
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Router
+  map:
+    fields:
+    - name: id
+      type:
+        scalar: string
+      default: ""
+    - name: ips
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterFilter
+  map:
+    fields:
+    - name: description
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+    - name: notTags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: notTagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: projectID
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: tagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterFilter
+    - name: id
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SchedulerHintAdditionalProperty
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: value
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SchedulerHintAdditionalValue
+      default: {}
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SchedulerHintAdditionalValue
+  map:
+    fields:
+    - name: bool
+      type:
+        scalar: boolean
+    - name: number
+      type:
+        scalar: numeric
+    - name: string
+      type:
+        scalar: string
+    - name: type
+      type:
+        scalar: string
+      default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupFilter
+  map:
+    fields:
+    - name: description
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+    - name: notTags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: notTagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: projectID
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: tagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupFilter
+    - name: id
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupRuleSpec
+  map:
+    fields:
+    - name: description
+      type:
+        scalar: string
+    - name: direction
+      type:
+        scalar: string
+      default: ""
+    - name: etherType
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: portRangeMax
+      type:
+        scalar: numeric
+    - name: portRangeMin
+      type:
+        scalar: numeric
+    - name: protocol
+      type:
+        scalar: string
+    - name: remoteGroupID
+      type:
+        scalar: string
+    - name: remoteIPPrefix
+      type:
+        scalar: string
+    - name: remoteManagedGroups
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
+  map:
+    fields:
+    - name: id
+      type:
+        scalar: string
+      default: ""
+    - name: name
+      type:
+        scalar: string
+      default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupFilter
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupFilter
+    - name: id
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerMetadata
+  map:
+    fields:
+    - name: key
+      type:
+        scalar: string
+      default: ""
+    - name: value
+      type:
+        scalar: string
+      default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Subnet
+  map:
+    fields:
+    - name: cidr
+      type:
+        scalar: string
+      default: ""
+    - name: id
+      type:
+        scalar: string
+      default: ""
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetFilter
+  map:
+    fields:
+    - name: cidr
+      type:
+        scalar: string
+    - name: description
+      type:
+        scalar: string
+    - name: gatewayIP
+      type:
+        scalar: string
+    - name: ipVersion
+      type:
+        scalar: numeric
+    - name: ipv6AddressMode
+      type:
+        scalar: string
+    - name: ipv6RAMode
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
+    - name: notTags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: notTagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: projectID
+      type:
+        scalar: string
+    - name: tags
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+    - name: tagsAny
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: associative
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+  map:
+    fields:
+    - name: filter
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetFilter
+    - name: id
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetSpec
+  map:
+    fields:
+    - name: allocationPools
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.AllocationPool
+          elementRelationship: atomic
+    - name: cidr
+      type:
+        scalar: string
+      default: ""
+    - name: dnsNameservers
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ValueSpec
+  map:
+    fields:
+    - name: key
+      type:
+        scalar: string
+      default: ""
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: value
+      type:
+        scalar: string
+      default: ""
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeAvailabilityZone
+  map:
+    fields:
+    - name: from
+      type:
+        scalar: string
+    - name: name
+      type:
+        scalar: string
 - name: io.k8s.sigs.cluster-api.api.core.v1beta1.APIEndpoint
   map:
     fields:
@@ -1763,7 +3112,7 @@ var schemaYAML = typed.YAMLObject(`types:
     fields:
     - name: lastTransitionTime
       type:
-        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Time
+        namedType: Time.v1.meta.apis.pkg.apimachinery.k8s.io
     - name: message
       type:
         scalar: string
@@ -1792,6 +3141,29 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: controlPlane
       type:
         scalar: boolean
+- name: io.k8s.sigs.cluster-api.api.core.v1beta2.APIEndpoint
+  map:
+    fields:
+    - name: host
+      type:
+        scalar: string
+    - name: port
+      type:
+        scalar: numeric
+- name: io.k8s.sigs.cluster-api.api.core.v1beta2.FailureDomain
+  map:
+    fields:
+    - name: attributes
+      type:
+        map:
+          elementType:
+            scalar: string
+    - name: controlPlane
+      type:
+        scalar: boolean
+    - name: name
+      type:
+        scalar: string
 - name: __untyped_atomic_
   scalar: untyped
   list:

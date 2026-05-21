@@ -33,7 +33,7 @@ const (
 // +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? !has(self.bastion) || !has(self.bastion.floatingIP) : true",message="bastion floating IP cannot be set when disableExternalNetwork is true"
 // +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? has(self.disableAPIServerFloatingIP) && self.disableAPIServerFloatingIP : true",message="disableAPIServerFloatingIP cannot be false when disableExternalNetwork is true"
 type OpenStackClusterSpec struct {
-	// ManagedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
+	// managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
 	// subnet is supported. If you leave this empty, no network will be created.
 	// +kubebuilder:validation:MaxItems=1
@@ -41,17 +41,7 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ManagedSubnets []SubnetSpec `json:"managedSubnets,omitempty"`
 
-	// Router specifies an existing router to be used if ManagedSubnets are
-	// specified. If specified, no new router will be created.
-	// +optional
-	Router *RouterParam `json:"router,omitempty"`
-
-	// Network specifies an existing network to use if no ManagedSubnets
-	// are specified.
-	// +optional
-	Network *NetworkParam `json:"network,omitempty"`
-
-	// Subnets specifies existing subnets to use if not ManagedSubnets are
+	// subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.
 	// There can be zero, one, or two subnets. If no subnets are specified,
 	// all subnets in Network will be used. If 2 subnets are specified, one
@@ -61,20 +51,29 @@ type OpenStackClusterSpec struct {
 	// +optional
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 
-	// NetworkMTU sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
-	// This value will be used only if the Cluster actuator creates the network.
-	// If left empty, the network will have the default MTU defined in Openstack network service.
-	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
+	// managedRouter specifies attributes of the router. The values are used only
+	// if the Cluster actuator creates the router.
+	// +kubebuilder:validation:XValidation:rule="has(self.externalIPs)",message="managedRouter must not be empty if set"
 	// +optional
-	NetworkMTU optional.Int `json:"networkMTU,omitempty"`
+	ManagedRouter *ManagedRouter `json:"managedRouter,omitempty"`
 
-	// ExternalRouterIPs is an array of externalIPs on the respective subnets.
-	// This is necessary if the router needs a fixed ip in a specific subnet.
-	// +listType=atomic
+	// router specifies an existing router to be used if ManagedSubnets are
+	// specified. If specified, no new router will be created.
 	// +optional
-	ExternalRouterIPs []ExternalRouterIPParam `json:"externalRouterIPs,omitempty"`
+	Router *RouterParam `json:"router,omitempty"`
 
-	// ExternalNetwork is the OpenStack Network to be used to get public internet to the VMs.
+	// managedNetwork specifies attributes of the network. The values are used only
+	// if the Cluster actuator creates the network.
+	// +kubebuilder:validation:XValidation:rule="self == null || has(self.mtu) || has(self.disablePortSecurity)",message="managedNetwork must not be empty if set"
+	// +optional
+	ManagedNetwork *ManagedNetwork `json:"managedNetwork,omitempty"`
+
+	// network specifies an existing network to use if no ManagedSubnets
+	// are specified.
+	// +optional
+	Network *NetworkParam `json:"network,omitempty"`
+
+	// externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// This option is ignored if DisableExternalNetwork is set to true.
 	//
 	// If ExternalNetwork is defined it must refer to exactly one external network.
@@ -89,18 +88,18 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ExternalNetwork *NetworkParam `json:"externalNetwork,omitempty"`
 
-	// DisableExternalNetwork specifies whether or not to attempt to connect the cluster
+	// disableExternalNetwork specifies whether or not to attempt to connect the cluster
 	// to an external network. This allows for the creation of clusters when connecting
 	// to an external network is not possible or desirable, e.g. if using a provider network.
 	// +optional
 	DisableExternalNetwork optional.Bool `json:"disableExternalNetwork,omitempty"`
 
-	// APIServerLoadBalancer configures the optional LoadBalancer for the APIServer.
+	// apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
 	// If not specified, no load balancer will be created for the API server.
 	// +optional
 	APIServerLoadBalancer *APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
-	// DisableAPIServerFloatingIP determines whether or not to attempt to attach a floating
+	// disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
 	// IP to the API server. This allows for the creation of clusters when attaching a floating
 	// IP to the API server (and hence, in many cases, exposing the API server to the internet)
 	// is not possible or desirable, e.g. if using a shared VLAN for communication between
@@ -115,14 +114,14 @@ type OpenStackClusterSpec struct {
 	// +optional
 	DisableAPIServerFloatingIP optional.Bool `json:"disableAPIServerFloatingIP,omitempty"`
 
-	// APIServerFloatingIP is the floatingIP which will be associated with the API server.
+	// apiServerFloatingIP is the floatingIP which will be associated with the API server.
 	// The floatingIP will be created if it does not already exist.
 	// If not specified, a new floatingIP is allocated.
 	// This field is not used if DisableAPIServerFloatingIP is set to true.
 	// +optional
 	APIServerFloatingIP optional.String `json:"apiServerFloatingIP,omitempty"`
 
-	// APIServerFixedIP is the fixed IP which will be associated with the API server.
+	// apiServerFixedIP is the fixed IP which will be associated with the API server.
 	// In the case where the API server has a floating IP but not a managed load balancer,
 	// this field is not used.
 	// If a managed load balancer is used and this field is not specified, a fixed IP will
@@ -133,12 +132,12 @@ type OpenStackClusterSpec struct {
 	// +optional
 	APIServerFixedIP optional.String `json:"apiServerFixedIP,omitempty"`
 
-	// APIServerPort is the port on which the listener on the APIServer
+	// apiServerPort is the port on which the listener on the APIServer
 	// will be created. If specified, it must be an integer between 0 and 65535.
 	// +optional
 	APIServerPort optional.UInt16 `json:"apiServerPort,omitempty"`
 
-	// ManagedSecurityGroups determines whether OpenStack security groups for the cluster
+	// managedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will
 	// be specified as part of the configuration.
 	// By default, the managed security groups have rules that allow the Kubelet, etcd, and the
@@ -148,17 +147,12 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ManagedSecurityGroups *ManagedSecurityGroups `json:"managedSecurityGroups,omitempty"`
 
-	// DisablePortSecurity disables the port security of the network created for the
-	// Kubernetes cluster, which also disables SecurityGroups
-	// +optional
-	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
-
-	// Tags to set on all resources in cluster which support tags
+	// tags to set on all resources in cluster which support tags
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 
-	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+	// controlPlaneEndpoint represents the endpoint used to communicate with the control plane.
 	// It is normally populated automatically by the OpenStackCluster
 	// controller during cluster provisioning. If it is set on creation the
 	// control plane endpoint will use the values set here in preference to
@@ -167,20 +161,20 @@ type OpenStackClusterSpec struct {
 	// +optional
 	ControlPlaneEndpoint *clusterv1.APIEndpoint `json:"controlPlaneEndpoint,omitempty"`
 
-	// ControlPlaneAvailabilityZones is the set of availability zones which
+	// controlPlaneAvailabilityZones is the set of availability zones which
 	// control plane machines may be deployed to.
 	// +listType=set
 	// +optional
 	ControlPlaneAvailabilityZones []string `json:"controlPlaneAvailabilityZones,omitempty"`
 
-	// ControlPlaneOmitAvailabilityZone causes availability zone to be
+	// controlPlaneOmitAvailabilityZone causes availability zone to be
 	// omitted when creating control plane nodes, allowing the Nova
 	// scheduler to make a decision on which availability zone to use based
 	// on other scheduling constraints
 	// +optional
 	ControlPlaneOmitAvailabilityZone optional.Bool `json:"controlPlaneOmitAvailabilityZone,omitempty"`
 
-	// Bastion is the OpenStack instance to login the nodes
+	// bastion is the OpenStack instance to login the nodes
 	//
 	// As a rolling update is not ideal during a bastion host session, we
 	// prevent changes to a running bastion configuration. To make changes, it's required
@@ -188,7 +182,7 @@ type OpenStackClusterSpec struct {
 	//+optional
 	Bastion *Bastion `json:"bastion,omitempty"`
 
-	// IdentityRef is a reference to a secret holding OpenStack credentials
+	// identityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this cluster. It is also to reconcile
 	// machines unless overridden in the machine spec.
 	// +kubebuilder:validation:Required
@@ -197,7 +191,7 @@ type OpenStackClusterSpec struct {
 
 // ClusterInitialization represents the initialization status of the cluster.
 type ClusterInitialization struct {
-	// Provisioned is set to true when the initial provisioning of the cluster infrastructure is completed.
+	// provisioned is set to true when the initial provisioning of the cluster infrastructure is completed.
 	// The value of this field is never updated after provisioning is completed.
 	// +optional
 	Provisioned bool `json:"provisioned,omitempty"`
@@ -205,59 +199,63 @@ type ClusterInitialization struct {
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.
 type OpenStackClusterStatus struct {
-	// Initialization contains information about the initialization status of the cluster.
+	// conditions defines current service state of the OpenStackCluster.
+	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
+	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
+	// (both during initial provisioning and after the initial provisioning is completed).
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// initialization contains information about the initialization status of the cluster.
 	// +optional
 	Initialization *ClusterInitialization `json:"initialization,omitempty"`
 
-	// Network contains information about the created OpenStack Network.
+	// network contains information about the created OpenStack Network.
 	// +optional
 	Network *NetworkStatusWithSubnets `json:"network,omitempty"`
 
-	// ExternalNetwork contains information about the external network used for default ingress and egress traffic.
+	// externalNetwork contains information about the external network used for default ingress and egress traffic.
 	// +optional
 	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
 
-	// Router describes the default cluster router
+	// router describes the default cluster router
 	// +optional
 	Router *Router `json:"router,omitempty"`
 
-	// APIServerLoadBalancer describes the api server load balancer if one exists
+	// apiServerLoadBalancer describes the api server load balancer if one exists
 	// +optional
 	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
 
-	// FailureDomains represent OpenStack availability zones
+	// failureDomains represent OpenStack availability zones
+	// +optional
 	FailureDomains []clusterv1.FailureDomain `json:"failureDomains,omitempty"`
 
-	// ControlPlaneSecurityGroup contains the information about the
+	// controlPlaneSecurityGroup contains the information about the
 	// OpenStack Security Group that needs to be applied to control plane
 	// nodes.
 	// +optional
 	ControlPlaneSecurityGroup *SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty"`
 
-	// WorkerSecurityGroup contains the information about the OpenStack
+	// workerSecurityGroup contains the information about the OpenStack
 	// Security Group that needs to be applied to worker nodes.
 	// +optional
 	WorkerSecurityGroup *SecurityGroupStatus `json:"workerSecurityGroup,omitempty"`
 
-	// BastionSecurityGroup contains the information about the OpenStack
+	// bastionSecurityGroup contains the information about the OpenStack
 	// Security Group that needs to be applied to worker nodes.
 	// +optional
 	BastionSecurityGroup *SecurityGroupStatus `json:"bastionSecurityGroup,omitempty"`
 
-	// Bastion contains the information about the deployed bastion host
+	// bastion contains the information about the deployed bastion host
 	// +optional
 	Bastion *BastionStatus `json:"bastion,omitempty"`
-
-	// Conditions defines current service state of the OpenStackCluster.
-	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
-	// The Ready condition must surface issues during the entire lifecycle of the OpenStackCluster
-	// (both during initial provisioning and after the initial provisioning is completed).
-	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +genclient
 // +kubebuilder:object:root=true
+// +kubebuilder:storageversion
 // +kubebuilder:resource:path=openstackclusters,scope=Namespaced,categories=cluster-api,shortName=osc
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Cluster",type="string",JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this OpenStackCluster belongs"
@@ -268,10 +266,13 @@ type OpenStackClusterStatus struct {
 
 // OpenStackCluster is the Schema for the openstackclusters API.
 type OpenStackCluster struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// metadata is the standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   OpenStackClusterSpec   `json:"spec,omitempty"`
+	// spec is the desired state of the OpenStackCluster.
+	Spec OpenStackClusterSpec `json:"spec,omitempty"`
+	// status is the observed state of the OpenStackCluster.
 	Status OpenStackClusterStatus `json:"status,omitempty"`
 }
 
@@ -284,15 +285,41 @@ type OpenStackClusterList struct {
 	Items           []OpenStackCluster `json:"items"`
 }
 
+// ManagedRouter specifies attributes of the router.
+type ManagedRouter struct {
+	// externalIPs is a list of external IPs to assign to the router.
+	// This is necessary if the router needs a fixed ip in a specific subnet.
+	// Each entry specifies a fixed IP and the subnet it should be allocated from.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	// +listType=atomic
+	ExternalIPs []ExternalRouterIPParam `json:"externalIPs,omitempty"`
+}
+
+// ManagedNetwork specifies attributes of the network.
+type ManagedNetwork struct {
+	// mtu sets the maximum transmission unit (MTU) value to address fragmentation for the private network ID.
+	// This value will be used only if the Cluster actuator creates the network.
+	// If left empty, the network will have the default MTU defined in Openstack network service.
+	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
+	// +optional
+	MTU optional.Int `json:"mtu,omitempty"`
+
+	// disablePortSecurity disables the port security of the network created for the
+	// Kubernetes cluster, which also disables SecurityGroups
+	// +optional
+	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
+}
+
 // ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.
 type ManagedSecurityGroups struct {
-	// allNodesSecurityGroupRules defines the rules that should be applied to all nodes.
+	// clusterNodesSecurityGroupRules defines the rules that should be applied to all cluster nodes, excluding the bastion host.
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	// +listType=map
 	// +listMapKey=name
 	// +optional
-	AllNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"allNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	ClusterNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"clusterNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
 	// controlPlaneNodesSecurityGroupRules defines the rules that should be applied to control plane nodes.
 	// +patchMergeKey=name
@@ -310,7 +337,7 @@ type ManagedSecurityGroups struct {
 	// +optional
 	WorkerNodesSecurityGroupRules []SecurityGroupRuleSpec `json:"workerNodesSecurityGroupRules,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
-	// AllowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
+	// allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
 	// +kubebuilder:default=false
 	// +kubebuilder:validation:Required
 	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic"`

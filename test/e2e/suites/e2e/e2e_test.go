@@ -50,14 +50,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/ptr"
 	bootstrapv1 "sigs.k8s.io/cluster-api/api/bootstrap/kubeadm/v1beta2"
-	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/internal/util/ssa"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/generated/applyconfiguration/api/v1beta1"
 	shared "sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
@@ -212,7 +211,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 			bastionSpec := openStackCluster.Spec.Bastion
-			bastionFlavor := openStackCluster.Spec.Bastion.Spec.Flavor
+			bastionFlavor := openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name
 			Expect(openStackCluster.Status.Bastion).NotTo(BeNil(), "OpenStackCluster.Status.Bastion has not been populated")
 			bastionServerName := openStackCluster.Status.Bastion.Name
 			bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName})
@@ -220,11 +219,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(bastionServer).To(HaveLen(1), "Did not find the bastion in OpenStack")
 
 			shared.Logf("Disable the bastion")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterDisabledBastion := openStackCluster.DeepCopy()
-			openStackClusterDisabledBastion.Spec.Bastion.Enabled = ptr.To(false)
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterDisabledBastion)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion.Enabled = ptr.To(false)
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			Eventually(
 				func() (bool, error) {
 					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName})
@@ -257,11 +259,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 
 			shared.Logf("Delete the bastion")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterWithoutBastion := openStackCluster.DeepCopy()
-			openStackClusterWithoutBastion.Spec.Bastion = nil
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithoutBastion)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion = nil
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(
@@ -279,12 +284,18 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			bastionNewFlavorName := ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackBastionFlavorAlt))
 			bastionNewFlavor, err := shared.GetFlavorFromName(e2eCtx, bastionNewFlavorName)
 			Expect(err).NotTo(HaveOccurred())
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterWithNewBastionFlavor := openStackCluster.DeepCopy()
-			openStackClusterWithNewBastionFlavor.Spec.Bastion = bastionSpec
-			openStackClusterWithNewBastionFlavor.Spec.Bastion.Spec.Flavor = bastionNewFlavorName
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithNewBastionFlavor)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion = bastionSpec
+				if openStackCluster.Spec.Bastion.Spec.Flavor.Filter == nil {
+					openStackCluster.Spec.Bastion.Spec.Flavor.Filter = &infrav1.FlavorFilter{}
+				}
+				openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name = bastionNewFlavorName
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			Eventually(
 				func() (bool, error) {
 					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName, Flavor: bastionNewFlavor.ID})
@@ -297,7 +308,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(openStackCluster.Spec.Bastion).To(Equal(openStackClusterWithNewBastionFlavor.Spec.Bastion))
+			Expect(openStackCluster.Spec.Bastion).To(Equal(bastionSpec))
 			Eventually(
 				func() (bool, error) {
 					openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
@@ -315,12 +326,18 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			shared.Logf("Change the bastion spec with the original flavor")
 			bastionOriginalFlavor, err := shared.GetFlavorFromName(e2eCtx, bastionFlavor)
 			Expect(err).NotTo(HaveOccurred())
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-			openStackClusterWithOriginalBastionFlavor := openStackCluster.DeepCopy()
-			openStackClusterWithOriginalBastionFlavor.Spec.Bastion = bastionSpec
-			openStackClusterWithOriginalBastionFlavor.Spec.Bastion.Spec.Flavor = bastionFlavor
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackClusterWithOriginalBastionFlavor)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.Bastion = bastionSpec
+				if openStackCluster.Spec.Bastion.Spec.Flavor.Filter == nil {
+					openStackCluster.Spec.Bastion.Spec.Flavor.Filter = &infrav1.FlavorFilter{}
+				}
+				openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name = bastionFlavor
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 			Eventually(
 				func() (bool, error) {
 					bastionServer, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{Name: bastionServerName, Flavor: bastionOriginalFlavor.ID})
@@ -333,7 +350,7 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			).Should(BeTrue())
 			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(openStackCluster.Spec.Bastion).To(Equal(openStackClusterWithOriginalBastionFlavor.Spec.Bastion))
+			Expect(openStackCluster.Spec.Bastion).To(Equal(bastionSpec))
 			Eventually(
 				func() (bool, error) {
 					openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
@@ -1037,13 +1054,13 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 			shared.Logf("Waiting for the OpenStackMachine to have a condition that the server has been unexpectedly deleted")
 			retries := 0
-			Eventually(func() (clusterv1beta1.Condition, error) {
+			Eventually(func() (metav1.Condition, error) {
 				k8sClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
 
 				openStackMachine := &infrav1.OpenStackMachine{}
 				err := k8sClient.Get(ctx, crclient.ObjectKey{Name: controlPlaneMachines[0].Name, Namespace: controlPlaneMachines[0].Namespace}, openStackMachine)
 				if err != nil {
-					return clusterv1beta1.Condition{}, err
+					return metav1.Condition{}, err
 				}
 				for _, condition := range openStackMachine.Status.Conditions {
 					if condition.Type == infrav1.InstanceReadyCondition {
@@ -1062,18 +1079,17 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					})
 				err = k8sClient.Patch(ctx, openStackMachine, ssa.ApplyConfigPatch(applyConfig), crclient.ForceOwnership, crclient.FieldOwner("capo-e2e"))
 				if err != nil {
-					return clusterv1beta1.Condition{}, err
+					return metav1.Condition{}, err
 				}
 
-				return clusterv1beta1.Condition{}, errors.New("condition InstanceReadyCondition not found")
+				return metav1.Condition{}, errors.New("condition InstanceReadyCondition not found")
 			}, time.Minute*3, time.Second*10).Should(MatchFields(
 				IgnoreExtras,
 				Fields{
-					"Type":     Equal(infrav1.InstanceReadyCondition),
-					"Status":   Equal(corev1.ConditionFalse),
-					"Reason":   Equal(infrav1.InstanceDeletedReason),
-					"Message":  Equal(infrav1.ServerUnexpectedDeletedMessage),
-					"Severity": Equal(clusterv1beta1.ConditionSeverityError),
+					"Type":    Equal(infrav1.InstanceReadyCondition),
+					"Status":  Equal(metav1.ConditionFalse),
+					"Reason":  Equal(infrav1.InstanceDeletedReason),
+					"Message": Equal(infrav1.ServerUnexpectedDeletedMessage),
 				},
 			), "OpenStackMachine should be marked not ready with InstanceDeletedReason")
 		})
@@ -1147,14 +1163,15 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(clusterMonitor.Type).To(Equal("TCP"), "Monitor should be TCP type")
 
 			shared.Logf("Testing health monitor configuration update")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-
-			updatedCluster := openStackCluster.DeepCopy()
-			updatedCluster.Spec.APIServerLoadBalancer.Monitor.Delay = 20
-			updatedCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries = 4
-
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, updatedCluster)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.APIServerLoadBalancer.Monitor.Delay = 20
+				openStackCluster.Spec.APIServerLoadBalancer.Monitor.MaxRetries = 4
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 
 			Eventually(func() (bool, error) {
 				updatedMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)
@@ -1172,16 +1189,18 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(finalMonitor.MaxRetriesDown).To(Equal(2), "Monitor maxRetriesDown should remain unchanged")
 
 			shared.Logf("Testing monitor configuration removal and default value reversion")
-			openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
-			Expect(err).NotTo(HaveOccurred())
-
-			clusterWithRemovedMonitor := openStackCluster.DeepCopy()
-			clusterWithRemovedMonitor.Spec.APIServerLoadBalancer.Monitor = nil
-			if clusterWithRemovedMonitor.Annotations == nil {
-				clusterWithRemovedMonitor.Annotations = make(map[string]string)
-			}
-			clusterWithRemovedMonitor.Annotations["test.e2e/monitor-update"] = fmt.Sprintf("%d", time.Now().Unix())
-			Expect(e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, clusterWithRemovedMonitor)).To(Succeed())
+			Eventually(func() error {
+				openStackCluster, err = shared.ClusterForSpec(ctx, e2eCtx, namespace)
+				if err != nil {
+					return err
+				}
+				openStackCluster.Spec.APIServerLoadBalancer.Monitor = nil
+				if openStackCluster.Annotations == nil {
+					openStackCluster.Annotations = make(map[string]string)
+				}
+				openStackCluster.Annotations["test.e2e/monitor-update"] = fmt.Sprintf("%d", time.Now().Unix())
+				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
+			}, "30s", "1s").Should(Succeed())
 
 			Eventually(func() (bool, error) {
 				revertedMonitor, err := shared.GetOpenStackLoadBalancerMonitor(e2eCtx, clusterMonitor.ID)
@@ -1198,6 +1217,144 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(revertedMonitor.Timeout).To(Equal(5), "Monitor timeout should revert to default value (5)")
 			Expect(revertedMonitor.MaxRetries).To(Equal(5), "Monitor maxRetries should revert to default value (5)")
 			Expect(revertedMonitor.MaxRetriesDown).To(Equal(3), "Monitor maxRetriesDown should revert to default value (3)")
+		})
+	})
+
+	Describe("AllowedAddressPairs mutability", func() {
+		It("should update Neutron port allowedAddressPairs when OSMT spec is patched [Feature:AllowedAddressPairs]", func(ctx context.Context) {
+			shared.Logf("Creating a cluster with 1 CP and 0 initial workers")
+			clusterName := fmt.Sprintf("cluster-%s", namespace.Name)
+			configCluster := defaultConfigCluster(clusterName, namespace.Name)
+			configCluster.ControlPlaneMachineCount = ptr.To(int64(1))
+			configCluster.WorkerMachineCount = ptr.To(int64(0))
+			configCluster.Flavor = shared.FlavorWithoutLB
+			createCluster(ctx, configCluster, clusterResources)
+
+			mgmtClient := e2eCtx.Environment.BootstrapClusterProxy.GetClient()
+
+			// Fetch the cluster to get its UID (needed for OSMT owner reference).
+			cluster := &clusterv1.Cluster{}
+			Expect(mgmtClient.Get(ctx, apimachinerytypes.NamespacedName{Namespace: namespace.Name, Name: clusterName}, cluster)).To(Succeed())
+
+			// Create a new MachineDeployment whose OSMT has 1 port with initially empty allowedAddressPairs.
+			mdName := clusterName + "-md-aap"
+			testTag := utilrand.String(6)
+			initialPortOpts := &[]infrav1.PortOpts{
+				{Description: ptr.To("aap-port")},
+			}
+			osmt := makeOpenStackMachineTemplateWithPortOptions(namespace.Name, clusterName, mdName, initialPortOpts, []string{testTag})
+
+			// The OSMT controller requires a direct Cluster owner reference.
+			osmt.Labels = map[string]string{clusterv1.ClusterNameLabel: clusterName}
+			osmt.OwnerReferences = []metav1.OwnerReference{
+				{
+					APIVersion: clusterv1.GroupVersion.String(),
+					Kind:       "Cluster",
+					Name:       cluster.Name,
+					UID:        cluster.UID,
+				},
+			}
+			md := makeMachineDeployment(namespace.Name, mdName, clusterName, "", 1)
+			framework.CreateMachineDeployment(ctx, framework.CreateMachineDeploymentInput{
+				Creator:                 mgmtClient,
+				MachineDeployment:       md,
+				BootstrapConfigTemplate: makeWorkerJoinConfigTemplate(namespace.Name, mdName),
+				InfraMachineTemplate:    osmt,
+			})
+
+			// Wait for the worker port to appear in OpenStack.
+			shared.Logf("Waiting for worker port to be created in OpenStack")
+			var portList []ports.Port
+			Eventually(func() int {
+				portList, _ = shared.DumpOpenStackPorts(e2eCtx, ports.ListOpts{Description: "aap-port", Tags: testTag})
+				return len(portList)
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(Equal(1))
+			workerPort := portList[0]
+			shared.Logf("Port created: %s", workerPort.ID)
+
+			// Wait for the Machine's InfrastructureRef to be populated (OSM created by CAPI).
+			var osmKey apimachinerytypes.NamespacedName
+			shared.Logf("Waiting for Machine InfrastructureRef to be set")
+			Eventually(func() bool {
+				workers := framework.GetMachinesByMachineDeployments(ctx, framework.GetMachinesByMachineDeploymentsInput{
+					Lister:            mgmtClient,
+					ClusterName:       clusterName,
+					Namespace:         namespace.Name,
+					MachineDeployment: *md,
+				})
+				if len(workers) == 0 || workers[0].Spec.InfrastructureRef.Name == "" {
+					return false
+				}
+				osmKey = apimachinerytypes.NamespacedName{
+					Namespace: namespace.Name,
+					Name:      workers[0].Spec.InfrastructureRef.Name,
+				}
+				return true
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
+			shared.Logf("Machine InfrastructureRef resolved to OSM %s", osmKey.Name)
+
+			// Wait for the OSMT controller to set the initial annotation on the OSM.
+			// Requires the OSM controller to have provisioned the Nova server first
+			// (status.resources.ports must be populated).
+			shared.Logf("Waiting for OSMT controller to annotate OSM %s", osmKey.Name)
+			Eventually(func() bool {
+				osm := &infrav1.OpenStackMachine{}
+				if err := mgmtClient.Get(ctx, osmKey, osm); err != nil {
+					return false
+				}
+				_, ok := osm.Annotations["infrastructure.cluster.x-k8s.io/osmt-allowed-address-pairs"]
+				return ok
+			}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(BeTrue())
+
+			osmtKey := apimachinerytypes.NamespacedName{Namespace: namespace.Name, Name: mdName}
+
+			// Helper to get a fresh Neutron client and verify allowedAddressPairs on the port.
+			verifyNeutronPort := func(expectedIPs ...string) {
+				GinkgoHelper()
+				providerClient, clientOpts, _, err := shared.GetTenantProviderClient(e2eCtx)
+				Expect(err).To(BeNil(), "cannot get OpenStack provider client")
+				networkClient, err := openstack.NewNetworkV2(providerClient, gophercloud.EndpointOpts{
+					Region: clientOpts.RegionName,
+				})
+				Expect(err).To(BeNil(), "cannot create Neutron client")
+				updatedPort, err := ports.Get(ctx, networkClient, workerPort.ID).Extract()
+				Expect(err).To(BeNil(), "cannot get port from Neutron")
+				for _, ip := range expectedIPs {
+					Expect(updatedPort.AllowedAddressPairs).To(ContainElement(
+						MatchFields(IgnoreExtras, Fields{"IPAddress": Equal(ip)}),
+					), "expected allowedAddressPair %s on port %s", ip, workerPort.ID)
+				}
+				Expect(updatedPort.AllowedAddressPairs).To(HaveLen(len(expectedIPs)),
+					"expected exactly %d allowedAddressPairs on port %s", len(expectedIPs), workerPort.ID)
+			}
+
+			patchAndVerify := func(newIPs []string, waitForIP string) {
+				GinkgoHelper()
+				currentOSMT := &infrav1.OpenStackMachineTemplate{}
+				Expect(mgmtClient.Get(ctx, osmtKey, currentOSMT)).To(Succeed())
+				patchBase := currentOSMT.DeepCopy()
+				pairs := make([]infrav1.AddressPair, len(newIPs))
+				for i, ip := range newIPs {
+					pairs[i] = infrav1.AddressPair{IPAddress: ip}
+				}
+				currentOSMT.Spec.Template.Spec.Ports[0].AllowedAddressPairs = pairs
+				Expect(mgmtClient.Patch(ctx, currentOSMT, crclient.MergeFrom(patchBase))).To(Succeed())
+
+				Eventually(func() string {
+					osm := &infrav1.OpenStackMachine{}
+					if err := mgmtClient.Get(ctx, osmKey, osm); err != nil {
+						return ""
+					}
+					return osm.Annotations["infrastructure.cluster.x-k8s.io/osmt-allowed-address-pairs"]
+				}, e2eCtx.E2EConfig.GetIntervals(specName, "wait-worker-nodes")...).Should(ContainSubstring(waitForIP))
+
+				verifyNeutronPort(newIPs...)
+				time.Sleep(5 * time.Second)
+			}
+
+			patchAndVerify([]string{"192.0.2.100"}, "192.0.2.100")
+			patchAndVerify([]string{"192.0.2.100", "192.0.2.101"}, "192.0.2.101")
+			patchAndVerify([]string{"192.0.2.100", "192.0.2.101", "192.0.2.102"}, "192.0.2.102")
 		})
 	})
 })
@@ -1273,7 +1430,11 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),
@@ -1299,7 +1460,11 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 		Spec: infrav1.OpenStackMachineTemplateSpec{
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
-					Flavor: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+					Flavor: infrav1.FlavorParam{
+						Filter: &infrav1.FlavorFilter{
+							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
+						},
+					},
 					Image: infrav1.ImageParam{
 						Filter: &infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),
@@ -1312,6 +1477,38 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 					},
 					Ports: *portOpts,
 					Tags:  machineTags,
+				},
+			},
+		},
+	}
+}
+
+// makeWorkerJoinConfigTemplate returns a KubeadmConfigTemplate that correctly configures
+// a worker node to join a cluster, matching the flags used by the standard cluster templates.
+func makeWorkerJoinConfigTemplate(namespace, name string) *bootstrapv1.KubeadmConfigTemplate {
+	return &bootstrapv1.KubeadmConfigTemplate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: bootstrapv1.KubeadmConfigTemplateSpec{
+			Template: bootstrapv1.KubeadmConfigTemplateResource{
+				Spec: bootstrapv1.KubeadmConfigSpec{
+					JoinConfiguration: bootstrapv1.JoinConfiguration{
+						NodeRegistration: bootstrapv1.NodeRegistrationOptions{
+							Name: "{{ local_hostname }}",
+							KubeletExtraArgs: []bootstrapv1.Arg{
+								{
+									Name:  "cloud-provider",
+									Value: ptr.To("external"),
+								},
+								{
+									Name:  "provider-id",
+									Value: ptr.To("openstack:///'{{ instance_id }}'"),
+								},
+							},
+						},
+					},
 				},
 			},
 		},

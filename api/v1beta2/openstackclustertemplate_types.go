@@ -22,23 +22,28 @@ import (
 
 // OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.
 type OpenStackClusterTemplateResource struct {
+	// spec is the desired state of the OpenStackCluster.
 	Spec OpenStackClusterSpec `json:"spec"`
 }
 
 // OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.
 type OpenStackClusterTemplateSpec struct {
+	// template is the OpenStackClusterTemplate resource data.
 	Template OpenStackClusterTemplateResource `json:"template"`
 }
 
 // +genclient
 // +kubebuilder:object:root=true
+// +kubebuilder:storageversion
 // +kubebuilder:resource:path=openstackclustertemplates,scope=Namespaced,categories=cluster-api,shortName=osct
 
 // OpenStackClusterTemplate is the Schema for the openstackclustertemplates API.
 type OpenStackClusterTemplate struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+	// metadata is the standard object metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// spec is the desired state of the OpenStackClusterTemplate.
 	Spec OpenStackClusterTemplateSpec `json:"spec,omitempty"`
 }
 

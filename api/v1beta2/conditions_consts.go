@@ -49,7 +49,7 @@ const (
 
 const (
 	// APIServerIngressReadyCondition reports on the current status of the network ingress (Loadbalancer, Floating IP) for Control Plane machines. Ready indicates that the instance can receive requests.
-	APIServerIngressReadyCondition string = "APIServerIngressReadyCondition"
+	APIServerIngressReadyCondition string = "APIServerIngressReady"
 
 	// LoadBalancerMemberErrorReason used when the instance could not be added as a loadbalancer member.
 	LoadBalancerMemberErrorReason = "LoadBalancerMemberError"
@@ -66,6 +66,16 @@ const (
 	FloatingAddressFromPoolErrorReason = "FloatingIPError"
 	// UnableToFindFloatingIPNetworkReason is used when the floating ip network is not found.
 	UnableToFindFloatingIPNetworkReason = "UnableToFindFloatingIPNetwork"
+	// PortCreateFailedReason used when creating a port failed.
+	PortCreateFailedReason = "PortCreateFailed"
+)
+
+const (
+	// OpenStackAuthenticationSucceeded reports on the current status of the OpenStack credentials.
+	OpenStackAuthenticationSucceeded string = "OpenStackAuthenticationSucceeded"
+
+	// OpenStackAuthenticationFailedReason is used when the controller fails to authenticate with OpenStack.
+	OpenStackAuthenticationFailedReason = "OpenStackAuthenticationFailed"
 )
 
 const (
@@ -85,6 +95,8 @@ const (
 	// Ready indicates that the control plane endpoint has been successfully configured.
 	APIEndpointReadyCondition string = "APIEndpointReady"
 
+	// ReadyConditionReason is the reason used when the resource is ready.
+	ReadyConditionReason = "Ready"
 	// NetworkReconcileFailedReason is used when network reconciliation fails.
 	NetworkReconcileFailedReason = "NetworkCreateFailed"
 	// SubnetReconcileFailedReason is used when subnet reconciliation fails.

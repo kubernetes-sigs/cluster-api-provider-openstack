@@ -23,6 +23,7 @@ package tools
 import (
 	_ "github.com/a8m/envsubst"
 	_ "github.com/ahmetb/gen-crd-api-reference-docs"
+	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 	_ "github.com/itchyny/gojq/cmd/gojq"
 	_ "github.com/onsi/ginkgo/v2/ginkgo"
 	_ "go.uber.org/mock/mockgen"
@@ -34,7 +35,7 @@ import (
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 	_ "sigs.k8s.io/kustomize/kustomize/v5"
 
-        // Pulling in CAPO ensures that any dependency which is also in CAPO
-        // will be updated to at least the same version (e.g. ginkgo)
-        _ "sigs.k8s.io/cluster-api-provider-openstack"
+	// Pulling in CAPO ensures that any dependency which is also in CAPO
+	// will be updated to at least the same version (e.g. ginkgo)
+	_ "sigs.k8s.io/cluster-api-provider-openstack"
 )

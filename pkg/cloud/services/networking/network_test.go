@@ -25,11 +25,11 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
-	. "github.com/onsi/gomega" //nolint:revive
+	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
@@ -210,7 +210,9 @@ func Test_ReconcileNetwork(t *testing.T) {
 			name: "creation with disabled port security",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisablePortSecurity: ptr.To(true),
+					ManagedNetwork: &infrav1.ManagedNetwork{
+						DisablePortSecurity: ptr.To(true),
+					},
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
@@ -246,7 +248,9 @@ func Test_ReconcileNetwork(t *testing.T) {
 			name: "creation with mtu set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					NetworkMTU: ptr.To(1500),
+					ManagedNetwork: &infrav1.ManagedNetwork{
+						MTU: ptr.To(1500),
+					},
 				},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {

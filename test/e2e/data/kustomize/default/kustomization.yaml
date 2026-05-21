@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- ../../../../../kustomize/v1beta1/default
+- ../../../../../kustomize/default
 
 components:
 - ../components/cluster-resource-sets

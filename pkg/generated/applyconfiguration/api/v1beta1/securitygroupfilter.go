@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import (
 
 // SecurityGroupFilterApplyConfiguration represents a declarative configuration of the SecurityGroupFilter type for use
 // with apply.
+//
+// SecurityGroupFilter specifies a query to select an OpenStack security group. At least one property must be set.
 type SecurityGroupFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`

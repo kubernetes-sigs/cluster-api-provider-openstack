@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import (
 
 // RouterFilterApplyConfiguration represents a declarative configuration of the RouterFilter type for use
 // with apply.
+//
+// RouterFilter specifies a query to select an OpenStack router. At least one property must be set.
 type RouterFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`

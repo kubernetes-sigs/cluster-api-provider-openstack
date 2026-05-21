@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,8 +20,16 @@ package v1beta1
 
 // BlockDeviceVolumeApplyConfiguration represents a declarative configuration of the BlockDeviceVolume type for use
 // with apply.
+//
+// BlockDeviceVolume contains additional storage options for a volume block device.
 type BlockDeviceVolumeApplyConfiguration struct {
-	Type             *string                                   `json:"type,omitempty"`
+	// Type is the Cinder volume type of the volume.
+	// If omitted, the default Cinder volume type that is configured in the OpenStack cloud
+	// will be used.
+	Type *string `json:"type,omitempty"`
+	// AvailabilityZone is the volume availability zone to create the volume
+	// in. If not specified, the volume will be created without an explicit
+	// availability zone.
 	AvailabilityZone *VolumeAvailabilityZoneApplyConfiguration `json:"availabilityZone,omitempty"`
 }
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Kubernetes Authors.
+Copyright 2026 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,8 +20,12 @@ package v1beta1
 
 // SubnetParamApplyConfiguration represents a declarative configuration of the SubnetParam type for use
 // with apply.
+//
+// SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.
 type SubnetParamApplyConfiguration struct {
-	ID     *string                         `json:"id,omitempty"`
+	// ID is the uuid of the subnet. It will not be validated.
+	ID *string `json:"id,omitempty"`
+	// Filter specifies a filter to select the subnet. It must match exactly one subnet.
 	Filter *SubnetFilterApplyConfiguration `json:"filter,omitempty"`
 }
 
