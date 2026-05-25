@@ -105,6 +105,11 @@ updates:
   # Ignore golang.org/x minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "golang.org/x/*"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore setup-envtest major and minor bumps to prevent cascading Go version requirements
+  - dependency-name: "sigs.k8s.io/controller-runtime/tools/setup-envtest"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore ginkgo to prevent cascading Go version requirements
+  - dependency-name: "github.com/onsi/ginkgo/v2"
   # Ignore gophercloud minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "github.com/gophercloud/gophercloud/v2"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
@@ -167,6 +172,11 @@ updates:
   # Ignore golang.org/x minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "golang.org/x/*"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore setup-envtest major and minor bumps to prevent cascading Go version requirements
+  - dependency-name: "sigs.k8s.io/controller-runtime/tools/setup-envtest"
+    update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore ginkgo to prevent cascading Go version requirements
+  - dependency-name: "github.com/onsi/ginkgo/v2"
   # Ignore gophercloud minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "github.com/gophercloud/gophercloud/v2"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
@@ -175,5 +185,4 @@ updates:
   labels:
   - "area/dependency"
   - "ok-to-test"
-
 ## release-0.13 branch config ends here
