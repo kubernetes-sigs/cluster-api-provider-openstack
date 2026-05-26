@@ -34,6 +34,8 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
+const securityGroupRuleDirectionIngress = "ingress"
+
 // ConvertTo converts this OpenStackCluster to the Hub version (v1beta2).
 func (src *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	dst := dstRaw.(*infrav1.OpenStackCluster)
@@ -478,7 +480,7 @@ func LegacyCalicoSecurityGroupRules() []SecurityGroupRuleSpec {
 		{
 			Name:                "BGP (calico)",
 			Description:         ptr.To("Created by cluster-api-provider-openstack API conversion - BGP (calico)"),
-			Direction:           "ingress",
+			Direction:           securityGroupRuleDirectionIngress,
 			EtherType:           ptr.To("IPv4"),
 			PortRangeMin:        ptr.To(179),
 			PortRangeMax:        ptr.To(179),
@@ -488,7 +490,7 @@ func LegacyCalicoSecurityGroupRules() []SecurityGroupRuleSpec {
 		{
 			Name:                "IP-in-IP (calico)",
 			Description:         ptr.To("Created by cluster-api-provider-openstack API conversion - IP-in-IP (calico)"),
-			Direction:           "ingress",
+			Direction:           securityGroupRuleDirectionIngress,
 			EtherType:           ptr.To("IPv4"),
 			Protocol:            ptr.To("4"),
 			RemoteManagedGroups: []ManagedSecurityGroupName{"controlplane", "worker"},

@@ -27,6 +27,7 @@ import (
 const (
 	clusterAPIGroup       = "cluster.x-k8s.io"
 	clusterAPITestVersion = "v1beta2"
+	crdSchemaTypeObject   = "object"
 )
 
 var (
@@ -63,14 +64,14 @@ func generateTestClusterAPICRD(kind, pluralKind string) *apiextensionsv1.CustomR
 					},
 					Schema: &apiextensionsv1.CustomResourceValidation{
 						OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
-							Type: "object",
+							Type: crdSchemaTypeObject,
 							Properties: map[string]apiextensionsv1.JSONSchemaProps{
 								"spec": {
-									Type:                   "object",
+									Type:                   crdSchemaTypeObject,
 									XPreserveUnknownFields: ptr.To(true),
 								},
 								"status": {
-									Type:                   "object",
+									Type:                   crdSchemaTypeObject,
 									XPreserveUnknownFields: ptr.To(true),
 								},
 							},
