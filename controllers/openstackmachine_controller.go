@@ -69,6 +69,7 @@ const (
 	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
 	waitForBuildingInstanceToReconcile        = 10 * time.Second
 	deleteServerRequeueDelay                  = 10 * time.Second
+	waitingForInstanceCreatedMessage          = "Waiting for instance to be created"
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,verbs=get;list;watch;create;update;patch;delete
@@ -494,13 +495,13 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 			Type:    infrav1.InstanceReadyCondition,
 			Status:  metav1.ConditionFalse,
 			Reason:  infrav1.InstanceNotReadyReason,
-			Message: "Waiting for instance to be created",
+			Message: waitingForInstanceCreatedMessage,
 		})
 		conditions.Set(openStackMachine, metav1.Condition{
 			Type:    clusterv1.ReadyCondition,
 			Status:  metav1.ConditionFalse,
 			Reason:  infrav1.InstanceNotReadyReason,
-			Message: "Waiting for instance to be created",
+			Message: waitingForInstanceCreatedMessage,
 		})
 		return &ctrl.Result{RequeueAfter: waitForBuildingInstanceToReconcile}
 	}

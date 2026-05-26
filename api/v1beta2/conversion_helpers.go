@@ -65,7 +65,7 @@ func ConvertConditionsFromV1Beta2(src []metav1.Condition) clusterv1beta1.Conditi
 // IsReady checks if the Ready condition is True.
 func IsReady(conditions []metav1.Condition) bool {
 	for _, c := range conditions {
-		if c.Type == "Ready" && c.Status == metav1.ConditionTrue {
+		if c.Type == ReadyConditionReason && c.Status == metav1.ConditionTrue {
 			return true
 		}
 	}

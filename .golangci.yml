@@ -1,6 +1,6 @@
 version: "2"
 run:
-  go: "1.25"
+  go: "1.26"
   build-tags:
   - e2e
   allow-parallel-runners: true
@@ -49,6 +49,8 @@ linters:
   - wastedassign
   - whitespace
   settings:
+    goconst:
+      ignore-tests: true
     # TODO(sbuerin) fix remaining findings and set to 20 afterwards
     cyclop:
       max-complexity: 30

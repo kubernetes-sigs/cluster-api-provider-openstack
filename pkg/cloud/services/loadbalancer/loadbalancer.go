@@ -46,6 +46,7 @@ const (
 	networkPrefix           string = "k8s-clusterapi"
 	kubeapiLBSuffix         string = "kubeapi"
 	waitForOctaviaLBCleanup        = 15 * time.Second
+	loadBalancerProtocolTCP        = "TCP"
 )
 
 const (
@@ -447,7 +448,7 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 
 	listenerCreateOpts := listeners.CreateOpts{
 		Name:           listenerName,
-		Protocol:       "TCP",
+		Protocol:       loadBalancerProtocolTCP,
 		ProtocolPort:   port,
 		LoadbalancerID: lbID,
 		Tags:           openStackCluster.Spec.Tags,
@@ -521,7 +522,7 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 
 	poolCreateOpts := pools.CreateOpts{
 		Name:       poolName,
-		Protocol:   "TCP",
+		Protocol:   loadBalancerProtocolTCP,
 		LBMethod:   method,
 		ListenerID: listenerID,
 		Tags:       openStackCluster.Spec.Tags,
@@ -611,7 +612,7 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 	monitor, err = s.loadbalancerClient.CreateMonitor(monitors.CreateOpts{
 		Name:           monitorName,
 		PoolID:         poolID,
-		Type:           "TCP",
+		Type:           loadBalancerProtocolTCP,
 		Delay:          cfg.Delay,
 		Timeout:        cfg.Timeout,
 		MaxRetries:     cfg.MaxRetries,

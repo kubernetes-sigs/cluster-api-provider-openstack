@@ -260,12 +260,12 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 			Rules: append(
 				[]resolvedSecurityGroupRuleSpec{
 					{
-						Description:  "SSH",
-						Direction:    "ingress",
-						EtherType:    "IPv4",
+						Description:  securityGroupRuleDescriptionSSH,
+						Direction:    securityGroupRuleDirectionIngress,
+						EtherType:    securityGroupRuleEtherTypeIPv4,
 						PortRangeMin: 22,
 						PortRangeMax: 22,
-						Protocol:     "tcp",
+						Protocol:     securityGroupRuleProtocolTCP,
 					},
 				},
 				defaultRules...,
