@@ -4944,9 +4944,9 @@ spec:
           status:
             description: status is the observed state of the OpenStackCluster.
             properties:
-              apiServerLoadBalancer:
-                description: apiServerLoadBalancer describes the api server load balancer
-                  if one exists
+              apiServerManagedLoadBalancer:
+                description: apiServerManagedLoadBalancer describes the api server
+                  load balancer if one exists
                 properties:
                   allowedCIDRs:
                     description: allowedCIDRs is a list of CIDRs that are allowed

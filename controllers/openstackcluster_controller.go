@@ -671,10 +671,10 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 		return nil
 	}
 
-	lbStatus := openStackCluster.Status.APIServerLoadBalancer
+	lbStatus := openStackCluster.Status.APIServerManagedLoadBalancer
 	if lbStatus == nil {
 		lbStatus = &infrav1.LoadBalancer{}
-		openStackCluster.Status.APIServerLoadBalancer = lbStatus
+		openStackCluster.Status.APIServerManagedLoadBalancer = lbStatus
 	}
 
 	lbNetStatus := lbStatus.LoadBalancerNetwork
@@ -723,7 +723,7 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 		lbNetStatus.Subnets = openStackCluster.Status.Network.Subnets
 	}
 
-	openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+	openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork = lbNetStatus
 
 	return nil
 }
@@ -1014,10 +1014,10 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 		}
 
 		// Control plane endpoint is the floating IP if one was defined, otherwise the VIP address
-		if openStackCluster.Status.APIServerLoadBalancer.IP != "" {
-			host = openStackCluster.Status.APIServerLoadBalancer.IP
+		if openStackCluster.Status.APIServerManagedLoadBalancer.IP != "" {
+			host = openStackCluster.Status.APIServerManagedLoadBalancer.IP
 		} else {
-			host = openStackCluster.Status.APIServerLoadBalancer.InternalIP
+			host = openStackCluster.Status.APIServerManagedLoadBalancer.InternalIP
 		}
 
 	// Control plane endpoint is already set

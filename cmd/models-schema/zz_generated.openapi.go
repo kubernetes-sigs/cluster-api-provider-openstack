@@ -23799,9 +23799,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Router"),
 						},
 					},
-					"apiServerLoadBalancer": {
+					"apiServerManagedLoadBalancer": {
 						SchemaProps: spec.SchemaProps{
-							Description: "apiServerLoadBalancer describes the api server load balancer if one exists",
+							Description: "apiServerManagedLoadBalancer describes the api server load balancer if one exists",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.LoadBalancer"),
 						},
 					},

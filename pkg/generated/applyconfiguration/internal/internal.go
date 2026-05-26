@@ -2296,7 +2296,7 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterStatus
   map:
     fields:
-    - name: apiServerLoadBalancer
+    - name: apiServerManagedLoadBalancer
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.LoadBalancer
     - name: bastion

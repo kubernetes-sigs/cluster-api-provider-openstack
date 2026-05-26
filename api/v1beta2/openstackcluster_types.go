@@ -221,9 +221,9 @@ type OpenStackClusterStatus struct {
 	// +optional
 	Router *Router `json:"router,omitempty"`
 
-	// apiServerLoadBalancer describes the api server load balancer if one exists
+	// apiServerManagedLoadBalancer describes the api server load balancer if one exists
 	// +optional
-	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
+	APIServerManagedLoadBalancer *LoadBalancer `json:"apiServerManagedLoadBalancer,omitempty"`
 
 	// failureDomains represent OpenStack availability zones
 	// +optional

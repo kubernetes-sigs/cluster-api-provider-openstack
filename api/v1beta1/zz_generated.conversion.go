@@ -1531,7 +1531,7 @@ func autoConvert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatu
 	out.Network = (*v1beta2.NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*v1beta2.NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
 	out.Router = (*v1beta2.Router)(unsafe.Pointer(in.Router))
-	out.APIServerLoadBalancer = (*v1beta2.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+	// WARNING: in.APIServerLoadBalancer requires manual conversion: does not exist in peer-type
 	// WARNING: in.FailureDomains requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api/api/core/v1beta1.FailureDomains vs []sigs.k8s.io/cluster-api/api/core/v1beta2.FailureDomain)
 	out.ControlPlaneSecurityGroup = (*v1beta2.SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*v1beta2.SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
@@ -1569,7 +1569,7 @@ func autoConvert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatu
 	out.Network = (*NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
 	out.Router = (*Router)(unsafe.Pointer(in.Router))
-	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+	// WARNING: in.APIServerManagedLoadBalancer requires manual conversion: does not exist in peer-type
 	// WARNING: in.FailureDomains requires manual conversion: inconvertible types ([]sigs.k8s.io/cluster-api/api/core/v1beta2.FailureDomain vs sigs.k8s.io/cluster-api/api/core/v1beta1.FailureDomains)
 	out.ControlPlaneSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))

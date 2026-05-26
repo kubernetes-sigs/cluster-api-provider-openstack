@@ -41,8 +41,8 @@ type OpenStackClusterStatusApplyConfiguration struct {
 	ExternalNetwork *NetworkStatusApplyConfiguration `json:"externalNetwork,omitempty"`
 	// router describes the default cluster router
 	Router *RouterApplyConfiguration `json:"router,omitempty"`
-	// apiServerLoadBalancer describes the api server load balancer if one exists
-	APIServerLoadBalancer *LoadBalancerApplyConfiguration `json:"apiServerLoadBalancer,omitempty"`
+	// apiServerManagedLoadBalancer describes the api server load balancer if one exists
+	APIServerManagedLoadBalancer *LoadBalancerApplyConfiguration `json:"apiServerManagedLoadBalancer,omitempty"`
 	// failureDomains represent OpenStack availability zones
 	FailureDomains []corev1beta2.FailureDomain `json:"failureDomains,omitempty"`
 	// controlPlaneSecurityGroup contains the information about the
@@ -110,11 +110,11 @@ func (b *OpenStackClusterStatusApplyConfiguration) WithRouter(value *RouterApply
 	return b
 }
 
-// WithAPIServerLoadBalancer sets the APIServerLoadBalancer field in the declarative configuration to the given value
+// WithAPIServerManagedLoadBalancer sets the APIServerManagedLoadBalancer field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the APIServerLoadBalancer field is set to the value of the last call.
-func (b *OpenStackClusterStatusApplyConfiguration) WithAPIServerLoadBalancer(value *LoadBalancerApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
-	b.APIServerLoadBalancer = value
+// If called multiple times, the APIServerManagedLoadBalancer field is set to the value of the last call.
+func (b *OpenStackClusterStatusApplyConfiguration) WithAPIServerManagedLoadBalancer(value *LoadBalancerApplyConfiguration) *OpenStackClusterStatusApplyConfiguration {
+	b.APIServerManagedLoadBalancer = value
 	return b
 }
 

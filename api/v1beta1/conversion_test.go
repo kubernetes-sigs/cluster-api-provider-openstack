@@ -1353,3 +1353,81 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenStackClusterStatusAPIServerLoadBalancerConversion(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: OpenStackClusterSpec{
+			IdentityRef: OpenStackIdentityReference{
+				Name:      "cloud-config",
+				CloudName: "openstack",
+			},
+		},
+		Status: OpenStackClusterStatus{
+			APIServerLoadBalancer: &LoadBalancer{
+				Name:       "test-lb",
+				ID:         "lb-id-123",
+				IP:         "192.168.1.100",
+				InternalIP: "10.0.0.10",
+			},
+		},
+	}
+
+	// Convert to v1beta2
+	dst := &infrav1.OpenStackCluster{}
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
+
+	// Verify field was mapped to the renamed destination field
+	g.Expect(dst.Status.APIServerManagedLoadBalancer).NotTo(BeNil())
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.Name).To(Equal("test-lb"))
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.ID).To(Equal("lb-id-123"))
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.IP).To(Equal("192.168.1.100"))
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.InternalIP).To(Equal("10.0.0.10"))
+
+	// Convert back
+	restored := &OpenStackCluster{}
+	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
+
+	// Verify round-trip
+	g.Expect(restored.Status.APIServerLoadBalancer).NotTo(BeNil())
+	g.Expect(restored.Status.APIServerLoadBalancer).To(Equal(src.Status.APIServerLoadBalancer))
+}
+
+func TestOpenStackClusterStatusAPIServerLoadBalancerNilConversion(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: OpenStackClusterSpec{
+			IdentityRef: OpenStackIdentityReference{
+				Name:      "cloud-config",
+				CloudName: "openstack",
+			},
+		},
+		Status: OpenStackClusterStatus{
+			APIServerLoadBalancer: nil,
+		},
+	}
+
+	// Convert to v1beta2
+	dst := &infrav1.OpenStackCluster{}
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
+
+	// Verify nil is preserved and does not bleed into renamed field
+	g.Expect(dst.Status.APIServerManagedLoadBalancer).To(BeNil())
+
+	// Convert back
+	restored := &OpenStackCluster{}
+	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
+
+	// Verify round-trip preserves nil
+	g.Expect(restored.Status.APIServerLoadBalancer).To(BeNil())
+}

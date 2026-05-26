@@ -88,10 +88,10 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling load balancer", "name", loadBalancerName)
 
-	lbStatus := openStackCluster.Status.APIServerLoadBalancer
+	lbStatus := openStackCluster.Status.APIServerManagedLoadBalancer
 	if lbStatus == nil {
 		lbStatus = &infrav1.LoadBalancer{}
-		openStackCluster.Status.APIServerLoadBalancer = lbStatus
+		openStackCluster.Status.APIServerManagedLoadBalancer = lbStatus
 	}
 
 	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName)
@@ -169,8 +169,8 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string, error) {
 	switch {
 	// We only use call this function when creating the loadbalancer, so this case should never be used
-	case openStackCluster.Status.APIServerLoadBalancer != nil && openStackCluster.Status.APIServerLoadBalancer.InternalIP != "":
-		return &openStackCluster.Status.APIServerLoadBalancer.InternalIP, nil
+	case openStackCluster.Status.APIServerManagedLoadBalancer != nil && openStackCluster.Status.APIServerManagedLoadBalancer.InternalIP != "":
+		return &openStackCluster.Status.APIServerManagedLoadBalancer.InternalIP, nil
 
 	// Explicit fixed IP in the cluster spec
 	case openStackCluster.Spec.APIServer.GetFixedIP() != nil:
@@ -193,8 +193,8 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (*string, error) {
 	switch {
 	// The floating IP was created previously
-	case openStackCluster.Status.APIServerLoadBalancer != nil && openStackCluster.Status.APIServerLoadBalancer.IP != "":
-		return &openStackCluster.Status.APIServerLoadBalancer.IP, nil
+	case openStackCluster.Status.APIServerManagedLoadBalancer != nil && openStackCluster.Status.APIServerManagedLoadBalancer.IP != "":
+		return &openStackCluster.Status.APIServerManagedLoadBalancer.IP, nil
 
 	// Explicit floating IP in the cluster spec
 	case openStackCluster.Spec.APIServer.GetFloatingIP() != nil:
@@ -290,14 +290,14 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		return nil, fmt.Errorf("network is not yet available in OpenStackCluster.Status")
 	}
 
-	if openStackCluster.Status.APIServerLoadBalancer == nil {
+	if openStackCluster.Status.APIServerManagedLoadBalancer == nil {
 		return nil, fmt.Errorf("apiserver loadbalancer network is not yet available in OpenStackCluster.Status")
 	}
 
-	lbNetwork := openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork
+	lbNetwork := openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork
 	if lbNetwork == nil {
 		lbNetwork = &infrav1.NetworkStatusWithSubnets{}
-		openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetwork
+		openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork = lbNetwork
 	}
 
 	var vipNetworkID, vipSubnetID string
@@ -401,11 +401,11 @@ func (s *Service) reconcileAPILoadBalancerListener(lb *loadbalancers.LoadBalance
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 
-	if openStackCluster.Status.APIServerLoadBalancer == nil {
+	if openStackCluster.Status.APIServerManagedLoadBalancer == nil {
 		return fmt.Errorf("APIServerLoadBalancer is not yet available in OpenStackCluster.Status")
 	}
 
-	allowedCIDRs := openStackCluster.Status.APIServerLoadBalancer.AllowedCIDRs
+	allowedCIDRs := openStackCluster.Status.APIServerManagedLoadBalancer.AllowedCIDRs
 
 	listener, err := s.getOrCreateListener(openStackCluster, lbPortObjectsName, lb.ID, allowedCIDRs, port)
 	if err != nil {
@@ -643,7 +643,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	if len(openStackCluster.Status.Network.Subnets) == 0 {
 		return errors.New("network.Subnets are not yet available in openStackCluster.Status")
 	}
-	if openStackCluster.Status.APIServerLoadBalancer == nil {
+	if openStackCluster.Status.APIServerManagedLoadBalancer == nil {
 		return errors.New("network.APIServerLoadBalancer is not yet available in openStackCluster.Status")
 	}
 	if openStackCluster.Spec.ControlPlaneEndpoint == nil || !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
@@ -653,7 +653,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling load balancer member", "loadBalancerName", loadBalancerName)
 
-	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
+	lbID := openStackCluster.Status.APIServerManagedLoadBalancer.ID
 	var portList []int
 	if openStackCluster.Spec.ControlPlaneEndpoint != nil {
 		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
@@ -711,7 +711,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			Tags:         openStackCluster.Spec.Tags,
 		}
 
-		if openStackCluster.Status.Network.ID != openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork.ID {
+		if openStackCluster.Status.Network.ID != openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork.ID {
 			lbMemberOpts.SubnetID = openStackCluster.Status.Network.Subnets[0].ID
 		}
 

@@ -544,7 +544,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -560,7 +560,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -577,7 +577,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -593,7 +593,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},

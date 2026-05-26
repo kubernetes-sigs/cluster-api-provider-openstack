@@ -527,7 +527,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP is InternalIP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						InternalIP: "1.2.3.4",
 					},
 				},
@@ -622,7 +622,7 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 			name: "API server FIP is API Server LB IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -837,7 +837,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-333333333333"},
 						},
 					},
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						LoadBalancerNetwork: nil,
 					},
 				},
@@ -864,7 +864,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 						},
 					},
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
 							NetworkStatus: infrav1.NetworkStatus{
 								Name: "VIPNET",
@@ -913,7 +913,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-333333333333"},
 						},
 					},
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						LoadBalancerNetwork: nil,
 					},
 				},
@@ -996,7 +996,7 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 				Tags: []string{"k8s", "clusterapi"},
 			},
 			Status: infrav1.OpenStackClusterStatus{
-				APIServerLoadBalancer: &infrav1.LoadBalancer{
+				APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 					ID: lbID,
 					LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{

@@ -942,8 +942,8 @@ func (in *OpenStackClusterStatus) DeepCopyInto(out *OpenStackClusterStatus) {
 		*out = new(Router)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.APIServerLoadBalancer != nil {
-		in, out := &in.APIServerLoadBalancer, &out.APIServerLoadBalancer
+	if in.APIServerManagedLoadBalancer != nil {
+		in, out := &in.APIServerManagedLoadBalancer, &out.APIServerManagedLoadBalancer
 		*out = new(LoadBalancer)
 		(*in).DeepCopyInto(*out)
 	}

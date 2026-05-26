@@ -2954,7 +2954,7 @@ Router
 </tr>
 <tr>
 <td>
-<code>apiServerLoadBalancer</code><br/>
+<code>apiServerManagedLoadBalancer</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.LoadBalancer">
 LoadBalancer
@@ -2963,7 +2963,7 @@ LoadBalancer
 </td>
 <td>
 <em>(Optional)</em>
-<p>apiServerLoadBalancer describes the api server load balancer if one exists</p>
+<p>apiServerManagedLoadBalancer describes the api server load balancer if one exists</p>
 </td>
 </tr>
 <tr>

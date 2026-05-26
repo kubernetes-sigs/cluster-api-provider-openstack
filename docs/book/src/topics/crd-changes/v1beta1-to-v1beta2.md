@@ -60,6 +60,16 @@ into a single structured `spec.apiServer` object. This applies to `OpenStackClus
 
 For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.apiServer`.
 
+Additionally, the corresponding status field has been renamed for consistency with the spec-side naming:
+
+```diff
+ status:
+-  apiServerLoadBalancer:
++  apiServerManagedLoadBalancer:
+     name: my-lb
+     id: lb-id-123
+```
+
 ### Flavor field restructure
 
 `spec.flavor` (string) and `spec.flavorID` have been replaced by a structured `spec.flavor` object,

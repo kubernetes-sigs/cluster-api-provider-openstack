@@ -231,8 +231,8 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	newObj.Spec.ControlPlaneOmitAvailabilityZone = nil
 
 	// Allow change on the spec.APIServer.FloatingIP only if it matches the current api server loadbalancer IP.
-	if oldObj.Status.APIServerLoadBalancer != nil &&
-		ptr.Deref(newObj.Spec.APIServer.GetFloatingIP(), "") == oldObj.Status.APIServerLoadBalancer.IP {
+	if oldObj.Status.APIServerManagedLoadBalancer != nil &&
+		ptr.Deref(newObj.Spec.APIServer.GetFloatingIP(), "") == oldObj.Status.APIServerManagedLoadBalancer.IP {
 		if newObj.Spec.APIServer != nil {
 			newObj.Spec.APIServer.FloatingIP = nil
 			// If APIServer is now empty after zeroing FloatingIP, nil it out
