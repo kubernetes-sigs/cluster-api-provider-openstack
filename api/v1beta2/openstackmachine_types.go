@@ -51,23 +51,26 @@ const (
 type SchedulerHintAdditionalValue struct {
 	// type represents the type of the value.
 	// Valid values are Bool, String, and Number.
-	// +kubebuilder:validation:Required
+	// +required
 	// +unionDiscriminator
 	Type SchedulerHintValueType `json:"type"`
 
 	// bool is the boolean value of the scheduler hint, used when Type is "Bool".
 	// This field is required if type is 'Bool', and must not be set otherwise.
 	// +unionMember,optional
+	// +optional
 	Bool *bool `json:"bool,omitempty"`
 
 	// number is the integer value of the scheduler hint, used when Type is "Number".
 	// This field is required if type is 'Number', and must not be set otherwise.
 	// +unionMember,optional
+	// +optional
 	Number *int `json:"number,omitempty"`
 
 	// string is the string value of the scheduler hint, used when Type is "String".
 	// This field is required if type is 'String', and must not be set otherwise.
 	// +unionMember,optional
+	// +optional
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:MaxLength:=255
 	String *string `json:"string,omitempty"`
@@ -79,18 +82,19 @@ type SchedulerHintAdditionalProperty struct {
 	// name is the name of the scheduler hint property.
 	// It is a unique identifier for the property.
 	// +kubebuilder:validation:MinLength:=1
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name"`
 
 	// value is the value of the scheduler hint property, which can be of various types
 	// (e.g., bool, string, int). The type is indicated by the Value.Type field.
-	// +kubebuilder:validation:Required
+	// +required
 	Value SchedulerHintAdditionalValue `json:"value"`
 }
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
 type OpenStackMachineSpec struct {
 	// providerID is the unique identifier as specified by the cloud provider.
+	// +optional
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// flavor is the flavor to use for this machine.
@@ -103,16 +107,20 @@ type OpenStackMachineSpec struct {
 	Image ImageParam `json:"image"`
 
 	// sshKeyName is the name of the SSH key to inject in the instance.
+	// +optional
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 
 	// ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
+	// +optional
 	Ports []PortOpts `json:"ports,omitempty"`
 
 	// securityGroups is a list of security groups to assign to the instance.
+	// +optional
 	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
 	// trunk specifies whether the server instance is created on a trunk port or not.
+	// +optional
 	Trunk bool `json:"trunk,omitempty"`
 
 	// tags which will be added to the machine and all dependent resources
@@ -120,17 +128,21 @@ type OpenStackMachineSpec struct {
 	// cluster.
 	// Requires Nova api 2.52 minimum!
 	// +listType=set
+	// +optional
 	Tags []string `json:"tags,omitempty"`
 
 	// serverMetadata is a list of key/value pairs to add to the server instance.
 	// +listType=map
 	// +listMapKey=key
+	// +optional
 	ServerMetadata []ServerMetadata `json:"serverMetadata,omitempty"`
 
 	// configDrive enables config drive support.
+	// +optional
 	ConfigDrive *bool `json:"configDrive,omitempty"`
 
 	// rootVolume is the volume metadata to boot from.
+	// +optional
 	RootVolume *RootVolume `json:"rootVolume,omitempty"`
 
 	// additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
@@ -167,12 +179,12 @@ type OpenStackMachineSpec struct {
 type ServerMetadata struct {
 	// key is the server metadata key
 	// +kubebuilder:validation:MaxLength:=255
-	// +kubebuilder:validation:Required
+	// +required
 	Key string `json:"key"`
 
 	// value is the server metadata value
 	// +kubebuilder:validation:MaxLength:=255
-	// +kubebuilder:validation:Required
+	// +required
 	Value string `json:"value"`
 }
 
@@ -237,11 +249,14 @@ type OpenStackMachineStatus struct {
 type OpenStackMachine struct {
 	metav1.TypeMeta `json:",inline"`
 	// metadata is the standard object metadata.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackMachine.
+	// +optional
 	Spec OpenStackMachineSpec `json:"spec,omitempty"`
 	// status is the observed state of the OpenStackMachine.
+	// +optional
 	Status OpenStackMachineStatus `json:"status,omitempty"`
 }
 
@@ -251,7 +266,8 @@ type OpenStackMachine struct {
 type OpenStackMachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []OpenStackMachine `json:"items"`
+	// +required
+	Items []OpenStackMachine `json:"items"`
 }
 
 // GetConditions returns the observations of the operational state of the OpenStackMachine resource.

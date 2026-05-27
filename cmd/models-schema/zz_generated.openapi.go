@@ -24006,7 +24006,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackIdenti
 						},
 					},
 				},
-				Required: []string{"name", "cloudName"},
+				Required: []string{"type", "name", "cloudName"},
 			},
 		},
 	}
@@ -25056,7 +25056,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 						},
 					},
 				},
-				Required: []string{"name", "description", "networkID"},
+				Required: []string{"name", "networkID"},
 			},
 		},
 		Dependencies: []string{

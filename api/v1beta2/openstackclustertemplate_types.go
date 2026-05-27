@@ -23,12 +23,14 @@ import (
 // OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.
 type OpenStackClusterTemplateResource struct {
 	// spec is the desired state of the OpenStackCluster.
+	// +required
 	Spec OpenStackClusterSpec `json:"spec"`
 }
 
 // OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.
 type OpenStackClusterTemplateSpec struct {
 	// template is the OpenStackClusterTemplate resource data.
+	// +required
 	Template OpenStackClusterTemplateResource `json:"template"`
 }
 
@@ -41,9 +43,11 @@ type OpenStackClusterTemplateSpec struct {
 type OpenStackClusterTemplate struct {
 	metav1.TypeMeta `json:",inline"`
 	// metadata is the standard object metadata.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackClusterTemplate.
+	// +optional
 	Spec OpenStackClusterTemplateSpec `json:"spec,omitempty"`
 }
 
@@ -53,7 +57,8 @@ type OpenStackClusterTemplate struct {
 type OpenStackClusterTemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []OpenStackClusterTemplate `json:"items"`
+	// +required
+	Items []OpenStackClusterTemplate `json:"items"`
 }
 
 func init() {

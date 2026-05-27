@@ -179,13 +179,13 @@ type OpenStackClusterSpec struct {
 	// As a rolling update is not ideal during a bastion host session, we
 	// prevent changes to a running bastion configuration. To make changes, it's required
 	// to first set `enabled: false` which will remove the bastion and then changes can be made.
-	//+optional
+	// +optional
 	Bastion *Bastion `json:"bastion,omitempty"`
 
 	// identityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this cluster. It is also to reconcile
 	// machines unless overridden in the machine spec.
-	// +kubebuilder:validation:Required
+	// +required
 	IdentityRef OpenStackIdentityReference `json:"identityRef"`
 }
 
@@ -268,11 +268,14 @@ type OpenStackClusterStatus struct {
 type OpenStackCluster struct {
 	metav1.TypeMeta `json:",inline"`
 	// metadata is the standard object metadata.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackCluster.
+	// +optional
 	Spec OpenStackClusterSpec `json:"spec,omitempty"`
 	// status is the observed state of the OpenStackCluster.
+	// +optional
 	Status OpenStackClusterStatus `json:"status,omitempty"`
 }
 
@@ -282,7 +285,8 @@ type OpenStackCluster struct {
 type OpenStackClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []OpenStackCluster `json:"items"`
+	// +required
+	Items []OpenStackCluster `json:"items"`
 }
 
 // ManagedRouter specifies attributes of the router.
@@ -339,7 +343,7 @@ type ManagedSecurityGroups struct {
 
 	// allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
 	// +kubebuilder:default=false
-	// +kubebuilder:validation:Required
+	// +required
 	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic"`
 }
 
