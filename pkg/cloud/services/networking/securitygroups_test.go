@@ -740,3 +740,27 @@ func TestGetSGControlPlaneAdditionalPorts(t *testing.T) {
 		})
 	}
 }
+
+func TestMatchesIgnoresDescription(t *testing.T) {
+	rule1 := resolvedSecurityGroupRuleSpec{
+		Description:    "desc1",
+		Direction:      "ingress",
+		EtherType:      "IPv4",
+		PortRangeMin:   30000,
+		PortRangeMax:   32767,
+		Protocol:       "tcp",
+		RemoteIPPrefix: "10.0.0.0/24",
+	}
+	observed := rules.SecGroupRule{
+		Description:    "desc2",
+		Direction:      "ingress",
+		EtherType:      "IPv4",
+		PortRangeMin:   30000,
+		PortRangeMax:   32767,
+		Protocol:       "tcp",
+		RemoteIPPrefix: "10.0.0.0/24",
+	}
+	if !rule1.Matches(observed) {
+		t.Errorf("Matches should ignore Description and return true for functionally identical rules")
+	}
+}
