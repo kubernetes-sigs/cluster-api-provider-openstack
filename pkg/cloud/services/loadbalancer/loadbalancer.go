@@ -87,7 +87,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
-	s.scope.Logger().Info("Reconciling load balancer", "name", loadBalancerName)
+	s.scope.Logger().V(3).Info("Reconciling load balancer", "name", loadBalancerName)
 
 	lbStatus := openStackCluster.Status.APIServerLoadBalancer
 	if lbStatus == nil {
@@ -316,9 +316,9 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	if vipNetworkID == "" && vipSubnetID == "" {
 		// keep the default and create the VIP on the first cluster subnet
 		vipSubnetID = openStackCluster.Status.Network.Subnets[0].ID
-		s.scope.Logger().Info("No load balancer network specified, creating load balancer in the default subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
+		s.scope.Logger().V(2).Info("No load balancer network specified, creating load balancer in the default subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
 	} else {
-		s.scope.Logger().Info("Creating load balancer in subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
+		s.scope.Logger().V(2).Info("Creating load balancer in subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
 	}
 
 	providers, err := s.loadbalancerClient.ListLoadBalancerProviders()
@@ -444,7 +444,7 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 		return listener, nil
 	}
 
-	s.scope.Logger().Info("Creating load balancer listener", "name", listenerName, "loadBalancerID", lbID)
+	s.scope.Logger().V(2).Info("Creating load balancer listener", "name", listenerName, "loadBalancerID", lbID)
 
 	listenerCreateOpts := listeners.CreateOpts{
 		Name:           listenerName,
@@ -480,7 +480,7 @@ func (s *Service) getOrUpdateAllowedCIDRs(openStackCluster *infrav1.OpenStackClu
 	listener.AllowedCIDRs = capostrings.Canonicalize(listener.AllowedCIDRs)
 
 	if !slices.Equal(allowedCIDRs, listener.AllowedCIDRs) {
-		s.scope.Logger().Info("CIDRs do not match, updating listener", "expectedCIDRs", allowedCIDRs, "currentCIDRs", listener.AllowedCIDRs)
+		s.scope.Logger().V(3).Info("CIDRs do not match, updating listener", "expectedCIDRs", allowedCIDRs, "currentCIDRs", listener.AllowedCIDRs)
 		listenerUpdateOpts := listeners.UpdateOpts{
 			AllowedCIDRs: &allowedCIDRs,
 		}
@@ -512,7 +512,7 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 		return pool, nil
 	}
 
-	s.scope.Logger().Info("Creating load balancer pool for listener", "loadBalancerID", lbID, "listenerID", listenerID, "name", poolName)
+	s.scope.Logger().V(2).Info("Creating load balancer pool for listener", "loadBalancerID", lbID, "listenerID", listenerID, "name", poolName)
 
 	method := pools.LBMethodRoundRobin
 
@@ -564,31 +564,31 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 		monitorUpdateOpts := monitors.UpdateOpts{}
 
 		if monitor.Delay != cfg.Delay {
-			s.scope.Logger().Info("Monitor delay needs update", "current", monitor.Delay, "desired", cfg.Delay)
+			s.scope.Logger().V(3).Info("Monitor delay needs update", "current", monitor.Delay, "desired", cfg.Delay)
 			monitorUpdateOpts.Delay = cfg.Delay
 			needsUpdate = true
 		}
 
 		if monitor.Timeout != cfg.Timeout {
-			s.scope.Logger().Info("Monitor timeout needs update", "current", monitor.Timeout, "desired", cfg.Timeout)
+			s.scope.Logger().V(3).Info("Monitor timeout needs update", "current", monitor.Timeout, "desired", cfg.Timeout)
 			monitorUpdateOpts.Timeout = cfg.Timeout
 			needsUpdate = true
 		}
 
 		if monitor.MaxRetries != cfg.MaxRetries {
-			s.scope.Logger().Info("Monitor maxRetries needs update", "current", monitor.MaxRetries, "desired", cfg.MaxRetries)
+			s.scope.Logger().V(3).Info("Monitor maxRetries needs update", "current", monitor.MaxRetries, "desired", cfg.MaxRetries)
 			monitorUpdateOpts.MaxRetries = cfg.MaxRetries
 			needsUpdate = true
 		}
 
 		if monitor.MaxRetriesDown != cfg.MaxRetriesDown {
-			s.scope.Logger().Info("Monitor maxRetriesDown needs update", "current", monitor.MaxRetriesDown, "desired", cfg.MaxRetriesDown)
+			s.scope.Logger().V(3).Info("Monitor maxRetriesDown needs update", "current", monitor.MaxRetriesDown, "desired", cfg.MaxRetriesDown)
 			monitorUpdateOpts.MaxRetriesDown = cfg.MaxRetriesDown
 			needsUpdate = true
 		}
 
 		if needsUpdate {
-			s.scope.Logger().Info("Updating load balancer monitor", "loadBalancerID", lbID, "name", monitorName, "monitorID", monitor.ID)
+			s.scope.Logger().V(2).Info("Updating load balancer monitor", "loadBalancerID", lbID, "name", monitorName, "monitorID", monitor.ID)
 
 			updatedMonitor, err := s.loadbalancerClient.UpdateMonitor(monitor.ID, monitorUpdateOpts)
 			if err != nil {
@@ -607,7 +607,7 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 		return nil
 	}
 
-	s.scope.Logger().Info("Creating load balancer monitor for pool", "loadBalancerID", lbID, "name", monitorName, "poolID", poolID)
+	s.scope.Logger().V(2).Info("Creating load balancer monitor for pool", "loadBalancerID", lbID, "name", monitorName, "poolID", poolID)
 
 	monitor, err = s.loadbalancerClient.CreateMonitor(monitors.CreateOpts{
 		Name:           monitorName,
@@ -652,7 +652,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
-	s.scope.Logger().Info("Reconciling load balancer member", "loadBalancerName", loadBalancerName)
+	s.scope.Logger().V(3).Info("Reconciling load balancer member", "loadBalancerName", loadBalancerName)
 
 	lbID := openStackCluster.Status.APIServerLoadBalancer.ID
 	var portList []int
@@ -686,7 +686,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 				continue
 			}
 
-			s.scope.Logger().Info("Deleting load balancer member because the IP of the machine changed", "name", name)
+			s.scope.Logger().V(2).Info("Deleting load balancer member because the IP of the machine changed", "name", name)
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
 			_, err = s.waitForLoadBalancerActive(lbID)
@@ -702,7 +702,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			}
 		}
 
-		s.scope.Logger().Info("Creating load balancer member", "name", name)
+		s.scope.Logger().V(2).Info("Creating load balancer member", "name", name)
 
 		// if we got to this point we should either create or re-create the lb member
 		lbMemberOpts := pools.CreateMemberOpts{
@@ -751,7 +751,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	// However we should still wait for the load balancer to be deleted which is why we
 	// request a new reconcile after a certain amount of time.
 	if lb.ProvisioningStatus == loadBalancerProvisioningStatusPendingDelete {
-		s.scope.Logger().Info("Load balancer is already in PENDING_DELETE state", "name", loadBalancerName)
+		s.scope.Logger().V(3).Info("Load balancer is already in PENDING_DELETE state", "name", loadBalancerName)
 		return &ctrl.Result{RequeueAfter: waitForOctaviaLBCleanup}, nil
 	}
 
@@ -772,7 +772,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 					return nil, err
 				}
 			} else {
-				s.scope.Logger().Info("Skipping load balancer floating IP deletion as it's a user-provided resource", "name", loadBalancerName, "fip", fip.FloatingIP)
+				s.scope.Logger().V(3).Info("Skipping load balancer floating IP deletion as it's a user-provided resource", "name", loadBalancerName, "floatingIP", fip.FloatingIP)
 			}
 		}
 	}
@@ -780,7 +780,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	deleteOpts := loadbalancers.DeleteOpts{
 		Cascade: true,
 	}
-	s.scope.Logger().Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
+	s.scope.Logger().V(2).Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
 	err = s.loadbalancerClient.DeleteLoadBalancer(lb.ID, deleteOpts)
 	if err != nil && !capoerrors.IsNotFound(err) {
 		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
@@ -827,7 +827,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 			return err
 		}
 		if pool == nil {
-			s.scope.Logger().Info("Load balancer pool does not exist", "name", lbPortObjectsName)
+			s.scope.Logger().V(4).Info("Load balancer pool does not exist", "name", lbPortObjectsName)
 			continue
 		}
 
@@ -924,7 +924,7 @@ var backoff = wait.Backoff{
 func (s *Service) waitForLoadBalancerActive(id string) (*loadbalancers.LoadBalancer, error) {
 	var lb *loadbalancers.LoadBalancer
 
-	s.scope.Logger().Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
+	s.scope.Logger().V(3).Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		var err error
 		lb, err = s.loadbalancerClient.GetLoadBalancer(id)
@@ -943,7 +943,7 @@ func (s *Service) waitForLoadBalancerActive(id string) (*loadbalancers.LoadBalan
 func (s *Service) waitForPoolMemberActive(poolID, memberID string) (*pools.Member, error) {
 	var member *pools.Member
 
-	s.scope.Logger().Info("Waiting for pool member", "pool_id", poolID, "member_id", memberID, "targetStatus", "ACTIVE")
+	s.scope.Logger().V(3).Info("Waiting for pool member", "poolID", poolID, "memberID", memberID, "targetStatus", "ACTIVE")
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		var err error
 		member, err = s.loadbalancerClient.GetPoolMember(poolID, memberID)
@@ -959,7 +959,7 @@ func (s *Service) waitForPoolMemberActive(poolID, memberID string) (*pools.Membe
 }
 
 func (s *Service) waitForListener(id, target string) error {
-	s.scope.Logger().Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
+	s.scope.Logger().V(3).Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
 		_, err := s.loadbalancerClient.GetListener(id)
 		if err != nil {

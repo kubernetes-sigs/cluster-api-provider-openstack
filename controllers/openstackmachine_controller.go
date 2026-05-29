@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/events"
+	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
@@ -95,7 +96,7 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	log = log.WithValues("openStackMachine", openStackMachine.Name)
+	log = log.WithValues("OpenStackMachine", klog.KObj(openStackMachine))
 	log.V(4).Info("Reconciling OpenStackMachine")
 
 	// Fetch the Machine.
@@ -104,20 +105,20 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 	if machine == nil {
-		log.Info("Machine Controller has not yet set OwnerRef")
+		log.Info("Machine controller has not yet set owner reference")
 		return ctrl.Result{}, nil
 	}
 
-	log = log.WithValues("machine", machine.Name)
+	log = log.WithValues("Machine", klog.KObj(machine))
 
 	// Fetch the Cluster.
 	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
 	if err != nil {
-		log.Info("Machine is missing cluster label or cluster does not exist")
+		log.Info("Machine is missing cluster label or Cluster does not exist")
 		return ctrl.Result{}, nil
 	}
 
-	log = log.WithValues("cluster", cluster.Name)
+	log = log.WithValues("Cluster", klog.KObj(cluster))
 
 	if annotations.IsPaused(cluster, openStackMachine) {
 		log.Info("OpenStackMachine or linked Cluster is marked as paused. Won't reconcile")
@@ -129,11 +130,11 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, errors.New("error getting infra provider cluster")
 	}
 	if infraCluster == nil {
-		log.Info("OpenStackCluster is not ready yet")
+		log.Info("OpenStackCluster is not ready yet", "OpenStackCluster", klog.KRef(cluster.Namespace, cluster.Spec.InfrastructureRef.Name))
 		return ctrl.Result{}, nil
 	}
 
-	log = log.WithValues("openStackCluster", infraCluster.Name)
+	log = log.WithValues("OpenStackCluster", klog.KObj(infraCluster))
 
 	// Initialize the patch helper
 	patchHelper, err := patch.NewHelper(openStackMachine, r.Client)
@@ -461,7 +462,7 @@ func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope 
 		})
 	}
 
-	scope.Logger().Info("Reconciled Machine create successfully")
+	scope.Logger().Info("Reconciled OpenStackMachine create successfully")
 	return ctrl.Result{}, nil
 }
 
@@ -473,7 +474,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 	// This can happen when the server is still being created or when
 	// there was an error during resource resolution (e.g., image not found).
 	if openStackServer.Status.InstanceState == nil {
-		scope.Logger().Info("Waiting for OpenStackServer instance state", "name", openStackServer.Name)
+		scope.Logger().Info("Waiting for OpenStackServer instance state", "OpenStackServer", klog.KObj(openStackServer))
 
 		if condition := meta.FindStatusCondition(openStackServer.Status.Conditions, infrav1.InstanceReadyCondition); condition != nil && condition.Status == metav1.ConditionFalse {
 			conditions.Set(openStackMachine, metav1.Condition{

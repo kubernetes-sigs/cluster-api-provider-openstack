@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/events"
+	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
@@ -90,8 +91,8 @@ func (r *OpenStackMachineTemplateReconciler) Reconcile(ctx context.Context, req 
 		return ctrl.Result{}, err
 	}
 
-	log = log.WithValues("openStackMachineTemplate", openStackMachineTemplate.Name)
-	log.V(4).Info("Reconciling openStackMachineTemplate")
+	log = log.WithValues("OpenStackMachineTemplate", klog.KObj(openStackMachineTemplate))
+	log.V(4).Info("Reconciling OpenStackMachineTemplate")
 
 	// If OSMT is set for deletion, do nothing
 	if !openStackMachineTemplate.DeletionTimestamp.IsZero() {
@@ -105,11 +106,11 @@ func (r *OpenStackMachineTemplateReconciler) Reconcile(ctx context.Context, req 
 	// are patched by the CC and thus not valid.
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, openStackMachineTemplate.ObjectMeta)
 	if err != nil || cluster == nil {
-		log.Info("openStackMachineTemplate is missing owner cluster or cluster does not exist")
+		log.Info("OpenStackMachineTemplate is missing owner Cluster or Cluster does not exist")
 		return ctrl.Result{}, nil
 	}
 
-	log = log.WithValues("cluster", cluster.Name)
+	log = log.WithValues("Cluster", klog.KObj(cluster))
 
 	if annotations.IsPaused(cluster, openStackMachineTemplate) {
 		log.Info("OpenStackMachineTemplate or linked Cluster is marked as paused. Won't reconcile")
@@ -121,11 +122,11 @@ func (r *OpenStackMachineTemplateReconciler) Reconcile(ctx context.Context, req 
 		return ctrl.Result{}, errors.New("error getting infra provider cluster")
 	}
 	if infraCluster == nil {
-		log.Info("OpenStackCluster not ready", "name", cluster.Spec.InfrastructureRef.Name)
+		log.Info("OpenStackCluster is not ready", "OpenStackCluster", klog.KRef(cluster.Namespace, cluster.Spec.InfrastructureRef.Name))
 		return ctrl.Result{}, nil
 	}
 
-	log = log.WithValues("openStackCluster", infraCluster.Name)
+	log = log.WithValues("OpenStackCluster", klog.KObj(infraCluster))
 
 	// Initialize the patch helper
 	patchHelper, err := patch.NewHelper(openStackMachineTemplate, r.Client)
@@ -356,10 +357,11 @@ func (r *OpenStackMachineTemplateReconciler) reconcileAllowedAddressPairs(ctx co
 					break
 				}
 				pairs := templatePorts[portIdx].AllowedAddressPairs
-				log.Info("Updating allowedAddressPairs on port", "portID", portStatus.ID,
-					"machine", osm.Name, "portIndex", portIdx)
+				log.Info("Updating spec.template.spec.ports[*].allowedAddressPairs on Neutron port",
+					"OpenStackMachine", klog.KObj(osm), "portID", portStatus.ID, "portIndex", portIdx)
 				if err := networkingService.UpdateAllowedAddressPairs(portStatus.ID, pairs); err != nil {
-					log.Error(err, "Failed to update allowedAddressPairs", "portID", portStatus.ID)
+					log.Error(err, "Failed to update spec.template.spec.ports[*].allowedAddressPairs",
+						"OpenStackMachine", klog.KObj(osm), "portID", portStatus.ID)
 					return err
 				}
 			}
