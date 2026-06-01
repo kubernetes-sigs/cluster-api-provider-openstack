@@ -219,9 +219,9 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")
 		})
 
-		It("should not allow DisableFloatingIP to be false with EnableExternalNetwork set to false", func() {
+		It("should not allow EnableFloatingIP to be true with EnableExternalNetwork set to false", func() {
 			cluster.Spec.APIServer = &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(false),
+				EnableFloatingIP: ptr.To(true),
 			}
 			cluster.Spec.EnableExternalNetwork = ptr.To(false)
 			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")

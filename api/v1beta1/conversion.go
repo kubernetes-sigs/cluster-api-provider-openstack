@@ -412,10 +412,12 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 		in.APIServerFixedIP != nil ||
 		in.APIServerPort != nil {
 		out.APIServer = &infrav1.APIServer{
-			DisableFloatingIP: in.DisableAPIServerFloatingIP,
-			FloatingIP:        in.APIServerFloatingIP,
-			FixedIP:           in.APIServerFixedIP,
-			Port:              in.APIServerPort,
+			FloatingIP: in.APIServerFloatingIP,
+			FixedIP:    in.APIServerFixedIP,
+			Port:       in.APIServerPort,
+		}
+		if in.DisableAPIServerFloatingIP != nil {
+			out.APIServer.EnableFloatingIP = ptr.To(!*in.DisableAPIServerFloatingIP)
 		}
 		// APIServerLoadBalancer is structurally identical between versions,
 		// so an unsafe cast is safe here (same field layout).
@@ -462,10 +464,12 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 
 	// Expand the v1beta2 APIServer struct back into the flat v1beta1 fields.
 	if in.APIServer != nil {
-		out.DisableAPIServerFloatingIP = in.APIServer.DisableFloatingIP
 		out.APIServerFloatingIP = in.APIServer.FloatingIP
 		out.APIServerFixedIP = in.APIServer.FixedIP
 		out.APIServerPort = in.APIServer.Port
+		if in.APIServer.EnableFloatingIP != nil {
+			out.DisableAPIServerFloatingIP = ptr.To(!*in.APIServer.EnableFloatingIP)
+		}
 
 		if in.APIServer.ManagedLoadBalancer != nil {
 			out.APIServerLoadBalancer = (*APIServerLoadBalancer)(unsafe.Pointer(in.APIServer.ManagedLoadBalancer))

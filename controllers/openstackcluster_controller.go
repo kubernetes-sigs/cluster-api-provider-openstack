@@ -1028,7 +1028,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 
 	// API server load balancer is disabled, but external network and floating IP are not. Create
 	// a floating IP to be attached directly to a control plane host.
-	case !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true):
+	case ptr.Deref(openStackCluster.Spec.APIServer.GetEnableFloatingIP(), true) && ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true):
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServer.GetFloatingIP())
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))

@@ -56,7 +56,7 @@ func TestOpenStackClusterTemplate_ValidateUpdate(t *testing.T) {
 								CloudName: "foobar",
 							},
 							APIServer: &infrav1.APIServer{
-								DisableFloatingIP: ptr.To(true),
+								EnableFloatingIP: ptr.To(false),
 							},
 						},
 					},

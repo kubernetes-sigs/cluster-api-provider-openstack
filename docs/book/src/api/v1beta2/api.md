@@ -851,20 +851,19 @@ string
 <p>floatingIP is the floating IP which will be associated with the API server.
 The floating IP will be created if it does not already exist.
 If not specified, a new floating IP is allocated.
-This field is not used if DisableFloatingIP is set to true.</p>
+This field is not used if EnableFloatingIP is set to false.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableFloatingIP</code><br/>
+<code>enableFloatingIP</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableFloatingIP determines whether or not to attempt to attach a
-floating IP to the API server.</p>
+<p>enableFloatingIP determines whether to attach a floating IP to the API server.</p>
 </td>
 </tr>
 <tr>

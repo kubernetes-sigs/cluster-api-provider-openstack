@@ -1775,7 +1775,7 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServer
   map:
     fields:
-    - name: disableFloatingIP
+    - name: enableFloatingIP
       type:
         scalar: boolean
     - name: fixedIP

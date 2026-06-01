@@ -31,7 +31,7 @@ const (
 
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
 // +kubebuilder:validation:XValidation:rule="has(self.enableExternalNetwork) && !self.enableExternalNetwork ? !has(self.bastion) || !has(self.bastion.floatingIP) : true",message="bastion floating IP cannot be set when enableExternalNetwork is false"
-// +kubebuilder:validation:XValidation:rule="has(self.enableExternalNetwork) && !self.enableExternalNetwork ? has(self.apiServer) && has(self.apiServer.disableFloatingIP) && self.apiServer.disableFloatingIP : true",message="apiServer.disableFloatingIP cannot be false when enableExternalNetwork is false"
+// +kubebuilder:validation:XValidation:rule="has(self.enableExternalNetwork) && !self.enableExternalNetwork ? has(self.apiServer) && has(self.apiServer.enableFloatingIP) && !self.apiServer.enableFloatingIP : true",message="apiServer.enableFloatingIP cannot be true when enableExternalNetwork is false"
 type OpenStackClusterSpec struct {
 	// managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
@@ -171,14 +171,13 @@ type APIServer struct {
 	// floatingIP is the floating IP which will be associated with the API server.
 	// The floating IP will be created if it does not already exist.
 	// If not specified, a new floating IP is allocated.
-	// This field is not used if DisableFloatingIP is set to true.
+	// This field is not used if EnableFloatingIP is set to false.
 	// +optional
 	FloatingIP optional.String `json:"floatingIP,omitempty"`
 
-	// disableFloatingIP determines whether or not to attempt to attach a
-	// floating IP to the API server.
+	// enableFloatingIP determines whether to attach a floating IP to the API server.
 	// +optional
-	DisableFloatingIP optional.Bool `json:"disableFloatingIP,omitempty"`
+	EnableFloatingIP optional.Bool `json:"enableFloatingIP,omitempty"`
 
 	// managedLoadBalancer configures the optional LoadBalancer for the API server.
 	// If not specified, no load balancer will be created.
@@ -369,11 +368,11 @@ func (a *APIServer) GetManagedLoadBalancer() *APIServerLoadBalancer {
 	return a.ManagedLoadBalancer
 }
 
-func (a *APIServer) GetDisableFloatingIP() *bool {
+func (a *APIServer) GetEnableFloatingIP() *bool {
 	if a == nil {
 		return nil
 	}
-	return a.DisableFloatingIP
+	return a.EnableFloatingIP
 }
 
 func (a *APIServer) GetFloatingIP() *string {

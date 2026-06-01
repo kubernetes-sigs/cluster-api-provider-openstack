@@ -45,8 +45,8 @@ func (in *APIServer) DeepCopyInto(out *APIServer) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.DisableFloatingIP != nil {
-		in, out := &in.DisableFloatingIP, &out.DisableFloatingIP
+	if in.EnableFloatingIP != nil {
+		in, out := &in.EnableFloatingIP, &out.EnableFloatingIP
 		*out = new(bool)
 		**out = **in
 	}

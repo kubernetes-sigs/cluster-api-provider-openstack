@@ -35,8 +35,10 @@ This only documents backwards incompatible changes. Fields that were added to v1
 
 `spec.apiServerFloatingIP`, `spec.apiServerFixedIP`, `spec.apiServerPort`,
 `spec.disableAPIServerFloatingIP`, and `spec.apiServerLoadBalancer` have been consolidated
-into a single structured `spec.apiServer` object. This applies to `OpenStackCluster` and
-`OpenStackClusterTemplate`.
+into a single structured `spec.apiServer` object. Note that `disableAPIServerFloatingIP` has
+been renamed to `apiServer.enableFloatingIP` with inverted polarity — set it to `false` to
+disable the floating IP instead of `true`. Defaults to `true`. This applies to `OpenStackCluster`
+and `OpenStackClusterTemplate`.
 
 ```diff
  spec:
@@ -52,7 +54,7 @@ into a single structured `spec.apiServer` object. This applies to `OpenStackClus
 +    floatingIP: 1.2.3.4
 +    fixedIP: 10.0.0.1
 +    port: 6443
-+    disableFloatingIP: true
++    enableFloatingIP: false
 +    managedLoadBalancer:
 +      enabled: true
 +      allowedCIDRs:

@@ -272,7 +272,7 @@ func fuzzAPIServer(as **infrav1.APIServer, c randfill.Continue) {
 	if a.FloatingIP == nil &&
 		a.FixedIP == nil &&
 		a.Port == nil &&
-		a.DisableFloatingIP == nil &&
+		a.EnableFloatingIP == nil &&
 		a.ManagedLoadBalancer == nil {
 		a.FloatingIP = ptr.To(nonEmptyString(c))
 	}

@@ -2761,10 +2761,9 @@ spec:
                   apiServer configures the API server endpoint and its associated
                   load balancer and floating IP.
                 properties:
-                  disableFloatingIP:
-                    description: |-
-                      disableFloatingIP determines whether or not to attempt to attach a
-                      floating IP to the API server.
+                  enableFloatingIP:
+                    description: enableFloatingIP determines whether to attach a floating
+                      IP to the API server.
                     type: boolean
                   fixedIP:
                     description: |-
@@ -2782,7 +2781,7 @@ spec:
                       floatingIP is the floating IP which will be associated with the API server.
                       The floating IP will be created if it does not already exist.
                       If not specified, a new floating IP is allocated.
-                      This field is not used if DisableFloatingIP is set to true.
+                      This field is not used if EnableFloatingIP is set to false.
                     type: string
                   managedLoadBalancer:
                     description: |-
@@ -4937,11 +4936,11 @@ spec:
                 is false
               rule: 'has(self.enableExternalNetwork) && !self.enableExternalNetwork
                 ? !has(self.bastion) || !has(self.bastion.floatingIP) : true'
-            - message: apiServer.disableFloatingIP cannot be false when enableExternalNetwork
+            - message: apiServer.enableFloatingIP cannot be true when enableExternalNetwork
                 is false
               rule: 'has(self.enableExternalNetwork) && !self.enableExternalNetwork
-                ? has(self.apiServer) && has(self.apiServer.disableFloatingIP) &&
-                self.apiServer.disableFloatingIP : true'
+                ? has(self.apiServer) && has(self.apiServer.enableFloatingIP) && !self.apiServer.enableFloatingIP
+                : true'
           status:
             description: status is the observed state of the OpenStackCluster.
             properties:

@@ -1236,8 +1236,9 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 	disable := optional.Bool(ptr.To(true))
 
 	tests := []struct {
-		name string
-		in   OpenStackCluster
+		name                     string
+		in                       OpenStackCluster
+		expectedEnableFloatingIP optional.Bool
 	}{
 		{
 			name: "all fields set",
@@ -1252,6 +1253,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					},
 				},
 			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(false)), // disable=true → enable=false
 		},
 		{
 			name: "only floatingIP set",
@@ -1260,6 +1262,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerFloatingIP: floatingIP,
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "only fixedIP set",
@@ -1268,6 +1271,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerFixedIP: fixedIP,
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "only port set",
@@ -1276,14 +1280,25 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerPort: port,
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
-			name: "only disableFloatingIP set",
+			name: "DisableAPIServerFloatingIP explicitly true",
 			in: OpenStackCluster{
 				Spec: OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: disable,
 				},
 			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(false)), // disable=true → enable=false
+		},
+		{
+			name: "DisableAPIServerFloatingIP explicitly false",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: optional.Bool(ptr.To(false)),
+				},
+			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(true)), // disable=false → enable=true
 		},
 		{
 			name: "only loadBalancer set",
@@ -1294,6 +1309,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					},
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "loadBalancer disabled explicitly",
@@ -1304,6 +1320,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					},
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "disableFloatingIP with fixedIP (no-LB VIP case)",
@@ -1313,10 +1330,12 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerFixedIP:           fixedIP,
 				},
 			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(false)), // disable=true → enable=false
 		},
 		{
-			name: "no APIServer fields set — APIServer stays nil",
-			in:   OpenStackCluster{},
+			name:                     "no APIServer fields set — APIServer stays nil",
+			in:                       OpenStackCluster{},
+			expectedEnableFloatingIP: nil,
 		},
 	}
 
@@ -1343,7 +1362,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 				g.Expect(hub.Spec.APIServer.FloatingIP).To(Equal(src.APIServerFloatingIP))
 				g.Expect(hub.Spec.APIServer.FixedIP).To(Equal(src.APIServerFixedIP))
 				g.Expect(hub.Spec.APIServer.Port).To(Equal(src.APIServerPort))
-				g.Expect(hub.Spec.APIServer.DisableFloatingIP).To(Equal(src.DisableAPIServerFloatingIP))
+				g.Expect(hub.Spec.APIServer.EnableFloatingIP).To(Equal(tt.expectedEnableFloatingIP))
 
 				if src.APIServerLoadBalancer == nil {
 					g.Expect(hub.Spec.APIServer.ManagedLoadBalancer).To(BeNil())

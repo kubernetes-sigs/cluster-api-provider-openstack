@@ -22148,14 +22148,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServer(ref c
 					},
 					"floatingIP": {
 						SchemaProps: spec.SchemaProps{
-							Description: "floatingIP is the floating IP which will be associated with the API server. The floating IP will be created if it does not already exist. If not specified, a new floating IP is allocated. This field is not used if DisableFloatingIP is set to true.",
+							Description: "floatingIP is the floating IP which will be associated with the API server. The floating IP will be created if it does not already exist. If not specified, a new floating IP is allocated. This field is not used if EnableFloatingIP is set to false.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"disableFloatingIP": {
+					"enableFloatingIP": {
 						SchemaProps: spec.SchemaProps{
-							Description: "disableFloatingIP determines whether or not to attempt to attach a floating IP to the API server.",
+							Description: "enableFloatingIP determines whether to attach a floating IP to the API server.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

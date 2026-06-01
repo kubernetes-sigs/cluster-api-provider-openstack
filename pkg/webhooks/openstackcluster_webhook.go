@@ -127,13 +127,13 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 
 	// Allow APIServerFixedIP to be set for the first time when floating IP is disabled.
 	if oldObj.Spec.APIServer != nil && newObj.Spec.APIServer != nil {
-		if ptr.Deref(oldObj.Spec.APIServer.DisableFloatingIP, false) && ptr.Deref(oldObj.Spec.APIServer.FixedIP, "") == "" {
+		if ptr.Deref(oldObj.Spec.APIServer.GetEnableFloatingIP(), true) && ptr.Deref(oldObj.Spec.APIServer.FixedIP, "") == "" {
 			oldObj.Spec.APIServer.FixedIP = nil
 			newObj.Spec.APIServer.FixedIP = nil
 		}
 
 		// If API Server floating IP is disabled, allow the change of the API Server port only for the first time.
-		if ptr.Deref(oldObj.Spec.APIServer.GetDisableFloatingIP(), false) && oldObj.Spec.APIServer.GetPort() == nil && newObj.Spec.APIServer.GetPort() != nil {
+		if ptr.Deref(oldObj.Spec.APIServer.GetEnableFloatingIP(), true) && oldObj.Spec.APIServer.GetPort() == nil && newObj.Spec.APIServer.GetPort() != nil {
 			newObj.Spec.APIServer.Port = nil
 		}
 	}

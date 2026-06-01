@@ -439,7 +439,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(true),
+						EnableFloatingIP: ptr.To(false),
 					},
 				},
 			},
@@ -450,8 +450,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(true),
-						FixedIP:           ptr.To("20.1.56.1"),
+						EnableFloatingIP: ptr.To(false),
+						FixedIP:          ptr.To("20.1.56.1"),
 					},
 				},
 			},
@@ -466,7 +466,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(false),
+						EnableFloatingIP: ptr.To(true),
 					},
 				},
 			},
@@ -477,8 +477,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(false),
-						FixedIP:           ptr.To("20.1.56.1"),
+						EnableFloatingIP: ptr.To(true),
+						FixedIP:          ptr.To("20.1.56.1"),
 					},
 				},
 			},
@@ -493,15 +493,15 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(true),
+						EnableFloatingIP: ptr.To(false),
 					},
 				},
 			},
 			newCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(true),
-						Port:              ptr.To(uint16(8443)),
+						EnableFloatingIP: ptr.To(false),
+						Port:             ptr.To(uint16(8443)),
 					},
 				},
 			},
@@ -516,7 +516,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(false),
+						EnableFloatingIP: ptr.To(true),
 					},
 				},
 			},
@@ -527,8 +527,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(false),
-						Port:              ptr.To(uint16(8443)),
+						EnableFloatingIP: ptr.To(true),
+						Port:             ptr.To(uint16(8443)),
 					},
 				},
 			},

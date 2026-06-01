@@ -71,7 +71,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
 					Enabled: ptr.To(true),
 				},
-				DisableFloatingIP: ptr.To(true),
+				EnableFloatingIP: ptr.To(false),
 			},
 			ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 				Host: apiHostname,
@@ -193,7 +193,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 								MaxRetriesDown: 4,
 							},
 						},
-						DisableFloatingIP: ptr.To(true),
+						EnableFloatingIP: ptr.To(false),
 					},
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
@@ -296,7 +296,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 								MaxRetriesDown: 4,
 							},
 						},
-						DisableFloatingIP: ptr.To(true),
+						EnableFloatingIP: ptr.To(false),
 					},
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
@@ -391,7 +391,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 								MaxRetriesDown: 4,
 							},
 						},
-						DisableFloatingIP: ptr.To(true),
+						EnableFloatingIP: ptr.To(false),
 					},
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
@@ -552,7 +552,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(true),
+						EnableFloatingIP: ptr.To(false),
 					},
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: apiHostname,
@@ -568,7 +568,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					APIServer: &infrav1.APIServer{
-						DisableFloatingIP: ptr.To(true),
+						EnableFloatingIP: ptr.To(false),
 					},
 					ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 						Host: "invalid-api.test-cluster.test",
@@ -987,7 +987,7 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 							ID: &lbNetworkID,
 						},
 					},
-					DisableFloatingIP: ptr.To(true),
+					EnableFloatingIP: ptr.To(false),
 				},
 				ControlPlaneEndpoint: &clusterv1.APIEndpoint{
 					Host: apiHostname,
