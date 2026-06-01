@@ -385,6 +385,10 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 		}
 	}
 
+	if in.DisableExternalNetwork != nil {
+		out.EnableExternalNetwork = ptr.To(!*in.DisableExternalNetwork)
+	}
+
 	// ExternalRouterIPs and ExternalRouterIPParam are structurally identical between versions,
 	// but the nested SubnetParam is a different Go type per package, preventing a direct cast.
 	// Loop and convert element-wise.
@@ -437,6 +441,10 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 		if in.ManagedNetwork.EnablePortSecurity != nil {
 			out.DisablePortSecurity = ptr.To(!*in.ManagedNetwork.EnablePortSecurity)
 		}
+	}
+
+	if in.EnableExternalNetwork != nil {
+		out.DisableExternalNetwork = ptr.To(!*in.EnableExternalNetwork)
 	}
 
 	// ExternalRouterIPs and ExternalRouterIPParam are structurally identical between versions,

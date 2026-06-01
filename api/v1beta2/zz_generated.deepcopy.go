@@ -859,8 +859,8 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(NetworkParam)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.DisableExternalNetwork != nil {
-		in, out := &in.DisableExternalNetwork, &out.DisableExternalNetwork
+	if in.EnableExternalNetwork != nil {
+		in, out := &in.EnableExternalNetwork, &out.EnableExternalNetwork
 		*out = new(bool)
 		**out = **in
 	}

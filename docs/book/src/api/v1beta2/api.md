@@ -175,28 +175,28 @@ NetworkParam
 <td>
 <em>(Optional)</em>
 <p>externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-This option is ignored if DisableExternalNetwork is set to true.</p>
+This option is ignored if EnableExternalNetwork is set to false.</p>
 <p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
 <p>If ExternalNetwork is not defined or is empty the controller will use any
 existing external network as long as there is only one. It is an
 error if ExternalNetwork is not defined and there are multiple
-external networks unless DisableExternalNetwork is also set.</p>
+external networks unless EnableExternalNetwork is also set to false.</p>
 <p>If ExternalNetwork is not defined and there are no external networks
-the controller will proceed as though DisableExternalNetwork was set.</p>
+the controller will proceed as though EnableExternalNetwork was set to true.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableExternalNetwork</code><br/>
+<code>enableExternalNetwork</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableExternalNetwork specifies whether or not to attempt to connect the cluster
-to an external network. This allows for the creation of clusters when connecting
-to an external network is not possible or desirable, e.g. if using a provider network.</p>
+<p>enableExternalNetwork specifies whether to connect the cluster to an external network.
+Set this to false when connecting to an external network is not possible or desirable,
+e.g. if using a provider network.</p>
 </td>
 </tr>
 <tr>
@@ -2713,28 +2713,28 @@ NetworkParam
 <td>
 <em>(Optional)</em>
 <p>externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-This option is ignored if DisableExternalNetwork is set to true.</p>
+This option is ignored if EnableExternalNetwork is set to false.</p>
 <p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
 <p>If ExternalNetwork is not defined or is empty the controller will use any
 existing external network as long as there is only one. It is an
 error if ExternalNetwork is not defined and there are multiple
-external networks unless DisableExternalNetwork is also set.</p>
+external networks unless EnableExternalNetwork is also set to false.</p>
 <p>If ExternalNetwork is not defined and there are no external networks
-the controller will proceed as though DisableExternalNetwork was set.</p>
+the controller will proceed as though EnableExternalNetwork was set to true.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableExternalNetwork</code><br/>
+<code>enableExternalNetwork</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableExternalNetwork specifies whether or not to attempt to connect the cluster
-to an external network. This allows for the creation of clusters when connecting
-to an external network is not possible or desirable, e.g. if using a provider network.</p>
+<p>enableExternalNetwork specifies whether to connect the cluster to an external network.
+Set this to false when connecting to an external network is not possible or desirable,
+e.g. if using a provider network.</p>
 </td>
 </tr>
 <tr>
@@ -3178,28 +3178,28 @@ NetworkParam
 <td>
 <em>(Optional)</em>
 <p>externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-This option is ignored if DisableExternalNetwork is set to true.</p>
+This option is ignored if EnableExternalNetwork is set to false.</p>
 <p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
 <p>If ExternalNetwork is not defined or is empty the controller will use any
 existing external network as long as there is only one. It is an
 error if ExternalNetwork is not defined and there are multiple
-external networks unless DisableExternalNetwork is also set.</p>
+external networks unless EnableExternalNetwork is also set to false.</p>
 <p>If ExternalNetwork is not defined and there are no external networks
-the controller will proceed as though DisableExternalNetwork was set.</p>
+the controller will proceed as though EnableExternalNetwork was set to true.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableExternalNetwork</code><br/>
+<code>enableExternalNetwork</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableExternalNetwork specifies whether or not to attempt to connect the cluster
-to an external network. This allows for the creation of clusters when connecting
-to an external network is not possible or desirable, e.g. if using a provider network.</p>
+<p>enableExternalNetwork specifies whether to connect the cluster to an external network.
+Set this to false when connecting to an external network is not possible or desirable,
+e.g. if using a provider network.</p>
 </td>
 </tr>
 <tr>

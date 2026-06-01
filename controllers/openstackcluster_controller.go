@@ -456,7 +456,7 @@ func (r *OpenStackClusterReconciler) reconcileBastion(ctx context.Context, scope
 		return nil, err
 	}
 
-	if !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false) {
+	if ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true) {
 		return bastionAddFloatingIP(openStackCluster, clusterResourceName, port, networkingService)
 	}
 
@@ -1026,9 +1026,9 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		host = openStackCluster.Spec.ControlPlaneEndpoint.Host
 
-	// API server load balancer is disabled, but external netowork and floating IP are not. Create
+	// API server load balancer is disabled, but external network and floating IP are not. Create
 	// a floating IP to be attached directly to a control plane host.
-	case !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false):
+	case !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true):
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServer.GetFloatingIP())
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))

@@ -30,8 +30,8 @@ const (
 )
 
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
-// +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? !has(self.bastion) || !has(self.bastion.floatingIP) : true",message="bastion floating IP cannot be set when disableExternalNetwork is true"
-// +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? has(self.apiServer) && has(self.apiServer.disableFloatingIP) && self.apiServer.disableFloatingIP : true",message="apiServer.disableFloatingIP cannot be false when disableExternalNetwork is true"
+// +kubebuilder:validation:XValidation:rule="has(self.enableExternalNetwork) && !self.enableExternalNetwork ? !has(self.bastion) || !has(self.bastion.floatingIP) : true",message="bastion floating IP cannot be set when enableExternalNetwork is false"
+// +kubebuilder:validation:XValidation:rule="has(self.enableExternalNetwork) && !self.enableExternalNetwork ? has(self.apiServer) && has(self.apiServer.disableFloatingIP) && self.apiServer.disableFloatingIP : true",message="apiServer.disableFloatingIP cannot be false when enableExternalNetwork is false"
 type OpenStackClusterSpec struct {
 	// managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
@@ -74,25 +74,25 @@ type OpenStackClusterSpec struct {
 	Network *NetworkParam `json:"network,omitempty"`
 
 	// externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-	// This option is ignored if DisableExternalNetwork is set to true.
+	// This option is ignored if EnableExternalNetwork is set to false.
 	//
 	// If ExternalNetwork is defined it must refer to exactly one external network.
 	//
 	// If ExternalNetwork is not defined or is empty the controller will use any
 	// existing external network as long as there is only one. It is an
 	// error if ExternalNetwork is not defined and there are multiple
-	// external networks unless DisableExternalNetwork is also set.
+	// external networks unless EnableExternalNetwork is also set to false.
 	//
 	// If ExternalNetwork is not defined and there are no external networks
-	// the controller will proceed as though DisableExternalNetwork was set.
+	// the controller will proceed as though EnableExternalNetwork was set to true.
 	// +optional
 	ExternalNetwork *NetworkParam `json:"externalNetwork,omitempty"`
 
-	// disableExternalNetwork specifies whether or not to attempt to connect the cluster
-	// to an external network. This allows for the creation of clusters when connecting
-	// to an external network is not possible or desirable, e.g. if using a provider network.
+	// enableExternalNetwork specifies whether to connect the cluster to an external network.
+	// Set this to false when connecting to an external network is not possible or desirable,
+	// e.g. if using a provider network.
 	// +optional
-	DisableExternalNetwork optional.Bool `json:"disableExternalNetwork,omitempty"`
+	EnableExternalNetwork optional.Bool `json:"enableExternalNetwork,omitempty"`
 
 	// apiServer configures the API server endpoint and its associated
 	// load balancer and floating IP.

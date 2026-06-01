@@ -436,13 +436,13 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "not reconcile external network when external network disabled",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableExternalNetwork: ptr.To(true),
+					EnableExternalNetwork: ptr.To(false),
 				},
 			},
 			expect: func(Gomega, *mock.MockNetworkClientMockRecorder) {},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableExternalNetwork: ptr.To(true),
+					EnableExternalNetwork: ptr.To(false),
 				},
 				Status: infrav1.OpenStackClusterStatus{
 					ExternalNetwork: nil,

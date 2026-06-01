@@ -608,7 +608,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To("10.0.0.1"),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			Subnets: []infrav1.SubnetParam{
 				{ID: ptr.To(clusterSubnetID)},
 			},
@@ -888,7 +888,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To(fixedIP),
@@ -944,7 +944,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To("192.168.0.10"),
@@ -1042,7 +1042,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To("192.168.0.10"),
@@ -1087,7 +1087,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To("192.168.0.10"),
@@ -1143,7 +1143,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Router: &infrav1.RouterParam{
 				ID: ptr.To(clusterRouterID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To("192.168.0.10"),
@@ -1209,7 +1209,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To("192.168.0.10"),
@@ -1287,7 +1287,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
 				DisableFloatingIP: ptr.To(true),
 				FixedIP:           ptr.To("192.168.0.10"),

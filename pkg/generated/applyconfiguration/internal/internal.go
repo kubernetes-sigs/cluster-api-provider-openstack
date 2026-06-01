@@ -2250,7 +2250,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: controlPlaneOmitAvailabilityZone
       type:
         scalar: boolean
-    - name: disableExternalNetwork
+    - name: enableExternalNetwork
       type:
         scalar: boolean
     - name: externalNetwork

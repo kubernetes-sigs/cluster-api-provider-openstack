@@ -1452,7 +1452,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
 	// WARNING: in.ExternalRouterIPs requires manual conversion: does not exist in peer-type
 	out.ExternalNetwork = (*v1beta2.NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
-	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
+	// WARNING: in.DisableExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerLoadBalancer requires manual conversion: does not exist in peer-type
 	// WARNING: in.DisableAPIServerFloatingIP requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerFloatingIP requires manual conversion: does not exist in peer-type
@@ -1495,7 +1495,7 @@ func autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in
 	// WARNING: in.ManagedNetwork requires manual conversion: does not exist in peer-type
 	out.Network = (*NetworkParam)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
-	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
+	// WARNING: in.EnableExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServer requires manual conversion: does not exist in peer-type
 	if in.ManagedSecurityGroups != nil {
 		in, out := &in.ManagedSecurityGroups, &out.ManagedSecurityGroups

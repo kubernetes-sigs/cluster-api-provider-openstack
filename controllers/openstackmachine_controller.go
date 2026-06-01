@@ -828,7 +828,7 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 			})
 			return fmt.Errorf("reconcile load balancer member: %w", err)
 		}
-	} else if !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false) {
+	} else if !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true) {
 		var floatingIPAddress *string
 		switch {
 		case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():

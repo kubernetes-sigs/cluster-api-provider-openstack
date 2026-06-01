@@ -1443,3 +1443,53 @@ func TestOpenStackClusterStatusAPIServerLoadBalancerNilConversion(t *testing.T) 
 	// Verify round-trip preserves nil
 	g.Expect(restored.Status.APIServerLoadBalancer).To(BeNil())
 }
+
+func TestOpenStackCluster_RoundTrip_ExternalNetwork(t *testing.T) {
+	tests := []struct {
+		name             string
+		in               OpenStackCluster
+		expectedEnableEN optional.Bool
+	}{
+		{
+			name: "DisableExternalNetwork explicitly true",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableExternalNetwork: optional.Bool(ptr.To(true)),
+				},
+			},
+			expectedEnableEN: optional.Bool(ptr.To(false)), // disable=true → enable=false
+		},
+		{
+			name: "DisableExternalNetwork explicitly false",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableExternalNetwork: optional.Bool(ptr.To(false)),
+				},
+			},
+			expectedEnableEN: optional.Bool(ptr.To(true)), // disable=false → enable=true
+		},
+		{
+			name:             "DisableExternalNetwork unset — EnableExternalNetwork stays nil",
+			in:               OpenStackCluster{},
+			expectedEnableEN: nil, // unset stays unset, controller applies default
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackCluster{}
+			g.Expect(tt.in.ConvertTo(hub)).To(Succeed())
+
+			// --- Verify intermediate v1beta2 state ---
+			g.Expect(hub.Spec.EnableExternalNetwork).To(Equal(tt.expectedEnableEN))
+
+			// --- Verify full round-trip back to v1beta1 ---
+			restored := &OpenStackCluster{}
+			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
+
+			g.Expect(restored.Spec.DisableExternalNetwork).To(Equal(tt.in.Spec.DisableExternalNetwork))
+		})
+	}
+}

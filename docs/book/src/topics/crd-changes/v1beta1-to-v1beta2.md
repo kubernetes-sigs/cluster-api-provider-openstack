@@ -6,6 +6,7 @@
   - [Migration](#migration)
   - [API Changes](#api-changes)
     - [API server fields restructure](#api-server-fields-restructure)
+    - [DisableExternalNetwork renamed to EnableExternalNetwork](#disableexternalnetwork-renamed-to-enableexternalnetwork)
     - [Flavor field restructure](#flavor-field-restructure)
     - [Network management fields restructure](#network-management-fields-restructure)
     - [External router IPs restructure](#external-router-ips-restructure)
@@ -69,6 +70,20 @@ Additionally, the corresponding status field has been renamed for consistency wi
      name: my-lb
      id: lb-id-123
 ```
+
+### DisableExternalNetwork renamed to EnableExternalNetwork
+
+`spec.disableExternalNetwork` has been renamed to `spec.enableExternalNetwork` with inverted
+polarity — set it to `false` to disable external network connectivity instead of `true`.
+This applies to `OpenStackCluster` and `OpenStackClusterTemplate`.
+
+```diff
+ spec:
+-  disableExternalNetwork: true
++  enableExternalNetwork: false
+```
+
+For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.enableExternalNetwork`.
 
 ### Flavor field restructure
 

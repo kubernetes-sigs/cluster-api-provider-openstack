@@ -51,9 +51,9 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 // The external network can be specified in the cluster spec or will be searched for if not specified.
 // OpenStackCluster.Status.ExternalNetwork will be set to nil if one of these conditions are met:
 // - no external network was given in the cluster spec and no external network was found
-// - the user has set OpenStackCluster.Spec.DisableExternalNetwork to true.
+// - the user has set OpenStackCluster.Spec.EnableExternalNetwork to false.
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
-	if ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false) {
+	if ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true) {
 		s.scope.Logger().Info("External network is disabled - proceeding with internal network only")
 		openStackCluster.Status.ExternalNetwork = nil
 		return nil
