@@ -57,9 +57,10 @@ GO_APIDIFF_BIN := go-apidiff
 GO_APIDIFF_PKG := github.com/joelanford/go-apidiff
 
 # govulncheck
-GOVULNCHECK_VER := v1.1.4
+GOVULNCHECK_VER := v1.3.0
 GOVULNCHECK_BIN := govulncheck
-GOVULNCHECK_PKG := golang.org/x/vuln/cmd/govulncheck
+GOVULNCHECK_DIR := hack/tools/govulncheck
+GOVULNCHECK_TMP_DIR ?= $(GOVULNCHECK_DIR)/govulncheck.tmp
 
 TRIVY_VER := 0.69.3
 
@@ -81,7 +82,7 @@ RELEASE_NOTES := $(TOOLS_BIN_DIR)/release-notes
 SETUP_ENVTEST := $(TOOLS_BIN_DIR)/setup-envtest
 GEN_CRD_API_REFERENCE_DOCS := $(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GO_APIDIFF := $(TOOLS_BIN_DIR)/$(GO_APIDIFF_BIN)-$(GO_APIDIFF_VER)
-GOVULNCHECK := $(TOOLS_BIN_DIR)/$(GOVULNCHECK_BIN)-$(GOVULNCHECK_VER)
+GOVULNCHECK := $(abspath $(TOOLS_BIN_DIR)/$(GOVULNCHECK_BIN))
 
 # Kubebuilder
 export KUBEBUILDER_ENVTEST_KUBERNETES_VERSION ?= 1.28.0
@@ -276,8 +277,26 @@ $(GO_APIDIFF): # Build go-apidiff.
 .PHONY: $(GOVULNCHECK_BIN)
 $(GOVULNCHECK_BIN): $(GOVULNCHECK) ## Build a local copy of govulncheck.
 
-$(GOVULNCHECK): # Build govulncheck.
-	GOBIN=$(abspath $(TOOLS_BIN_DIR)) $(GO_INSTALL) $(GOVULNCHECK_PKG) $(GOVULNCHECK_BIN) $(GOVULNCHECK_VER)
+$(GOVULNCHECK): # Build govulncheck from source with exclusion patch.
+	@if [ -d "$(GOVULNCHECK_TMP_DIR)" ]; then \
+		echo "$(GOVULNCHECK_TMP_DIR) exists, skipping clone"; \
+	else \
+		git clone "https://github.com/golang/vuln.git" "$(GOVULNCHECK_TMP_DIR)"; \
+		cd "$(GOVULNCHECK_TMP_DIR)"; \
+		git checkout "$(GOVULNCHECK_VER)"; \
+		git apply "$(REPO_ROOT)/$(GOVULNCHECK_DIR)/govulncheck.patch"; \
+	fi
+	@cd "$(REPO_ROOT)/$(GOVULNCHECK_TMP_DIR)"; \
+	if [ "$$(git describe --tag 2> /dev/null)" != "$(GOVULNCHECK_VER)" ]; then \
+		echo "ERROR: checked out version does not match expected version $(GOVULNCHECK_VER)"; \
+		exit 1; \
+	fi
+	@rm -f $(GOVULNCHECK)
+	go build -C "$(REPO_ROOT)/$(GOVULNCHECK_TMP_DIR)" -o $(GOVULNCHECK) ./cmd/govulncheck
+
+.PHONY: clean-govulncheck
+clean-govulncheck:
+	rm -fr "$(GOVULNCHECK_TMP_DIR)"
 
 ## --------------------------------------
 ##@ Linting
@@ -677,11 +696,7 @@ verify-container-images: ## Verify container images
 
 .PHONY: verify-govulncheck
 verify-govulncheck: $(GOVULNCHECK) ## Verify code for vulnerabilities
-	$(GOVULNCHECK) $(GOVULNCHECK_ARGS) ./... && R1=$$? || R1=$$?; \
-	$(GOVULNCHECK) $(GOVULNCHECK_ARGS) -C "$(TOOLS_DIR)" ./... && R2=$$? || R2=$$?; \
-	if [ "$$R1" -ne "0" ] || [ "$$R2" -ne "0" ]; then \
-		exit 1; \
-	fi
+	$(GOVULNCHECK) $(GOVULNCHECK_ARGS) ./...
 
 .PHONY: verify-security
 verify-security: ## Verify code and images for vulnerabilities
