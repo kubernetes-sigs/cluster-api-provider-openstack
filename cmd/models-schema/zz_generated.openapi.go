@@ -23067,9 +23067,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedNetwork(
 							Format:      "int32",
 						},
 					},
-					"disablePortSecurity": {
+					"enablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "disablePortSecurity disables the port security of the network created for the Kubernetes cluster, which also disables SecurityGroups",
+							Description: "enablePortSecurity enables port security for the network created for the Kubernetes cluster, which also enables SecurityGroups. If left empty, the network will have port security setting enabled.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

@@ -64,7 +64,7 @@ type OpenStackClusterSpec struct {
 
 	// managedNetwork specifies attributes of the network. The values are used only
 	// if the Cluster actuator creates the network.
-	// +kubebuilder:validation:XValidation:rule="self == null || has(self.mtu) || has(self.disablePortSecurity)",message="managedNetwork must not be empty if set"
+	// +kubebuilder:validation:XValidation:rule="self == null || has(self.mtu) || has(self.enablePortSecurity)",message="managedNetwork must not be empty if set"
 	// +optional
 	ManagedNetwork *ManagedNetwork `json:"managedNetwork,omitempty"`
 
@@ -302,10 +302,11 @@ type ManagedNetwork struct {
 	// +optional
 	MTU optional.Int `json:"mtu,omitempty"`
 
-	// disablePortSecurity disables the port security of the network created for the
-	// Kubernetes cluster, which also disables SecurityGroups
+	// enablePortSecurity enables port security for the network created for the
+	// Kubernetes cluster, which also enables SecurityGroups.
+	// If left empty, the network will have port security setting enabled.
 	// +optional
-	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
+	EnablePortSecurity optional.Bool `json:"enablePortSecurity,omitempty"`
 }
 
 // ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.

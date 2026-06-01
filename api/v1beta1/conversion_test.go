@@ -977,8 +977,9 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 	disablePS := optional.Bool(ptr.To(true))
 
 	tests := []struct {
-		name string
-		in   OpenStackCluster
+		name             string
+		in               OpenStackCluster
+		expectedEnablePS optional.Bool
 	}{
 		{
 			name: "both fields set",
@@ -988,22 +989,33 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 					DisablePortSecurity: disablePS,
 				},
 			},
+			expectedEnablePS: optional.Bool(ptr.To(false)), // disablePS=true → enablePS=false
 		},
 		{
 			name: "only MTU set",
 			in: OpenStackCluster{
 				Spec: OpenStackClusterSpec{NetworkMTU: mtu},
 			},
+			expectedEnablePS: nil, // unset stays unset
 		},
 		{
-			name: "only DisablePortSecurity set",
+			name: "only DisablePortSecurity set to true",
 			in: OpenStackCluster{
 				Spec: OpenStackClusterSpec{DisablePortSecurity: disablePS},
 			},
+			expectedEnablePS: optional.Bool(ptr.To(false)), // disablePS=true → enablePS=false
 		},
 		{
-			name: "neither set — ManagedNetwork stays nil",
-			in:   OpenStackCluster{},
+			name: "DisablePortSecurity explicitly false",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{DisablePortSecurity: optional.Bool(ptr.To(false))},
+			},
+			expectedEnablePS: optional.Bool(ptr.To(true)), // disablePS=false → enablePS=true
+		},
+		{
+			name:             "neither set — ManagedNetwork stays nil",
+			in:               OpenStackCluster{},
+			expectedEnablePS: nil,
 		},
 	}
 
@@ -1020,13 +1032,13 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 			} else {
 				g.Expect(hub.Spec.ManagedNetwork).NotTo(BeNil())
 				g.Expect(hub.Spec.ManagedNetwork.MTU).To(Equal(tt.in.Spec.NetworkMTU))
-				g.Expect(hub.Spec.ManagedNetwork.DisablePortSecurity).To(Equal(tt.in.Spec.DisablePortSecurity))
+				g.Expect(hub.Spec.ManagedNetwork.EnablePortSecurity).To(Equal(tt.expectedEnablePS))
 			}
 
 			restored := &OpenStackCluster{}
 			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
 
-			// Verify final v1beta1 state
+			// Verify final v1beta1 state round-trips correctly
 			g.Expect(restored.Spec.NetworkMTU).To(Equal(tt.in.Spec.NetworkMTU))
 			g.Expect(restored.Spec.DisablePortSecurity).To(Equal(tt.in.Spec.DisablePortSecurity))
 		})

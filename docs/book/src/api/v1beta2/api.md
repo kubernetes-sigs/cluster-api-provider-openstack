@@ -2202,15 +2202,16 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </tr>
 <tr>
 <td>
-<code>disablePortSecurity</code><br/>
+<code>enablePortSecurity</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disablePortSecurity disables the port security of the network created for the
-Kubernetes cluster, which also disables SecurityGroups</p>
+<p>enablePortSecurity enables port security for the network created for the
+Kubernetes cluster, which also enables SecurityGroups.
+If left empty, the network will have port security setting enabled.</p>
 </td>
 </tr>
 </tbody>

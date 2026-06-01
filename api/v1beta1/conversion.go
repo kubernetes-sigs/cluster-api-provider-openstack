@@ -378,8 +378,10 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 
 	if in.NetworkMTU != nil || in.DisablePortSecurity != nil {
 		out.ManagedNetwork = &infrav1.ManagedNetwork{
-			MTU:                 in.NetworkMTU,
-			DisablePortSecurity: in.DisablePortSecurity,
+			MTU: in.NetworkMTU,
+		}
+		if in.DisablePortSecurity != nil {
+			out.ManagedNetwork.EnablePortSecurity = ptr.To(!*in.DisablePortSecurity)
 		}
 	}
 
@@ -432,7 +434,9 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 
 	if in.ManagedNetwork != nil {
 		out.NetworkMTU = in.ManagedNetwork.MTU
-		out.DisablePortSecurity = in.ManagedNetwork.DisablePortSecurity
+		if in.ManagedNetwork.EnablePortSecurity != nil {
+			out.DisablePortSecurity = ptr.To(!*in.ManagedNetwork.EnablePortSecurity)
+		}
 	}
 
 	// ExternalRouterIPs and ExternalRouterIPParam are structurally identical between versions,

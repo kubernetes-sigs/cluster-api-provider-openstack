@@ -92,15 +92,17 @@ For `OpenStackCluster` the same change applies under `spec.bastion.spec.flavor`.
 
 `spec.networkMTU` and `spec.disablePortSecurity` have been replaced by a structured
 `spec.managedNetwork` object. The field is optional, but must not be empty if set.
+Note that `disablePortSecurity` has been renamed to `enablePortSecurity` with inverted
+polarity — set it to `false` to disable port security instead of `true`.
 This applies to `OpenStackCluster` and `OpenStackClusterTemplate`.
 
 ```diff
  spec:
--  networkMTU: 
--  disablePortSecurity: 
+-  networkMTU: 1500
+-  disablePortSecurity: true
 +  managedNetwork:
-+    mtu: 
-+    disablePortSecurity: 
++    mtu: 1500
++    enablePortSecurity: false
 ```
 
 For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.managedNetwork`.

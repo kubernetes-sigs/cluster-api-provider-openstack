@@ -241,7 +241,7 @@ func fuzzManagedNetwork(mn **infrav1.ManagedNetwork, c randfill.Continue) {
 	}
 	m := &infrav1.ManagedNetwork{}
 	c.Fill(m)
-	if m.MTU == nil && m.DisablePortSecurity == nil {
+	if m.MTU == nil && m.EnablePortSecurity == nil {
 		m.MTU = ptr.To(int(c.Int31()))
 	}
 	*mn = m

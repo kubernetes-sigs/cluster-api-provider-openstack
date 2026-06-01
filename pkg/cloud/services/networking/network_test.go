@@ -211,7 +211,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedNetwork: &infrav1.ManagedNetwork{
-						DisablePortSecurity: ptr.To(true),
+						EnablePortSecurity: ptr.To(false),
 					},
 				},
 			},

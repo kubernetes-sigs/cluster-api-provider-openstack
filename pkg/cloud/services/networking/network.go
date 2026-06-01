@@ -119,7 +119,9 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	}
 
 	if openStackCluster.Spec.ManagedNetwork != nil {
-		if ptr.Deref(openStackCluster.Spec.ManagedNetwork.DisablePortSecurity, false) {
+		// Port Security is set to disabled only when EnablePortSecurity is
+		// set and equals false
+		if !ptr.Deref(openStackCluster.Spec.ManagedNetwork.EnablePortSecurity, true) {
 			opts.PortSecurityEnabled = gophercloud.Disabled
 		}
 

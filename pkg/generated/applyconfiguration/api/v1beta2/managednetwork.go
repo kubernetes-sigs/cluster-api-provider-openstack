@@ -28,9 +28,10 @@ type ManagedNetworkApplyConfiguration struct {
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	MTU *int `json:"mtu,omitempty"`
-	// disablePortSecurity disables the port security of the network created for the
-	// Kubernetes cluster, which also disables SecurityGroups
-	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
+	// enablePortSecurity enables port security for the network created for the
+	// Kubernetes cluster, which also enables SecurityGroups.
+	// If left empty, the network will have port security setting enabled.
+	EnablePortSecurity *bool `json:"enablePortSecurity,omitempty"`
 }
 
 // ManagedNetworkApplyConfiguration constructs a declarative configuration of the ManagedNetwork type for use with
@@ -47,10 +48,10 @@ func (b *ManagedNetworkApplyConfiguration) WithMTU(value int) *ManagedNetworkApp
 	return b
 }
 
-// WithDisablePortSecurity sets the DisablePortSecurity field in the declarative configuration to the given value
+// WithEnablePortSecurity sets the EnablePortSecurity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DisablePortSecurity field is set to the value of the last call.
-func (b *ManagedNetworkApplyConfiguration) WithDisablePortSecurity(value bool) *ManagedNetworkApplyConfiguration {
-	b.DisablePortSecurity = &value
+// If called multiple times, the EnablePortSecurity field is set to the value of the last call.
+func (b *ManagedNetworkApplyConfiguration) WithEnablePortSecurity(value bool) *ManagedNetworkApplyConfiguration {
+	b.EnablePortSecurity = &value
 	return b
 }

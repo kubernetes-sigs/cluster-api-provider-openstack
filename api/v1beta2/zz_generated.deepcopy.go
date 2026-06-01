@@ -584,8 +584,8 @@ func (in *ManagedNetwork) DeepCopyInto(out *ManagedNetwork) {
 		*out = new(int)
 		**out = **in
 	}
-	if in.DisablePortSecurity != nil {
-		in, out := &in.DisablePortSecurity, &out.DisablePortSecurity
+	if in.EnablePortSecurity != nil {
+		in, out := &in.EnablePortSecurity, &out.EnablePortSecurity
 		*out = new(bool)
 		**out = **in
 	}

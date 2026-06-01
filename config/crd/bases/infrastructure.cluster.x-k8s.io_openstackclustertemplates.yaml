@@ -3681,10 +3681,11 @@ spec:
                           managedNetwork specifies attributes of the network. The values are used only
                           if the Cluster actuator creates the network.
                         properties:
-                          disablePortSecurity:
+                          enablePortSecurity:
                             description: |-
-                              disablePortSecurity disables the port security of the network created for the
-                              Kubernetes cluster, which also disables SecurityGroups
+                              enablePortSecurity enables port security for the network created for the
+                              Kubernetes cluster, which also enables SecurityGroups.
+                              If left empty, the network will have port security setting enabled.
                             type: boolean
                           mtu:
                             description: |-
@@ -3696,7 +3697,7 @@ spec:
                         type: object
                         x-kubernetes-validations:
                         - message: managedNetwork must not be empty if set
-                          rule: self == null || has(self.mtu) || has(self.disablePortSecurity)
+                          rule: self == null || has(self.mtu) || has(self.enablePortSecurity)
                       managedRouter:
                         description: |-
                           managedRouter specifies attributes of the router. The values are used only

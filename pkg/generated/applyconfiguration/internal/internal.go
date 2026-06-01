@@ -2071,7 +2071,7 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedNetwork
   map:
     fields:
-    - name: disablePortSecurity
+    - name: enablePortSecurity
       type:
         scalar: boolean
     - name: mtu
