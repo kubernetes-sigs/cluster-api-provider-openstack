@@ -8,6 +8,7 @@
     - [API server fields restructure](#api-server-fields-restructure)
     - [DisableExternalNetwork renamed to EnableExternalNetwork](#disableexternalnetwork-renamed-to-enableexternalnetwork)
     - [Flavor field restructure](#flavor-field-restructure)
+    - [Port security field rename](#port-security-field-rename)
     - [Network management fields restructure](#network-management-fields-restructure)
     - [External router IPs restructure](#external-router-ips-restructure)
     - [Managed security group rules rename](#managed-security-group-rules-rename)
@@ -104,6 +105,22 @@ following the ID/Filter pattern used by other fields. This applies to `OpenStack
 ```
 
 For `OpenStackCluster` the same change applies under `spec.bastion.spec.flavor`.
+
+### Port security field rename
+
+`spec.ports[*].disablePortSecurity` has been renamed to `spec.ports[*].enablePortSecurity`
+with inverted polarity — set it to `false` to disable port security instead of `true`.
+This applies to `OpenStackMachine` and `OpenStackMachineTemplate`.
+
+```diff
+ spec:
+   ports:
+-  - disablePortSecurity: true
++  - enablePortSecurity: false
+```
+
+For `OpenStackMachineTemplate` the same change applies under `spec.template.spec.ports[*].enablePortSecurity`.
+For `OpenStackCluster` and `OpenStackClusterTemplate` the same change applies under `spec.bastion.spec.ports[*].enablePortSecurity`.
 
 ### Network management fields restructure
 

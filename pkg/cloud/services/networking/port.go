@@ -181,7 +181,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		return port, nil
 	}
 	var addressPairs []ports.AddressPair
-	if !ptr.Deref(portSpec.DisablePortSecurity, false) {
+	if ptr.Deref(portSpec.EnablePortSecurity, true) {
 		for _, ap := range portSpec.AllowedAddressPairs {
 			addressPairs = append(addressPairs, ports.AddressPair{
 				IPAddress:  ap.IPAddress,
@@ -225,18 +225,17 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		createOpts.FixedIPs = fixedIPs
 	}
 	if portSpec.SecurityGroups != nil {
-		if ptr.Deref(portSpec.DisablePortSecurity, false) {
+		if !ptr.Deref(portSpec.EnablePortSecurity, true) {
 			return nil, errors.New("security groups cannot be set when port security is disabled")
 		}
 		createOpts.SecurityGroups = &portSpec.SecurityGroups
 	}
 	builder = createOpts
 
-	if portSpec.DisablePortSecurity != nil {
-		portSecurity := !*portSpec.DisablePortSecurity
+	if portSpec.EnablePortSecurity != nil {
 		portSecurityOpts := portsecurity.PortCreateOptsExt{
 			CreateOptsBuilder:   builder,
-			PortSecurityEnabled: &portSecurity,
+			PortSecurityEnabled: portSpec.EnablePortSecurity,
 		}
 		builder = portSecurityOpts
 	}
@@ -511,7 +510,7 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 		}
 
 		// Resolve security groups when port security is not disabled
-		if !ptr.Deref(port.DisablePortSecurity, false) {
+		if ptr.Deref(port.EnablePortSecurity, true) {
 			if len(port.SecurityGroups) == 0 {
 				normalizedPort.SecurityGroups = defaultSecurityGroupIDs
 			} else {

@@ -2585,7 +2585,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: description
       type:
         scalar: string
-    - name: disablePortSecurity
+    - name: enablePortSecurity
       type:
         scalar: boolean
     - name: fixedIPs
@@ -2688,7 +2688,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
-    - name: disablePortSecurity
+    - name: enablePortSecurity
       type:
         scalar: boolean
     - name: fixedIPs

@@ -3349,9 +3349,9 @@ spec:
                               description: description is a human-readable description
                                 for the port.
                               type: string
-                            disablePortSecurity:
+                            enablePortSecurity:
                               description: |-
-                                disablePortSecurity enables or disables the port security when set.
+                                enablePortSecurity enables or disables the port security when set.
                                 When not set, it takes the value of the corresponding field at the network level.
                               type: boolean
                             fixedIPs:
@@ -4079,7 +4079,7 @@ spec:
                   external networks unless EnableExternalNetwork is also set to false.
 
                   If ExternalNetwork is not defined and there are no external networks
-                  the controller will proceed as though EnableExternalNetwork was set to true.
+                  the controller will proceed as though EnableExternalNetwork was set to false.
                 maxProperties: 1
                 minProperties: 1
                 properties:
@@ -5096,9 +5096,9 @@ spec:
                               description: description is a human-readable description
                                 for the port.
                               type: string
-                            disablePortSecurity:
+                            enablePortSecurity:
                               description: |-
-                                disablePortSecurity enables or disables the port security when set.
+                                enablePortSecurity enables or disables the port security when set.
                                 When not set, it takes the value of the corresponding field at the network level.
                               type: boolean
                             fixedIPs:

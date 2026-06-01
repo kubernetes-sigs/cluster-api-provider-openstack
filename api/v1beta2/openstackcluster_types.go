@@ -84,7 +84,7 @@ type OpenStackClusterSpec struct {
 	// external networks unless EnableExternalNetwork is also set to false.
 	//
 	// If ExternalNetwork is not defined and there are no external networks
-	// the controller will proceed as though EnableExternalNetwork was set to true.
+	// the controller will proceed as though EnableExternalNetwork was set to false.
 	// +optional
 	ExternalNetwork *NetworkParam `json:"externalNetwork,omitempty"`
 

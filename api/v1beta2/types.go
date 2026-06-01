@@ -424,10 +424,10 @@ type ResolvedPortSpecFields struct {
 	// +optional
 	Profile *BindingProfile `json:"profile,omitempty"`
 
-	// disablePortSecurity enables or disables the port security when set.
+	// enablePortSecurity enables or disables the port security when set.
 	// When not set, it takes the value of the corresponding field at the network level.
 	// +optional
-	DisablePortSecurity *bool `json:"disablePortSecurity,omitempty"`
+	EnablePortSecurity *bool `json:"enablePortSecurity,omitempty"`
 
 	// propagateUplinkStatus enables or disables the propagate uplink status on the port.
 	// +optional

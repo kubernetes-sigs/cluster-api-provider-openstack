@@ -588,3 +588,27 @@ func ConvertAllTagsFrom(neutronTags *FilterByNeutronTags, tags, tagsAny, notTags
 	*notTags = JoinTags(neutronTags.NotTags)
 	*notTagsAny = JoinTags(neutronTags.NotTagsAny)
 }
+
+func Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(in *ResolvedPortSpecFields, out *infrav1.ResolvedPortSpecFields, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(in, out, s); err != nil {
+		return err
+	}
+
+	if in.DisablePortSecurity != nil {
+		out.EnablePortSecurity = ptr.To(!*in.DisablePortSecurity)
+	}
+
+	return nil
+}
+
+func Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in *infrav1.ResolvedPortSpecFields, out *ResolvedPortSpecFields, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in, out, s); err != nil {
+		return err
+	}
+
+	if in.EnablePortSecurity != nil {
+		out.DisablePortSecurity = ptr.To(!*in.EnablePortSecurity)
+	}
+
+	return nil
+}

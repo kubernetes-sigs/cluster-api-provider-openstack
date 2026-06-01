@@ -178,7 +178,7 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 		return openStackCluster.Spec.APIServer.GetFixedIP(), nil
 
 		// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
-	case ptr.Deref(openStackCluster.Spec.APIServer.GetEnableFloatingIP(), true) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
+	case !ptr.Deref(openStackCluster.Spec.APIServer.GetEnableFloatingIP(), true) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		fixedIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)

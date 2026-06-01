@@ -309,12 +309,12 @@ associated to the first controller node and the other controller nodes have no f
 to any other controller node. So we recommend to only set one controller node when floating IP is needed,
 or please consider using load balancer instead, see [issue #1265](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/1265) for further information.
 
-Note: `spec.disableExternalNetwork` must be unset or set to `false` to allow the API server to have a floating IP.
+Note: `spec.enableExternalNetwork` must be unset or set to `true` to allow the API server to have a floating IP.
 
 ### Disabling the API server floating IP
 
 It is possible to provision a cluster without a floating IP for the API server by setting
-`OpenStackCluster.spec.disableAPIServerFloatingIP: true` (the default is `false`). This will
+`OpenStackCluster.spec.APIServer.enableFloatingIP: false` (the default is `true`). This will
 prevent a floating IP from being allocated.
 
 > **WARNING**
@@ -568,7 +568,7 @@ spec:
       - network:
           id: <your-network-id>
         ...
-        disablePortSecurity: true
+        enablePortSecurity: false
         ...
 ```
 
@@ -782,7 +782,7 @@ spec:
     floatingIP: <Floating IP address>
 ```
 
-Note: A floating IP can only be added if `OpenStackCluster.Spec.DisableExternalNetwork` is not set or set to `false`.
+Note: A floating IP can only be added if `OpenStackCluster.Spec.EnableExternalNetwork` is not set or set to `true`.
 
 If `managedSecurityGroups` is set to a non-nil value (e.g. `{}`), security group rule opening 22/tcp is added to security groups for bastion, controller, and worker nodes respectively. Otherwise, you have to add `securityGroups` to the `bastion` in `OpenStackCluster` spec and `OpenStackMachineTemplate` spec template respectively.
 

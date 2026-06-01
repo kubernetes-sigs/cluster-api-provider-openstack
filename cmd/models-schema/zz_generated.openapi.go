@@ -23648,7 +23648,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					},
 					"externalNetwork": {
 						SchemaProps: spec.SchemaProps{
-							Description: "externalNetwork is the OpenStack Network to be used to get public internet to the VMs. This option is ignored if EnableExternalNetwork is set to false.\n\nIf ExternalNetwork is defined it must refer to exactly one external network.\n\nIf ExternalNetwork is not defined or is empty the controller will use any existing external network as long as there is only one. It is an error if ExternalNetwork is not defined and there are multiple external networks unless EnableExternalNetwork is also set to false.\n\nIf ExternalNetwork is not defined and there are no external networks the controller will proceed as though EnableExternalNetwork was set to true.",
+							Description: "externalNetwork is the OpenStack Network to be used to get public internet to the VMs. This option is ignored if EnableExternalNetwork is set to false.\n\nIf ExternalNetwork is defined it must refer to exactly one external network.\n\nIf ExternalNetwork is not defined or is empty the controller will use any existing external network as long as there is only one. It is an error if ExternalNetwork is not defined and there are multiple external networks unless EnableExternalNetwork is also set to false.\n\nIf ExternalNetwork is not defined and there are no external networks the controller will proceed as though EnableExternalNetwork was set to false.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
@@ -24753,9 +24753,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BindingProfile"),
 						},
 					},
-					"disablePortSecurity": {
+					"enablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "disablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Description: "enablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -25040,9 +25040,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BindingProfile"),
 						},
 					},
-					"disablePortSecurity": {
+					"enablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "disablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Description: "enablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -25140,9 +25140,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BindingProfile"),
 						},
 					},
-					"disablePortSecurity": {
+					"enablePortSecurity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "disablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
+							Description: "enablePortSecurity enables or disables the port security when set. When not set, it takes the value of the corresponding field at the network level.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

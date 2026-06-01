@@ -716,8 +716,8 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		}
 		// Only inject the default SG when portSecurity is not disabled,
 		// there are no SGs passed by user and defaultSecGroup is set
-		portSecurityDisabled := serverPort.DisablePortSecurity != nil && *serverPort.DisablePortSecurity
-		if !portSecurityDisabled && len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
+		portSecurityEnabled := serverPort.EnablePortSecurity == nil || *serverPort.EnablePortSecurity
+		if portSecurityEnabled && len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
 			serverPort.SecurityGroups = []infrav1.SecurityGroupParam{
 				{
 					ID: defaultSecGroup,

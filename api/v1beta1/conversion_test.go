@@ -1512,3 +1512,51 @@ func TestOpenStackCluster_RoundTrip_ExternalNetwork(t *testing.T) {
 		})
 	}
 }
+
+func TestResolvedPortSpecFields_RoundTrip_PortSecurity(t *testing.T) {
+	tests := []struct {
+		name             string
+		in               ResolvedPortSpecFields
+		expectedEnablePS *bool
+	}{
+		{
+			name: "DisablePortSecurity explicitly true",
+			in: ResolvedPortSpecFields{
+				DisablePortSecurity: ptr.To(true),
+			},
+			expectedEnablePS: ptr.To(false), // disable=true → enable=false
+		},
+		{
+			name: "DisablePortSecurity explicitly false",
+			in: ResolvedPortSpecFields{
+				DisablePortSecurity: ptr.To(false),
+			},
+			expectedEnablePS: ptr.To(true), // disable=false → enable=true
+		},
+		{
+			name:             "DisablePortSecurity unset — EnablePortSecurity stays nil",
+			in:               ResolvedPortSpecFields{},
+			expectedEnablePS: nil, // unset stays unset, inherits from network level
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			// --- Convert to v1beta2 ---
+			out := &infrav1.ResolvedPortSpecFields{}
+			g.Expect(Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(&tt.in, out, nil)).To(Succeed())
+
+			// --- Verify intermediate v1beta2 state ---
+			g.Expect(out.EnablePortSecurity).To(Equal(tt.expectedEnablePS))
+
+			// --- Convert back to v1beta1 ---
+			restored := &ResolvedPortSpecFields{}
+			g.Expect(Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(out, restored, nil)).To(Succeed())
+
+			// --- Verify full round-trip ---
+			g.Expect(restored.DisablePortSecurity).To(Equal(tt.in.DisablePortSecurity))
+		})
+	}
+}
