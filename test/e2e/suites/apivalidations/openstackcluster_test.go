@@ -79,27 +79,29 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 		})
 
-		It("should default enabled to true if APIServerLoadBalancer is specified without enabled=true", func() {
-			cluster.Spec.APIServerLoadBalancer = &infrav1.APIServerLoadBalancer{}
+		It("should default enabled to true if APIServer.ManagedLoadBalancer is specified without enabled=true", func() {
+			cluster.Spec.APIServer = &infrav1.APIServer{
+				ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{},
+			}
 			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 
 			// Fetch the cluster and check the defaulting
 			fetchedCluster := &infrav1.OpenStackCluster{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetchedCluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
 
-			Expect(fetchedCluster.Spec.APIServerLoadBalancer.Enabled).ToNot(BeNil(), "APIServerLoadBalancer.Enabled should have been defaulted")
-			Expect(*fetchedCluster.Spec.APIServerLoadBalancer.Enabled).To(BeTrue(), "APIServerLoadBalancer.Enabled should default to true")
+			Expect(fetchedCluster.Spec.APIServer.ManagedLoadBalancer.Enabled).ToNot(BeNil(), "APIServer.ManagedLoadBalancer.Enabled should have been defaulted")
+			Expect(*fetchedCluster.Spec.APIServer.ManagedLoadBalancer.Enabled).To(BeTrue(), "APIServer.ManagedLoadBalancer.Enabled should default to true")
 		})
 
-		It("should not default APIServerLoadBalancer if it is not specifid", func() {
+		It("should not default APIServer.ManagedLoadBalancer if it is not specified", func() {
 			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
 
 			// Fetch the cluster and check the defaulting
 			fetchedCluster := &infrav1.OpenStackCluster{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetchedCluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
 
-			Expect(fetchedCluster.Spec.APIServerLoadBalancer).To(BeNil(), "APIServerLoadBalancer should not have been defaulted")
-			Expect(fetchedCluster.Spec.APIServerLoadBalancer.IsEnabled()).To(BeFalse(), "APIServerLoadBalancer.Enabled should not have been defaulted")
+			Expect(fetchedCluster.Spec.APIServer).To(BeNil(), "APIServer should not have been defaulted")
+			Expect(fetchedCluster.Spec.APIServer.GetManagedLoadBalancer().IsEnabled()).To(BeFalse(), "APIServer.ManagedLoadBalancer.Enabled should not have been defaulted")
 		})
 
 		It("should allow bastion.enabled=true with a spec", func() {
@@ -217,8 +219,10 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")
 		})
 
-		It("should not allow DisableAPIServerFloatingIP to be false with DisableExternalNetwork set to true", func() {
-			cluster.Spec.DisableAPIServerFloatingIP = ptr.To(false)
+		It("should not allow DisableFloatingIP to be false with DisableExternalNetwork set to true", func() {
+			cluster.Spec.APIServer = &infrav1.APIServer{
+				DisableFloatingIP: ptr.To(false),
+			}
 			cluster.Spec.DisableExternalNetwork = ptr.To(true)
 			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")
 		})
@@ -236,7 +240,12 @@ var _ = Describe("OpenStackCluster API validations", func() {
 				Kind:    "OpenStackCluster",
 			})
 			spec := obj["spec"].(map[string]any)
-			spec["apiServerPort"] = apiServerPort
+			apiServer, ok := spec["apiServer"].(map[string]any)
+			if !ok {
+				apiServer = map[string]any{}
+				spec["apiServer"] = apiServer
+			}
+			apiServer["port"] = apiServerPort
 
 			return u
 		}

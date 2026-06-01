@@ -198,7 +198,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		return reconcile.Result{}, err
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
+	if openStackCluster.Spec.APIServer.GetManagedLoadBalancer().IsEnabled() {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -664,17 +664,17 @@ func getBastionSecurityGroupID(openStackCluster *infrav1.OpenStackCluster) *stri
 }
 
 func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
-	lbSpec := openStackCluster.Spec.APIServerLoadBalancer
+	lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer()
 
 	// if lb is not enabled, return early
 	if !lbSpec.IsEnabled() {
 		return nil
 	}
 
-	lbStatus := openStackCluster.Status.APIServerLoadBalancer
+	lbStatus := openStackCluster.Status.APIServerManagedLoadBalancer
 	if lbStatus == nil {
 		lbStatus = &infrav1.LoadBalancer{}
-		openStackCluster.Status.APIServerLoadBalancer = lbStatus
+		openStackCluster.Status.APIServerManagedLoadBalancer = lbStatus
 	}
 
 	lbNetStatus := lbStatus.LoadBalancerNetwork
@@ -723,7 +723,7 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 		lbNetStatus.Subnets = openStackCluster.Status.Network.Subnets
 	}
 
-	openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork = lbNetStatus
+	openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork = lbNetStatus
 
 	return nil
 }
@@ -1000,7 +1000,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	// API server load balancer is enabled. Create an Octavia load balancer.
 	// Note that we reconcile the load balancer even if the control plane
 	// endpoint is already set.
-	case openStackCluster.Spec.APIServerLoadBalancer.IsEnabled():
+	case openStackCluster.Spec.APIServer.GetManagedLoadBalancer().IsEnabled():
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to create load balancer service: %w", err))
@@ -1014,10 +1014,10 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 		}
 
 		// Control plane endpoint is the floating IP if one was defined, otherwise the VIP address
-		if openStackCluster.Status.APIServerLoadBalancer.IP != "" {
-			host = openStackCluster.Status.APIServerLoadBalancer.IP
+		if openStackCluster.Status.APIServerManagedLoadBalancer.IP != "" {
+			host = openStackCluster.Status.APIServerManagedLoadBalancer.IP
 		} else {
-			host = openStackCluster.Status.APIServerLoadBalancer.InternalIP
+			host = openStackCluster.Status.APIServerManagedLoadBalancer.InternalIP
 		}
 
 	// Control plane endpoint is already set
@@ -1028,8 +1028,8 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 
 	// API server load balancer is disabled, but external netowork and floating IP are not. Create
 	// a floating IP to be attached directly to a control plane host.
-	case !ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false):
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServerFloatingIP)
+	case !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false):
+		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServer.GetFloatingIP())
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))
 			return fmt.Errorf("floating IP cannot be got or created: %w", err)
@@ -1040,8 +1040,8 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	// plane floating IP. In this case we configure APIServerFixedIP as the
 	// control plane endpoint and leave it to the user to configure load
 	// balancing.
-	case openStackCluster.Spec.APIServerFixedIP != nil:
-		host = *openStackCluster.Spec.APIServerFixedIP
+	case openStackCluster.Spec.APIServer.GetFixedIP() != nil:
+		host = *openStackCluster.Spec.APIServer.GetFixedIP()
 
 	// Control plane endpoint is not set, and none can be created
 	default:
@@ -1063,8 +1063,8 @@ func getAPIServerPort(openStackCluster *infrav1.OpenStackCluster) int32 {
 	switch {
 	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 		return openStackCluster.Spec.ControlPlaneEndpoint.Port
-	case openStackCluster.Spec.APIServerPort != nil:
-		return int32(*openStackCluster.Spec.APIServerPort)
+	case openStackCluster.Spec.APIServer.GetPort() != nil:
+		return int32(*openStackCluster.Spec.APIServer.GetPort())
 	}
 	return 6443
 }

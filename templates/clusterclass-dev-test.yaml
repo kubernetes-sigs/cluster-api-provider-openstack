@@ -223,7 +223,7 @@ spec:
           infrastructureCluster: true
       jsonPatches:
       - op: add
-        path: /spec/template/spec/apiServerLoadBalancer/allowedCIDRs
+        path: /spec/template/spec/apiServer/managedLoadBalancer/allowedCIDRs
         valueFrom:
           variable: allowedCIDRs
   - name: bastion
@@ -477,8 +477,9 @@ metadata:
 spec:
   template:
     spec:
-      apiServerLoadBalancer:
-        enabled: true
+      apiServer:
+        managedLoadBalancer:
+          enabled: true
       externalNetwork:
         filter:
           name: ${OPENSTACK_EXTERNAL_NETWORK_NAME:=public}

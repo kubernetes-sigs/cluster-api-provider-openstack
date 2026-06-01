@@ -1216,3 +1216,218 @@ func TestOpenStackCluster_RoundTrip_ManagedSecurityGroups_ClusterNodesRules(t *t
 		})
 	}
 }
+
+func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
+	floatingIP := optional.String(ptr.To("203.0.113.10"))
+	fixedIP := optional.String(ptr.To("10.0.0.5"))
+	port := optional.UInt16(ptr.To(uint16(6443)))
+	disable := optional.Bool(ptr.To(true))
+
+	tests := []struct {
+		name string
+		in   OpenStackCluster
+	}{
+		{
+			name: "all fields set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerFloatingIP:        floatingIP,
+					APIServerFixedIP:           fixedIP,
+					APIServerPort:              port,
+					DisableAPIServerFloatingIP: disable,
+					APIServerLoadBalancer: &APIServerLoadBalancer{
+						Enabled: ptr.To(true),
+					},
+				},
+			},
+		},
+		{
+			name: "only floatingIP set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerFloatingIP: floatingIP,
+				},
+			},
+		},
+		{
+			name: "only fixedIP set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerFixedIP: fixedIP,
+				},
+			},
+		},
+		{
+			name: "only port set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerPort: port,
+				},
+			},
+		},
+		{
+			name: "only disableFloatingIP set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: disable,
+				},
+			},
+		},
+		{
+			name: "only loadBalancer set",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerLoadBalancer: &APIServerLoadBalancer{
+						Enabled: ptr.To(true),
+					},
+				},
+			},
+		},
+		{
+			name: "loadBalancer disabled explicitly",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					APIServerLoadBalancer: &APIServerLoadBalancer{
+						Enabled: ptr.To(false),
+					},
+				},
+			},
+		},
+		{
+			name: "disableFloatingIP with fixedIP (no-LB VIP case)",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: disable,
+					APIServerFixedIP:           fixedIP,
+				},
+			},
+		},
+		{
+			name: "no APIServer fields set — APIServer stays nil",
+			in:   OpenStackCluster{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackCluster{}
+			g.Expect(tt.in.ConvertTo(hub)).To(Succeed())
+
+			src := tt.in.Spec
+
+			// --- Verify intermediate v1beta2 state ---
+			allNil := src.APIServerFloatingIP == nil &&
+				src.APIServerFixedIP == nil &&
+				src.APIServerPort == nil &&
+				src.DisableAPIServerFloatingIP == nil &&
+				src.APIServerLoadBalancer == nil
+
+			if allNil {
+				g.Expect(hub.Spec.APIServer).To(BeNil(), "APIServer should be nil when no source fields are set")
+			} else {
+				g.Expect(hub.Spec.APIServer).NotTo(BeNil(), "APIServer should be non-nil when at least one source field is set")
+				g.Expect(hub.Spec.APIServer.FloatingIP).To(Equal(src.APIServerFloatingIP))
+				g.Expect(hub.Spec.APIServer.FixedIP).To(Equal(src.APIServerFixedIP))
+				g.Expect(hub.Spec.APIServer.Port).To(Equal(src.APIServerPort))
+				g.Expect(hub.Spec.APIServer.DisableFloatingIP).To(Equal(src.DisableAPIServerFloatingIP))
+
+				if src.APIServerLoadBalancer == nil {
+					g.Expect(hub.Spec.APIServer.ManagedLoadBalancer).To(BeNil())
+				} else {
+					g.Expect(hub.Spec.APIServer.ManagedLoadBalancer).NotTo(BeNil())
+					g.Expect(hub.Spec.APIServer.ManagedLoadBalancer.Enabled).To(Equal(src.APIServerLoadBalancer.Enabled))
+				}
+			}
+
+			// --- Verify full round-trip back to v1beta1 ---
+			restored := &OpenStackCluster{}
+			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
+
+			g.Expect(restored.Spec.APIServerFloatingIP).To(Equal(src.APIServerFloatingIP))
+			g.Expect(restored.Spec.APIServerFixedIP).To(Equal(src.APIServerFixedIP))
+			g.Expect(restored.Spec.APIServerPort).To(Equal(src.APIServerPort))
+			g.Expect(restored.Spec.DisableAPIServerFloatingIP).To(Equal(src.DisableAPIServerFloatingIP))
+			g.Expect(restored.Spec.APIServerLoadBalancer).To(Equal(src.APIServerLoadBalancer))
+		})
+	}
+}
+
+func TestOpenStackClusterStatusAPIServerLoadBalancerConversion(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: OpenStackClusterSpec{
+			IdentityRef: OpenStackIdentityReference{
+				Name:      "cloud-config",
+				CloudName: "openstack",
+			},
+		},
+		Status: OpenStackClusterStatus{
+			APIServerLoadBalancer: &LoadBalancer{
+				Name:       "test-lb",
+				ID:         "lb-id-123",
+				IP:         "192.168.1.100",
+				InternalIP: "10.0.0.10",
+			},
+		},
+	}
+
+	// Convert to v1beta2
+	dst := &infrav1.OpenStackCluster{}
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
+
+	// Verify field was mapped to the renamed destination field
+	g.Expect(dst.Status.APIServerManagedLoadBalancer).NotTo(BeNil())
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.Name).To(Equal("test-lb"))
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.ID).To(Equal("lb-id-123"))
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.IP).To(Equal("192.168.1.100"))
+	g.Expect(dst.Status.APIServerManagedLoadBalancer.InternalIP).To(Equal("10.0.0.10"))
+
+	// Convert back
+	restored := &OpenStackCluster{}
+	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
+
+	// Verify round-trip
+	g.Expect(restored.Status.APIServerLoadBalancer).NotTo(BeNil())
+	g.Expect(restored.Status.APIServerLoadBalancer).To(Equal(src.Status.APIServerLoadBalancer))
+}
+
+func TestOpenStackClusterStatusAPIServerLoadBalancerNilConversion(t *testing.T) {
+	g := NewWithT(t)
+
+	src := &OpenStackCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: OpenStackClusterSpec{
+			IdentityRef: OpenStackIdentityReference{
+				Name:      "cloud-config",
+				CloudName: "openstack",
+			},
+		},
+		Status: OpenStackClusterStatus{
+			APIServerLoadBalancer: nil,
+		},
+	}
+
+	// Convert to v1beta2
+	dst := &infrav1.OpenStackCluster{}
+	g.Expect(src.ConvertTo(dst)).To(Succeed())
+
+	// Verify nil is preserved and does not bleed into renamed field
+	g.Expect(dst.Status.APIServerManagedLoadBalancer).To(BeNil())
+
+	// Convert back
+	restored := &OpenStackCluster{}
+	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
+
+	// Verify round-trip preserves nil
+	g.Expect(restored.Status.APIServerLoadBalancer).To(BeNil())
+}

@@ -3,9 +3,10 @@ kind: OpenStackCluster
 metadata:
   name: "${CLUSTER_NAME}"
 spec:
-  apiServerLoadBalancer:
-    monitor:
-      delay: 15
-      timeout: 10
-      maxRetries: 3
-      maxRetriesDown: 2
+  apiServer:
+    managedLoadBalancer:
+      monitor:
+        delay: 15
+        timeout: 10
+        maxRetries: 3
+        maxRetriesDown: 2

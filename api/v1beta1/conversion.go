@@ -191,7 +191,7 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatus(in
 	out.Network = (*infrav1.NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*infrav1.NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
 	out.Router = (*infrav1.Router)(unsafe.Pointer(in.Router))
-	out.APIServerLoadBalancer = (*infrav1.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+	out.APIServerManagedLoadBalancer = (*infrav1.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
 	out.ControlPlaneSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
@@ -221,7 +221,7 @@ func Convert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in
 	out.Network = (*NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
 	out.Router = (*Router)(unsafe.Pointer(in.Router))
-	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerManagedLoadBalancer))
 	out.ControlPlaneSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
@@ -399,6 +399,25 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 		}
 	}
 
+	// Consolidate the flat v1beta1 APIServer fields into the new APIServer struct.
+	if in.APIServerLoadBalancer != nil ||
+		in.DisableAPIServerFloatingIP != nil ||
+		in.APIServerFloatingIP != nil ||
+		in.APIServerFixedIP != nil ||
+		in.APIServerPort != nil {
+		out.APIServer = &infrav1.APIServer{
+			DisableFloatingIP: in.DisableAPIServerFloatingIP,
+			FloatingIP:        in.APIServerFloatingIP,
+			FixedIP:           in.APIServerFixedIP,
+			Port:              in.APIServerPort,
+		}
+		// APIServerLoadBalancer is structurally identical between versions,
+		// so an unsafe cast is safe here (same field layout).
+		if in.APIServerLoadBalancer != nil {
+			out.APIServer.ManagedLoadBalancer = (*infrav1.APIServerLoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+		}
+	}
+
 	return nil
 }
 
@@ -426,6 +445,18 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 			if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(&in.ManagedRouter.ExternalIPs[i].Subnet, &out.ExternalRouterIPs[i].Subnet, s); err != nil {
 				return err
 			}
+		}
+	}
+
+	// Expand the v1beta2 APIServer struct back into the flat v1beta1 fields.
+	if in.APIServer != nil {
+		out.DisableAPIServerFloatingIP = in.APIServer.DisableFloatingIP
+		out.APIServerFloatingIP = in.APIServer.FloatingIP
+		out.APIServerFixedIP = in.APIServer.FixedIP
+		out.APIServerPort = in.APIServer.Port
+
+		if in.APIServer.ManagedLoadBalancer != nil {
+			out.APIServerLoadBalancer = (*APIServerLoadBalancer)(unsafe.Pointer(in.APIServer.ManagedLoadBalancer))
 		}
 	}
 

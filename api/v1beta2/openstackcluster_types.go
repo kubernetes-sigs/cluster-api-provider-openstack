@@ -31,7 +31,7 @@ const (
 
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
 // +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? !has(self.bastion) || !has(self.bastion.floatingIP) : true",message="bastion floating IP cannot be set when disableExternalNetwork is true"
-// +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? has(self.disableAPIServerFloatingIP) && self.disableAPIServerFloatingIP : true",message="disableAPIServerFloatingIP cannot be false when disableExternalNetwork is true"
+// +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? has(self.apiServer) && has(self.apiServer.disableFloatingIP) && self.apiServer.disableFloatingIP : true",message="apiServer.disableFloatingIP cannot be false when disableExternalNetwork is true"
 type OpenStackClusterSpec struct {
 	// managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
@@ -94,48 +94,10 @@ type OpenStackClusterSpec struct {
 	// +optional
 	DisableExternalNetwork optional.Bool `json:"disableExternalNetwork,omitempty"`
 
-	// apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-	// If not specified, no load balancer will be created for the API server.
+	// apiServer configures the API server endpoint and its associated
+	// load balancer and floating IP.
 	// +optional
-	APIServerLoadBalancer *APIServerLoadBalancer `json:"apiServerLoadBalancer,omitempty"`
-
-	// disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
-	// IP to the API server. This allows for the creation of clusters when attaching a floating
-	// IP to the API server (and hence, in many cases, exposing the API server to the internet)
-	// is not possible or desirable, e.g. if using a shared VLAN for communication between
-	// management and workload clusters or when the management cluster is inside the
-	// project network.
-	// This option requires that the API server use a VIP on the cluster network so that the
-	// underlying machines can change without changing ControlPlaneEndpoint.Host.
-	// When using a managed load balancer, this VIP will be managed automatically.
-	// If not using a managed load balancer, cluster configuration will fail without additional
-	// configuration to manage the VIP on the control plane machines, which falls outside of
-	// the scope of this controller.
-	// +optional
-	DisableAPIServerFloatingIP optional.Bool `json:"disableAPIServerFloatingIP,omitempty"`
-
-	// apiServerFloatingIP is the floatingIP which will be associated with the API server.
-	// The floatingIP will be created if it does not already exist.
-	// If not specified, a new floatingIP is allocated.
-	// This field is not used if DisableAPIServerFloatingIP is set to true.
-	// +optional
-	APIServerFloatingIP optional.String `json:"apiServerFloatingIP,omitempty"`
-
-	// apiServerFixedIP is the fixed IP which will be associated with the API server.
-	// In the case where the API server has a floating IP but not a managed load balancer,
-	// this field is not used.
-	// If a managed load balancer is used and this field is not specified, a fixed IP will
-	// be dynamically allocated for the load balancer.
-	// If a managed load balancer is not used AND the API server floating IP is disabled,
-	// this field MUST be specified and should correspond to a pre-allocated port that
-	// holds the fixed IP to be used as a VIP.
-	// +optional
-	APIServerFixedIP optional.String `json:"apiServerFixedIP,omitempty"`
-
-	// apiServerPort is the port on which the listener on the APIServer
-	// will be created. If specified, it must be an integer between 0 and 65535.
-	// +optional
-	APIServerPort optional.UInt16 `json:"apiServerPort,omitempty"`
+	APIServer *APIServer `json:"apiServer,omitempty"`
 
 	// managedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will
@@ -189,6 +151,41 @@ type OpenStackClusterSpec struct {
 	IdentityRef OpenStackIdentityReference `json:"identityRef"`
 }
 
+type APIServer struct {
+	// port is the port on which the API server listener will be created.
+	// If specified, it must be an integer between 0 and 65535.
+	// +optional
+	Port optional.UInt16 `json:"port,omitempty"`
+
+	// fixedIP is the fixed IP which will be associated with the API server.
+	// In the case where the API server has a floating IP but not a managed
+	// load balancer, this field is not used.
+	// If a managed load balancer is used and this field is not specified, a
+	// fixed IP will be dynamically allocated for the load balancer.
+	// If a managed load balancer is not used AND the floating IP is disabled,
+	// this field MUST be specified and should correspond to a pre-allocated
+	// port that holds the fixed IP to be used as a VIP.
+	// +optional
+	FixedIP optional.String `json:"fixedIP,omitempty"`
+
+	// floatingIP is the floating IP which will be associated with the API server.
+	// The floating IP will be created if it does not already exist.
+	// If not specified, a new floating IP is allocated.
+	// This field is not used if DisableFloatingIP is set to true.
+	// +optional
+	FloatingIP optional.String `json:"floatingIP,omitempty"`
+
+	// disableFloatingIP determines whether or not to attempt to attach a
+	// floating IP to the API server.
+	// +optional
+	DisableFloatingIP optional.Bool `json:"disableFloatingIP,omitempty"`
+
+	// managedLoadBalancer configures the optional LoadBalancer for the API server.
+	// If not specified, no load balancer will be created.
+	// +optional
+	ManagedLoadBalancer *APIServerLoadBalancer `json:"managedLoadBalancer,omitempty"`
+}
+
 // ClusterInitialization represents the initialization status of the cluster.
 type ClusterInitialization struct {
 	// provisioned is set to true when the initial provisioning of the cluster infrastructure is completed.
@@ -224,9 +221,9 @@ type OpenStackClusterStatus struct {
 	// +optional
 	Router *Router `json:"router,omitempty"`
 
-	// apiServerLoadBalancer describes the api server load balancer if one exists
+	// apiServerManagedLoadBalancer describes the api server load balancer if one exists
 	// +optional
-	APIServerLoadBalancer *LoadBalancer `json:"apiServerLoadBalancer,omitempty"`
+	APIServerManagedLoadBalancer *LoadBalancer `json:"apiServerManagedLoadBalancer,omitempty"`
 
 	// failureDomains represent OpenStack availability zones
 	// +optional
@@ -362,4 +359,39 @@ func (c *OpenStackCluster) GetIdentityRef() (*string, *OpenStackIdentityReferenc
 
 func init() {
 	objectTypes = append(objectTypes, &OpenStackCluster{}, &OpenStackClusterList{})
+}
+
+func (a *APIServer) GetManagedLoadBalancer() *APIServerLoadBalancer {
+	if a == nil {
+		return nil
+	}
+	return a.ManagedLoadBalancer
+}
+
+func (a *APIServer) GetDisableFloatingIP() *bool {
+	if a == nil {
+		return nil
+	}
+	return a.DisableFloatingIP
+}
+
+func (a *APIServer) GetFloatingIP() *string {
+	if a == nil {
+		return nil
+	}
+	return a.FloatingIP
+}
+
+func (a *APIServer) GetFixedIP() *string {
+	if a == nil {
+		return nil
+	}
+	return a.FixedIP
+}
+
+func (a *APIServer) GetPort() *uint16 {
+	if a == nil {
+		return nil
+	}
+	return a.Port
 }

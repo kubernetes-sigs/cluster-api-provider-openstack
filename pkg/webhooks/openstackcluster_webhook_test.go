@@ -301,11 +301,13 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Enabled: ptr.To(true),
-						AllowedCIDRs: []string{
-							"0.0.0.0/0",
-							"192.168.10.0/24",
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							Enabled: ptr.To(true),
+							AllowedCIDRs: []string{
+								"0.0.0.0/0",
+								"192.168.10.0/24",
+							},
 						},
 					},
 				},
@@ -316,12 +318,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerLoadBalancer: &infrav1.APIServerLoadBalancer{
-						Enabled: ptr.To(true),
-						AllowedCIDRs: []string{
-							"0.0.0.0/0",
-							"192.168.10.0/24",
-							"10.6.0.0/16",
+					APIServer: &infrav1.APIServer{
+						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
+							Enabled: ptr.To(true),
+							AllowedCIDRs: []string{
+								"0.0.0.0/0",
+								"192.168.10.0/24",
+								"10.6.0.0/16",
+							},
 						},
 					},
 				},
@@ -427,14 +431,16 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is allowed when API Server Floating IP is disabled",
+			name: "Changing OpenStackCluster.Spec.APIServer.FixedIP is allowed when API Server Floating IP is disabled",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: ptr.To(true),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(true),
+					},
 				},
 			},
 			newCluster: &infrav1.OpenStackCluster{
@@ -443,21 +449,25 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: ptr.To(true),
-					APIServerFixedIP:           ptr.To("20.1.56.1"),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(true),
+						FixedIP:           ptr.To("20.1.56.1"),
+					},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Changing OpenStackCluster.Spec.APIServerFixedIP is not allowed",
+			name: "Changing OpenStackCluster.Spec.APIServer.FixedIP is not allowed",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: ptr.To(false),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(false),
+					},
 				},
 			},
 			newCluster: &infrav1.OpenStackCluster{
@@ -466,41 +476,48 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: ptr.To(false),
-					APIServerFixedIP:           ptr.To("20.1.56.1"),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(false),
+						FixedIP:           ptr.To("20.1.56.1"),
+					},
 				},
 			},
 			wantErr: true,
 		},
-
 		{
-			name: "Changing OpenStackCluster.Spec.APIServerPort is allowed when API Server Floating IP is disabled",
+			name: "Changing OpenStackCluster.Spec.APIServer.Port is allowed when API Server Floating IP is disabled",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: ptr.To(true),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(true),
+					},
 				},
 			},
 			newCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					DisableAPIServerFloatingIP: ptr.To(true),
-					APIServerPort:              ptr.To(uint16(8443)),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(true),
+						Port:              ptr.To(uint16(8443)),
+					},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "Changing OpenStackCluster.Spec.APIServerPort is not allowed",
+			name: "Changing OpenStackCluster.Spec.APIServer.Port is not allowed",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: ptr.To(false),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(false),
+					},
 				},
 			},
 			newCluster: &infrav1.OpenStackCluster{
@@ -509,14 +526,16 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					DisableAPIServerFloatingIP: ptr.To(false),
-					APIServerPort:              ptr.To(uint16(8443)),
+					APIServer: &infrav1.APIServer{
+						DisableFloatingIP: ptr.To(false),
+						Port:              ptr.To(uint16(8443)),
+					},
 				},
 			},
 			wantErr: true,
 		},
 		{
-			name: "Changing OpenStackCluster.Spec.APIServerFloatingIP is allowed when it matches the current api server loadbalancer IP",
+			name: "Changing OpenStackCluster.Spec.APIServer.FloatingIP is allowed when it matches the current api server loadbalancer IP",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					IdentityRef: infrav1.OpenStackIdentityReference{
@@ -525,7 +544,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -536,10 +555,12 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: ptr.To("1.2.3.4"),
+					APIServer: &infrav1.APIServer{
+						FloatingIP: ptr.To("1.2.3.4"),
+					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -556,7 +577,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},
@@ -567,10 +588,12 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					APIServerFloatingIP: ptr.To("5.6.7.8"),
+					APIServer: &infrav1.APIServer{
+						FloatingIP: ptr.To("5.6.7.8"),
+					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
 						IP: "1.2.3.4",
 					},
 				},

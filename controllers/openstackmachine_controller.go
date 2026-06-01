@@ -283,7 +283,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 }
 
 func removeAPIServerEndpoint(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, clusterResourceName string) error {
-	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
+	if openStackCluster.Spec.APIServer.GetManagedLoadBalancer().IsEnabled() {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
 			return err
@@ -307,7 +307,7 @@ func removeAPIServerEndpoint(scope *scope.WithLogger, openStackCluster *infrav1.
 	// floating IP to be created and deleted with the cluster. And if the
 	// delete behaviour is correct, we leak it if the instance was
 	// previously deleted.
-	if openStackCluster.Spec.APIServerFloatingIP == nil && instanceStatus != nil {
+	if openStackCluster.Spec.APIServer.GetFloatingIP() == nil && instanceStatus != nil {
 		instanceNS, err := instanceStatus.NetworkStatus()
 		if err != nil {
 			conditions.Set(openStackMachine, metav1.Condition{
@@ -817,7 +817,7 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 		return err
 	}
 
-	if openStackCluster.Spec.APIServerLoadBalancer.IsEnabled() {
+	if openStackCluster.Spec.APIServer.GetManagedLoadBalancer().IsEnabled() {
 		err = r.reconcileLoadBalancerMember(scope, openStackCluster, openStackMachine, instanceNS, clusterResourceName)
 		if err != nil {
 			conditions.Set(openStackMachine, metav1.Condition{
@@ -828,13 +828,13 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 			})
 			return fmt.Errorf("reconcile load balancer member: %w", err)
 		}
-	} else if !ptr.Deref(openStackCluster.Spec.DisableAPIServerFloatingIP, false) && !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false) {
+	} else if !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false) {
 		var floatingIPAddress *string
 		switch {
 		case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
 			floatingIPAddress = &openStackCluster.Spec.ControlPlaneEndpoint.Host
-		case openStackCluster.Spec.APIServerFloatingIP != nil:
-			floatingIPAddress = openStackCluster.Spec.APIServerFloatingIP
+		case openStackCluster.Spec.APIServer.GetFloatingIP() != nil:
+			floatingIPAddress = openStackCluster.Spec.APIServer.GetFloatingIP()
 		}
 		fp, err := networkingService.GetOrCreateFloatingIP(openStackMachine, openStackCluster, clusterResourceName, floatingIPAddress)
 		if err != nil {

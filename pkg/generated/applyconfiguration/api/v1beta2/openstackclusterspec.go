@@ -66,39 +66,9 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// to an external network. This allows for the creation of clusters when connecting
 	// to an external network is not possible or desirable, e.g. if using a provider network.
 	DisableExternalNetwork *bool `json:"disableExternalNetwork,omitempty"`
-	// apiServerLoadBalancer configures the optional LoadBalancer for the APIServer.
-	// If not specified, no load balancer will be created for the API server.
-	APIServerLoadBalancer *APIServerLoadBalancerApplyConfiguration `json:"apiServerLoadBalancer,omitempty"`
-	// disableAPIServerFloatingIP determines whether or not to attempt to attach a floating
-	// IP to the API server. This allows for the creation of clusters when attaching a floating
-	// IP to the API server (and hence, in many cases, exposing the API server to the internet)
-	// is not possible or desirable, e.g. if using a shared VLAN for communication between
-	// management and workload clusters or when the management cluster is inside the
-	// project network.
-	// This option requires that the API server use a VIP on the cluster network so that the
-	// underlying machines can change without changing ControlPlaneEndpoint.Host.
-	// When using a managed load balancer, this VIP will be managed automatically.
-	// If not using a managed load balancer, cluster configuration will fail without additional
-	// configuration to manage the VIP on the control plane machines, which falls outside of
-	// the scope of this controller.
-	DisableAPIServerFloatingIP *bool `json:"disableAPIServerFloatingIP,omitempty"`
-	// apiServerFloatingIP is the floatingIP which will be associated with the API server.
-	// The floatingIP will be created if it does not already exist.
-	// If not specified, a new floatingIP is allocated.
-	// This field is not used if DisableAPIServerFloatingIP is set to true.
-	APIServerFloatingIP *string `json:"apiServerFloatingIP,omitempty"`
-	// apiServerFixedIP is the fixed IP which will be associated with the API server.
-	// In the case where the API server has a floating IP but not a managed load balancer,
-	// this field is not used.
-	// If a managed load balancer is used and this field is not specified, a fixed IP will
-	// be dynamically allocated for the load balancer.
-	// If a managed load balancer is not used AND the API server floating IP is disabled,
-	// this field MUST be specified and should correspond to a pre-allocated port that
-	// holds the fixed IP to be used as a VIP.
-	APIServerFixedIP *string `json:"apiServerFixedIP,omitempty"`
-	// apiServerPort is the port on which the listener on the APIServer
-	// will be created. If specified, it must be an integer between 0 and 65535.
-	APIServerPort *uint16 `json:"apiServerPort,omitempty"`
+	// apiServer configures the API server endpoint and its associated
+	// load balancer and floating IP.
+	APIServer *APIServerApplyConfiguration `json:"apiServer,omitempty"`
 	// managedSecurityGroups determines whether OpenStack security groups for the cluster
 	// will be managed by the OpenStack provider or whether pre-existing security groups will
 	// be specified as part of the configuration.
@@ -216,43 +186,11 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithDisableExternalNetwork(valu
 	return b
 }
 
-// WithAPIServerLoadBalancer sets the APIServerLoadBalancer field in the declarative configuration to the given value
+// WithAPIServer sets the APIServer field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the APIServerLoadBalancer field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerLoadBalancer(value *APIServerLoadBalancerApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
-	b.APIServerLoadBalancer = value
-	return b
-}
-
-// WithDisableAPIServerFloatingIP sets the DisableAPIServerFloatingIP field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DisableAPIServerFloatingIP field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithDisableAPIServerFloatingIP(value bool) *OpenStackClusterSpecApplyConfiguration {
-	b.DisableAPIServerFloatingIP = &value
-	return b
-}
-
-// WithAPIServerFloatingIP sets the APIServerFloatingIP field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the APIServerFloatingIP field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerFloatingIP(value string) *OpenStackClusterSpecApplyConfiguration {
-	b.APIServerFloatingIP = &value
-	return b
-}
-
-// WithAPIServerFixedIP sets the APIServerFixedIP field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the APIServerFixedIP field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerFixedIP(value string) *OpenStackClusterSpecApplyConfiguration {
-	b.APIServerFixedIP = &value
-	return b
-}
-
-// WithAPIServerPort sets the APIServerPort field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the APIServerPort field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServerPort(value uint16) *OpenStackClusterSpecApplyConfiguration {
-	b.APIServerPort = &value
+// If called multiple times, the APIServer field is set to the value of the last call.
+func (b *OpenStackClusterSpecApplyConfiguration) WithAPIServer(value *APIServerApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
+	b.APIServer = value
 	return b
 }
 

@@ -108,8 +108,9 @@ kind: OpenStackCluster
 metadata:
   name: ${CLUSTER_NAME}
 spec:
-  apiServerLoadBalancer:
-    enabled: true
+  apiServer:
+    managedLoadBalancer:
+      enabled: true
   externalNetwork:
     id: ${OPENSTACK_EXTERNAL_NETWORK_ID}
   identityRef:

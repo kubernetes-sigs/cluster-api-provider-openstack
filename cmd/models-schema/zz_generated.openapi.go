@@ -409,6 +409,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec":                                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ValueSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabilityZone(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServer":                                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServer(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBalancer(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancerMonitor":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBalancerMonitor(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.AdditionalBlockDevice":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AdditionalBlockDevice(ref),
@@ -22125,6 +22126,54 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabil
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServer(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"port": {
+						SchemaProps: spec.SchemaProps{
+							Description: "port is the port on which the API server listener will be created. If specified, it must be an integer between 0 and 65535.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"fixedIP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "fixedIP is the fixed IP which will be associated with the API server. In the case where the API server has a floating IP but not a managed load balancer, this field is not used. If a managed load balancer is used and this field is not specified, a fixed IP will be dynamically allocated for the load balancer. If a managed load balancer is not used AND the floating IP is disabled, this field MUST be specified and should correspond to a pre-allocated port that holds the fixed IP to be used as a VIP.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"floatingIP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "floatingIP is the floating IP which will be associated with the API server. The floating IP will be created if it does not already exist. If not specified, a new floating IP is allocated. This field is not used if DisableFloatingIP is set to true.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"disableFloatingIP": {
+						SchemaProps: spec.SchemaProps{
+							Description: "disableFloatingIP determines whether or not to attempt to attach a floating IP to the API server.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"managedLoadBalancer": {
+						SchemaProps: spec.SchemaProps{
+							Description: "managedLoadBalancer configures the optional LoadBalancer for the API server. If not specified, no load balancer will be created.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer"},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBalancer(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -23610,38 +23659,10 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							Format:      "",
 						},
 					},
-					"apiServerLoadBalancer": {
+					"apiServer": {
 						SchemaProps: spec.SchemaProps{
-							Description: "apiServerLoadBalancer configures the optional LoadBalancer for the APIServer. If not specified, no load balancer will be created for the API server.",
-							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer"),
-						},
-					},
-					"disableAPIServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "disableAPIServerFloatingIP determines whether or not to attempt to attach a floating IP to the API server. This allows for the creation of clusters when attaching a floating IP to the API server (and hence, in many cases, exposing the API server to the internet) is not possible or desirable, e.g. if using a shared VLAN for communication between management and workload clusters or when the management cluster is inside the project network. This option requires that the API server use a VIP on the cluster network so that the underlying machines can change without changing ControlPlaneEndpoint.Host. When using a managed load balancer, this VIP will be managed automatically. If not using a managed load balancer, cluster configuration will fail without additional configuration to manage the VIP on the control plane machines, which falls outside of the scope of this controller.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"apiServerFloatingIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "apiServerFloatingIP is the floatingIP which will be associated with the API server. The floatingIP will be created if it does not already exist. If not specified, a new floatingIP is allocated. This field is not used if DisableAPIServerFloatingIP is set to true.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerFixedIP": {
-						SchemaProps: spec.SchemaProps{
-							Description: "apiServerFixedIP is the fixed IP which will be associated with the API server. In the case where the API server has a floating IP but not a managed load balancer, this field is not used. If a managed load balancer is used and this field is not specified, a fixed IP will be dynamically allocated for the load balancer. If a managed load balancer is not used AND the API server floating IP is disabled, this field MUST be specified and should correspond to a pre-allocated port that holds the fixed IP to be used as a VIP.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiServerPort": {
-						SchemaProps: spec.SchemaProps{
-							Description: "apiServerPort is the port on which the listener on the APIServer will be created. If specified, it must be an integer between 0 and 65535.",
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Description: "apiServer configures the API server endpoint and its associated load balancer and floating IP.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServer"),
 						},
 					},
 					"managedSecurityGroups": {
@@ -23721,7 +23742,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
 	}
 }
 
@@ -23778,9 +23799,9 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Router"),
 						},
 					},
-					"apiServerLoadBalancer": {
+					"apiServerManagedLoadBalancer": {
 						SchemaProps: spec.SchemaProps{
-							Description: "apiServerLoadBalancer describes the api server load balancer if one exists",
+							Description: "apiServerManagedLoadBalancer describes the api server load balancer if one exists",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.LoadBalancer"),
 						},
 					},

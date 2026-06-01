@@ -192,6 +192,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta2.AddressPairApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("AllocationPool"):
 		return &apiv1beta2.AllocationPoolApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("APIServer"):
+		return &apiv1beta2.APIServerApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("APIServerLoadBalancer"):
 		return &apiv1beta2.APIServerLoadBalancerApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("APIServerLoadBalancerMonitor"):

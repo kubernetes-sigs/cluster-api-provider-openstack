@@ -344,7 +344,7 @@ IP, the load balancer virtual IP on the cluster network is used.
 > This requires "amphora" as load balancer provider at in version >= `v2.12`
 
 It is possible to restrict access to the Kubernetes API server on a network level. If required, you can specify
-the allowed CIDRs by `spec.APIServerLoadBalancer.AllowedCIDRs` of `OpenStackCluster`.
+the allowed CIDRs by `spec.APIServer.ManagedLoadBalancer.AllowedCIDRs` of `OpenStackCluster`.
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
@@ -353,10 +353,11 @@ metadata:
   name: <cluster-name>
   namespace: <cluster-namespace>
 spec:
-  apiServerLoadBalancer:
-    allowedCIDRs:
-    - 192.168.10/24
-    - 10.10.0.0/16
+  apiServer:
+    managedLoadBalancer:
+      allowedCIDRs:
+      - 192.168.10/24
+      - 10.10.0.0/16
 ```
 
 All known IPs of the target cluster will be discovered dynamically (e.g. you don't have to take care of target Cluster own Router IP, internal CIDRs or any Bastion Host IP).

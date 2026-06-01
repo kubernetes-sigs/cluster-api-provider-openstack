@@ -1772,6 +1772,24 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServer
+  map:
+    fields:
+    - name: disableFloatingIP
+      type:
+        scalar: boolean
+    - name: fixedIP
+      type:
+        scalar: string
+    - name: floatingIP
+      type:
+        scalar: string
+    - name: managedLoadBalancer
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServerLoadBalancer
+    - name: port
+      type:
+        scalar: numeric
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServerLoadBalancer
   map:
     fields:
@@ -2214,18 +2232,9 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterSpec
   map:
     fields:
-    - name: apiServerFixedIP
+    - name: apiServer
       type:
-        scalar: string
-    - name: apiServerFloatingIP
-      type:
-        scalar: string
-    - name: apiServerLoadBalancer
-      type:
-        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServerLoadBalancer
-    - name: apiServerPort
-      type:
-        scalar: numeric
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServer
     - name: bastion
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Bastion
@@ -2239,9 +2248,6 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         namedType: io.k8s.sigs.cluster-api.api.core.v1beta2.APIEndpoint
     - name: controlPlaneOmitAvailabilityZone
-      type:
-        scalar: boolean
-    - name: disableAPIServerFloatingIP
       type:
         scalar: boolean
     - name: disableExternalNetwork
@@ -2290,7 +2296,7 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterStatus
   map:
     fields:
-    - name: apiServerLoadBalancer
+    - name: apiServerManagedLoadBalancer
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.LoadBalancer
     - name: bastion
