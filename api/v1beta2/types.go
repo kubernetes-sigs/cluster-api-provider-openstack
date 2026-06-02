@@ -27,11 +27,13 @@ import (
 // OpenStackMachineTemplateResource describes the data needed to create a OpenStackMachine from a template.
 type OpenStackMachineTemplateResource struct {
 	// spec is the specification of the desired behavior of the machine.
+	// +required
 	Spec OpenStackMachineSpec `json:"spec"`
 }
 
 type ResourceReference struct {
 	// name is the name of the referenced resource
+	// +required
 	Name string `json:"name"`
 }
 
@@ -110,8 +112,10 @@ func (f *FlavorFilter) IsZero() bool {
 
 type ExternalRouterIPParam struct {
 	// fixedIP is the FixedIP in the corresponding subnet.
+	// +optional
 	FixedIP string `json:"fixedIP,omitempty"`
 	// subnet is the subnet in which the FixedIP is used for the Gateway of this router.
+	// +required
 	Subnet SubnetParam `json:"subnet"`
 }
 
@@ -170,10 +174,13 @@ type SecurityGroupParam struct {
 // +kubebuilder:validation:MinProperties:=1
 type SecurityGroupFilter struct {
 	// name filters security groups by name.
+	// +optional
 	Name string `json:"name,omitempty"`
 	// description filters security groups by description.
+	// +optional
 	Description string `json:"description,omitempty"`
 	// projectID filters security groups by project ID.
+	// +optional
 	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -207,10 +214,13 @@ type NetworkParam struct {
 // +kubebuilder:validation:MinProperties:=1
 type NetworkFilter struct {
 	// name filters networks by name.
+	// +optional
 	Name string `json:"name,omitempty"`
 	// description filters networks by description.
+	// +optional
 	Description string `json:"description,omitempty"`
 	// projectID filters networks by project ID.
+	// +optional
 	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -244,20 +254,28 @@ type SubnetParam struct {
 // +kubebuilder:validation:MinProperties:=1
 type SubnetFilter struct {
 	// name filters subnets by name.
+	// +optional
 	Name string `json:"name,omitempty"`
 	// description filters subnets by description.
+	// +optional
 	Description string `json:"description,omitempty"`
 	// projectID filters subnets by project ID.
+	// +optional
 	ProjectID string `json:"projectID,omitempty"`
 	// ipVersion filters subnets by IP version.
+	// +optional
 	IPVersion int `json:"ipVersion,omitempty"`
 	// gatewayIP filters subnets by gateway IP.
+	// +optional
 	GatewayIP string `json:"gatewayIP,omitempty"`
 	// cidr filters subnets by CIDR.
+	// +optional
 	CIDR string `json:"cidr,omitempty"`
 	// ipv6AddressMode filters subnets by IPv6 address mode.
+	// +optional
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
 	// ipv6RAMode filters subnets by IPv6 Router Advertisement mode.
+	// +optional
 	IPv6RAMode string `json:"ipv6RAMode,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -288,6 +306,7 @@ type RouterParam struct {
 	ID optional.String `json:"id,omitempty"`
 
 	// filter specifies a filter to select an OpenStack router. If provided, cannot be empty.
+	// +optional
 	Filter *RouterFilter `json:"filter,omitempty"`
 }
 
@@ -295,10 +314,13 @@ type RouterParam struct {
 // +kubebuilder:validation:MinProperties:=1
 type RouterFilter struct {
 	// name filters routers by name.
+	// +optional
 	Name string `json:"name,omitempty"`
 	// description filters routers by description.
+	// +optional
 	Description string `json:"description,omitempty"`
 	// projectID filters routers by project ID.
+	// +optional
 	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -322,11 +344,13 @@ type SubnetSpec struct {
 
 	// dnsNameservers holds a list of DNS server addresses that will be provided when creating
 	// the subnet. These addresses need to have the same IP version as CIDR.
+	// +optional
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 
 	// allocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
 	// If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
 	// outside of these ranges manually.
+	// +optional
 	AllocationPools []AllocationPool `json:"allocationPools,omitempty"`
 }
 
@@ -445,12 +469,15 @@ type ResolvedPortSpecFields struct {
 // ResolvedPortSpec is a PortOpts with all contained references fully resolved.
 type ResolvedPortSpec struct {
 	// name is the name of the port.
+	// +required
 	Name string `json:"name"`
 
 	// description is a human-readable description for the port.
+	// +optional
 	Description string `json:"description"`
 
 	// networkID is the ID of the network the port will be created in.
+	// +required
 	NetworkID string `json:"networkID"`
 
 	// tags applied to the port (and corresponding trunk, if a trunk is configured.)
@@ -525,7 +552,7 @@ type AddressPair struct {
 	// ipAddress is the IP address of the allowed address pair. Depending on
 	// the configuration of Neutron, it may be supported to specify a CIDR
 	// instead of a specific IP address.
-	// +kubebuilder:validation:Required
+	// +required
 	IPAddress string `json:"ipAddress"`
 
 	// macAddress is the MAC address of the allowed address pair. If not
@@ -536,16 +563,22 @@ type AddressPair struct {
 
 type BastionStatus struct {
 	// id is the unique identifier of the bastion.
+	// +optional
 	ID string `json:"id,omitempty"`
 	// name is the name of the bastion.
+	// +optional
 	Name string `json:"name,omitempty"`
 	// sshKeyName is the name of the SSH key used for the bastion.
+	// +optional
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 	// state is the current state of the bastion.
+	// +optional
 	State InstanceState `json:"state,omitempty"`
 	// ip is the IP address of the bastion.
+	// +optional
 	IP string `json:"ip,omitempty"`
 	// floatingIP is the floating IP address of the bastion.
+	// +optional
 	FloatingIP string `json:"floatingIP,omitempty"`
 
 	// resolved contains parts of the bastion's machine spec with all
@@ -560,7 +593,7 @@ type BastionStatus struct {
 
 type RootVolume struct {
 	// sizeGiB is the size of the block device in gibibytes (GiB).
-	// +kubebuilder:validation:Required
+	// +required
 	// +kubebuilder:validation:Minimum:=1
 	SizeGiB int `json:"sizeGiB"`
 
@@ -576,6 +609,7 @@ type BlockDeviceStorage struct {
 	// type is the type of block device to create.
 	// This can be either "Volume" or "Local".
 	// +unionDiscriminator
+	// +required
 	Type BlockDeviceType `json:"type"`
 
 	// volume contains additional storage options for a volume block device.
@@ -641,16 +675,17 @@ type AdditionalBlockDevice struct {
 	// Information about the block device tag can be obtained from the OpenStack
 	// metadata API or the config drive.
 	// Name cannot be 'root', which is reserved for the root volume.
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name"`
 
 	// sizeGiB is the size of the block device in gibibytes (GiB).
-	// +kubebuilder:validation:Required
+	// +required
 	// +kubebuilder:validation:Minimum:=1
 	SizeGiB int `json:"sizeGiB"`
 
 	// storage specifies the storage type of the block device and
 	// additional storage options.
+	// +required
 	Storage BlockDeviceStorage `json:"storage"`
 }
 
@@ -660,9 +695,11 @@ type AdditionalBlockDevice struct {
 type ServerGroupParam struct {
 	// id is the ID of the server group to use.
 	// +kubebuilder:validation:Format:=uuid
+	// +optional
 	ID optional.String `json:"id,omitempty"`
 
 	// filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.
+	// +optional
 	Filter *ServerGroupFilter `json:"filter,omitempty"`
 }
 
@@ -670,6 +707,7 @@ type ServerGroupParam struct {
 // +kubebuilder:validation:MinProperties:=1
 type ServerGroupFilter struct {
 	// name is the name of a server group to look for.
+	// +optional
 	Name optional.String `json:"name,omitempty"`
 }
 
@@ -694,8 +732,10 @@ const (
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
 	// name is the name of the network.
+	// +required
 	Name string `json:"name"`
 	// id is the unique identifier of the network.
+	// +required
 	ID string `json:"id"`
 
 	// tags is a list of tags on the network.
@@ -708,17 +748,21 @@ type NetworkStatusWithSubnets struct {
 	NetworkStatus `json:",inline"`
 
 	// subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	// +optional
 	Subnets []Subnet `json:"subnets,omitempty"`
 }
 
 // Subnet represents basic information about the associated OpenStack Neutron Subnet.
 type Subnet struct {
 	// name is the name of the subnet.
+	// +required
 	Name string `json:"name"`
 	// id is the unique identifier of the subnet.
+	// +required
 	ID string `json:"id"`
 
 	// cidr is the CIDR of the subnet.
+	// +required
 	CIDR string `json:"cidr"`
 
 	// tags is a list of tags on the subnet.
@@ -729,8 +773,10 @@ type Subnet struct {
 // Router represents basic information about the associated OpenStack Neutron Router.
 type Router struct {
 	// name is the name of the router.
+	// +required
 	Name string `json:"name"`
 	// id is the unique identifier of the router.
+	// +required
 	ID string `json:"id"`
 	// tags is a list of tags on the router.
 	// +optional
@@ -743,12 +789,16 @@ type Router struct {
 // LoadBalancer represents basic information about the associated OpenStack LoadBalancer.
 type LoadBalancer struct {
 	// name is the name of the load balancer.
+	// +required
 	Name string `json:"name"`
 	// id is the unique identifier of the load balancer.
+	// +required
 	ID string `json:"id"`
 	// ip is the IP address of the load balancer.
+	// +required
 	IP string `json:"ip"`
 	// internalIP is the internal IP address of the load balancer.
+	// +required
 	InternalIP string `json:"internalIP"`
 	// allowedCIDRs is a list of CIDRs that are allowed to access the load balancer.
 	// +optional
@@ -768,11 +818,11 @@ type LoadBalancer struct {
 // OpenStack Neutron Security Group.
 type SecurityGroupStatus struct {
 	// name of the security group
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name"`
 
 	// id of the security group
-	// +kubebuilder:validation:Required
+	// +required
 	ID string `json:"id"`
 }
 
@@ -784,7 +834,7 @@ type SecurityGroupStatus struct {
 type SecurityGroupRuleSpec struct {
 	// name of the security group rule.
 	// It's used to identify the rule so it can be patched and will not be sent to the OpenStack API.
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name"`
 
 	// description of the security group rule.
@@ -795,7 +845,7 @@ type SecurityGroupRuleSpec struct {
 	// allowed are "ingress" or "egress". For a compute instance, an ingress
 	// security group rule is applied to incoming (ingress) traffic for that
 	// instance. An egress rule is applied to traffic leaving the instance.
-	// +kubebuilder:validation:Required
+	// +required
 	// +kubebuilder:validation:Enum=ingress;egress
 	Direction string `json:"direction"`
 
@@ -889,16 +939,17 @@ type Bastion struct {
 	Enabled *bool `json:"enabled,omitempty"`
 
 	// spec for the bastion itself
+	// +optional
 	Spec *OpenStackMachineSpec `json:"spec,omitempty"`
 
 	// availabilityZone is the failure domain that will be used to create the Bastion Spec.
-	//+optional
+	// +optional
 	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 
 	// floatingIP which will be associated to the bastion machine. It's the IP address, not UUID.
 	// The floating IP should already exist and should not be associated with a port. If FIP of this address does not
 	// exist, CAPO will try to create it, but by default only OpenStack administrators have privileges to do so.
-	//+optional
+	// +optional
 	//+kubebuilder:validation:Format:=ipv4
 	FloatingIP optional.String `json:"floatingIP,omitempty"`
 }
@@ -918,7 +969,7 @@ type APIServerLoadBalancer struct {
 	// API server loadbalancer, omit the APIServerLoadBalancer field in the
 	// cluster spec instead.
 	//
-	// +kubebuilder:validation:Required
+	// +required
 	// +kubebuilder:default:=true
 	Enabled *bool `json:"enabled"`
 
@@ -939,7 +990,7 @@ type APIServerLoadBalancer struct {
 	Provider optional.String `json:"provider,omitempty"`
 
 	// network defines which network should the load balancer be allocated on.
-	//+optional
+	// +optional
 	Network *NetworkParam `json:"network,omitempty"`
 
 	// subnets define which subnets should the load balancer be allocated on.
@@ -951,44 +1002,44 @@ type APIServerLoadBalancer struct {
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 
 	// availabilityZone is the failure domain that will be used to create the APIServerLoadBalancer Spec.
-	//+optional
+	// +optional
 	AvailabilityZone optional.String `json:"availabilityZone,omitempty"`
 
 	// flavor is the flavor name that will be used to create the APIServerLoadBalancer Spec.
-	//+optional
+	// +optional
 	Flavor optional.String `json:"flavor,omitempty"`
 
 	// monitor contains configuration for the load balancer health monitor.
-	//+optional
+	// +optional
 	Monitor *APIServerLoadBalancerMonitor `json:"monitor,omitempty"`
 }
 
 // APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
 type APIServerLoadBalancerMonitor struct {
 	// delay is the time in seconds between sending probes to members.
-	//+optional
-	//+kubebuilder:validation:Minimum=0
-	//+kubebuilder:default:10
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default:10
 	Delay int `json:"delay,omitempty"`
 
 	// timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
-	//+optional
-	//+kubebuilder:validation:Minimum=0
-	//+kubebuilder:default:5
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default:5
 	Timeout int `json:"timeout,omitempty"`
 
 	// maxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
-	//+optional
-	//+kubebuilder:validation:Minimum=0
-	//+kubebuilder:validation:Maximum=10
-	//+kubebuilder:default:5
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=10
+	// +kubebuilder:default:5
 	MaxRetries int `json:"maxRetries,omitempty"`
 
 	// maxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
-	//+optional
-	//+kubebuilder:validation:Minimum=1
-	//+kubebuilder:validation:Maximum=10
-	//+kubebuilder:default:3
+	// +optional
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=10
+	// +kubebuilder:default:3
 	MaxRetriesDown int `json:"maxRetriesDown,omitempty"`
 }
 
@@ -1030,13 +1081,13 @@ type MachineResources struct {
 type ValueSpec struct {
 	// name is the name of the key-value pair.
 	// This is just for identifying the pair and will not be sent to the OpenStack API.
-	// +kubebuilder:validation:Required
+	// +required
 	Name string `json:"name"`
 	// key is the key in the key-value pair.
-	// +kubebuilder:validation:Required
+	// +required
 	Key string `json:"key"`
 	// value is the value in the key-value pair.
-	// +kubebuilder:validation:Required
+	// +required
 	Value string `json:"value"`
 }
 

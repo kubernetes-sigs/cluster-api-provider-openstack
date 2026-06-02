@@ -24,6 +24,7 @@ import (
 // OpenStackMachineTemplateSpec defines the desired state of OpenStackMachineTemplate.
 type OpenStackMachineTemplateSpec struct {
 	// template is the OpenStackMachineTemplate resource data.
+	// +required
 	Template OpenStackMachineTemplateResource `json:"template"`
 }
 
@@ -66,11 +67,14 @@ type NodeInfo struct {
 type OpenStackMachineTemplate struct {
 	metav1.TypeMeta `json:",inline"`
 	// metadata is the standard object metadata.
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackMachineTemplate.
+	// +optional
 	Spec OpenStackMachineTemplateSpec `json:"spec,omitempty"`
 	// status is the observed state of the OpenStackMachineTemplate.
+	// +optional
 	Status OpenStackMachineTemplateStatus `json:"status,omitempty"`
 }
 
@@ -80,7 +84,8 @@ type OpenStackMachineTemplate struct {
 type OpenStackMachineTemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []OpenStackMachineTemplate `json:"items"`
+	// +required
+	Items []OpenStackMachineTemplate `json:"items"`
 }
 
 // GetIdentityRef returns the object's namespace and IdentityRef if it has an IdentityRef, or nulls if it does not.

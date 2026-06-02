@@ -50,6 +50,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
@@ -65,6 +66,7 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackCluster.</p>
 <br/>
 <br/>
@@ -336,6 +338,7 @@ OpenStackClusterStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>status is the observed state of the OpenStackCluster.</p>
 </td>
 </tr>
@@ -379,6 +382,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
@@ -394,6 +398,7 @@ OpenStackClusterTemplateSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackClusterTemplate.</p>
 <br/>
 <br/>
@@ -454,6 +459,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
@@ -469,6 +475,7 @@ OpenStackMachineSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackMachine.</p>
 <br/>
 <br/>
@@ -481,6 +488,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>providerID is the unique identifier as specified by the cloud provider.</p>
 </td>
 </tr>
@@ -519,6 +527,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>sshKeyName is the name of the SSH key to inject in the instance.</p>
 </td>
 </tr>
@@ -532,6 +541,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 If not specified a default port will be added for the default cluster network.</p>
 </td>
@@ -546,6 +556,7 @@ If not specified a default port will be added for the default cluster network.</
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>securityGroups is a list of security groups to assign to the instance.</p>
 </td>
 </tr>
@@ -557,6 +568,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>trunk specifies whether the server instance is created on a trunk port or not.</p>
 </td>
 </tr>
@@ -568,6 +580,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>tags which will be added to the machine and all dependent resources
 which support them. These are in addition to Tags defined on the
 cluster.
@@ -584,6 +597,7 @@ Requires Nova api 2.52 minimum!</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>serverMetadata is a list of key/value pairs to add to the server instance.</p>
 </td>
 </tr>
@@ -595,6 +609,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>configDrive enables config drive support.</p>
 </td>
 </tr>
@@ -608,6 +623,7 @@ RootVolume
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>rootVolume is the volume metadata to boot from.</p>
 </td>
 </tr>
@@ -698,6 +714,7 @@ OpenStackMachineStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>status is the observed state of the OpenStackMachine.</p>
 </td>
 </tr>
@@ -741,6 +758,7 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>metadata is the standard object metadata.</p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
@@ -756,6 +774,7 @@ OpenStackMachineTemplateSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackMachineTemplate.</p>
 <br/>
 <br/>
@@ -786,6 +805,7 @@ OpenStackMachineTemplateStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>status is the observed state of the OpenStackMachineTemplate.</p>
 </td>
 </tr>
@@ -1280,6 +1300,7 @@ OpenStackMachineSpec
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>spec for the bastion itself</p>
 <br/>
 <br/>
@@ -1339,6 +1360,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>id is the unique identifier of the bastion.</p>
 </td>
 </tr>
@@ -1350,6 +1372,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name is the name of the bastion.</p>
 </td>
 </tr>
@@ -1361,6 +1384,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>sshKeyName is the name of the SSH key used for the bastion.</p>
 </td>
 </tr>
@@ -1374,6 +1398,7 @@ InstanceState
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>state is the current state of the bastion.</p>
 </td>
 </tr>
@@ -1385,6 +1410,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ip is the IP address of the bastion.</p>
 </td>
 </tr>
@@ -1396,6 +1422,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>floatingIP is the floating IP address of the bastion.</p>
 </td>
 </tr>
@@ -1652,6 +1679,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>fixedIP is the FixedIP in the corresponding subnet.</p>
 </td>
 </tr>
@@ -2355,6 +2383,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name filters networks by name.</p>
 </td>
 </tr>
@@ -2366,6 +2395,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>description filters networks by description.</p>
 </td>
 </tr>
@@ -2377,6 +2407,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>projectID filters networks by project ID.</p>
 </td>
 </tr>
@@ -2541,6 +2572,7 @@ NetworkStatus
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.</p>
 </td>
 </tr>
@@ -3460,6 +3492,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>providerID is the unique identifier as specified by the cloud provider.</p>
 </td>
 </tr>
@@ -3498,6 +3531,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>sshKeyName is the name of the SSH key to inject in the instance.</p>
 </td>
 </tr>
@@ -3511,6 +3545,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 If not specified a default port will be added for the default cluster network.</p>
 </td>
@@ -3525,6 +3560,7 @@ If not specified a default port will be added for the default cluster network.</
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>securityGroups is a list of security groups to assign to the instance.</p>
 </td>
 </tr>
@@ -3536,6 +3572,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>trunk specifies whether the server instance is created on a trunk port or not.</p>
 </td>
 </tr>
@@ -3547,6 +3584,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>tags which will be added to the machine and all dependent resources
 which support them. These are in addition to Tags defined on the
 cluster.
@@ -3563,6 +3601,7 @@ Requires Nova api 2.52 minimum!</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>serverMetadata is a list of key/value pairs to add to the server instance.</p>
 </td>
 </tr>
@@ -3574,6 +3613,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>configDrive enables config drive support.</p>
 </td>
 </tr>
@@ -3587,6 +3627,7 @@ RootVolume
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>rootVolume is the volume metadata to boot from.</p>
 </td>
 </tr>
@@ -3824,6 +3865,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>providerID is the unique identifier as specified by the cloud provider.</p>
 </td>
 </tr>
@@ -3862,6 +3904,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>sshKeyName is the name of the SSH key to inject in the instance.</p>
 </td>
 </tr>
@@ -3875,6 +3918,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 If not specified a default port will be added for the default cluster network.</p>
 </td>
@@ -3889,6 +3933,7 @@ If not specified a default port will be added for the default cluster network.</
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>securityGroups is a list of security groups to assign to the instance.</p>
 </td>
 </tr>
@@ -3900,6 +3945,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>trunk specifies whether the server instance is created on a trunk port or not.</p>
 </td>
 </tr>
@@ -3911,6 +3957,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>tags which will be added to the machine and all dependent resources
 which support them. These are in addition to Tags defined on the
 cluster.
@@ -3927,6 +3974,7 @@ Requires Nova api 2.52 minimum!</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>serverMetadata is a list of key/value pairs to add to the server instance.</p>
 </td>
 </tr>
@@ -3938,6 +3986,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>configDrive enables config drive support.</p>
 </td>
 </tr>
@@ -3951,6 +4000,7 @@ RootVolume
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>rootVolume is the volume metadata to boot from.</p>
 </td>
 </tr>
@@ -4436,6 +4486,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>description is a human-readable description for the port.</p>
 </td>
 </tr>
@@ -4836,6 +4887,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name filters routers by name.</p>
 </td>
 </tr>
@@ -4847,6 +4899,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>description filters routers by description.</p>
 </td>
 </tr>
@@ -4858,6 +4911,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>projectID filters routers by project ID.</p>
 </td>
 </tr>
@@ -4917,6 +4971,7 @@ RouterFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>filter specifies a filter to select an OpenStack router. If provided, cannot be empty.</p>
 </td>
 </tr>
@@ -5009,6 +5064,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>bool is the boolean value of the scheduler hint, used when Type is &ldquo;Bool&rdquo;.
 This field is required if type is &lsquo;Bool&rsquo;, and must not be set otherwise.</p>
 </td>
@@ -5021,6 +5077,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>number is the integer value of the scheduler hint, used when Type is &ldquo;Number&rdquo;.
 This field is required if type is &lsquo;Number&rsquo;, and must not be set otherwise.</p>
 </td>
@@ -5033,6 +5090,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>string is the string value of the scheduler hint, used when Type is &ldquo;String&rdquo;.
 This field is required if type is &lsquo;String&rsquo;, and must not be set otherwise.</p>
 </td>
@@ -5088,6 +5146,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name filters security groups by name.</p>
 </td>
 </tr>
@@ -5099,6 +5158,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>description filters security groups by description.</p>
 </td>
 </tr>
@@ -5110,6 +5170,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>projectID filters security groups by project ID.</p>
 </td>
 </tr>
@@ -5397,6 +5458,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name is the name of a server group to look for.</p>
 </td>
 </tr>
@@ -5427,6 +5489,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>id is the ID of the server group to use.</p>
 </td>
 </tr>
@@ -5440,6 +5503,7 @@ ServerGroupFilter
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.</p>
 </td>
 </tr>
@@ -5574,6 +5638,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name filters subnets by name.</p>
 </td>
 </tr>
@@ -5585,6 +5650,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>description filters subnets by description.</p>
 </td>
 </tr>
@@ -5596,6 +5662,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>projectID filters subnets by project ID.</p>
 </td>
 </tr>
@@ -5607,6 +5674,7 @@ int
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ipVersion filters subnets by IP version.</p>
 </td>
 </tr>
@@ -5618,6 +5686,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>gatewayIP filters subnets by gateway IP.</p>
 </td>
 </tr>
@@ -5629,6 +5698,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>cidr filters subnets by CIDR.</p>
 </td>
 </tr>
@@ -5640,6 +5710,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ipv6AddressMode filters subnets by IPv6 address mode.</p>
 </td>
 </tr>
@@ -5651,6 +5722,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ipv6RAMode filters subnets by IPv6 Router Advertisement mode.</p>
 </td>
 </tr>
@@ -5755,6 +5827,7 @@ This field is required when defining a subnet.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>dnsNameservers holds a list of DNS server addresses that will be provided when creating
 the subnet. These addresses need to have the same IP version as CIDR.</p>
 </td>
@@ -5769,6 +5842,7 @@ the subnet. These addresses need to have the same IP version as CIDR.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>allocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
 If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
 outside of these ranges manually.</p>

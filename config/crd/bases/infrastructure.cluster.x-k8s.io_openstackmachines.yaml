@@ -2526,7 +2526,6 @@ spec:
                             deployments. If not specified, the Neutron default value is used.
                           type: string
                       required:
-                      - description
                       - name
                       - networkID
                       type: object

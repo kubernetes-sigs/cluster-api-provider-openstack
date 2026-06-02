@@ -30,7 +30,7 @@ linters:
             - "notimestamp" # Prevents usage of Timestamp fields.
             # - "optionalfields" # Ensure that all fields marked as optional adhere to being pointers and
             # having the omitempty value in their json tag where appropriate.
-            # - "optionalorrequired" # Every field should be marked as optional or required.
+            - "optionalorrequired" # Every field should be marked as optional or required.
             # - "requiredfields" # Required fields should not be pointers, and should not have omitempty.
             # - "ssatags" # Ensure array fields have the appropriate listType markers.
             - "statusoptional" # Ensure all first children within status should be optional.
