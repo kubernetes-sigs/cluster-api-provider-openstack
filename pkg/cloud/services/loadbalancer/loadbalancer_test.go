@@ -1208,6 +1208,20 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 			},
 			wantError: nil,
 		},
+		{
+			// LoadBalancerNetwork is nil when the cluster was created with an older CAPO version that
+			// did not populate this field. The reconciler must return an error to requeue and wait
+			// for the cluster controller to populate the field.
+			name: "nil LoadBalancerNetwork, return error and wait",
+			clusterSpec: func() *infrav1.OpenStackCluster {
+				c := makeCluster(nil, clusterNetID)
+				c.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork = nil
+				return c
+			}(),
+			expectNetwork:      func(*mock.MockNetworkClientMockRecorder) {},
+			expectLoadBalancer: func(*mock.MockLbClientMockRecorder) {},
+			wantError:          errors.New("apiServerManagedLoadBalancer.LoadBalancerNetwork is not yet available in openStackCluster.Status"),
+		},
 	}
 
 	for _, tt := range lbtests {
