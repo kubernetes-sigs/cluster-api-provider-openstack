@@ -646,6 +646,9 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 	if openStackCluster.Status.APIServerLoadBalancer == nil {
 		return errors.New("network.APIServerLoadBalancer is not yet available in openStackCluster.Status")
 	}
+	if openStackCluster.Status.APIServerLoadBalancer.LoadBalancerNetwork == nil {
+		return errors.New("apiServerLoadBalancer.LoadBalancerNetwork is not yet available in openStackCluster.Status")
+	}
 	if openStackCluster.Spec.ControlPlaneEndpoint == nil || !openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
 		return errors.New("ControlPlaneEndpoint is not yet set in openStackCluster.Spec")
 	}
