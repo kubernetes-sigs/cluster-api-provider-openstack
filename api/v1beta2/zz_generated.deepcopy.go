@@ -77,7 +77,7 @@ func (in *APIServerLoadBalancer) DeepCopyInto(out *APIServerLoadBalancer) {
 	}
 	if in.AdditionalPorts != nil {
 		in, out := &in.AdditionalPorts, &out.AdditionalPorts
-		*out = make([]int, len(*in))
+		*out = make([]int32, len(*in))
 		copy(*out, *in)
 	}
 	if in.AllowedCIDRs != nil {
@@ -581,7 +581,7 @@ func (in *ManagedNetwork) DeepCopyInto(out *ManagedNetwork) {
 	*out = *in
 	if in.MTU != nil {
 		in, out := &in.MTU, &out.MTU
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.EnablePortSecurity != nil {
@@ -1748,7 +1748,7 @@ func (in *SchedulerHintAdditionalValue) DeepCopyInto(out *SchedulerHintAdditiona
 	}
 	if in.Number != nil {
 		in, out := &in.Number, &out.Number
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.String != nil {
@@ -1824,12 +1824,12 @@ func (in *SecurityGroupRuleSpec) DeepCopyInto(out *SecurityGroupRuleSpec) {
 	}
 	if in.PortRangeMin != nil {
 		in, out := &in.PortRangeMin, &out.PortRangeMin
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.PortRangeMax != nil {
 		in, out := &in.PortRangeMax, &out.PortRangeMax
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.Protocol != nil {

@@ -24,13 +24,13 @@ package v1beta2
 // APIServerLoadBalancerMonitor contains configuration for the load balancer health monitor.
 type APIServerLoadBalancerMonitorApplyConfiguration struct {
 	// delay is the time in seconds between sending probes to members.
-	Delay *int `json:"delay,omitempty"`
+	Delay *int32 `json:"delay,omitempty"`
 	// timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
-	Timeout *int `json:"timeout,omitempty"`
+	Timeout *int32 `json:"timeout,omitempty"`
 	// maxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
-	MaxRetries *int `json:"maxRetries,omitempty"`
+	MaxRetries *int32 `json:"maxRetries,omitempty"`
 	// maxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
-	MaxRetriesDown *int `json:"maxRetriesDown,omitempty"`
+	MaxRetriesDown *int32 `json:"maxRetriesDown,omitempty"`
 }
 
 // APIServerLoadBalancerMonitorApplyConfiguration constructs a declarative configuration of the APIServerLoadBalancerMonitor type for use with
@@ -42,7 +42,7 @@ func APIServerLoadBalancerMonitor() *APIServerLoadBalancerMonitorApplyConfigurat
 // WithDelay sets the Delay field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Delay field is set to the value of the last call.
-func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithDelay(value int) *APIServerLoadBalancerMonitorApplyConfiguration {
+func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithDelay(value int32) *APIServerLoadBalancerMonitorApplyConfiguration {
 	b.Delay = &value
 	return b
 }
@@ -50,7 +50,7 @@ func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithDelay(value int) *A
 // WithTimeout sets the Timeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Timeout field is set to the value of the last call.
-func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithTimeout(value int) *APIServerLoadBalancerMonitorApplyConfiguration {
+func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithTimeout(value int32) *APIServerLoadBalancerMonitorApplyConfiguration {
 	b.Timeout = &value
 	return b
 }
@@ -58,7 +58,7 @@ func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithTimeout(value int) 
 // WithMaxRetries sets the MaxRetries field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxRetries field is set to the value of the last call.
-func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithMaxRetries(value int) *APIServerLoadBalancerMonitorApplyConfiguration {
+func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithMaxRetries(value int32) *APIServerLoadBalancerMonitorApplyConfiguration {
 	b.MaxRetries = &value
 	return b
 }
@@ -66,7 +66,7 @@ func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithMaxRetries(value in
 // WithMaxRetriesDown sets the MaxRetriesDown field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxRetriesDown field is set to the value of the last call.
-func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithMaxRetriesDown(value int) *APIServerLoadBalancerMonitorApplyConfiguration {
+func (b *APIServerLoadBalancerMonitorApplyConfiguration) WithMaxRetriesDown(value int32) *APIServerLoadBalancerMonitorApplyConfiguration {
 	b.MaxRetriesDown = &value
 	return b
 }

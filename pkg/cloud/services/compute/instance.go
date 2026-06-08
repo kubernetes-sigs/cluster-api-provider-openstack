@@ -231,7 +231,7 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 	createOpts := volumes.CreateOpts{
 		Name:             volumeName(instanceSpec.Name, blockDeviceSpec.Name),
 		Description:      description,
-		Size:             blockDeviceSpec.SizeGiB,
+		Size:             int(blockDeviceSpec.SizeGiB),
 		ImageID:          imageID,
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volType,
@@ -324,7 +324,7 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 		case infrav1.LocalBlockDevice:
 			sourceType = servers.SourceBlank
 			destinationType = servers.DestinationLocal
-			localDiskSizeGiB = blockDeviceSpec.SizeGiB
+			localDiskSizeGiB = int(blockDeviceSpec.SizeGiB)
 		default:
 			return nil, fmt.Errorf("invalid block device type %s", blockDeviceSpec.Storage.Type)
 		}

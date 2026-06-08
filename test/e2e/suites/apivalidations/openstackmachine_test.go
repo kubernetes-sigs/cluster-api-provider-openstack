@@ -499,7 +499,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 					Name: "test-hints",
 					Value: infrav1.SchedulerHintAdditionalValue{
 						Type:   infrav1.SchedulerHintTypeNumber,
-						Number: ptr.To(1),
+						Number: ptr.To[int32](1),
 					},
 				},
 			}
@@ -526,7 +526,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 					Name: "test-hints",
 					Value: infrav1.SchedulerHintAdditionalValue{
 						Type:   infrav1.SchedulerHintTypeBool,
-						Number: ptr.To(1),
+						Number: ptr.To[int32](1),
 					},
 				},
 			}
@@ -592,7 +592,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 					Name: "test-hints",
 					Value: infrav1.SchedulerHintAdditionalValue{
 						Type:   infrav1.SchedulerHintTypeString,
-						Number: ptr.To(1),
+						Number: ptr.To[int32](1),
 					},
 				},
 			}

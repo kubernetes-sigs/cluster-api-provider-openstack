@@ -940,7 +940,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						Name: "custom_hint",
 						Value: infrav1.SchedulerHintAdditionalValue{
 							Type:   infrav1.SchedulerHintTypeNumber,
-							Number: ptr.To(1),
+							Number: ptr.To[int32](1),
 						},
 					},
 				}
@@ -951,7 +951,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				schedulerHintOpts := servers.SchedulerHintOpts{
 					Group: serverGroupUUID,
 					AdditionalProperties: map[string]any{
-						"custom_hint": 1,
+						"custom_hint": int32(1),
 					},
 				}
 				expectCreateServer(g, r.compute, withSSHKey(createOpts), schedulerHintOpts, factory.ComputeClient, false)

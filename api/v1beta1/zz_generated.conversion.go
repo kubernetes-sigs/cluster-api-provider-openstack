@@ -746,14 +746,40 @@ func RegisterConversions(s *runtime.Scheme) error {
 
 func autoConvert_v1beta1_APIServerLoadBalancer_To_v1beta2_APIServerLoadBalancer(in *APIServerLoadBalancer, out *v1beta2.APIServerLoadBalancer, s conversion.Scope) error {
 	out.Enabled = (*bool)(unsafe.Pointer(in.Enabled))
-	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
+	if in.AdditionalPorts != nil {
+		in, out := &in.AdditionalPorts, &out.AdditionalPorts
+		*out = make([]int32, len(*in))
+		for i := range *in {
+			(*out)[i] = int32((*in)[i])
+		}
+	} else {
+		out.AdditionalPorts = nil
+	}
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
 	out.Provider = (optional.String)(unsafe.Pointer(in.Provider))
 	out.Network = (*v1beta2.NetworkParam)(unsafe.Pointer(in.Network))
-	out.Subnets = *(*[]v1beta2.SubnetParam)(unsafe.Pointer(&in.Subnets))
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]v1beta2.SubnetParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Subnets = nil
+	}
 	out.AvailabilityZone = (optional.String)(unsafe.Pointer(in.AvailabilityZone))
 	out.Flavor = (optional.String)(unsafe.Pointer(in.Flavor))
-	out.Monitor = (*v1beta2.APIServerLoadBalancerMonitor)(unsafe.Pointer(in.Monitor))
+	if in.Monitor != nil {
+		in, out := &in.Monitor, &out.Monitor
+		*out = new(v1beta2.APIServerLoadBalancerMonitor)
+		if err := Convert_v1beta1_APIServerLoadBalancerMonitor_To_v1beta2_APIServerLoadBalancerMonitor(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Monitor = nil
+	}
 	return nil
 }
 
@@ -764,14 +790,40 @@ func Convert_v1beta1_APIServerLoadBalancer_To_v1beta2_APIServerLoadBalancer(in *
 
 func autoConvert_v1beta2_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *v1beta2.APIServerLoadBalancer, out *APIServerLoadBalancer, s conversion.Scope) error {
 	out.Enabled = (*bool)(unsafe.Pointer(in.Enabled))
-	out.AdditionalPorts = *(*[]int)(unsafe.Pointer(&in.AdditionalPorts))
+	if in.AdditionalPorts != nil {
+		in, out := &in.AdditionalPorts, &out.AdditionalPorts
+		*out = make([]int, len(*in))
+		for i := range *in {
+			(*out)[i] = int((*in)[i])
+		}
+	} else {
+		out.AdditionalPorts = nil
+	}
 	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
 	out.Provider = (optional.String)(unsafe.Pointer(in.Provider))
 	out.Network = (*NetworkParam)(unsafe.Pointer(in.Network))
-	out.Subnets = *(*[]SubnetParam)(unsafe.Pointer(&in.Subnets))
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]SubnetParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Subnets = nil
+	}
 	out.AvailabilityZone = (optional.String)(unsafe.Pointer(in.AvailabilityZone))
 	out.Flavor = (optional.String)(unsafe.Pointer(in.Flavor))
-	out.Monitor = (*APIServerLoadBalancerMonitor)(unsafe.Pointer(in.Monitor))
+	if in.Monitor != nil {
+		in, out := &in.Monitor, &out.Monitor
+		*out = new(APIServerLoadBalancerMonitor)
+		if err := Convert_v1beta2_APIServerLoadBalancerMonitor_To_v1beta1_APIServerLoadBalancerMonitor(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Monitor = nil
+	}
 	return nil
 }
 
@@ -781,10 +833,10 @@ func Convert_v1beta2_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *
 }
 
 func autoConvert_v1beta1_APIServerLoadBalancerMonitor_To_v1beta2_APIServerLoadBalancerMonitor(in *APIServerLoadBalancerMonitor, out *v1beta2.APIServerLoadBalancerMonitor, s conversion.Scope) error {
-	out.Delay = in.Delay
-	out.Timeout = in.Timeout
-	out.MaxRetries = in.MaxRetries
-	out.MaxRetriesDown = in.MaxRetriesDown
+	out.Delay = int32(in.Delay)
+	out.Timeout = int32(in.Timeout)
+	out.MaxRetries = int32(in.MaxRetries)
+	out.MaxRetriesDown = int32(in.MaxRetriesDown)
 	return nil
 }
 
@@ -794,10 +846,10 @@ func Convert_v1beta1_APIServerLoadBalancerMonitor_To_v1beta2_APIServerLoadBalanc
 }
 
 func autoConvert_v1beta2_APIServerLoadBalancerMonitor_To_v1beta1_APIServerLoadBalancerMonitor(in *v1beta2.APIServerLoadBalancerMonitor, out *APIServerLoadBalancerMonitor, s conversion.Scope) error {
-	out.Delay = in.Delay
-	out.Timeout = in.Timeout
-	out.MaxRetries = in.MaxRetries
-	out.MaxRetriesDown = in.MaxRetriesDown
+	out.Delay = int(in.Delay)
+	out.Timeout = int(in.Timeout)
+	out.MaxRetries = int(in.MaxRetries)
+	out.MaxRetriesDown = int(in.MaxRetriesDown)
 	return nil
 }
 
@@ -808,7 +860,7 @@ func Convert_v1beta2_APIServerLoadBalancerMonitor_To_v1beta1_APIServerLoadBalanc
 
 func autoConvert_v1beta1_AdditionalBlockDevice_To_v1beta2_AdditionalBlockDevice(in *AdditionalBlockDevice, out *v1beta2.AdditionalBlockDevice, s conversion.Scope) error {
 	out.Name = in.Name
-	out.SizeGiB = in.SizeGiB
+	out.SizeGiB = int32(in.SizeGiB)
 	if err := Convert_v1beta1_BlockDeviceStorage_To_v1beta2_BlockDeviceStorage(&in.Storage, &out.Storage, s); err != nil {
 		return err
 	}
@@ -822,7 +874,7 @@ func Convert_v1beta1_AdditionalBlockDevice_To_v1beta2_AdditionalBlockDevice(in *
 
 func autoConvert_v1beta2_AdditionalBlockDevice_To_v1beta1_AdditionalBlockDevice(in *v1beta2.AdditionalBlockDevice, out *AdditionalBlockDevice, s conversion.Scope) error {
 	out.Name = in.Name
-	out.SizeGiB = in.SizeGiB
+	out.SizeGiB = int(in.SizeGiB)
 	if err := Convert_v1beta2_BlockDeviceStorage_To_v1beta1_BlockDeviceStorage(&in.Storage, &out.Storage, s); err != nil {
 		return err
 	}
@@ -1109,7 +1161,15 @@ func Convert_v1beta2_FilterByNeutronTags_To_v1beta1_FilterByNeutronTags(in *v1be
 }
 
 func autoConvert_v1beta1_FixedIP_To_v1beta2_FixedIP(in *FixedIP, out *v1beta2.FixedIP, s conversion.Scope) error {
-	out.Subnet = (*v1beta2.SubnetParam)(unsafe.Pointer(in.Subnet))
+	if in.Subnet != nil {
+		in, out := &in.Subnet, &out.Subnet
+		*out = new(v1beta2.SubnetParam)
+		if err := Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Subnet = nil
+	}
 	out.IPAddress = (optional.String)(unsafe.Pointer(in.IPAddress))
 	return nil
 }
@@ -1120,7 +1180,15 @@ func Convert_v1beta1_FixedIP_To_v1beta2_FixedIP(in *FixedIP, out *v1beta2.FixedI
 }
 
 func autoConvert_v1beta2_FixedIP_To_v1beta1_FixedIP(in *v1beta2.FixedIP, out *FixedIP, s conversion.Scope) error {
-	out.Subnet = (*SubnetParam)(unsafe.Pointer(in.Subnet))
+	if in.Subnet != nil {
+		in, out := &in.Subnet, &out.Subnet
+		*out = new(SubnetParam)
+		if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Subnet = nil
+	}
 	out.IPAddress = (optional.String)(unsafe.Pointer(in.IPAddress))
 	return nil
 }
@@ -1250,16 +1318,56 @@ func Convert_v1beta2_MachineResources_To_v1beta1_MachineResources(in *v1beta2.Ma
 
 func autoConvert_v1beta1_ManagedSecurityGroups_To_v1beta2_ManagedSecurityGroups(in *ManagedSecurityGroups, out *v1beta2.ManagedSecurityGroups, s conversion.Scope) error {
 	// WARNING: in.AllNodesSecurityGroupRules requires manual conversion: does not exist in peer-type
-	out.ControlPlaneNodesSecurityGroupRules = *(*[]v1beta2.SecurityGroupRuleSpec)(unsafe.Pointer(&in.ControlPlaneNodesSecurityGroupRules))
-	out.WorkerNodesSecurityGroupRules = *(*[]v1beta2.SecurityGroupRuleSpec)(unsafe.Pointer(&in.WorkerNodesSecurityGroupRules))
+	if in.ControlPlaneNodesSecurityGroupRules != nil {
+		in, out := &in.ControlPlaneNodesSecurityGroupRules, &out.ControlPlaneNodesSecurityGroupRules
+		*out = make([]v1beta2.SecurityGroupRuleSpec, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_SecurityGroupRuleSpec_To_v1beta2_SecurityGroupRuleSpec(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ControlPlaneNodesSecurityGroupRules = nil
+	}
+	if in.WorkerNodesSecurityGroupRules != nil {
+		in, out := &in.WorkerNodesSecurityGroupRules, &out.WorkerNodesSecurityGroupRules
+		*out = make([]v1beta2.SecurityGroupRuleSpec, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_SecurityGroupRuleSpec_To_v1beta2_SecurityGroupRuleSpec(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.WorkerNodesSecurityGroupRules = nil
+	}
 	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
 	return nil
 }
 
 func autoConvert_v1beta2_ManagedSecurityGroups_To_v1beta1_ManagedSecurityGroups(in *v1beta2.ManagedSecurityGroups, out *ManagedSecurityGroups, s conversion.Scope) error {
 	// WARNING: in.ClusterNodesSecurityGroupRules requires manual conversion: does not exist in peer-type
-	out.ControlPlaneNodesSecurityGroupRules = *(*[]SecurityGroupRuleSpec)(unsafe.Pointer(&in.ControlPlaneNodesSecurityGroupRules))
-	out.WorkerNodesSecurityGroupRules = *(*[]SecurityGroupRuleSpec)(unsafe.Pointer(&in.WorkerNodesSecurityGroupRules))
+	if in.ControlPlaneNodesSecurityGroupRules != nil {
+		in, out := &in.ControlPlaneNodesSecurityGroupRules, &out.ControlPlaneNodesSecurityGroupRules
+		*out = make([]SecurityGroupRuleSpec, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_SecurityGroupRuleSpec_To_v1beta1_SecurityGroupRuleSpec(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.ControlPlaneNodesSecurityGroupRules = nil
+	}
+	if in.WorkerNodesSecurityGroupRules != nil {
+		in, out := &in.WorkerNodesSecurityGroupRules, &out.WorkerNodesSecurityGroupRules
+		*out = make([]SecurityGroupRuleSpec, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_SecurityGroupRuleSpec_To_v1beta1_SecurityGroupRuleSpec(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.WorkerNodesSecurityGroupRules = nil
+	}
 	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
 	return nil
 }
@@ -1464,7 +1572,17 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 	out.ManagedSubnets = *(*[]v1beta2.SubnetSpec)(unsafe.Pointer(&in.ManagedSubnets))
 	out.Router = (*v1beta2.RouterParam)(unsafe.Pointer(in.Router))
 	out.Network = (*v1beta2.NetworkParam)(unsafe.Pointer(in.Network))
-	out.Subnets = *(*[]v1beta2.SubnetParam)(unsafe.Pointer(&in.Subnets))
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]v1beta2.SubnetParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Subnets = nil
+	}
 	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
 	// WARNING: in.ExternalRouterIPs requires manual conversion: does not exist in peer-type
 	out.ExternalNetwork = (*v1beta2.NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
@@ -1505,7 +1623,17 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 
 func autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in *v1beta2.OpenStackClusterSpec, out *OpenStackClusterSpec, s conversion.Scope) error {
 	out.ManagedSubnets = *(*[]SubnetSpec)(unsafe.Pointer(&in.ManagedSubnets))
-	out.Subnets = *(*[]SubnetParam)(unsafe.Pointer(&in.Subnets))
+	if in.Subnets != nil {
+		in, out := &in.Subnets, &out.Subnets
+		*out = make([]SubnetParam, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Subnets = nil
+	}
 	// WARNING: in.ManagedRouter requires manual conversion: does not exist in peer-type
 	out.Router = (*RouterParam)(unsafe.Pointer(in.Router))
 	// WARNING: in.ManagedNetwork requires manual conversion: does not exist in peer-type
@@ -1850,12 +1978,40 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ServerMetadata = *(*[]v1beta2.ServerMetadata)(unsafe.Pointer(&in.ServerMetadata))
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*v1beta2.RootVolume)(unsafe.Pointer(in.RootVolume))
-	out.AdditionalBlockDevices = *(*[]v1beta2.AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(v1beta2.RootVolume)
+		if err := Convert_v1beta1_RootVolume_To_v1beta2_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
+	if in.AdditionalBlockDevices != nil {
+		in, out := &in.AdditionalBlockDevices, &out.AdditionalBlockDevices
+		*out = make([]v1beta2.AdditionalBlockDevice, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_AdditionalBlockDevice_To_v1beta2_AdditionalBlockDevice(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AdditionalBlockDevices = nil
+	}
 	out.ServerGroup = (*v1beta2.ServerGroupParam)(unsafe.Pointer(in.ServerGroup))
 	out.IdentityRef = (*v1beta2.OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	out.FloatingIPPoolRef = (*corev1.TypedLocalObjectReference)(unsafe.Pointer(in.FloatingIPPoolRef))
-	out.SchedulerHintAdditionalProperties = *(*[]v1beta2.SchedulerHintAdditionalProperty)(unsafe.Pointer(&in.SchedulerHintAdditionalProperties))
+	if in.SchedulerHintAdditionalProperties != nil {
+		in, out := &in.SchedulerHintAdditionalProperties, &out.SchedulerHintAdditionalProperties
+		*out = make([]v1beta2.SchedulerHintAdditionalProperty, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_SchedulerHintAdditionalProperty_To_v1beta2_SchedulerHintAdditionalProperty(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.SchedulerHintAdditionalProperties = nil
+	}
 	return nil
 }
 
@@ -1882,12 +2038,40 @@ func autoConvert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.ServerMetadata = *(*[]ServerMetadata)(unsafe.Pointer(&in.ServerMetadata))
 	out.ConfigDrive = (*bool)(unsafe.Pointer(in.ConfigDrive))
-	out.RootVolume = (*RootVolume)(unsafe.Pointer(in.RootVolume))
-	out.AdditionalBlockDevices = *(*[]AdditionalBlockDevice)(unsafe.Pointer(&in.AdditionalBlockDevices))
+	if in.RootVolume != nil {
+		in, out := &in.RootVolume, &out.RootVolume
+		*out = new(RootVolume)
+		if err := Convert_v1beta2_RootVolume_To_v1beta1_RootVolume(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.RootVolume = nil
+	}
+	if in.AdditionalBlockDevices != nil {
+		in, out := &in.AdditionalBlockDevices, &out.AdditionalBlockDevices
+		*out = make([]AdditionalBlockDevice, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_AdditionalBlockDevice_To_v1beta1_AdditionalBlockDevice(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.AdditionalBlockDevices = nil
+	}
 	out.ServerGroup = (*ServerGroupParam)(unsafe.Pointer(in.ServerGroup))
 	out.IdentityRef = (*OpenStackIdentityReference)(unsafe.Pointer(in.IdentityRef))
 	out.FloatingIPPoolRef = (*corev1.TypedLocalObjectReference)(unsafe.Pointer(in.FloatingIPPoolRef))
-	out.SchedulerHintAdditionalProperties = *(*[]SchedulerHintAdditionalProperty)(unsafe.Pointer(&in.SchedulerHintAdditionalProperties))
+	if in.SchedulerHintAdditionalProperties != nil {
+		in, out := &in.SchedulerHintAdditionalProperties, &out.SchedulerHintAdditionalProperties
+		*out = make([]SchedulerHintAdditionalProperty, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_SchedulerHintAdditionalProperty_To_v1beta1_SchedulerHintAdditionalProperty(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.SchedulerHintAdditionalProperties = nil
+	}
 	return nil
 }
 
@@ -2126,7 +2310,17 @@ func autoConvert_v1beta1_PortOpts_To_v1beta2_PortOpts(in *PortOpts, out *v1beta2
 	out.Network = (*v1beta2.NetworkParam)(unsafe.Pointer(in.Network))
 	out.Description = (optional.String)(unsafe.Pointer(in.Description))
 	out.NameSuffix = (optional.String)(unsafe.Pointer(in.NameSuffix))
-	out.FixedIPs = *(*[]v1beta2.FixedIP)(unsafe.Pointer(&in.FixedIPs))
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]v1beta2.FixedIP, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_FixedIP_To_v1beta2_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.FixedIPs = nil
+	}
 	out.SecurityGroups = *(*[]v1beta2.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
@@ -2145,7 +2339,17 @@ func autoConvert_v1beta2_PortOpts_To_v1beta1_PortOpts(in *v1beta2.PortOpts, out 
 	out.Network = (*NetworkParam)(unsafe.Pointer(in.Network))
 	out.Description = (optional.String)(unsafe.Pointer(in.Description))
 	out.NameSuffix = (optional.String)(unsafe.Pointer(in.NameSuffix))
-	out.FixedIPs = *(*[]FixedIP)(unsafe.Pointer(&in.FixedIPs))
+	if in.FixedIPs != nil {
+		in, out := &in.FixedIPs, &out.FixedIPs
+		*out = make([]FixedIP, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_FixedIP_To_v1beta1_FixedIP(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.FixedIPs = nil
+	}
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
 	out.Trunk = (*bool)(unsafe.Pointer(in.Trunk))
@@ -2333,7 +2537,7 @@ func Convert_v1beta2_ResourceReference_To_v1beta1_ResourceReference(in *v1beta2.
 }
 
 func autoConvert_v1beta1_RootVolume_To_v1beta2_RootVolume(in *RootVolume, out *v1beta2.RootVolume, s conversion.Scope) error {
-	out.SizeGiB = in.SizeGiB
+	out.SizeGiB = int32(in.SizeGiB)
 	if err := Convert_v1beta1_BlockDeviceVolume_To_v1beta2_BlockDeviceVolume(&in.BlockDeviceVolume, &out.BlockDeviceVolume, s); err != nil {
 		return err
 	}
@@ -2346,7 +2550,7 @@ func Convert_v1beta1_RootVolume_To_v1beta2_RootVolume(in *RootVolume, out *v1bet
 }
 
 func autoConvert_v1beta2_RootVolume_To_v1beta1_RootVolume(in *v1beta2.RootVolume, out *RootVolume, s conversion.Scope) error {
-	out.SizeGiB = in.SizeGiB
+	out.SizeGiB = int(in.SizeGiB)
 	if err := Convert_v1beta2_BlockDeviceVolume_To_v1beta1_BlockDeviceVolume(&in.BlockDeviceVolume, &out.BlockDeviceVolume, s); err != nil {
 		return err
 	}
@@ -2465,7 +2669,13 @@ func Convert_v1beta2_SchedulerHintAdditionalProperty_To_v1beta1_SchedulerHintAdd
 func autoConvert_v1beta1_SchedulerHintAdditionalValue_To_v1beta2_SchedulerHintAdditionalValue(in *SchedulerHintAdditionalValue, out *v1beta2.SchedulerHintAdditionalValue, s conversion.Scope) error {
 	out.Type = v1beta2.SchedulerHintValueType(in.Type)
 	out.Bool = (*bool)(unsafe.Pointer(in.Bool))
-	out.Number = (*int)(unsafe.Pointer(in.Number))
+	if in.Number != nil {
+		in, out := &in.Number, &out.Number
+		*out = new(int32)
+		**out = int32(**in)
+	} else {
+		out.Number = nil
+	}
 	out.String = (*string)(unsafe.Pointer(in.String))
 	return nil
 }
@@ -2478,7 +2688,13 @@ func Convert_v1beta1_SchedulerHintAdditionalValue_To_v1beta2_SchedulerHintAdditi
 func autoConvert_v1beta2_SchedulerHintAdditionalValue_To_v1beta1_SchedulerHintAdditionalValue(in *v1beta2.SchedulerHintAdditionalValue, out *SchedulerHintAdditionalValue, s conversion.Scope) error {
 	out.Type = SchedulerHintValueType(in.Type)
 	out.Bool = (*bool)(unsafe.Pointer(in.Bool))
-	out.Number = (*int)(unsafe.Pointer(in.Number))
+	if in.Number != nil {
+		in, out := &in.Number, &out.Number
+		*out = new(int)
+		**out = int(**in)
+	} else {
+		out.Number = nil
+	}
 	out.String = (*string)(unsafe.Pointer(in.String))
 	return nil
 }
@@ -2545,8 +2761,20 @@ func autoConvert_v1beta1_SecurityGroupRuleSpec_To_v1beta2_SecurityGroupRuleSpec(
 	out.Description = (*string)(unsafe.Pointer(in.Description))
 	out.Direction = in.Direction
 	out.EtherType = (*string)(unsafe.Pointer(in.EtherType))
-	out.PortRangeMin = (*int)(unsafe.Pointer(in.PortRangeMin))
-	out.PortRangeMax = (*int)(unsafe.Pointer(in.PortRangeMax))
+	if in.PortRangeMin != nil {
+		in, out := &in.PortRangeMin, &out.PortRangeMin
+		*out = new(int32)
+		**out = int32(**in)
+	} else {
+		out.PortRangeMin = nil
+	}
+	if in.PortRangeMax != nil {
+		in, out := &in.PortRangeMax, &out.PortRangeMax
+		*out = new(int32)
+		**out = int32(**in)
+	} else {
+		out.PortRangeMax = nil
+	}
 	out.Protocol = (*string)(unsafe.Pointer(in.Protocol))
 	out.RemoteGroupID = (*string)(unsafe.Pointer(in.RemoteGroupID))
 	out.RemoteIPPrefix = (*string)(unsafe.Pointer(in.RemoteIPPrefix))
@@ -2564,8 +2792,20 @@ func autoConvert_v1beta2_SecurityGroupRuleSpec_To_v1beta1_SecurityGroupRuleSpec(
 	out.Description = (*string)(unsafe.Pointer(in.Description))
 	out.Direction = in.Direction
 	out.EtherType = (*string)(unsafe.Pointer(in.EtherType))
-	out.PortRangeMin = (*int)(unsafe.Pointer(in.PortRangeMin))
-	out.PortRangeMax = (*int)(unsafe.Pointer(in.PortRangeMax))
+	if in.PortRangeMin != nil {
+		in, out := &in.PortRangeMin, &out.PortRangeMin
+		*out = new(int)
+		**out = int(**in)
+	} else {
+		out.PortRangeMin = nil
+	}
+	if in.PortRangeMax != nil {
+		in, out := &in.PortRangeMax, &out.PortRangeMax
+		*out = new(int)
+		**out = int(**in)
+	} else {
+		out.PortRangeMax = nil
+	}
 	out.Protocol = (*string)(unsafe.Pointer(in.Protocol))
 	out.RemoteGroupID = (*string)(unsafe.Pointer(in.RemoteGroupID))
 	out.RemoteIPPrefix = (*string)(unsafe.Pointer(in.RemoteIPPrefix))
@@ -2694,7 +2934,7 @@ func autoConvert_v1beta1_SubnetFilter_To_v1beta2_SubnetFilter(in *SubnetFilter, 
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
-	out.IPVersion = in.IPVersion
+	out.IPVersion = int32(in.IPVersion)
 	out.GatewayIP = in.GatewayIP
 	out.CIDR = in.CIDR
 	out.IPv6AddressMode = in.IPv6AddressMode
@@ -2714,7 +2954,7 @@ func autoConvert_v1beta2_SubnetFilter_To_v1beta1_SubnetFilter(in *v1beta2.Subnet
 	out.Name = in.Name
 	out.Description = in.Description
 	out.ProjectID = in.ProjectID
-	out.IPVersion = in.IPVersion
+	out.IPVersion = int(in.IPVersion)
 	out.GatewayIP = in.GatewayIP
 	out.CIDR = in.CIDR
 	out.IPv6AddressMode = in.IPv6AddressMode
@@ -2732,7 +2972,15 @@ func Convert_v1beta2_SubnetFilter_To_v1beta1_SubnetFilter(in *v1beta2.SubnetFilt
 
 func autoConvert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(in *SubnetParam, out *v1beta2.SubnetParam, s conversion.Scope) error {
 	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*v1beta2.SubnetFilter)(unsafe.Pointer(in.Filter))
+	if in.Filter != nil {
+		in, out := &in.Filter, &out.Filter
+		*out = new(v1beta2.SubnetFilter)
+		if err := Convert_v1beta1_SubnetFilter_To_v1beta2_SubnetFilter(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Filter = nil
+	}
 	return nil
 }
 
@@ -2743,7 +2991,15 @@ func Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(in *SubnetParam, out *v1
 
 func autoConvert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(in *v1beta2.SubnetParam, out *SubnetParam, s conversion.Scope) error {
 	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*SubnetFilter)(unsafe.Pointer(in.Filter))
+	if in.Filter != nil {
+		in, out := &in.Filter, &out.Filter
+		*out = new(SubnetFilter)
+		if err := Convert_v1beta2_SubnetFilter_To_v1beta1_SubnetFilter(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Filter = nil
+	}
 	return nil
 }
 

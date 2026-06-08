@@ -155,7 +155,9 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 	portList := make([]int, 0, 1+len(lbSpec.AdditionalPorts))
 	portList = append(portList, apiServerPort)
-	portList = append(portList, lbSpec.AdditionalPorts...)
+	for _, p := range lbSpec.AdditionalPorts {
+		portList = append(portList, int(p))
+	}
 	for _, port := range portList {
 		if err := s.reconcileAPILoadBalancerListener(lb, openStackCluster, clusterResourceName, port); err != nil {
 			return false, err
@@ -563,27 +565,27 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 		needsUpdate := false
 		monitorUpdateOpts := monitors.UpdateOpts{}
 
-		if monitor.Delay != cfg.Delay {
+		if monitor.Delay != int(cfg.Delay) {
 			s.scope.Logger().V(3).Info("Monitor delay needs update", "current", monitor.Delay, "desired", cfg.Delay)
-			monitorUpdateOpts.Delay = cfg.Delay
+			monitorUpdateOpts.Delay = int(cfg.Delay)
 			needsUpdate = true
 		}
 
-		if monitor.Timeout != cfg.Timeout {
+		if monitor.Timeout != int(cfg.Timeout) {
 			s.scope.Logger().V(3).Info("Monitor timeout needs update", "current", monitor.Timeout, "desired", cfg.Timeout)
-			monitorUpdateOpts.Timeout = cfg.Timeout
+			monitorUpdateOpts.Timeout = int(cfg.Timeout)
 			needsUpdate = true
 		}
 
-		if monitor.MaxRetries != cfg.MaxRetries {
+		if monitor.MaxRetries != int(cfg.MaxRetries) {
 			s.scope.Logger().V(3).Info("Monitor maxRetries needs update", "current", monitor.MaxRetries, "desired", cfg.MaxRetries)
-			monitorUpdateOpts.MaxRetries = cfg.MaxRetries
+			monitorUpdateOpts.MaxRetries = int(cfg.MaxRetries)
 			needsUpdate = true
 		}
 
-		if monitor.MaxRetriesDown != cfg.MaxRetriesDown {
+		if monitor.MaxRetriesDown != int(cfg.MaxRetriesDown) {
 			s.scope.Logger().V(3).Info("Monitor maxRetriesDown needs update", "current", monitor.MaxRetriesDown, "desired", cfg.MaxRetriesDown)
-			monitorUpdateOpts.MaxRetriesDown = cfg.MaxRetriesDown
+			monitorUpdateOpts.MaxRetriesDown = int(cfg.MaxRetriesDown)
 			needsUpdate = true
 		}
 
@@ -613,10 +615,10 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 		Name:           monitorName,
 		PoolID:         poolID,
 		Type:           loadBalancerProtocolTCP,
-		Delay:          cfg.Delay,
-		Timeout:        cfg.Timeout,
-		MaxRetries:     cfg.MaxRetries,
-		MaxRetriesDown: cfg.MaxRetriesDown,
+		Delay:          int(cfg.Delay),
+		Timeout:        int(cfg.Timeout),
+		MaxRetries:     int(cfg.MaxRetries),
+		MaxRetriesDown: int(cfg.MaxRetriesDown),
 	})
 	if err != nil {
 		if capoerrors.IsNotImplementedError(err) {
@@ -663,7 +665,9 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
 	}
 	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil {
-		portList = append(portList, lbSpec.AdditionalPorts...)
+		for _, p := range lbSpec.AdditionalPorts {
+			portList = append(portList, int(p))
+		}
 	}
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
@@ -819,7 +823,9 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 		portList = append(portList, int(openStackCluster.Spec.ControlPlaneEndpoint.Port))
 	}
 	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil {
-		portList = append(portList, lbSpec.AdditionalPorts...)
+		for _, p := range lbSpec.AdditionalPorts {
+			portList = append(portList, int(p))
+		}
 	}
 	for _, port := range portList {
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)

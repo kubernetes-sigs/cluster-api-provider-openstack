@@ -22,7 +22,7 @@ package v1beta2
 // with apply.
 type RootVolumeApplyConfiguration struct {
 	// sizeGiB is the size of the block device in gibibytes (GiB).
-	SizeGiB                             *int `json:"sizeGiB,omitempty"`
+	SizeGiB                             *int32 `json:"sizeGiB,omitempty"`
 	BlockDeviceVolumeApplyConfiguration `json:",inline"`
 }
 
@@ -35,7 +35,7 @@ func RootVolume() *RootVolumeApplyConfiguration {
 // WithSizeGiB sets the SizeGiB field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SizeGiB field is set to the value of the last call.
-func (b *RootVolumeApplyConfiguration) WithSizeGiB(value int) *RootVolumeApplyConfiguration {
+func (b *RootVolumeApplyConfiguration) WithSizeGiB(value int32) *RootVolumeApplyConfiguration {
 	b.SizeGiB = &value
 	return b
 }

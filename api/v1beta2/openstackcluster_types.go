@@ -303,7 +303,7 @@ type ManagedNetwork struct {
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
 	// +optional
-	MTU optional.Int `json:"mtu,omitempty"`
+	MTU *int32 `json:"mtu,omitempty"`
 
 	// enablePortSecurity enables port security for the network created for the
 	// Kubernetes cluster, which also enables SecurityGroups.

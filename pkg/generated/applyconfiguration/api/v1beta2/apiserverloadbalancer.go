@@ -29,7 +29,7 @@ type APIServerLoadBalancerApplyConfiguration struct {
 	// cluster spec instead.
 	Enabled *bool `json:"enabled,omitempty"`
 	// additionalPorts adds additional tcp ports to the load balancer.
-	AdditionalPorts []int `json:"additionalPorts,omitempty"`
+	AdditionalPorts []int32 `json:"additionalPorts,omitempty"`
 	// allowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	// provider specifies name of a specific Octavia provider to use for the
@@ -68,7 +68,7 @@ func (b *APIServerLoadBalancerApplyConfiguration) WithEnabled(value bool) *APISe
 // WithAdditionalPorts adds the given value to the AdditionalPorts field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the AdditionalPorts field.
-func (b *APIServerLoadBalancerApplyConfiguration) WithAdditionalPorts(values ...int) *APIServerLoadBalancerApplyConfiguration {
+func (b *APIServerLoadBalancerApplyConfiguration) WithAdditionalPorts(values ...int32) *APIServerLoadBalancerApplyConfiguration {
 	for i := range values {
 		b.AdditionalPorts = append(b.AdditionalPorts, values[i])
 	}

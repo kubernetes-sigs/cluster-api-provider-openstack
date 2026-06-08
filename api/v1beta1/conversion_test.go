@@ -1031,7 +1031,13 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 				g.Expect(hub.Spec.ManagedNetwork).To(BeNil())
 			} else {
 				g.Expect(hub.Spec.ManagedNetwork).NotTo(BeNil())
-				g.Expect(hub.Spec.ManagedNetwork.MTU).To(Equal(tt.in.Spec.NetworkMTU))
+				// hub.Spec.ManagedNetwork.MTU is *int32 while NetworkMTU is *int; compare values
+				if tt.in.Spec.NetworkMTU != nil {
+					g.Expect(hub.Spec.ManagedNetwork.MTU).NotTo(BeNil())
+					g.Expect(int(*hub.Spec.ManagedNetwork.MTU)).To(Equal(*tt.in.Spec.NetworkMTU))
+				} else {
+					g.Expect(hub.Spec.ManagedNetwork.MTU).To(BeNil())
+				}
 				g.Expect(hub.Spec.ManagedNetwork.EnablePortSecurity).To(Equal(tt.expectedEnablePS))
 			}
 

@@ -80,6 +80,7 @@ spec:
                     sizeGiB:
                       description: sizeGiB is the size of the block device in gibibytes
                         (GiB).
+                      format: int32
                       minimum: 1
                       type: integer
                     storage:
@@ -347,6 +348,7 @@ spec:
                                     type: string
                                   ipVersion:
                                     description: ipVersion filters subnets by IP version.
+                                    format: int32
                                     type: integer
                                   ipv6AddressMode:
                                     description: ipv6AddressMode filters subnets by
@@ -729,6 +731,7 @@ spec:
                   sizeGiB:
                     description: sizeGiB is the size of the block device in gibibytes
                       (GiB).
+                    format: int32
                     minimum: 1
                     type: integer
                   type:
@@ -770,6 +773,7 @@ spec:
                           description: |-
                             number is the integer value of the scheduler hint, used when Type is "Number".
                             This field is required if type is 'Number', and must not be set otherwise.
+                          format: int32
                           type: integer
                         string:
                           description: |-

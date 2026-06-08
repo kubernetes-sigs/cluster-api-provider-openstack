@@ -249,7 +249,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
 					ManagedNetwork: &infrav1.ManagedNetwork{
-						MTU: ptr.To(1500),
+						MTU: ptr.To[int32](1500),
 					},
 				},
 			},
@@ -262,7 +262,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 					CreateNetwork(createOpts{
 						AdminStateUp: gophercloud.Enabled,
 						Name:         expectedNetworkName,
-						MTU:          ptr.To(1500),
+						MTU:          ptr.To[int32](1500),
 					}).
 					Return(&networks.Network{
 						ID:   fakeNetworkID,

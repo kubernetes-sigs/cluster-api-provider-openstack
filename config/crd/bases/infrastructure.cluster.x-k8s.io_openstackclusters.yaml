@@ -2792,6 +2792,7 @@ spec:
                         description: additionalPorts adds additional tcp ports to
                           the load balancer.
                         items:
+                          format: int32
                           type: integer
                         type: array
                         x-kubernetes-list-type: set
@@ -2827,12 +2828,14 @@ spec:
                           delay:
                             description: delay is the time in seconds between sending
                               probes to members.
+                            format: int32
                             minimum: 0
                             type: integer
                           maxRetries:
                             description: maxRetries is the number of successful checks
                               before changing the operating status of the member to
                               ONLINE.
+                            format: int32
                             maximum: 10
                             minimum: 0
                             type: integer
@@ -2840,6 +2843,7 @@ spec:
                             description: maxRetriesDown is the number of allowed check
                               failures before changing the operating status of the
                               member to ERROR.
+                            format: int32
                             maximum: 10
                             minimum: 1
                             type: integer
@@ -2847,6 +2851,7 @@ spec:
                             description: timeout is the maximum time in seconds for
                               a monitor to wait for a connection to be established
                               before it times out.
+                            format: int32
                             minimum: 0
                             type: integer
                         type: object
@@ -2968,6 +2973,7 @@ spec:
                                   type: string
                                 ipVersion:
                                   description: ipVersion filters subnets by IP version.
+                                  format: int32
                                   type: integer
                                 ipv6AddressMode:
                                   description: ipv6AddressMode filters subnets by
@@ -3110,6 +3116,7 @@ spec:
                             sizeGiB:
                               description: sizeGiB is the size of the block device
                                 in gibibytes (GiB).
+                              format: int32
                               minimum: 1
                               type: integer
                             storage:
@@ -3394,6 +3401,7 @@ spec:
                                           ipVersion:
                                             description: ipVersion filters subnets
                                               by IP version.
+                                            format: int32
                                             type: integer
                                           ipv6AddressMode:
                                             description: ipv6AddressMode filters subnets
@@ -3786,6 +3794,7 @@ spec:
                           sizeGiB:
                             description: sizeGiB is the size of the block device in
                               gibibytes (GiB).
+                            format: int32
                             minimum: 1
                             type: integer
                           type:
@@ -3827,6 +3836,7 @@ spec:
                                   description: |-
                                     number is the integer value of the scheduler hint, used when Type is "Number".
                                     This field is required if type is 'Number', and must not be set otherwise.
+                                  format: int32
                                   type: integer
                                 string:
                                   description: |-
@@ -4216,6 +4226,7 @@ spec:
                       This value will be used only if the Cluster actuator creates the network.
                       If left empty, the network will have the default MTU defined in Openstack network service.
                       To use this field, the Openstack installation requires the net-mtu neutron API extension.
+                    format: int32
                     type: integer
                 type: object
                 x-kubernetes-validations:
@@ -4260,6 +4271,7 @@ spec:
                                   type: string
                                 ipVersion:
                                   description: ipVersion filters subnets by IP version.
+                                  format: int32
                                   type: integer
                                 ipv6AddressMode:
                                   description: ipv6AddressMode filters subnets by
@@ -4403,12 +4415,14 @@ spec:
                           description: |-
                             portRangeMax is a number in the range that is matched by the security group
                             rule. The portRangeMin attribute constrains the portRangeMax attribute.
+                          format: int32
                           type: integer
                         portRangeMin:
                           description: |-
                             portRangeMin is a number in the range that is matched by the security group
                             rule. If the protocol is TCP or UDP, this value must be less than or equal
                             to the value of the portRangeMax attribute.
+                          format: int32
                           type: integer
                         protocol:
                           description: protocol is the protocol that is matched by
@@ -4484,12 +4498,14 @@ spec:
                           description: |-
                             portRangeMax is a number in the range that is matched by the security group
                             rule. The portRangeMin attribute constrains the portRangeMax attribute.
+                          format: int32
                           type: integer
                         portRangeMin:
                           description: |-
                             portRangeMin is a number in the range that is matched by the security group
                             rule. If the protocol is TCP or UDP, this value must be less than or equal
                             to the value of the portRangeMax attribute.
+                          format: int32
                           type: integer
                         protocol:
                           description: protocol is the protocol that is matched by
@@ -4565,12 +4581,14 @@ spec:
                           description: |-
                             portRangeMax is a number in the range that is matched by the security group
                             rule. The portRangeMin attribute constrains the portRangeMax attribute.
+                          format: int32
                           type: integer
                         portRangeMin:
                           description: |-
                             portRangeMin is a number in the range that is matched by the security group
                             rule. If the protocol is TCP or UDP, this value must be less than or equal
                             to the value of the portRangeMax attribute.
+                          format: int32
                           type: integer
                         protocol:
                           description: protocol is the protocol that is matched by
@@ -4844,6 +4862,7 @@ spec:
                           type: string
                         ipVersion:
                           description: ipVersion filters subnets by IP version.
+                          format: int32
                           type: integer
                         ipv6AddressMode:
                           description: ipv6AddressMode filters subnets by IPv6 address

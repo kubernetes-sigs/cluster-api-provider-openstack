@@ -32,7 +32,7 @@ type AdditionalBlockDeviceApplyConfiguration struct {
 	// Name cannot be 'root', which is reserved for the root volume.
 	Name *string `json:"name,omitempty"`
 	// sizeGiB is the size of the block device in gibibytes (GiB).
-	SizeGiB *int `json:"sizeGiB,omitempty"`
+	SizeGiB *int32 `json:"sizeGiB,omitempty"`
 	// storage specifies the storage type of the block device and
 	// additional storage options.
 	Storage *BlockDeviceStorageApplyConfiguration `json:"storage,omitempty"`
@@ -55,7 +55,7 @@ func (b *AdditionalBlockDeviceApplyConfiguration) WithName(value string) *Additi
 // WithSizeGiB sets the SizeGiB field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SizeGiB field is set to the value of the last call.
-func (b *AdditionalBlockDeviceApplyConfiguration) WithSizeGiB(value int) *AdditionalBlockDeviceApplyConfiguration {
+func (b *AdditionalBlockDeviceApplyConfiguration) WithSizeGiB(value int32) *AdditionalBlockDeviceApplyConfiguration {
 	b.SizeGiB = &value
 	return b
 }
