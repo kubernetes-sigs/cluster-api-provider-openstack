@@ -151,8 +151,7 @@ type resolvedSecurityGroupRuleSpec struct {
 }
 
 func (r resolvedSecurityGroupRuleSpec) Matches(other rules.SecGroupRule) bool {
-	return r.Description == other.Description &&
-		r.Direction == other.Direction &&
+	return r.Direction == other.Direction &&
 		r.EtherType == other.EtherType &&
 		r.PortRangeMin == other.PortRangeMin &&
 		r.PortRangeMax == other.PortRangeMax &&
