@@ -1586,9 +1586,9 @@ spec:
                       description: description is a human-readable description for
                         the port.
                       type: string
-                    disablePortSecurity:
+                    enablePortSecurity:
                       description: |-
-                        disablePortSecurity enables or disables the port security when set.
+                        enablePortSecurity enables or disables the port security when set.
                         When not set, it takes the value of the corresponding field at the network level.
                       type: boolean
                     fixedIPs:
@@ -2400,9 +2400,9 @@ spec:
                           description: description is a human-readable description
                             for the port.
                           type: string
-                        disablePortSecurity:
+                        enablePortSecurity:
                           description: |-
-                            disablePortSecurity enables or disables the port security when set.
+                            enablePortSecurity enables or disables the port security when set.
                             When not set, it takes the value of the corresponding field at the network level.
                           type: boolean
                         fixedIPs:

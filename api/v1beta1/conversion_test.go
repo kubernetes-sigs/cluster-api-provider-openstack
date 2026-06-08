@@ -977,8 +977,9 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 	disablePS := optional.Bool(ptr.To(true))
 
 	tests := []struct {
-		name string
-		in   OpenStackCluster
+		name             string
+		in               OpenStackCluster
+		expectedEnablePS optional.Bool
 	}{
 		{
 			name: "both fields set",
@@ -988,22 +989,33 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 					DisablePortSecurity: disablePS,
 				},
 			},
+			expectedEnablePS: optional.Bool(ptr.To(false)), // disablePS=true → enablePS=false
 		},
 		{
 			name: "only MTU set",
 			in: OpenStackCluster{
 				Spec: OpenStackClusterSpec{NetworkMTU: mtu},
 			},
+			expectedEnablePS: nil, // unset stays unset
 		},
 		{
-			name: "only DisablePortSecurity set",
+			name: "only DisablePortSecurity set to true",
 			in: OpenStackCluster{
 				Spec: OpenStackClusterSpec{DisablePortSecurity: disablePS},
 			},
+			expectedEnablePS: optional.Bool(ptr.To(false)), // disablePS=true → enablePS=false
 		},
 		{
-			name: "neither set — ManagedNetwork stays nil",
-			in:   OpenStackCluster{},
+			name: "DisablePortSecurity explicitly false",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{DisablePortSecurity: optional.Bool(ptr.To(false))},
+			},
+			expectedEnablePS: optional.Bool(ptr.To(true)), // disablePS=false → enablePS=true
+		},
+		{
+			name:             "neither set — ManagedNetwork stays nil",
+			in:               OpenStackCluster{},
+			expectedEnablePS: nil,
 		},
 	}
 
@@ -1020,13 +1032,13 @@ func TestOpenStackCluster_RoundTrip_ManagedNetwork(t *testing.T) {
 			} else {
 				g.Expect(hub.Spec.ManagedNetwork).NotTo(BeNil())
 				g.Expect(hub.Spec.ManagedNetwork.MTU).To(Equal(tt.in.Spec.NetworkMTU))
-				g.Expect(hub.Spec.ManagedNetwork.DisablePortSecurity).To(Equal(tt.in.Spec.DisablePortSecurity))
+				g.Expect(hub.Spec.ManagedNetwork.EnablePortSecurity).To(Equal(tt.expectedEnablePS))
 			}
 
 			restored := &OpenStackCluster{}
 			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
 
-			// Verify final v1beta1 state
+			// Verify final v1beta1 state round-trips correctly
 			g.Expect(restored.Spec.NetworkMTU).To(Equal(tt.in.Spec.NetworkMTU))
 			g.Expect(restored.Spec.DisablePortSecurity).To(Equal(tt.in.Spec.DisablePortSecurity))
 		})
@@ -1224,8 +1236,9 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 	disable := optional.Bool(ptr.To(true))
 
 	tests := []struct {
-		name string
-		in   OpenStackCluster
+		name                     string
+		in                       OpenStackCluster
+		expectedEnableFloatingIP optional.Bool
 	}{
 		{
 			name: "all fields set",
@@ -1240,6 +1253,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					},
 				},
 			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(false)), // disable=true → enable=false
 		},
 		{
 			name: "only floatingIP set",
@@ -1248,6 +1262,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerFloatingIP: floatingIP,
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "only fixedIP set",
@@ -1256,6 +1271,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerFixedIP: fixedIP,
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "only port set",
@@ -1264,14 +1280,25 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerPort: port,
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
-			name: "only disableFloatingIP set",
+			name: "DisableAPIServerFloatingIP explicitly true",
 			in: OpenStackCluster{
 				Spec: OpenStackClusterSpec{
 					DisableAPIServerFloatingIP: disable,
 				},
 			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(false)), // disable=true → enable=false
+		},
+		{
+			name: "DisableAPIServerFloatingIP explicitly false",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableAPIServerFloatingIP: optional.Bool(ptr.To(false)),
+				},
+			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(true)), // disable=false → enable=true
 		},
 		{
 			name: "only loadBalancer set",
@@ -1282,6 +1309,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					},
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "loadBalancer disabled explicitly",
@@ -1292,6 +1320,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					},
 				},
 			},
+			expectedEnableFloatingIP: nil,
 		},
 		{
 			name: "disableFloatingIP with fixedIP (no-LB VIP case)",
@@ -1301,10 +1330,12 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 					APIServerFixedIP:           fixedIP,
 				},
 			},
+			expectedEnableFloatingIP: optional.Bool(ptr.To(false)), // disable=true → enable=false
 		},
 		{
-			name: "no APIServer fields set — APIServer stays nil",
-			in:   OpenStackCluster{},
+			name:                     "no APIServer fields set — APIServer stays nil",
+			in:                       OpenStackCluster{},
+			expectedEnableFloatingIP: nil,
 		},
 	}
 
@@ -1331,7 +1362,7 @@ func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 				g.Expect(hub.Spec.APIServer.FloatingIP).To(Equal(src.APIServerFloatingIP))
 				g.Expect(hub.Spec.APIServer.FixedIP).To(Equal(src.APIServerFixedIP))
 				g.Expect(hub.Spec.APIServer.Port).To(Equal(src.APIServerPort))
-				g.Expect(hub.Spec.APIServer.DisableFloatingIP).To(Equal(src.DisableAPIServerFloatingIP))
+				g.Expect(hub.Spec.APIServer.EnableFloatingIP).To(Equal(tt.expectedEnableFloatingIP))
 
 				if src.APIServerLoadBalancer == nil {
 					g.Expect(hub.Spec.APIServer.ManagedLoadBalancer).To(BeNil())
@@ -1430,4 +1461,102 @@ func TestOpenStackClusterStatusAPIServerLoadBalancerNilConversion(t *testing.T) 
 
 	// Verify round-trip preserves nil
 	g.Expect(restored.Status.APIServerLoadBalancer).To(BeNil())
+}
+
+func TestOpenStackCluster_RoundTrip_ExternalNetwork(t *testing.T) {
+	tests := []struct {
+		name             string
+		in               OpenStackCluster
+		expectedEnableEN optional.Bool
+	}{
+		{
+			name: "DisableExternalNetwork explicitly true",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableExternalNetwork: optional.Bool(ptr.To(true)),
+				},
+			},
+			expectedEnableEN: optional.Bool(ptr.To(false)), // disable=true → enable=false
+		},
+		{
+			name: "DisableExternalNetwork explicitly false",
+			in: OpenStackCluster{
+				Spec: OpenStackClusterSpec{
+					DisableExternalNetwork: optional.Bool(ptr.To(false)),
+				},
+			},
+			expectedEnableEN: optional.Bool(ptr.To(true)), // disable=false → enable=true
+		},
+		{
+			name:             "DisableExternalNetwork unset — EnableExternalNetwork stays nil",
+			in:               OpenStackCluster{},
+			expectedEnableEN: nil, // unset stays unset, controller applies default
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackCluster{}
+			g.Expect(tt.in.ConvertTo(hub)).To(Succeed())
+
+			// --- Verify intermediate v1beta2 state ---
+			g.Expect(hub.Spec.EnableExternalNetwork).To(Equal(tt.expectedEnableEN))
+
+			// --- Verify full round-trip back to v1beta1 ---
+			restored := &OpenStackCluster{}
+			g.Expect(restored.ConvertFrom(hub)).To(Succeed())
+
+			g.Expect(restored.Spec.DisableExternalNetwork).To(Equal(tt.in.Spec.DisableExternalNetwork))
+		})
+	}
+}
+
+func TestResolvedPortSpecFields_RoundTrip_PortSecurity(t *testing.T) {
+	tests := []struct {
+		name             string
+		in               ResolvedPortSpecFields
+		expectedEnablePS *bool
+	}{
+		{
+			name: "DisablePortSecurity explicitly true",
+			in: ResolvedPortSpecFields{
+				DisablePortSecurity: ptr.To(true),
+			},
+			expectedEnablePS: ptr.To(false), // disable=true → enable=false
+		},
+		{
+			name: "DisablePortSecurity explicitly false",
+			in: ResolvedPortSpecFields{
+				DisablePortSecurity: ptr.To(false),
+			},
+			expectedEnablePS: ptr.To(true), // disable=false → enable=true
+		},
+		{
+			name:             "DisablePortSecurity unset — EnablePortSecurity stays nil",
+			in:               ResolvedPortSpecFields{},
+			expectedEnablePS: nil, // unset stays unset, inherits from network level
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			// --- Convert to v1beta2 ---
+			out := &infrav1.ResolvedPortSpecFields{}
+			g.Expect(Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(&tt.in, out, nil)).To(Succeed())
+
+			// --- Verify intermediate v1beta2 state ---
+			g.Expect(out.EnablePortSecurity).To(Equal(tt.expectedEnablePS))
+
+			// --- Convert back to v1beta1 ---
+			restored := &ResolvedPortSpecFields{}
+			g.Expect(Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(out, restored, nil)).To(Succeed())
+
+			// --- Verify full round-trip ---
+			g.Expect(restored.DisablePortSecurity).To(Equal(tt.in.DisablePortSecurity))
+		})
+	}
 }

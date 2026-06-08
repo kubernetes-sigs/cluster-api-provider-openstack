@@ -164,11 +164,11 @@ func (b *ResolvedPortSpecApplyConfiguration) WithProfile(value *BindingProfileAp
 	return b
 }
 
-// WithDisablePortSecurity sets the DisablePortSecurity field in the declarative configuration to the given value
+// WithEnablePortSecurity sets the EnablePortSecurity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DisablePortSecurity field is set to the value of the last call.
-func (b *ResolvedPortSpecApplyConfiguration) WithDisablePortSecurity(value bool) *ResolvedPortSpecApplyConfiguration {
-	b.ResolvedPortSpecFieldsApplyConfiguration.DisablePortSecurity = &value
+// If called multiple times, the EnablePortSecurity field is set to the value of the last call.
+func (b *ResolvedPortSpecApplyConfiguration) WithEnablePortSecurity(value bool) *ResolvedPortSpecApplyConfiguration {
+	b.ResolvedPortSpecFieldsApplyConfiguration.EnablePortSecurity = &value
 	return b
 }
 

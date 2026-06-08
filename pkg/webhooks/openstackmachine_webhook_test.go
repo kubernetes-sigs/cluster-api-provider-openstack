@@ -77,7 +77,7 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 						{
 							SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To("sg-1")}},
 							ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-								DisablePortSecurity: ptr.To(true),
+								EnablePortSecurity: ptr.To(false),
 							},
 						},
 					},

@@ -471,16 +471,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*ResolvedPortSpecFields)(nil), (*v1beta2.ResolvedPortSpecFields)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(a.(*ResolvedPortSpecFields), b.(*v1beta2.ResolvedPortSpecFields), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1beta2.ResolvedPortSpecFields)(nil), (*ResolvedPortSpecFields)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(a.(*v1beta2.ResolvedPortSpecFields), b.(*ResolvedPortSpecFields), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*ResourceReference)(nil), (*v1beta2.ResourceReference)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta1_ResourceReference_To_v1beta2_ResourceReference(a.(*ResourceReference), b.(*v1beta2.ResourceReference), scope)
 	}); err != nil {
@@ -716,6 +706,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddConversionFunc((*ResolvedPortSpecFields)(nil), (*v1beta2.ResolvedPortSpecFields)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(a.(*ResolvedPortSpecFields), b.(*v1beta2.ResolvedPortSpecFields), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddConversionFunc((*v1beta2.ManagedSecurityGroups)(nil), (*ManagedSecurityGroups)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta2_ManagedSecurityGroups_To_v1beta1_ManagedSecurityGroups(a.(*v1beta2.ManagedSecurityGroups), b.(*ManagedSecurityGroups), scope)
 	}); err != nil {
@@ -738,6 +733,11 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddConversionFunc((*v1beta2.OpenStackMachineStatus)(nil), (*OpenStackMachineStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1beta2_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatus(a.(*v1beta2.OpenStackMachineStatus), b.(*OpenStackMachineStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddConversionFunc((*v1beta2.ResolvedPortSpecFields)(nil), (*ResolvedPortSpecFields)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(a.(*v1beta2.ResolvedPortSpecFields), b.(*ResolvedPortSpecFields), scope)
 	}); err != nil {
 		return err
 	}
@@ -927,7 +927,15 @@ func autoConvert_v1beta1_BastionStatus_To_v1beta2_BastionStatus(in *BastionStatu
 	out.State = v1beta2.InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.Resolved = (*v1beta2.ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
+	if in.Resolved != nil {
+		in, out := &in.Resolved, &out.Resolved
+		*out = new(v1beta2.ResolvedMachineSpec)
+		if err := Convert_v1beta1_ResolvedMachineSpec_To_v1beta2_ResolvedMachineSpec(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Resolved = nil
+	}
 	out.Resources = (*v1beta2.MachineResources)(unsafe.Pointer(in.Resources))
 	return nil
 }
@@ -944,7 +952,15 @@ func autoConvert_v1beta2_BastionStatus_To_v1beta1_BastionStatus(in *v1beta2.Bast
 	out.State = InstanceState(in.State)
 	out.IP = in.IP
 	out.FloatingIP = in.FloatingIP
-	out.Resolved = (*ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
+	if in.Resolved != nil {
+		in, out := &in.Resolved, &out.Resolved
+		*out = new(ResolvedMachineSpec)
+		if err := Convert_v1beta2_ResolvedMachineSpec_To_v1beta1_ResolvedMachineSpec(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Resolved = nil
+	}
 	out.Resources = (*MachineResources)(unsafe.Pointer(in.Resources))
 	return nil
 }
@@ -1452,7 +1468,7 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
 	// WARNING: in.ExternalRouterIPs requires manual conversion: does not exist in peer-type
 	out.ExternalNetwork = (*v1beta2.NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
-	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
+	// WARNING: in.DisableExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerLoadBalancer requires manual conversion: does not exist in peer-type
 	// WARNING: in.DisableAPIServerFloatingIP requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServerFloatingIP requires manual conversion: does not exist in peer-type
@@ -1495,7 +1511,7 @@ func autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in
 	// WARNING: in.ManagedNetwork requires manual conversion: does not exist in peer-type
 	out.Network = (*NetworkParam)(unsafe.Pointer(in.Network))
 	out.ExternalNetwork = (*NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
-	out.DisableExternalNetwork = (optional.Bool)(unsafe.Pointer(in.DisableExternalNetwork))
+	// WARNING: in.EnableExternalNetwork requires manual conversion: does not exist in peer-type
 	// WARNING: in.APIServer requires manual conversion: does not exist in peer-type
 	if in.ManagedSecurityGroups != nil {
 		in, out := &in.ManagedSecurityGroups, &out.ManagedSecurityGroups
@@ -1536,7 +1552,15 @@ func autoConvert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatu
 	out.ControlPlaneSecurityGroup = (*v1beta2.SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*v1beta2.SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*v1beta2.SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*v1beta2.BastionStatus)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(v1beta2.BastionStatus)
+		if err := Convert_v1beta1_BastionStatus_To_v1beta2_BastionStatus(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	// WARNING: in.FailureReason requires manual conversion: does not exist in peer-type
 	// WARNING: in.FailureMessage requires manual conversion: does not exist in peer-type
 	if in.Conditions != nil {
@@ -1574,7 +1598,15 @@ func autoConvert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatu
 	out.ControlPlaneSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
 	out.WorkerSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
 	out.BastionSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
-	out.Bastion = (*BastionStatus)(unsafe.Pointer(in.Bastion))
+	if in.Bastion != nil {
+		in, out := &in.Bastion, &out.Bastion
+		*out = new(BastionStatus)
+		if err := Convert_v1beta2_BastionStatus_To_v1beta1_BastionStatus(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Bastion = nil
+	}
 	return nil
 }
 
@@ -1802,7 +1834,17 @@ func autoConvert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in
 		return err
 	}
 	out.SSHKeyName = in.SSHKeyName
-	out.Ports = *(*[]v1beta2.PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]v1beta2.PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_PortOpts_To_v1beta2_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.SecurityGroups = *(*[]v1beta2.SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -1824,7 +1866,17 @@ func autoConvert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(in
 		return err
 	}
 	out.SSHKeyName = in.SSHKeyName
-	out.Ports = *(*[]PortOpts)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]PortOpts, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_PortOpts_To_v1beta1_PortOpts(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	out.SecurityGroups = *(*[]SecurityGroupParam)(unsafe.Pointer(&in.SecurityGroups))
 	out.Trunk = in.Trunk
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
@@ -1845,7 +1897,15 @@ func autoConvert_v1beta1_OpenStackMachineStatus_To_v1beta2_OpenStackMachineStatu
 	out.InstanceID = (optional.String)(unsafe.Pointer(in.InstanceID))
 	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*v1beta2.InstanceState)(unsafe.Pointer(in.InstanceState))
-	out.Resolved = (*v1beta2.ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
+	if in.Resolved != nil {
+		in, out := &in.Resolved, &out.Resolved
+		*out = new(v1beta2.ResolvedMachineSpec)
+		if err := Convert_v1beta1_ResolvedMachineSpec_To_v1beta2_ResolvedMachineSpec(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Resolved = nil
+	}
 	out.Resources = (*v1beta2.MachineResources)(unsafe.Pointer(in.Resources))
 	// WARNING: in.FailureReason requires manual conversion: does not exist in peer-type
 	// WARNING: in.FailureMessage requires manual conversion: does not exist in peer-type
@@ -1879,7 +1939,15 @@ func autoConvert_v1beta2_OpenStackMachineStatus_To_v1beta1_OpenStackMachineStatu
 	out.InstanceID = (optional.String)(unsafe.Pointer(in.InstanceID))
 	out.Addresses = *(*[]corev1.NodeAddress)(unsafe.Pointer(&in.Addresses))
 	out.InstanceState = (*InstanceState)(unsafe.Pointer(in.InstanceState))
-	out.Resolved = (*ResolvedMachineSpec)(unsafe.Pointer(in.Resolved))
+	if in.Resolved != nil {
+		in, out := &in.Resolved, &out.Resolved
+		*out = new(ResolvedMachineSpec)
+		if err := Convert_v1beta2_ResolvedMachineSpec_To_v1beta1_ResolvedMachineSpec(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.Resolved = nil
+	}
 	out.Resources = (*MachineResources)(unsafe.Pointer(in.Resources))
 	return nil
 }
@@ -2138,7 +2206,17 @@ func autoConvert_v1beta1_ResolvedMachineSpec_To_v1beta2_ResolvedMachineSpec(in *
 	out.ServerGroupID = in.ServerGroupID
 	out.ImageID = in.ImageID
 	out.FlavorID = in.FlavorID
-	out.Ports = *(*[]v1beta2.ResolvedPortSpec)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]v1beta2.ResolvedPortSpec, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_ResolvedPortSpec_To_v1beta2_ResolvedPortSpec(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	return nil
 }
 
@@ -2151,7 +2229,17 @@ func autoConvert_v1beta2_ResolvedMachineSpec_To_v1beta1_ResolvedMachineSpec(in *
 	out.ServerGroupID = in.ServerGroupID
 	out.ImageID = in.ImageID
 	out.FlavorID = in.FlavorID
-	out.Ports = *(*[]ResolvedPortSpec)(unsafe.Pointer(&in.Ports))
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]ResolvedPortSpec, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta2_ResolvedPortSpec_To_v1beta1_ResolvedPortSpec(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Ports = nil
+	}
 	return nil
 }
 
@@ -2205,15 +2293,10 @@ func autoConvert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecField
 	out.HostID = (optional.String)(unsafe.Pointer(in.HostID))
 	out.VNICType = (optional.String)(unsafe.Pointer(in.VNICType))
 	out.Profile = (*v1beta2.BindingProfile)(unsafe.Pointer(in.Profile))
-	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
+	// WARNING: in.DisablePortSecurity requires manual conversion: does not exist in peer-type
 	out.PropagateUplinkStatus = (*bool)(unsafe.Pointer(in.PropagateUplinkStatus))
 	out.ValueSpecs = *(*[]v1beta2.ValueSpec)(unsafe.Pointer(&in.ValueSpecs))
 	return nil
-}
-
-// Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields is an autogenerated conversion function.
-func Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(in *ResolvedPortSpecFields, out *v1beta2.ResolvedPortSpecFields, s conversion.Scope) error {
-	return autoConvert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(in, out, s)
 }
 
 func autoConvert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in *v1beta2.ResolvedPortSpecFields, out *ResolvedPortSpecFields, s conversion.Scope) error {
@@ -2223,15 +2306,10 @@ func autoConvert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecField
 	out.HostID = (optional.String)(unsafe.Pointer(in.HostID))
 	out.VNICType = (optional.String)(unsafe.Pointer(in.VNICType))
 	out.Profile = (*BindingProfile)(unsafe.Pointer(in.Profile))
-	out.DisablePortSecurity = (*bool)(unsafe.Pointer(in.DisablePortSecurity))
+	// WARNING: in.EnablePortSecurity requires manual conversion: does not exist in peer-type
 	out.PropagateUplinkStatus = (*bool)(unsafe.Pointer(in.PropagateUplinkStatus))
 	out.ValueSpecs = *(*[]ValueSpec)(unsafe.Pointer(&in.ValueSpecs))
 	return nil
-}
-
-// Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields is an autogenerated conversion function.
-func Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in *v1beta2.ResolvedPortSpecFields, out *ResolvedPortSpecFields, s conversion.Scope) error {
-	return autoConvert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in, out, s)
 }
 
 func autoConvert_v1beta1_ResourceReference_To_v1beta2_ResourceReference(in *ResourceReference, out *v1beta2.ResourceReference, s conversion.Scope) error {

@@ -716,8 +716,8 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		}
 		// Only inject the default SG when portSecurity is not disabled,
 		// there are no SGs passed by user and defaultSecGroup is set
-		portSecurityDisabled := serverPort.DisablePortSecurity != nil && *serverPort.DisablePortSecurity
-		if !portSecurityDisabled && len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
+		portSecurityEnabled := serverPort.EnablePortSecurity == nil || *serverPort.EnablePortSecurity
+		if portSecurityEnabled && len(serverPort.SecurityGroups) == 0 && defaultSecGroup != nil {
 			serverPort.SecurityGroups = []infrav1.SecurityGroupParam{
 				{
 					ID: defaultSecGroup,
@@ -828,7 +828,7 @@ func (r *OpenStackMachineReconciler) reconcileAPIServerLoadBalancer(scope *scope
 			})
 			return fmt.Errorf("reconcile load balancer member: %w", err)
 		}
-	} else if !ptr.Deref(openStackCluster.Spec.APIServer.GetDisableFloatingIP(), false) && !ptr.Deref(openStackCluster.Spec.DisableExternalNetwork, false) {
+	} else if ptr.Deref(openStackCluster.Spec.APIServer.GetEnableFloatingIP(), true) && ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true) {
 		var floatingIPAddress *string
 		switch {
 		case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():

@@ -30,8 +30,8 @@ const (
 )
 
 // OpenStackClusterSpec defines the desired state of OpenStackCluster.
-// +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? !has(self.bastion) || !has(self.bastion.floatingIP) : true",message="bastion floating IP cannot be set when disableExternalNetwork is true"
-// +kubebuilder:validation:XValidation:rule="has(self.disableExternalNetwork) && self.disableExternalNetwork ? has(self.apiServer) && has(self.apiServer.disableFloatingIP) && self.apiServer.disableFloatingIP : true",message="apiServer.disableFloatingIP cannot be false when disableExternalNetwork is true"
+// +kubebuilder:validation:XValidation:rule="has(self.enableExternalNetwork) && !self.enableExternalNetwork ? !has(self.bastion) || !has(self.bastion.floatingIP) : true",message="bastion floating IP cannot be set when enableExternalNetwork is false"
+// +kubebuilder:validation:XValidation:rule="has(self.enableExternalNetwork) && !self.enableExternalNetwork ? has(self.apiServer) && has(self.apiServer.enableFloatingIP) && !self.apiServer.enableFloatingIP : true",message="apiServer.enableFloatingIP cannot be true when enableExternalNetwork is false"
 type OpenStackClusterSpec struct {
 	// managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
 	// subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
@@ -64,7 +64,7 @@ type OpenStackClusterSpec struct {
 
 	// managedNetwork specifies attributes of the network. The values are used only
 	// if the Cluster actuator creates the network.
-	// +kubebuilder:validation:XValidation:rule="self == null || has(self.mtu) || has(self.disablePortSecurity)",message="managedNetwork must not be empty if set"
+	// +kubebuilder:validation:XValidation:rule="self == null || has(self.mtu) || has(self.enablePortSecurity)",message="managedNetwork must not be empty if set"
 	// +optional
 	ManagedNetwork *ManagedNetwork `json:"managedNetwork,omitempty"`
 
@@ -74,25 +74,25 @@ type OpenStackClusterSpec struct {
 	Network *NetworkParam `json:"network,omitempty"`
 
 	// externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-	// This option is ignored if DisableExternalNetwork is set to true.
+	// This option is ignored if EnableExternalNetwork is set to false.
 	//
 	// If ExternalNetwork is defined it must refer to exactly one external network.
 	//
 	// If ExternalNetwork is not defined or is empty the controller will use any
 	// existing external network as long as there is only one. It is an
 	// error if ExternalNetwork is not defined and there are multiple
-	// external networks unless DisableExternalNetwork is also set.
+	// external networks unless EnableExternalNetwork is also set to false.
 	//
 	// If ExternalNetwork is not defined and there are no external networks
-	// the controller will proceed as though DisableExternalNetwork was set.
+	// the controller will proceed as though EnableExternalNetwork was set to false.
 	// +optional
 	ExternalNetwork *NetworkParam `json:"externalNetwork,omitempty"`
 
-	// disableExternalNetwork specifies whether or not to attempt to connect the cluster
-	// to an external network. This allows for the creation of clusters when connecting
-	// to an external network is not possible or desirable, e.g. if using a provider network.
+	// enableExternalNetwork specifies whether to connect the cluster to an external network.
+	// Set this to false when connecting to an external network is not possible or desirable,
+	// e.g. if using a provider network.
 	// +optional
-	DisableExternalNetwork optional.Bool `json:"disableExternalNetwork,omitempty"`
+	EnableExternalNetwork optional.Bool `json:"enableExternalNetwork,omitempty"`
 
 	// apiServer configures the API server endpoint and its associated
 	// load balancer and floating IP.
@@ -171,14 +171,13 @@ type APIServer struct {
 	// floatingIP is the floating IP which will be associated with the API server.
 	// The floating IP will be created if it does not already exist.
 	// If not specified, a new floating IP is allocated.
-	// This field is not used if DisableFloatingIP is set to true.
+	// This field is not used if EnableFloatingIP is set to false.
 	// +optional
 	FloatingIP optional.String `json:"floatingIP,omitempty"`
 
-	// disableFloatingIP determines whether or not to attempt to attach a
-	// floating IP to the API server.
+	// enableFloatingIP determines whether to attach a floating IP to the API server.
 	// +optional
-	DisableFloatingIP optional.Bool `json:"disableFloatingIP,omitempty"`
+	EnableFloatingIP optional.Bool `json:"enableFloatingIP,omitempty"`
 
 	// managedLoadBalancer configures the optional LoadBalancer for the API server.
 	// If not specified, no load balancer will be created.
@@ -306,10 +305,11 @@ type ManagedNetwork struct {
 	// +optional
 	MTU optional.Int `json:"mtu,omitempty"`
 
-	// disablePortSecurity disables the port security of the network created for the
-	// Kubernetes cluster, which also disables SecurityGroups
+	// enablePortSecurity enables port security for the network created for the
+	// Kubernetes cluster, which also enables SecurityGroups.
+	// If left empty, the network will have port security setting enabled.
 	// +optional
-	DisablePortSecurity optional.Bool `json:"disablePortSecurity,omitempty"`
+	EnablePortSecurity optional.Bool `json:"enablePortSecurity,omitempty"`
 }
 
 // ManagedSecurityGroups defines the desired state of security groups and rules for the cluster.
@@ -372,11 +372,11 @@ func (a *APIServer) GetManagedLoadBalancer() *APIServerLoadBalancer {
 	return a.ManagedLoadBalancer
 }
 
-func (a *APIServer) GetDisableFloatingIP() *bool {
+func (a *APIServer) GetEnableFloatingIP() *bool {
 	if a == nil {
 		return nil
 	}
-	return a.DisableFloatingIP
+	return a.EnableFloatingIP
 }
 
 func (a *APIServer) GetFloatingIP() *string {

@@ -378,9 +378,15 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 
 	if in.NetworkMTU != nil || in.DisablePortSecurity != nil {
 		out.ManagedNetwork = &infrav1.ManagedNetwork{
-			MTU:                 in.NetworkMTU,
-			DisablePortSecurity: in.DisablePortSecurity,
+			MTU: in.NetworkMTU,
 		}
+		if in.DisablePortSecurity != nil {
+			out.ManagedNetwork.EnablePortSecurity = ptr.To(!*in.DisablePortSecurity)
+		}
+	}
+
+	if in.DisableExternalNetwork != nil {
+		out.EnableExternalNetwork = ptr.To(!*in.DisableExternalNetwork)
 	}
 
 	// ExternalRouterIPs and ExternalRouterIPParam are structurally identical between versions,
@@ -406,10 +412,12 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 		in.APIServerFixedIP != nil ||
 		in.APIServerPort != nil {
 		out.APIServer = &infrav1.APIServer{
-			DisableFloatingIP: in.DisableAPIServerFloatingIP,
-			FloatingIP:        in.APIServerFloatingIP,
-			FixedIP:           in.APIServerFixedIP,
-			Port:              in.APIServerPort,
+			FloatingIP: in.APIServerFloatingIP,
+			FixedIP:    in.APIServerFixedIP,
+			Port:       in.APIServerPort,
+		}
+		if in.DisableAPIServerFloatingIP != nil {
+			out.APIServer.EnableFloatingIP = ptr.To(!*in.DisableAPIServerFloatingIP)
 		}
 		// APIServerLoadBalancer is structurally identical between versions,
 		// so an unsafe cast is safe here (same field layout).
@@ -432,7 +440,13 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 
 	if in.ManagedNetwork != nil {
 		out.NetworkMTU = in.ManagedNetwork.MTU
-		out.DisablePortSecurity = in.ManagedNetwork.DisablePortSecurity
+		if in.ManagedNetwork.EnablePortSecurity != nil {
+			out.DisablePortSecurity = ptr.To(!*in.ManagedNetwork.EnablePortSecurity)
+		}
+	}
+
+	if in.EnableExternalNetwork != nil {
+		out.DisableExternalNetwork = ptr.To(!*in.EnableExternalNetwork)
 	}
 
 	// ExternalRouterIPs and ExternalRouterIPParam are structurally identical between versions,
@@ -450,10 +464,12 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 
 	// Expand the v1beta2 APIServer struct back into the flat v1beta1 fields.
 	if in.APIServer != nil {
-		out.DisableAPIServerFloatingIP = in.APIServer.DisableFloatingIP
 		out.APIServerFloatingIP = in.APIServer.FloatingIP
 		out.APIServerFixedIP = in.APIServer.FixedIP
 		out.APIServerPort = in.APIServer.Port
+		if in.APIServer.EnableFloatingIP != nil {
+			out.DisableAPIServerFloatingIP = ptr.To(!*in.APIServer.EnableFloatingIP)
+		}
 
 		if in.APIServer.ManagedLoadBalancer != nil {
 			out.APIServerLoadBalancer = (*APIServerLoadBalancer)(unsafe.Pointer(in.APIServer.ManagedLoadBalancer))
@@ -571,4 +587,28 @@ func ConvertAllTagsFrom(neutronTags *FilterByNeutronTags, tags, tagsAny, notTags
 	*tagsAny = JoinTags(neutronTags.TagsAny)
 	*notTags = JoinTags(neutronTags.NotTags)
 	*notTagsAny = JoinTags(neutronTags.NotTagsAny)
+}
+
+func Convert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(in *ResolvedPortSpecFields, out *infrav1.ResolvedPortSpecFields, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_ResolvedPortSpecFields_To_v1beta2_ResolvedPortSpecFields(in, out, s); err != nil {
+		return err
+	}
+
+	if in.DisablePortSecurity != nil {
+		out.EnablePortSecurity = ptr.To(!*in.DisablePortSecurity)
+	}
+
+	return nil
+}
+
+func Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in *infrav1.ResolvedPortSpecFields, out *ResolvedPortSpecFields, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in, out, s); err != nil {
+		return err
+	}
+
+	if in.EnablePortSecurity != nil {
+		out.DisablePortSecurity = ptr.To(!*in.EnablePortSecurity)
+	}
+
+	return nil
 }

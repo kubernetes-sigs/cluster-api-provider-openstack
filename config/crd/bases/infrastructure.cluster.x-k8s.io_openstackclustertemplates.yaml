@@ -2204,10 +2204,9 @@ spec:
                           apiServer configures the API server endpoint and its associated
                           load balancer and floating IP.
                         properties:
-                          disableFloatingIP:
-                            description: |-
-                              disableFloatingIP determines whether or not to attempt to attach a
-                              floating IP to the API server.
+                          enableFloatingIP:
+                            description: enableFloatingIP determines whether to attach
+                              a floating IP to the API server.
                             type: boolean
                           fixedIP:
                             description: |-
@@ -2225,7 +2224,7 @@ spec:
                               floatingIP is the floating IP which will be associated with the API server.
                               The floating IP will be created if it does not already exist.
                               If not specified, a new floating IP is allocated.
-                              This field is not used if DisableFloatingIP is set to true.
+                              This field is not used if EnableFloatingIP is set to false.
                             type: string
                           managedLoadBalancer:
                             description: |-
@@ -2805,9 +2804,9 @@ spec:
                                       description: description is a human-readable
                                         description for the port.
                                       type: string
-                                    disablePortSecurity:
+                                    enablePortSecurity:
                                       description: |-
-                                        disablePortSecurity enables or disables the port security when set.
+                                        enablePortSecurity enables or disables the port security when set.
                                         When not set, it takes the value of the corresponding field at the network level.
                                       type: boolean
                                     fixedIPs:
@@ -3535,26 +3534,26 @@ spec:
                           scheduler to make a decision on which availability zone to use based
                           on other scheduling constraints
                         type: boolean
-                      disableExternalNetwork:
+                      enableExternalNetwork:
                         description: |-
-                          disableExternalNetwork specifies whether or not to attempt to connect the cluster
-                          to an external network. This allows for the creation of clusters when connecting
-                          to an external network is not possible or desirable, e.g. if using a provider network.
+                          enableExternalNetwork specifies whether to connect the cluster to an external network.
+                          Set this to false when connecting to an external network is not possible or desirable,
+                          e.g. if using a provider network.
                         type: boolean
                       externalNetwork:
                         description: |-
                           externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-                          This option is ignored if DisableExternalNetwork is set to true.
+                          This option is ignored if EnableExternalNetwork is set to false.
 
                           If ExternalNetwork is defined it must refer to exactly one external network.
 
                           If ExternalNetwork is not defined or is empty the controller will use any
                           existing external network as long as there is only one. It is an
                           error if ExternalNetwork is not defined and there are multiple
-                          external networks unless DisableExternalNetwork is also set.
+                          external networks unless EnableExternalNetwork is also set to false.
 
                           If ExternalNetwork is not defined and there are no external networks
-                          the controller will proceed as though DisableExternalNetwork was set.
+                          the controller will proceed as though EnableExternalNetwork was set to false.
                         maxProperties: 1
                         minProperties: 1
                         properties:
@@ -3681,10 +3680,11 @@ spec:
                           managedNetwork specifies attributes of the network. The values are used only
                           if the Cluster actuator creates the network.
                         properties:
-                          disablePortSecurity:
+                          enablePortSecurity:
                             description: |-
-                              disablePortSecurity disables the port security of the network created for the
-                              Kubernetes cluster, which also disables SecurityGroups
+                              enablePortSecurity enables port security for the network created for the
+                              Kubernetes cluster, which also enables SecurityGroups.
+                              If left empty, the network will have port security setting enabled.
                             type: boolean
                           mtu:
                             description: |-
@@ -3696,7 +3696,7 @@ spec:
                         type: object
                         x-kubernetes-validations:
                         - message: managedNetwork must not be empty if set
-                          rule: self == null || has(self.mtu) || has(self.disablePortSecurity)
+                          rule: self == null || has(self.mtu) || has(self.enablePortSecurity)
                       managedRouter:
                         description: |-
                           managedRouter specifies attributes of the router. The values are used only
@@ -4420,15 +4420,15 @@ spec:
                     - identityRef
                     type: object
                     x-kubernetes-validations:
-                    - message: bastion floating IP cannot be set when disableExternalNetwork
-                        is true
-                      rule: 'has(self.disableExternalNetwork) && self.disableExternalNetwork
+                    - message: bastion floating IP cannot be set when enableExternalNetwork
+                        is false
+                      rule: 'has(self.enableExternalNetwork) && !self.enableExternalNetwork
                         ? !has(self.bastion) || !has(self.bastion.floatingIP) : true'
-                    - message: apiServer.disableFloatingIP cannot be false when disableExternalNetwork
-                        is true
-                      rule: 'has(self.disableExternalNetwork) && self.disableExternalNetwork
-                        ? has(self.apiServer) && has(self.apiServer.disableFloatingIP)
-                        && self.apiServer.disableFloatingIP : true'
+                    - message: apiServer.enableFloatingIP cannot be true when enableExternalNetwork
+                        is false
+                      rule: 'has(self.enableExternalNetwork) && !self.enableExternalNetwork
+                        ? has(self.apiServer) && has(self.apiServer.enableFloatingIP)
+                        && !self.apiServer.enableFloatingIP : true'
                 required:
                 - spec
                 type: object

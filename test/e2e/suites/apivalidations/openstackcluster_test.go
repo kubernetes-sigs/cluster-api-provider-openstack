@@ -198,7 +198,7 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(createObj(cluster)).NotTo(Succeed(), "OpenStackCluster creation should not succeed")
 		})
 
-		It("should not allow a bastion floating IP with DisableExternalNetwork set to true", func() {
+		It("should not allow a bastion floating IP with EnableExternalNetwork set to false", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Enabled: ptr.To(true),
 				Spec: &infrav1.OpenStackMachineSpec{
@@ -215,15 +215,15 @@ var _ = Describe("OpenStackCluster API validations", func() {
 				},
 				FloatingIP: ptr.To("10.0.0.0"),
 			}
-			cluster.Spec.DisableExternalNetwork = ptr.To(true)
+			cluster.Spec.EnableExternalNetwork = ptr.To(false)
 			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")
 		})
 
-		It("should not allow DisableFloatingIP to be false with DisableExternalNetwork set to true", func() {
+		It("should not allow EnableFloatingIP to be true with EnableExternalNetwork set to false", func() {
 			cluster.Spec.APIServer = &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(false),
+				EnableFloatingIP: ptr.To(true),
 			}
-			cluster.Spec.DisableExternalNetwork = ptr.To(true)
+			cluster.Spec.EnableExternalNetwork = ptr.To(false)
 			Expect(createObj(cluster)).ToNot(Succeed(), "OpenStackCluster creation should not succeed")
 		})
 

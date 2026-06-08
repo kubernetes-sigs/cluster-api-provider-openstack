@@ -177,28 +177,28 @@ NetworkParam
 <td>
 <em>(Optional)</em>
 <p>externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-This option is ignored if DisableExternalNetwork is set to true.</p>
+This option is ignored if EnableExternalNetwork is set to false.</p>
 <p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
 <p>If ExternalNetwork is not defined or is empty the controller will use any
 existing external network as long as there is only one. It is an
 error if ExternalNetwork is not defined and there are multiple
-external networks unless DisableExternalNetwork is also set.</p>
+external networks unless EnableExternalNetwork is also set to false.</p>
 <p>If ExternalNetwork is not defined and there are no external networks
-the controller will proceed as though DisableExternalNetwork was set.</p>
+the controller will proceed as though EnableExternalNetwork was set to false.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableExternalNetwork</code><br/>
+<code>enableExternalNetwork</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableExternalNetwork specifies whether or not to attempt to connect the cluster
-to an external network. This allows for the creation of clusters when connecting
-to an external network is not possible or desirable, e.g. if using a provider network.</p>
+<p>enableExternalNetwork specifies whether to connect the cluster to an external network.
+Set this to false when connecting to an external network is not possible or desirable,
+e.g. if using a provider network.</p>
 </td>
 </tr>
 <tr>
@@ -871,20 +871,19 @@ string
 <p>floatingIP is the floating IP which will be associated with the API server.
 The floating IP will be created if it does not already exist.
 If not specified, a new floating IP is allocated.
-This field is not used if DisableFloatingIP is set to true.</p>
+This field is not used if EnableFloatingIP is set to false.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableFloatingIP</code><br/>
+<code>enableFloatingIP</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableFloatingIP determines whether or not to attempt to attach a
-floating IP to the API server.</p>
+<p>enableFloatingIP determines whether to attach a floating IP to the API server.</p>
 </td>
 </tr>
 <tr>
@@ -2230,15 +2229,16 @@ To use this field, the Openstack installation requires the net-mtu neutron API e
 </tr>
 <tr>
 <td>
-<code>disablePortSecurity</code><br/>
+<code>enablePortSecurity</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disablePortSecurity disables the port security of the network created for the
-Kubernetes cluster, which also disables SecurityGroups</p>
+<p>enablePortSecurity enables port security for the network created for the
+Kubernetes cluster, which also enables SecurityGroups.
+If left empty, the network will have port security setting enabled.</p>
 </td>
 </tr>
 </tbody>
@@ -2744,28 +2744,28 @@ NetworkParam
 <td>
 <em>(Optional)</em>
 <p>externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-This option is ignored if DisableExternalNetwork is set to true.</p>
+This option is ignored if EnableExternalNetwork is set to false.</p>
 <p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
 <p>If ExternalNetwork is not defined or is empty the controller will use any
 existing external network as long as there is only one. It is an
 error if ExternalNetwork is not defined and there are multiple
-external networks unless DisableExternalNetwork is also set.</p>
+external networks unless EnableExternalNetwork is also set to false.</p>
 <p>If ExternalNetwork is not defined and there are no external networks
-the controller will proceed as though DisableExternalNetwork was set.</p>
+the controller will proceed as though EnableExternalNetwork was set to false.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableExternalNetwork</code><br/>
+<code>enableExternalNetwork</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableExternalNetwork specifies whether or not to attempt to connect the cluster
-to an external network. This allows for the creation of clusters when connecting
-to an external network is not possible or desirable, e.g. if using a provider network.</p>
+<p>enableExternalNetwork specifies whether to connect the cluster to an external network.
+Set this to false when connecting to an external network is not possible or desirable,
+e.g. if using a provider network.</p>
 </td>
 </tr>
 <tr>
@@ -3209,28 +3209,28 @@ NetworkParam
 <td>
 <em>(Optional)</em>
 <p>externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-This option is ignored if DisableExternalNetwork is set to true.</p>
+This option is ignored if EnableExternalNetwork is set to false.</p>
 <p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
 <p>If ExternalNetwork is not defined or is empty the controller will use any
 existing external network as long as there is only one. It is an
 error if ExternalNetwork is not defined and there are multiple
-external networks unless DisableExternalNetwork is also set.</p>
+external networks unless EnableExternalNetwork is also set to false.</p>
 <p>If ExternalNetwork is not defined and there are no external networks
-the controller will proceed as though DisableExternalNetwork was set.</p>
+the controller will proceed as though EnableExternalNetwork was set to false.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>disableExternalNetwork</code><br/>
+<code>enableExternalNetwork</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableExternalNetwork specifies whether or not to attempt to connect the cluster
-to an external network. This allows for the creation of clusters when connecting
-to an external network is not possible or desirable, e.g. if using a provider network.</p>
+<p>enableExternalNetwork specifies whether to connect the cluster to an external network.
+Set this to false when connecting to an external network is not possible or desirable,
+e.g. if using a provider network.</p>
 </td>
 </tr>
 <tr>
@@ -4683,14 +4683,14 @@ rule:create_port:binding:profile</p>
 </tr>
 <tr>
 <td>
-<code>disablePortSecurity</code><br/>
+<code>enablePortSecurity</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>disablePortSecurity enables or disables the port security when set.
+<p>enablePortSecurity enables or disables the port security when set.
 When not set, it takes the value of the corresponding field at the network level.</p>
 </td>
 </tr>

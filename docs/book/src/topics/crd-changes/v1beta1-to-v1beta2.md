@@ -6,7 +6,9 @@
   - [Migration](#migration)
   - [API Changes](#api-changes)
     - [API server fields restructure](#api-server-fields-restructure)
+    - [DisableExternalNetwork renamed to EnableExternalNetwork](#disableexternalnetwork-renamed-to-enableexternalnetwork)
     - [Flavor field restructure](#flavor-field-restructure)
+    - [Port security field rename](#port-security-field-rename)
     - [Network management fields restructure](#network-management-fields-restructure)
     - [External router IPs restructure](#external-router-ips-restructure)
     - [Managed security group rules rename](#managed-security-group-rules-rename)
@@ -34,8 +36,10 @@ This only documents backwards incompatible changes. Fields that were added to v1
 
 `spec.apiServerFloatingIP`, `spec.apiServerFixedIP`, `spec.apiServerPort`,
 `spec.disableAPIServerFloatingIP`, and `spec.apiServerLoadBalancer` have been consolidated
-into a single structured `spec.apiServer` object. This applies to `OpenStackCluster` and
-`OpenStackClusterTemplate`.
+into a single structured `spec.apiServer` object. Note that `disableAPIServerFloatingIP` has
+been renamed to `apiServer.enableFloatingIP` with inverted polarity — set it to `false` to
+disable the floating IP instead of `true`. Defaults to `true`. This applies to `OpenStackCluster`
+and `OpenStackClusterTemplate`.
 
 ```diff
  spec:
@@ -51,7 +55,7 @@ into a single structured `spec.apiServer` object. This applies to `OpenStackClus
 +    floatingIP: 1.2.3.4
 +    fixedIP: 10.0.0.1
 +    port: 6443
-+    disableFloatingIP: true
++    enableFloatingIP: false
 +    managedLoadBalancer:
 +      enabled: true
 +      allowedCIDRs:
@@ -69,6 +73,20 @@ Additionally, the corresponding status field has been renamed for consistency wi
      name: my-lb
      id: lb-id-123
 ```
+
+### DisableExternalNetwork renamed to EnableExternalNetwork
+
+`spec.disableExternalNetwork` has been renamed to `spec.enableExternalNetwork` with inverted
+polarity — set it to `false` to disable external network connectivity instead of `true`.
+This applies to `OpenStackCluster` and `OpenStackClusterTemplate`.
+
+```diff
+ spec:
+-  disableExternalNetwork: true
++  enableExternalNetwork: false
+```
+
+For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.enableExternalNetwork`.
 
 ### Flavor field restructure
 
@@ -88,19 +106,37 @@ following the ID/Filter pattern used by other fields. This applies to `OpenStack
 
 For `OpenStackCluster` the same change applies under `spec.bastion.spec.flavor`.
 
+### Port security field rename
+
+`spec.ports[*].disablePortSecurity` has been renamed to `spec.ports[*].enablePortSecurity`
+with inverted polarity — set it to `false` to disable port security instead of `true`.
+This applies to `OpenStackMachine` and `OpenStackMachineTemplate`.
+
+```diff
+ spec:
+   ports:
+-  - disablePortSecurity: true
++  - enablePortSecurity: false
+```
+
+For `OpenStackMachineTemplate` the same change applies under `spec.template.spec.ports[*].enablePortSecurity`.
+For `OpenStackCluster` and `OpenStackClusterTemplate` the same change applies under `spec.bastion.spec.ports[*].enablePortSecurity`.
+
 ### Network management fields restructure
 
 `spec.networkMTU` and `spec.disablePortSecurity` have been replaced by a structured
 `spec.managedNetwork` object. The field is optional, but must not be empty if set.
+Note that `disablePortSecurity` has been renamed to `enablePortSecurity` with inverted
+polarity — set it to `false` to disable port security instead of `true`.
 This applies to `OpenStackCluster` and `OpenStackClusterTemplate`.
 
 ```diff
  spec:
--  networkMTU: 
--  disablePortSecurity: 
+-  networkMTU: 1500
+-  disablePortSecurity: true
 +  managedNetwork:
-+    mtu: 
-+    disablePortSecurity: 
++    mtu: 1500
++    enablePortSecurity: false
 ```
 
 For `OpenStackClusterTemplate` the same change applies under `spec.template.spec.managedNetwork`.

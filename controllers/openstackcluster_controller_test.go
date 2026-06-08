@@ -440,8 +440,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Spec:    &bastionSpec,
 			},
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("10.0.0.1"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("10.0.0.1"),
 			},
 			ExternalNetwork: &infrav1.NetworkParam{
 				ID: ptr.To(externalNetworkID),
@@ -521,8 +521,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Spec:    &bastionSpec,
 			},
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("10.0.0.1"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("10.0.0.1"),
 			},
 			ExternalNetwork: &infrav1.NetworkParam{
 				ID: ptr.To(externalNetworkID),
@@ -605,10 +605,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 				CloudName: "openstack",
 			},
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("10.0.0.1"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("10.0.0.1"),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			Subnets: []infrav1.SubnetParam{
 				{ID: ptr.To(clusterSubnetID)},
 			},
@@ -888,10 +888,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To(fixedIP),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To(fixedIP),
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -944,10 +944,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("192.168.0.10"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("192.168.0.10"),
 			},
 			ManagedSubnets: []infrav1.SubnetSpec{
 				{CIDR: "192.168.0.0/24", DNSNameservers: []string{"8.8.8.8"}},
@@ -996,8 +996,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 				ID: ptr.To(externalNetworkID),
 			},
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("192.168.0.10"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("192.168.0.10"),
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -1042,10 +1042,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("192.168.0.10"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("192.168.0.10"),
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -1087,10 +1087,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("192.168.0.10"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("192.168.0.10"),
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -1143,10 +1143,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Router: &infrav1.RouterParam{
 				ID: ptr.To(clusterRouterID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("192.168.0.10"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("192.168.0.10"),
 			},
 		}
 		err := k8sClient.Create(ctx, testCluster)
@@ -1209,10 +1209,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("192.168.0.10"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("192.168.0.10"),
 			},
 			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
 				ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
@@ -1287,10 +1287,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 			Network: &infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			DisableExternalNetwork: ptr.To(true),
+			EnableExternalNetwork: ptr.To(false),
 			APIServer: &infrav1.APIServer{
-				DisableFloatingIP: ptr.To(true),
-				FixedIP:           ptr.To("192.168.0.10"),
+				EnableFloatingIP: ptr.To(false),
+				FixedIP:          ptr.To("192.168.0.10"),
 			},
 			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
 				ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{

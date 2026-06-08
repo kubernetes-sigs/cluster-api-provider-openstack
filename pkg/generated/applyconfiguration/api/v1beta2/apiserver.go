@@ -36,11 +36,10 @@ type APIServerApplyConfiguration struct {
 	// floatingIP is the floating IP which will be associated with the API server.
 	// The floating IP will be created if it does not already exist.
 	// If not specified, a new floating IP is allocated.
-	// This field is not used if DisableFloatingIP is set to true.
+	// This field is not used if EnableFloatingIP is set to false.
 	FloatingIP *string `json:"floatingIP,omitempty"`
-	// disableFloatingIP determines whether or not to attempt to attach a
-	// floating IP to the API server.
-	DisableFloatingIP *bool `json:"disableFloatingIP,omitempty"`
+	// enableFloatingIP determines whether to attach a floating IP to the API server.
+	EnableFloatingIP *bool `json:"enableFloatingIP,omitempty"`
 	// managedLoadBalancer configures the optional LoadBalancer for the API server.
 	// If not specified, no load balancer will be created.
 	ManagedLoadBalancer *APIServerLoadBalancerApplyConfiguration `json:"managedLoadBalancer,omitempty"`
@@ -76,11 +75,11 @@ func (b *APIServerApplyConfiguration) WithFloatingIP(value string) *APIServerApp
 	return b
 }
 
-// WithDisableFloatingIP sets the DisableFloatingIP field in the declarative configuration to the given value
+// WithEnableFloatingIP sets the EnableFloatingIP field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DisableFloatingIP field is set to the value of the last call.
-func (b *APIServerApplyConfiguration) WithDisableFloatingIP(value bool) *APIServerApplyConfiguration {
-	b.DisableFloatingIP = &value
+// If called multiple times, the EnableFloatingIP field is set to the value of the last call.
+func (b *APIServerApplyConfiguration) WithEnableFloatingIP(value bool) *APIServerApplyConfiguration {
+	b.EnableFloatingIP = &value
 	return b
 }
 

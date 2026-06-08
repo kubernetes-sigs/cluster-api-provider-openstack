@@ -50,22 +50,22 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// are specified.
 	Network *NetworkParamApplyConfiguration `json:"network,omitempty"`
 	// externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-	// This option is ignored if DisableExternalNetwork is set to true.
+	// This option is ignored if EnableExternalNetwork is set to false.
 	//
 	// If ExternalNetwork is defined it must refer to exactly one external network.
 	//
 	// If ExternalNetwork is not defined or is empty the controller will use any
 	// existing external network as long as there is only one. It is an
 	// error if ExternalNetwork is not defined and there are multiple
-	// external networks unless DisableExternalNetwork is also set.
+	// external networks unless EnableExternalNetwork is also set to false.
 	//
 	// If ExternalNetwork is not defined and there are no external networks
-	// the controller will proceed as though DisableExternalNetwork was set.
+	// the controller will proceed as though EnableExternalNetwork was set to false.
 	ExternalNetwork *NetworkParamApplyConfiguration `json:"externalNetwork,omitempty"`
-	// disableExternalNetwork specifies whether or not to attempt to connect the cluster
-	// to an external network. This allows for the creation of clusters when connecting
-	// to an external network is not possible or desirable, e.g. if using a provider network.
-	DisableExternalNetwork *bool `json:"disableExternalNetwork,omitempty"`
+	// enableExternalNetwork specifies whether to connect the cluster to an external network.
+	// Set this to false when connecting to an external network is not possible or desirable,
+	// e.g. if using a provider network.
+	EnableExternalNetwork *bool `json:"enableExternalNetwork,omitempty"`
 	// apiServer configures the API server endpoint and its associated
 	// load balancer and floating IP.
 	APIServer *APIServerApplyConfiguration `json:"apiServer,omitempty"`
@@ -178,11 +178,11 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithExternalNetwork(value *Netw
 	return b
 }
 
-// WithDisableExternalNetwork sets the DisableExternalNetwork field in the declarative configuration to the given value
+// WithEnableExternalNetwork sets the EnableExternalNetwork field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DisableExternalNetwork field is set to the value of the last call.
-func (b *OpenStackClusterSpecApplyConfiguration) WithDisableExternalNetwork(value bool) *OpenStackClusterSpecApplyConfiguration {
-	b.DisableExternalNetwork = &value
+// If called multiple times, the EnableExternalNetwork field is set to the value of the last call.
+func (b *OpenStackClusterSpecApplyConfiguration) WithEnableExternalNetwork(value bool) *OpenStackClusterSpecApplyConfiguration {
+	b.EnableExternalNetwork = &value
 	return b
 }
 

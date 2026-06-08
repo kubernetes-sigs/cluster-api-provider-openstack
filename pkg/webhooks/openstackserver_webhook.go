@@ -60,8 +60,8 @@ func (*openStackServerWebhook) ValidateCreate(_ context.Context, newObj *infrav1
 	}
 
 	for _, port := range newObj.Spec.Ports {
-		if ptr.Deref(port.DisablePortSecurity, false) && len(port.SecurityGroups) > 0 {
-			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "ports"), "cannot have security groups when DisablePortSecurity is set to true"))
+		if !ptr.Deref(port.EnablePortSecurity, true) && len(port.SecurityGroups) > 0 {
+			allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "ports"), "cannot have security groups when EnablePortSecurity is set to false"))
 		}
 	}
 

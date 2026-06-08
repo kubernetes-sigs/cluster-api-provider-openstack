@@ -45,8 +45,8 @@ func (in *APIServer) DeepCopyInto(out *APIServer) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.DisableFloatingIP != nil {
-		in, out := &in.DisableFloatingIP, &out.DisableFloatingIP
+	if in.EnableFloatingIP != nil {
+		in, out := &in.EnableFloatingIP, &out.EnableFloatingIP
 		*out = new(bool)
 		**out = **in
 	}
@@ -584,8 +584,8 @@ func (in *ManagedNetwork) DeepCopyInto(out *ManagedNetwork) {
 		*out = new(int)
 		**out = **in
 	}
-	if in.DisablePortSecurity != nil {
-		in, out := &in.DisablePortSecurity, &out.DisablePortSecurity
+	if in.EnablePortSecurity != nil {
+		in, out := &in.EnablePortSecurity, &out.EnablePortSecurity
 		*out = new(bool)
 		**out = **in
 	}
@@ -859,8 +859,8 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 		*out = new(NetworkParam)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.DisableExternalNetwork != nil {
-		in, out := &in.DisableExternalNetwork, &out.DisableExternalNetwork
+	if in.EnableExternalNetwork != nil {
+		in, out := &in.EnableExternalNetwork, &out.EnableExternalNetwork
 		*out = new(bool)
 		**out = **in
 	}
@@ -1598,8 +1598,8 @@ func (in *ResolvedPortSpecFields) DeepCopyInto(out *ResolvedPortSpecFields) {
 		*out = new(BindingProfile)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.DisablePortSecurity != nil {
-		in, out := &in.DisablePortSecurity, &out.DisablePortSecurity
+	if in.EnablePortSecurity != nil {
+		in, out := &in.EnablePortSecurity, &out.EnablePortSecurity
 		*out = new(bool)
 		**out = **in
 	}

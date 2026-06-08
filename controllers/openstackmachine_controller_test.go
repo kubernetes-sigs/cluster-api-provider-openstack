@@ -400,7 +400,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				Ports: []infrav1.PortOpts{{
 					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
 					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-						DisablePortSecurity: ptr.To(true),
+						EnablePortSecurity: ptr.To(false),
 					},
 				}},
 			},
@@ -413,7 +413,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
 					SecurityGroups: nil,
 					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-						DisablePortSecurity: ptr.To(true),
+						EnablePortSecurity: ptr.To(false),
 					},
 				}},
 				Tags:        tags,

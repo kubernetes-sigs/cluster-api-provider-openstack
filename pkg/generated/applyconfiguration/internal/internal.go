@@ -1775,7 +1775,7 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServer
   map:
     fields:
-    - name: disableFloatingIP
+    - name: enableFloatingIP
       type:
         scalar: boolean
     - name: fixedIP
@@ -2071,7 +2071,7 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ManagedNetwork
   map:
     fields:
-    - name: disablePortSecurity
+    - name: enablePortSecurity
       type:
         scalar: boolean
     - name: mtu
@@ -2250,7 +2250,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: controlPlaneOmitAvailabilityZone
       type:
         scalar: boolean
-    - name: disableExternalNetwork
+    - name: enableExternalNetwork
       type:
         scalar: boolean
     - name: externalNetwork
@@ -2585,7 +2585,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: description
       type:
         scalar: string
-    - name: disablePortSecurity
+    - name: enablePortSecurity
       type:
         scalar: boolean
     - name: fixedIPs
@@ -2688,7 +2688,7 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
-    - name: disablePortSecurity
+    - name: enablePortSecurity
       type:
         scalar: boolean
     - name: fixedIPs

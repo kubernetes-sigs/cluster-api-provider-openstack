@@ -253,7 +253,7 @@ func Test_EnsurePort(t *testing.T) {
 				Name:      "test-port",
 				NetworkID: netID,
 				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-					DisablePortSecurity: ptr.To(true),
+					EnablePortSecurity: ptr.To(false),
 				},
 				SecurityGroups: []string{portSecurityGroupID},
 			},
@@ -272,7 +272,7 @@ func Test_EnsurePort(t *testing.T) {
 				Name:      "test-port",
 				NetworkID: netID,
 				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-					DisablePortSecurity: ptr.To(true),
+					EnablePortSecurity: ptr.To(false),
 					AllowedAddressPairs: []infrav1.AddressPair{
 						{
 							IPAddress:  ipAddress1,
@@ -312,7 +312,7 @@ func Test_EnsurePort(t *testing.T) {
 				Name:      "test-port",
 				NetworkID: netID,
 				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-					DisablePortSecurity: ptr.To(false),
+					EnablePortSecurity: ptr.To(true),
 					AllowedAddressPairs: []infrav1.AddressPair{
 						{
 							IPAddress:  ipAddress1,
@@ -957,7 +957,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				Ports: []infrav1.PortOpts{
 					{
 						ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-							DisablePortSecurity: ptr.To(true),
+							EnablePortSecurity: ptr.To(false),
 						},
 					},
 				},
@@ -977,7 +977,7 @@ func TestService_ConstructPorts(t *testing.T) {
 					Description: defaultDescription,
 					Tags:        []string{"test-tag"},
 					ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-						DisablePortSecurity: ptr.To(true),
+						EnablePortSecurity: ptr.To(false),
 					},
 				},
 			},
@@ -1063,7 +1063,7 @@ func Test_getPortName(t *testing.T) {
 				NameSuffix: ptr.To("foo2"),
 				Network:    &infrav1.NetworkParam{ID: ptr.To("bar")},
 				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
-					DisablePortSecurity: ptr.To(true),
+					EnablePortSecurity: ptr.To(false),
 				},
 			},
 			netIndex: 4,
