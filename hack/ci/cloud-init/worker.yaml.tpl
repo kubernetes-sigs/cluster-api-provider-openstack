@@ -47,7 +47,7 @@
     # WORKAROUND:
     # 	https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2320
     # 	OVN built from source using LTS versions. Should be removed once OVS is more stable without the pin.
-    # 	https://opendev.org/openstack/neutron/src/commit/83de306105f9329e24c97c4af6c3886de20e7d70/zuul.d/tempest-multinode.yaml#L603-L604
+    # 	https://opendev.org/openstack/neutron/src/branch/stable/2026.1/zuul.d/tempest-multinode.yaml#L601-L611
     OVN_BUILD_FROM_SOURCE=True
     OVN_BRANCH=branch-24.03
     OVS_BRANCH=branch-3.3
@@ -62,8 +62,9 @@
 
     [workarounds]
     # FIXME(stephenfin): This is temporary while we get to the bottom of
-    # https://bugs.launchpad.net/nova/+bug/2091114 It should not be kept after
-    # we bump to 2025.1
+    # https://bugs.launchpad.net/nova/+bug/2091114
+    # It depends more on the flatcar image we use, it should be removed
+    # once we use an image that includes: https://github.com/flatcar/scripts/pull/2668
     disable_deep_image_inspection = True
 
     [[post-config|$CINDER_CONF]]
