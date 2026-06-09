@@ -138,7 +138,8 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	})
 	scope := scope.NewWithLogger(clientScope, log)
 
-	scope.Logger().Info("Reconciling OpenStackServer")
+	logger := scope.Logger().WithValues("OpenStackServer", klog.KObj(openStackServer))
+	logger.Info("Reconciling OpenStackServer")
 
 	cluster, err := getClusterFromMetadata(ctx, r.Client, openStackServer.ObjectMeta)
 	if err != nil {
@@ -241,7 +242,8 @@ func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ct
 }
 
 func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
-	scope.Logger().Info("Reconciling Server delete")
+	log := scope.Logger().WithValues("OpenStackServer", klog.KObj(openStackServer))
+	log.Info("Reconciling OpenStackServer delete")
 
 	computeService, err := compute.NewService(scope)
 	if err != nil {
@@ -300,7 +302,7 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 	}
 
 	controllerutil.RemoveFinalizer(openStackServer, infrav1alpha1.OpenStackServerFinalizer)
-	scope.Logger().Info("Reconciled Server deleted successfully")
+	log.Info("Reconciled OpenStackServer deleted successfully")
 	return nil
 }
 
@@ -314,11 +316,13 @@ func IsServerTerminalError(server *infrav1alpha1.OpenStackServer) bool {
 func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) {
 	// If the OpenStackServer is in an error state, return early.
 	if IsServerTerminalError(openStackServer) {
-		scope.Logger().Info("Not reconciling server in error state. See openStackServer.status or previously logged error for details")
+		log := scope.Logger().WithValues("OpenStackServer", klog.KObj(openStackServer))
+		log.Info("Not reconciling OpenStackServer in error state. See openStackServer.status or previously logged error for details")
 		return ctrl.Result{}, nil
 	}
 
-	scope.Logger().Info("Reconciling Server create")
+	log := scope.Logger().WithValues("OpenStackServer", klog.KObj(openStackServer))
+	log.Info("Reconciling OpenStackServer")
 
 	labels := openStackServer.GetLabels()
 	if labels == nil {
@@ -363,7 +367,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	// that in the delete path we can be sure that if there are no resolved
 	// resources then no resources were created.
 	if changed {
-		scope.Logger().V(5).Info("Server resources updated, requeuing")
+		log.V(5).Info("Server resources updated, requeuing")
 		return ctrl.Result{}, nil
 	}
 

@@ -32,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/events"
+	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
@@ -98,11 +99,11 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if cluster == nil {
-		log.Info("Cluster Controller has not yet set OwnerRef")
+		log.Info("Cluster controller has not yet set owner reference")
 		return reconcile.Result{}, nil
 	}
 
-	log = log.WithValues("cluster", cluster.Name)
+	log = log.WithValues("Cluster", klog.KObj(cluster))
 
 	if annotations.IsPaused(cluster, openStackCluster) {
 		log.Info("OpenStackCluster or linked Cluster is marked as paused. Not reconciling")
