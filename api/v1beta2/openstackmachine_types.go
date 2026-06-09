@@ -65,7 +65,7 @@ type SchedulerHintAdditionalValue struct {
 	// This field is required if type is 'Number', and must not be set otherwise.
 	// +unionMember,optional
 	// +optional
-	Number *int `json:"number,omitempty"`
+	Number *int32 `json:"number,omitempty"`
 
 	// string is the string value of the scheduler hint, used when Type is "String".
 	// This field is required if type is 'String', and must not be set otherwise.

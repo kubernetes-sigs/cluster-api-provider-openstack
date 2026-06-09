@@ -301,10 +301,10 @@ func getRulesFromSpecs(remoteManagedGroups map[string]string, securityGroupRules
 			r.EtherType = *rule.EtherType
 		}
 		if rule.PortRangeMin != nil {
-			r.PortRangeMin = *rule.PortRangeMin
+			r.PortRangeMin = int(*rule.PortRangeMin)
 		}
 		if rule.PortRangeMax != nil {
-			r.PortRangeMax = *rule.PortRangeMax
+			r.PortRangeMax = int(*rule.PortRangeMax)
 		}
 		if rule.Protocol != nil {
 			r.Protocol = *rule.Protocol

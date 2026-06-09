@@ -264,7 +264,7 @@ type SubnetFilter struct {
 	ProjectID string `json:"projectID,omitempty"`
 	// ipVersion filters subnets by IP version.
 	// +optional
-	IPVersion int `json:"ipVersion,omitempty"`
+	IPVersion int32 `json:"ipVersion,omitempty"`
 	// gatewayIP filters subnets by gateway IP.
 	// +optional
 	GatewayIP string `json:"gatewayIP,omitempty"`
@@ -595,7 +595,7 @@ type RootVolume struct {
 	// sizeGiB is the size of the block device in gibibytes (GiB).
 	// +required
 	// +kubebuilder:validation:Minimum:=1
-	SizeGiB int `json:"sizeGiB"`
+	SizeGiB int32 `json:"sizeGiB"`
 
 	BlockDeviceVolume `json:",inline"`
 }
@@ -681,7 +681,7 @@ type AdditionalBlockDevice struct {
 	// sizeGiB is the size of the block device in gibibytes (GiB).
 	// +required
 	// +kubebuilder:validation:Minimum:=1
-	SizeGiB int `json:"sizeGiB"`
+	SizeGiB int32 `json:"sizeGiB"`
 
 	// storage specifies the storage type of the block device and
 	// additional storage options.
@@ -859,12 +859,12 @@ type SecurityGroupRuleSpec struct {
 	// rule. If the protocol is TCP or UDP, this value must be less than or equal
 	// to the value of the portRangeMax attribute.
 	// +optional
-	PortRangeMin *int `json:"portRangeMin,omitempty"`
+	PortRangeMin *int32 `json:"portRangeMin,omitempty"`
 
 	// portRangeMax is a number in the range that is matched by the security group
 	// rule. The portRangeMin attribute constrains the portRangeMax attribute.
 	// +optional
-	PortRangeMax *int `json:"portRangeMax,omitempty"`
+	PortRangeMax *int32 `json:"portRangeMax,omitempty"`
 
 	// protocol is the protocol that is matched by the security group rule.
 	// +optional
@@ -976,7 +976,7 @@ type APIServerLoadBalancer struct {
 	// additionalPorts adds additional tcp ports to the load balancer.
 	// +optional
 	// +listType=set
-	AdditionalPorts []int `json:"additionalPorts,omitempty"`
+	AdditionalPorts []int32 `json:"additionalPorts,omitempty"`
 
 	// allowedCIDRs restrict access to all API-Server listeners to the given address CIDRs.
 	// +optional
@@ -1020,27 +1020,27 @@ type APIServerLoadBalancerMonitor struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default:10
-	Delay int `json:"delay,omitempty"`
+	Delay int32 `json:"delay,omitempty"`
 
 	// timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:default:5
-	Timeout int `json:"timeout,omitempty"`
+	Timeout int32 `json:"timeout,omitempty"`
 
 	// maxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=10
 	// +kubebuilder:default:5
-	MaxRetries int `json:"maxRetries,omitempty"`
+	MaxRetries int32 `json:"maxRetries,omitempty"`
 
 	// maxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
 	// +optional
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=10
 	// +kubebuilder:default:3
-	MaxRetriesDown int `json:"maxRetriesDown,omitempty"`
+	MaxRetriesDown int32 `json:"maxRetriesDown,omitempty"`
 }
 
 func (s *APIServerLoadBalancer) IsZero() bool {

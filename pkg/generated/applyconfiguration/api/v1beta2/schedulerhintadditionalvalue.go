@@ -37,7 +37,7 @@ type SchedulerHintAdditionalValueApplyConfiguration struct {
 	Bool *bool `json:"bool,omitempty"`
 	// number is the integer value of the scheduler hint, used when Type is "Number".
 	// This field is required if type is 'Number', and must not be set otherwise.
-	Number *int `json:"number,omitempty"`
+	Number *int32 `json:"number,omitempty"`
 	// string is the string value of the scheduler hint, used when Type is "String".
 	// This field is required if type is 'String', and must not be set otherwise.
 	String *string `json:"string,omitempty"`
@@ -68,7 +68,7 @@ func (b *SchedulerHintAdditionalValueApplyConfiguration) WithBool(value bool) *S
 // WithNumber sets the Number field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Number field is set to the value of the last call.
-func (b *SchedulerHintAdditionalValueApplyConfiguration) WithNumber(value int) *SchedulerHintAdditionalValueApplyConfiguration {
+func (b *SchedulerHintAdditionalValueApplyConfiguration) WithNumber(value int32) *SchedulerHintAdditionalValueApplyConfiguration {
 	b.Number = &value
 	return b
 }

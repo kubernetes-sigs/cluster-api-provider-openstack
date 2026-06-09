@@ -40,7 +40,7 @@ type createOpts struct {
 	AdminStateUp        *bool  `json:"admin_state_up,omitempty"`
 	Name                string `json:"name,omitempty"`
 	PortSecurityEnabled *bool  `json:"port_security_enabled,omitempty"`
-	MTU                 *int   `json:"mtu,omitempty"`
+	MTU                 *int32 `json:"mtu,omitempty"`
 }
 
 func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {

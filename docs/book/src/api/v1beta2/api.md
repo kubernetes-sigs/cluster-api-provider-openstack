@@ -938,7 +938,7 @@ cluster spec instead.</p>
 <td>
 <code>additionalPorts</code><br/>
 <em>
-[]int
+[]int32
 </em>
 </td>
 <td>
@@ -1064,7 +1064,7 @@ APIServerLoadBalancerMonitor
 <td>
 <code>delay</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -1076,7 +1076,7 @@ int
 <td>
 <code>timeout</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -1088,7 +1088,7 @@ int
 <td>
 <code>maxRetries</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -1100,7 +1100,7 @@ int
 <td>
 <code>maxRetriesDown</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -1148,7 +1148,7 @@ Name cannot be &lsquo;root&rsquo;, which is reserved for the root volume.</p>
 <td>
 <code>sizeGiB</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -2216,7 +2216,7 @@ The value of this field is never updated after provisioning is completed.</p>
 <td>
 <code>mtu</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -4773,7 +4773,7 @@ string
 <td>
 <code>sizeGiB</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -5073,7 +5073,7 @@ This field is required if type is &lsquo;Bool&rsquo;, and must not be set otherw
 <td>
 <code>number</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -5313,7 +5313,7 @@ ingress or egress rules.</p>
 <td>
 <code>portRangeMin</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -5327,7 +5327,7 @@ to the value of the portRangeMax attribute.</p>
 <td>
 <code>portRangeMax</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -5670,7 +5670,7 @@ string
 <td>
 <code>ipVersion</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>

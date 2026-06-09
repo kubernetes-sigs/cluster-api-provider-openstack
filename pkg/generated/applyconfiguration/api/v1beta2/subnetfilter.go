@@ -34,7 +34,7 @@ type SubnetFilterApplyConfiguration struct {
 	// projectID filters subnets by project ID.
 	ProjectID *string `json:"projectID,omitempty"`
 	// ipVersion filters subnets by IP version.
-	IPVersion *int `json:"ipVersion,omitempty"`
+	IPVersion *int32 `json:"ipVersion,omitempty"`
 	// gatewayIP filters subnets by gateway IP.
 	GatewayIP *string `json:"gatewayIP,omitempty"`
 	// cidr filters subnets by CIDR.
@@ -79,7 +79,7 @@ func (b *SubnetFilterApplyConfiguration) WithProjectID(value string) *SubnetFilt
 // WithIPVersion sets the IPVersion field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the IPVersion field is set to the value of the last call.
-func (b *SubnetFilterApplyConfiguration) WithIPVersion(value int) *SubnetFilterApplyConfiguration {
+func (b *SubnetFilterApplyConfiguration) WithIPVersion(value int32) *SubnetFilterApplyConfiguration {
 	b.IPVersion = &value
 	return b
 }

@@ -49,7 +49,7 @@ func SubnetFilterToListOpts(subnetFilter *infrav1.SubnetFilter) subnets.ListOpts
 		Name:            subnetFilter.Name,
 		Description:     subnetFilter.Description,
 		ProjectID:       subnetFilter.ProjectID,
-		IPVersion:       subnetFilter.IPVersion,
+		IPVersion:       int(subnetFilter.IPVersion),
 		GatewayIP:       subnetFilter.GatewayIP,
 		CIDR:            subnetFilter.CIDR,
 		IPv6AddressMode: subnetFilter.IPv6AddressMode,

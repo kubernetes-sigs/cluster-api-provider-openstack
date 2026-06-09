@@ -27,7 +27,7 @@ type ManagedNetworkApplyConfiguration struct {
 	// This value will be used only if the Cluster actuator creates the network.
 	// If left empty, the network will have the default MTU defined in Openstack network service.
 	// To use this field, the Openstack installation requires the net-mtu neutron API extension.
-	MTU *int `json:"mtu,omitempty"`
+	MTU *int32 `json:"mtu,omitempty"`
 	// enablePortSecurity enables port security for the network created for the
 	// Kubernetes cluster, which also enables SecurityGroups.
 	// If left empty, the network will have port security setting enabled.
@@ -43,7 +43,7 @@ func ManagedNetwork() *ManagedNetworkApplyConfiguration {
 // WithMTU sets the MTU field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MTU field is set to the value of the last call.
-func (b *ManagedNetworkApplyConfiguration) WithMTU(value int) *ManagedNetworkApplyConfiguration {
+func (b *ManagedNetworkApplyConfiguration) WithMTU(value int32) *ManagedNetworkApplyConfiguration {
 	b.MTU = &value
 	return b
 }

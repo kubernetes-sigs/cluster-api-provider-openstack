@@ -377,12 +377,15 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 	}
 
 	if in.NetworkMTU != nil || in.DisablePortSecurity != nil {
-		out.ManagedNetwork = &infrav1.ManagedNetwork{
-			MTU: in.NetworkMTU,
+		managed := &infrav1.ManagedNetwork{}
+		if in.NetworkMTU != nil {
+			mtu := int32(*in.NetworkMTU) //nolint:gosec // MTU values are always within int32 range
+			managed.MTU = &mtu
 		}
 		if in.DisablePortSecurity != nil {
-			out.ManagedNetwork.EnablePortSecurity = ptr.To(!*in.DisablePortSecurity)
+			managed.EnablePortSecurity = ptr.To(!*in.DisablePortSecurity)
 		}
+		out.ManagedNetwork = managed
 	}
 
 	if in.DisableExternalNetwork != nil {
@@ -419,10 +422,30 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 		if in.DisableAPIServerFloatingIP != nil {
 			out.APIServer.EnableFloatingIP = ptr.To(!*in.DisableAPIServerFloatingIP)
 		}
-		// APIServerLoadBalancer is structurally identical between versions,
-		// so an unsafe cast is safe here (same field layout).
+		// APIServerLoadBalancer fields are converted field-by-field to handle
+		// the int → int32 type changes in AdditionalPorts and Monitor fields.
 		if in.APIServerLoadBalancer != nil {
-			out.APIServer.ManagedLoadBalancer = (*infrav1.APIServerLoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
+			lb := in.APIServerLoadBalancer
+			out.APIServer.ManagedLoadBalancer = &infrav1.APIServerLoadBalancer{
+				Enabled:          lb.Enabled,
+				AllowedCIDRs:     lb.AllowedCIDRs,
+				Provider:         lb.Provider,
+				Network:          (*infrav1.NetworkParam)(unsafe.Pointer(lb.Network)),
+				Subnets:          *(*[]infrav1.SubnetParam)(unsafe.Pointer(&lb.Subnets)),
+				AvailabilityZone: lb.AvailabilityZone,
+				Flavor:           lb.Flavor,
+			}
+			for _, p := range lb.AdditionalPorts {
+				out.APIServer.ManagedLoadBalancer.AdditionalPorts = append(out.APIServer.ManagedLoadBalancer.AdditionalPorts, int32(p)) //nolint:gosec // Port values are always within int32 range
+			}
+			if lb.Monitor != nil {
+				out.APIServer.ManagedLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{
+					Delay:          int32(lb.Monitor.Delay),          //nolint:gosec // Monitor values are always within int32 range
+					Timeout:        int32(lb.Monitor.Timeout),        //nolint:gosec // Monitor values are always within int32 range
+					MaxRetries:     int32(lb.Monitor.MaxRetries),     //nolint:gosec // Monitor values are always within int32 range
+					MaxRetriesDown: int32(lb.Monitor.MaxRetriesDown), //nolint:gosec // Monitor values are always within int32 range
+				}
+			}
 		}
 	}
 
@@ -439,7 +462,10 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 	}
 
 	if in.ManagedNetwork != nil {
-		out.NetworkMTU = in.ManagedNetwork.MTU
+		if in.ManagedNetwork.MTU != nil {
+			mtu := int(*in.ManagedNetwork.MTU)
+			out.NetworkMTU = &mtu
+		}
 		if in.ManagedNetwork.EnablePortSecurity != nil {
 			out.DisablePortSecurity = ptr.To(!*in.ManagedNetwork.EnablePortSecurity)
 		}
@@ -472,7 +498,27 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 		}
 
 		if in.APIServer.ManagedLoadBalancer != nil {
-			out.APIServerLoadBalancer = (*APIServerLoadBalancer)(unsafe.Pointer(in.APIServer.ManagedLoadBalancer))
+			lb := in.APIServer.ManagedLoadBalancer
+			out.APIServerLoadBalancer = &APIServerLoadBalancer{
+				Enabled:          lb.Enabled,
+				AllowedCIDRs:     lb.AllowedCIDRs,
+				Provider:         lb.Provider,
+				Network:          (*NetworkParam)(unsafe.Pointer(lb.Network)),
+				Subnets:          *(*[]SubnetParam)(unsafe.Pointer(&lb.Subnets)),
+				AvailabilityZone: lb.AvailabilityZone,
+				Flavor:           lb.Flavor,
+			}
+			for _, p := range lb.AdditionalPorts {
+				out.APIServerLoadBalancer.AdditionalPorts = append(out.APIServerLoadBalancer.AdditionalPorts, int(p))
+			}
+			if lb.Monitor != nil {
+				out.APIServerLoadBalancer.Monitor = &APIServerLoadBalancerMonitor{
+					Delay:          int(lb.Monitor.Delay),
+					Timeout:        int(lb.Monitor.Timeout),
+					MaxRetries:     int(lb.Monitor.MaxRetries),
+					MaxRetriesDown: int(lb.Monitor.MaxRetriesDown),
+				}
+			}
 		}
 	}
 

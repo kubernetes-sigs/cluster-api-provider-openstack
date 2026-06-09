@@ -47,10 +47,10 @@ type SecurityGroupRuleSpecApplyConfiguration struct {
 	// portRangeMin is a number in the range that is matched by the security group
 	// rule. If the protocol is TCP or UDP, this value must be less than or equal
 	// to the value of the portRangeMax attribute.
-	PortRangeMin *int `json:"portRangeMin,omitempty"`
+	PortRangeMin *int32 `json:"portRangeMin,omitempty"`
 	// portRangeMax is a number in the range that is matched by the security group
 	// rule. The portRangeMin attribute constrains the portRangeMax attribute.
-	PortRangeMax *int `json:"portRangeMax,omitempty"`
+	PortRangeMax *int32 `json:"portRangeMax,omitempty"`
 	// protocol is the protocol that is matched by the security group rule.
 	Protocol *string `json:"protocol,omitempty"`
 	// remoteGroupID is the remote group ID to be associated with this security group rule.
@@ -105,7 +105,7 @@ func (b *SecurityGroupRuleSpecApplyConfiguration) WithEtherType(value string) *S
 // WithPortRangeMin sets the PortRangeMin field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PortRangeMin field is set to the value of the last call.
-func (b *SecurityGroupRuleSpecApplyConfiguration) WithPortRangeMin(value int) *SecurityGroupRuleSpecApplyConfiguration {
+func (b *SecurityGroupRuleSpecApplyConfiguration) WithPortRangeMin(value int32) *SecurityGroupRuleSpecApplyConfiguration {
 	b.PortRangeMin = &value
 	return b
 }
@@ -113,7 +113,7 @@ func (b *SecurityGroupRuleSpecApplyConfiguration) WithPortRangeMin(value int) *S
 // WithPortRangeMax sets the PortRangeMax field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PortRangeMax field is set to the value of the last call.
-func (b *SecurityGroupRuleSpecApplyConfiguration) WithPortRangeMax(value int) *SecurityGroupRuleSpecApplyConfiguration {
+func (b *SecurityGroupRuleSpecApplyConfiguration) WithPortRangeMax(value int32) *SecurityGroupRuleSpecApplyConfiguration {
 	b.PortRangeMax = &value
 	return b
 }
