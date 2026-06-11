@@ -697,7 +697,14 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	}
 
 	var clusterSubnets []infrav1.FixedIP
-	if len(openStackCluster.Spec.Subnets) > 0 {
+	if openStackCluster.Spec.PrimarySubnet != nil {
+		// When a primary subnet is set, restrict node ports to that subnet only.
+		// This allows an administrator to direct new nodes to a specific subnet,
+		// e.g. when migrating away from an exhausted subnet.
+		clusterSubnets = []infrav1.FixedIP{
+			{Subnet: openStackCluster.Spec.PrimarySubnet},
+		}
+	} else if len(openStackCluster.Spec.Subnets) > 0 {
 		clusterSubnets = make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
 		for idx, sn := range openStackCluster.Spec.Subnets {
 			clusterSubnets[idx] = infrav1.FixedIP{
