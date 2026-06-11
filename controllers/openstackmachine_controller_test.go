@@ -45,6 +45,8 @@ import (
 const (
 	networkUUID                   = "d412171b-9fd7-41c1-95a6-c24e5953974d"
 	subnetUUID                    = "d2d8d98d-b234-477e-a547-868b7cb5d6a5"
+	secondSubnetUUID              = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+	primarySubnetUUID             = "f9e8d7c6-b5a4-3210-fedc-ba9876543210"
 	extraSecurityGroupUUID        = "514bb2d8-3390-4a3b-86a7-7864ba57b329"
 	controlPlaneSecurityGroupUUID = "c9817a91-4821-42db-8367-2301002ab659"
 	workerSecurityGroupUUID       = "9c6c0d28-03c9-436c-815d-58440ac2c1c8"
@@ -178,6 +180,74 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 						ID: ptr.To(subnetUUID),
 					},
 				},
+			},
+		},
+	}
+	openStackClusterWithMultipleSubnets := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			Subnets: []infrav1.SubnetParam{
+				{ID: ptr.To(subnetUUID)},
+				{ID: ptr.To(secondSubnetUUID)},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				ID: workerSecurityGroupUUID,
+			},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: networkUUID,
+				},
+			},
+		},
+	}
+	openStackClusterWithPrimarySubnet := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			Subnets: []infrav1.SubnetParam{
+				{ID: ptr.To(subnetUUID)},
+				{ID: ptr.To(secondSubnetUUID)},
+			},
+			PrimarySubnet: &infrav1.SubnetParam{
+				ID: ptr.To(primarySubnetUUID),
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				ID: workerSecurityGroupUUID,
+			},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: networkUUID,
+				},
+			},
+		},
+	}
+	portOptsWithMultipleSubnets := []infrav1.PortOpts{
+		{
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(networkUUID),
+			},
+			SecurityGroups: []infrav1.SecurityGroupParam{
+				{ID: ptr.To(workerSecurityGroupUUID)},
+			},
+			FixedIPs: []infrav1.FixedIP{
+				{Subnet: &infrav1.SubnetParam{ID: ptr.To(subnetUUID)}},
+				{Subnet: &infrav1.SubnetParam{ID: ptr.To(secondSubnetUUID)}},
+			},
+		},
+	}
+	portOptsWithPrimarySubnet := []infrav1.PortOpts{
+		{
+			Network: &infrav1.NetworkParam{
+				ID: ptr.To(networkUUID),
+			},
+			SecurityGroups: []infrav1.SecurityGroupParam{
+				{ID: ptr.To(workerSecurityGroupUUID)},
+			},
+			FixedIPs: []infrav1.FixedIP{
+				{Subnet: &infrav1.SubnetParam{ID: ptr.To(primarySubnetUUID)}},
 			},
 		},
 	}
@@ -342,6 +412,50 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
 					SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(workerSecurityGroupUUID)}},
 				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name:    "multiple subnets without primarySubnet: port gets all subnets as FixedIPs",
+			cluster: openStackClusterWithMultipleSubnets,
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports:       portOptsWithMultipleSubnets,
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name:    "primarySubnet set: port FixedIPs restricted to primarySubnet only",
+			cluster: openStackClusterWithPrimarySubnet,
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports:       portOptsWithPrimarySubnet,
 				Tags:        tags,
 				UserDataRef: userData,
 			},

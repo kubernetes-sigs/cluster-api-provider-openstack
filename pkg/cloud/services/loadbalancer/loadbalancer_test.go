@@ -30,6 +30,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/monitors"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/pools"
 	"github.com/gophercloud/gophercloud/v2/openstack/loadbalancer/v2/providers"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -804,6 +805,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 	lbtests := []struct {
 		name               string
 		openStackCluster   *infrav1.OpenStackCluster
+		expectNetwork      func(m *mock.MockNetworkClientMockRecorder)
 		expectLoadBalancer func(m *mock.MockLbClientMockRecorder)
 		want               *loadbalancers.LoadBalancer
 		wantError          error
@@ -811,6 +813,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 		{
 			name:             "nothing exists",
 			openStackCluster: &infrav1.OpenStackCluster{},
+			expectNetwork:    func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
 			},
@@ -820,6 +823,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 		{
 			name:             "loadbalancer already exists",
 			openStackCluster: &infrav1.OpenStackCluster{},
+			expectNetwork:    func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{{ID: "AAAAA"}}, nil)
 			},
@@ -842,6 +846,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 					},
 				},
 			},
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
@@ -881,6 +886,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 					},
 				},
 			},
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
@@ -918,6 +924,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 					},
 				},
 			},
+			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
 				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
 				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
@@ -932,6 +939,45 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 				VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
 			},
 		},
+		{
+			name: "loadbalancer VIP uses primarySubnet when set",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					PrimarySubnet: &infrav1.SubnetParam{
+						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-444444444444"),
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						Subnets: []infrav1.Subnet{
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-333333333333"},
+							{ID: "aaaaaaaa-bbbb-cccc-dddd-444444444444"},
+						},
+					},
+					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+						LoadBalancerNetwork: nil,
+					},
+				},
+			},
+			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
+				m.GetSubnet("aaaaaaaa-bbbb-cccc-dddd-444444444444").Return(&subnets.Subnet{
+					ID: "aaaaaaaa-bbbb-cccc-dddd-444444444444",
+				}, nil)
+			},
+			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
+				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
+				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
+					ID:          "AAAAA",
+					VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-444444444444",
+				}, nil)
+			},
+			want: &loadbalancers.LoadBalancer{
+				ID:          "AAAAA",
+				VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-444444444444",
+			},
+		},
 	}
 	for _, tt := range lbtests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -942,6 +988,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			lbs, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
 			g.Expect(err).NotTo(HaveOccurred())
 
+			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
 			lb, err := lbs.getOrCreateAPILoadBalancer(tt.openStackCluster, "AAAAA")
 			if tt.wantError != nil {
