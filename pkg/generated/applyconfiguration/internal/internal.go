@@ -933,6 +933,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: networkMTU
       type:
         scalar: numeric
+    - name: primarySubnet
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetParam
     - name: router
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.RouterParam
@@ -2278,6 +2281,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+    - name: primarySubnet
+      type:
+        namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
     - name: router
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterParam
