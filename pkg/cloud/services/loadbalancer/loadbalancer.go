@@ -55,6 +55,29 @@ const (
 	poolMemberProvisioningStatusActive          = "ACTIVE"
 )
 
+// getPrimarySubnetID returns the ID of the primary cluster subnet for use in
+// load balancer VIP allocation and member registration.
+// If PrimarySubnet is specified in the cluster spec, it is resolved via
+// GetNetworkSubnetByParam scoped to the cluster network, which validates
+// membership and supports both id and filter forms of SubnetParam.
+// Otherwise the first subnet in the cluster status is used.
+func (s *Service) getPrimarySubnetID(openStackCluster *infrav1.OpenStackCluster) (string, error) {
+	subnets := openStackCluster.Status.Network.Subnets
+	if len(subnets) == 0 {
+		return "", fmt.Errorf("no subnets available in cluster status")
+	}
+
+	if openStackCluster.Spec.PrimarySubnet == nil {
+		return subnets[0].ID, nil
+	}
+
+	subnet, err := s.networkingService.GetNetworkSubnetByParam(openStackCluster.Status.Network.ID, openStackCluster.Spec.PrimarySubnet)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve primarySubnet: %w", err)
+	}
+	return subnet.ID, nil
+}
+
 // Default values for Monitor, sync with `kubebuilder:default` annotations on APIServerLoadBalancerMonitor object.
 const (
 	defaultMonitorDelay          = 10
@@ -316,9 +339,13 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	}
 
 	if vipNetworkID == "" && vipSubnetID == "" {
-		// keep the default and create the VIP on the first cluster subnet
-		vipSubnetID = openStackCluster.Status.Network.Subnets[0].ID
-		s.scope.Logger().V(2).Info("No load balancer network specified, creating load balancer in the default subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
+		// No explicit LB network specified — use the primary cluster subnet.
+		var err error
+		vipSubnetID, err = s.getPrimarySubnetID(openStackCluster)
+		if err != nil {
+			return nil, err
+		}
+		s.scope.Logger().V(2).Info("No load balancer network specified, creating load balancer in the primary subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
 	} else {
 		s.scope.Logger().V(2).Info("Creating load balancer in subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
 	}
@@ -720,7 +747,11 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		}
 
 		if openStackCluster.Status.Network.ID != openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork.ID {
-			lbMemberOpts.SubnetID = openStackCluster.Status.Network.Subnets[0].ID
+			primarySubnetID, err := s.getPrimarySubnetID(openStackCluster)
+			if err != nil {
+				return err
+			}
+			lbMemberOpts.SubnetID = primarySubnetID
 		}
 
 		if _, err := s.waitForLoadBalancerActive(lbID); err != nil {

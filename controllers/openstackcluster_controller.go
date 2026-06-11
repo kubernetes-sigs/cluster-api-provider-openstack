@@ -1146,9 +1146,6 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 			}
 			return nil, err
 		}
-		if len(clusterSubnets) > 2 {
-			return nil, fmt.Errorf("more than two subnets found in the Network. Specify the subnets in the OpenStackCluster.Spec instead")
-		}
 	} else {
 		for subnet := range openStackClusterSubnets {
 			filteredSubnet, err := networkingService.GetNetworkSubnetByParam(networkID, &openStackClusterSubnets[subnet])

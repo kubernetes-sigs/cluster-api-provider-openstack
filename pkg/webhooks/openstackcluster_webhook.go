@@ -248,6 +248,11 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 		}
 	}
 
+	// Allow changes to primarySubnet to support directing new nodes to a
+	// different subnet, e.g. when migrating away from an exhausted subnet.
+	oldObj.Spec.PrimarySubnet = nil
+	newObj.Spec.PrimarySubnet = nil
+
 	// Allow transitioning spec.network from filter to id and spec.subnets from
 	// filter to id. This lets users pin to resolved IDs after initial creation.
 	if newObj.Spec.Network != nil && oldObj.Spec.Network != nil && oldObj.Status.Network != nil {
