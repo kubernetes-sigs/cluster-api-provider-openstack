@@ -27,26 +27,15 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
-// ValidateSubnets validates if the amount of IPv4 and IPv6 subnets is allowed by OpenStackCluster.
+// ValidateSubnets validates that all subnet CIDRs are parseable.
+// Multiple subnets of the same IP version are allowed; use PrimarySubnet to
+// specify which subnet should be used for load balancer VIP allocation and
+// member registration when multiple subnets are present.
 func ValidateSubnets(subnets []infrav1.Subnet) error {
-	isIPv6 := []bool{false, false}
-	for i, subnet := range subnets {
-		ip, _, err := net.ParseCIDR(subnet.CIDR)
-		if err != nil {
-			return err
+	for _, subnet := range subnets {
+		if _, _, err := net.ParseCIDR(subnet.CIDR); err != nil {
+			return fmt.Errorf("invalid CIDR %q in subnet %q: %w", subnet.CIDR, subnet.ID, err)
 		}
-
-		if ip.To4() == nil {
-			isIPv6[i] = true
-		}
-	}
-
-	if len(subnets) > 1 && isIPv6[0] == isIPv6[1] {
-		ethertype := 4
-		if isIPv6[0] {
-			ethertype = 6
-		}
-		return fmt.Errorf("multiple IPv%d Subnet not allowed on OpenStackCluster", ethertype)
 	}
 	return nil
 }
