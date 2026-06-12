@@ -160,12 +160,6 @@ endif
 $(ARTIFACTS):
 	mkdir -p $@
 
-setup_envtest_extra_args=
-# Use the darwin/amd64 binary until an arm64 version is available
-ifeq ($(shell go env GOOS),darwin)
-	setup_envtest_extra_args += --arch amd64
-endif
-
 # By default setup-envtest will write to $XDG_DATA_HOME, or $HOME/.local/share
 # if that is not defined. Set KUBEBUILDER_ASSETS_DIR to override.
 ifdef KUBEBUILDER_ASSETS_DIR
