@@ -75,7 +75,7 @@ CONVERSION_GEN := $(TOOLS_BIN_DIR)/conversion-gen
 ENVSUBST := $(TOOLS_BIN_DIR)/envsubst
 GINKGO := $(TOOLS_BIN_DIR)/ginkgo
 GOJQ := $(TOOLS_BIN_DIR)/gojq
-GOLANGCI_LINT := $(abspath $(TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
+GOLANGCI_LINT = $(abspath $(TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
 GOLANGCI_LINT_KAL := $(abspath $(TOOLS_BIN_DIR)/golangci-lint-kube-api-linter)
 GOTESTSUM := $(TOOLS_BIN_DIR)/gotestsum
 KUSTOMIZE := $(TOOLS_BIN_DIR)/kustomize
@@ -159,12 +159,6 @@ endif
 
 $(ARTIFACTS):
 	mkdir -p $@
-
-setup_envtest_extra_args=
-# Use the darwin/amd64 binary until an arm64 version is available
-ifeq ($(shell go env GOOS),darwin)
-	setup_envtest_extra_args += --arch amd64
-endif
 
 # By default setup-envtest will write to $XDG_DATA_HOME, or $HOME/.local/share
 # if that is not defined. Set KUBEBUILDER_ASSETS_DIR to override.
