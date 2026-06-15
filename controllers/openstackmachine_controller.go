@@ -69,7 +69,6 @@ const (
 	waitForClusterInfrastructureReadyDuration = 15 * time.Second
 	waitForInstanceBecomeActiveToReconcile    = 60 * time.Second
 	waitForBuildingInstanceToReconcile        = 10 * time.Second
-	deleteServerRequeueDelay                  = 10 * time.Second
 	waitingForInstanceCreatedMessage          = "Waiting for instance to be created"
 )
 
@@ -272,10 +271,11 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 			})
 			return ctrl.Result{}, err
 		}
-		// If the server was found, we need to wait for it to be deleted before
-		// removing the OpenStackMachine finalizer.
+		// Wait for the OpenStackServer to be fully deleted before
+		// removing the OpenStackMachine finalizer. The watch on
+		// OpenStackServer delete events will trigger a reconcile.
 		scope.Logger().Info("Waiting for server to be deleted before removing finalizer")
-		return ctrl.Result{RequeueAfter: deleteServerRequeueDelay}, nil
+		return ctrl.Result{}, nil
 	}
 
 	controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)

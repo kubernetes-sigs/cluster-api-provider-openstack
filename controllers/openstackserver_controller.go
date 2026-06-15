@@ -860,7 +860,7 @@ func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
 			log.V(4).Info("OpenStackServer is still reconciling, blocking further processing")
 			return false
 		},
-		DeleteFunc:  func(event.DeleteEvent) bool { return false },
+		DeleteFunc:  func(event.DeleteEvent) bool { return true },
 		GenericFunc: func(event.GenericEvent) bool { return false },
 	}
 }
