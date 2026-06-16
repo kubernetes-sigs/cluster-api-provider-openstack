@@ -267,9 +267,11 @@ spec:
                 properties:
                   id:
                     description: id is the unique identifier of the network.
+                    minLength: 1
                     type: string
                   name:
                     description: name is the name of the network.
+                    minLength: 1
                     type: string
                   tags:
                     description: tags is a list of tags on the network.

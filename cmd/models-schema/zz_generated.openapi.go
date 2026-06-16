@@ -22345,7 +22345,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AdditionalBlock
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the block device in the context of a machine. If the block device is a volume, the Cinder volume will be named as a combination of the machine name and this name. Also, this name will be used for tagging the block device. Information about the block device tag can be obtained from the OpenStack metadata API or the config drive. Name cannot be 'root', which is reserved for the root volume.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22353,7 +22352,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AdditionalBlock
 					"sizeGiB": {
 						SchemaProps: spec.SchemaProps{
 							Description: "sizeGiB is the size of the block device in gibibytes (GiB).",
-							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -22383,7 +22381,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AddressPair(ref
 					"ipAddress": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ipAddress is the IP address of the allowed address pair. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22411,7 +22408,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AllocationPool(
 					"start": {
 						SchemaProps: spec.SchemaProps{
 							Description: "start represents the start of the AllocationPool, that is the lowest IP of the pool.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22419,7 +22415,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_AllocationPool(
 					"end": {
 						SchemaProps: spec.SchemaProps{
 							Description: "end represents the end of the AlloctionPool, that is the highest IP of the pool.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22577,7 +22572,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BlockDeviceStor
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "type is the type of block device to create. This can be either \"Volume\" or \"Local\".",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22937,7 +22931,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the load balancer.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22945,7 +22938,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "id is the unique identifier of the load balancer.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22953,7 +22945,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 					"ip": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ip is the IP address of the load balancer.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22961,7 +22952,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 					"internalIP": {
 						SchemaProps: spec.SchemaProps{
 							Description: "internalIP is the internal IP address of the load balancer.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -23202,13 +23192,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurity
 					"allowAllInClusterTraffic": {
 						SchemaProps: spec.SchemaProps{
 							Description: "allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.",
-							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 				},
-				Required: []string{"allowAllInClusterTraffic"},
 			},
 		},
 		Dependencies: []string{
@@ -23368,7 +23356,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatus(r
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the network.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -23376,7 +23363,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatus(r
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "id is the unique identifier of the network.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -23413,7 +23399,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatusWi
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the network.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -23421,7 +23406,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatusWi
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "id is the unique identifier of the network.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24018,7 +24002,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackIdenti
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned, or the name of an OpenStackClusterIdentity (type=ClusterIdentity). The Secret must contain a key named `clouds.yaml` which contains an OpenStack clouds.yaml file. The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24026,7 +24009,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackIdenti
 					"cloudName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "cloudName specifies the name of the entry in the clouds.yaml file to use.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24818,7 +24800,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortStatus(ref 
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "id is the unique identifier of the port.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24917,7 +24898,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the port.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -24933,7 +24913,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					"networkID": {
 						SchemaProps: spec.SchemaProps{
 							Description: "networkID is the ID of the network the port will be created in.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25205,7 +25184,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResourceReferen
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the referenced resource",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25226,7 +25204,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RootVolume(ref 
 					"sizeGiB": {
 						SchemaProps: spec.SchemaProps{
 							Description: "sizeGiB is the size of the block device in gibibytes (GiB).",
-							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -25263,7 +25240,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Router(ref comm
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the router.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25271,7 +25247,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Router(ref comm
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "id is the unique identifier of the router.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25465,7 +25440,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SchedulerHintAd
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the scheduler hint property. It is a unique identifier for the property.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25496,7 +25470,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SchedulerHintAd
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "type represents the type of the value. Valid values are Bool, String, and Number.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25681,7 +25654,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupRu
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the security group rule. It's used to identify the rule so it can be patched and will not be sent to the OpenStack API.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25696,7 +25668,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupRu
 					"direction": {
 						SchemaProps: spec.SchemaProps{
 							Description: "direction in which the security group rule is applied. The only values allowed are \"ingress\" or \"egress\". For a compute instance, an ingress security group rule is applied to incoming (ingress) traffic for that instance. An egress rule is applied to traffic leaving the instance.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25775,7 +25746,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupSt
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name of the security group",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25783,7 +25753,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupSt
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "id of the security group",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25852,7 +25821,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ServerMetadata(
 					"key": {
 						SchemaProps: spec.SchemaProps{
 							Description: "key is the server metadata key",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25860,7 +25828,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ServerMetadata(
 					"value": {
 						SchemaProps: spec.SchemaProps{
 							Description: "value is the server metadata value",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25882,7 +25849,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the subnet.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25890,7 +25856,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 					"id": {
 						SchemaProps: spec.SchemaProps{
 							Description: "id is the unique identifier of the subnet.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25898,7 +25863,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 					"cidr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "cidr is the CIDR of the subnet.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26111,7 +26075,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetSpec(ref 
 					"cidr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "cidr is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24. This field is required when defining a subnet.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26164,7 +26127,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ValueSpec(ref c
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "name is the name of the key-value pair. This is just for identifying the pair and will not be sent to the OpenStack API.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26172,7 +26134,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ValueSpec(ref c
 					"key": {
 						SchemaProps: spec.SchemaProps{
 							Description: "key is the key in the key-value pair.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26180,7 +26141,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ValueSpec(ref c
 					"value": {
 						SchemaProps: spec.SchemaProps{
 							Description: "value is the value in the key-value pair.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},

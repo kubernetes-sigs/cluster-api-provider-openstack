@@ -1346,6 +1346,7 @@ spec:
                         Information about the block device tag can be obtained from the OpenStack
                         metadata API or the config drive.
                         Name cannot be 'root', which is reserved for the root volume.
+                      minLength: 1
                       type: string
                     sizeGiB:
                       description: sizeGiB is the size of the block device in gibibytes
@@ -1362,6 +1363,9 @@ spec:
                           description: |-
                             type is the type of block device to create.
                             This can be either "Volume" or "Local".
+                          enum:
+                          - Local
+                          - Volume
                           type: string
                         volume:
                           description: volume contains additional storage options
@@ -1543,6 +1547,7 @@ spec:
                     properties:
                       name:
                         description: name is the name of the referenced resource
+                        minLength: 1
                         type: string
                     required:
                     - name
@@ -1573,6 +1578,7 @@ spec:
                               ipAddress is the IP address of the allowed address pair. Depending on
                               the configuration of Neutron, it may be supported to specify a CIDR
                               instead of a specific IP address.
+                            minLength: 1
                             type: string
                           macAddress:
                             description: |-
@@ -1943,14 +1949,17 @@ spec:
                         properties:
                           key:
                             description: key is the key in the key-value pair.
+                            minLength: 1
                             type: string
                           name:
                             description: |-
                               name is the name of the key-value pair.
                               This is just for identifying the pair and will not be sent to the OpenStack API.
+                            minLength: 1
                             type: string
                           value:
                             description: value is the value in the key-value pair.
+                            minLength: 1
                             type: string
                         required:
                         - key
@@ -2213,10 +2222,12 @@ spec:
                     key:
                       description: key is the server metadata key
                       maxLength: 255
+                      minLength: 1
                       type: string
                     value:
                       description: value is the server metadata value
                       maxLength: 255
+                      minLength: 1
                       type: string
                   required:
                   - key
@@ -2390,6 +2401,7 @@ spec:
                                   ipAddress is the IP address of the allowed address pair. Depending on
                                   the configuration of Neutron, it may be supported to specify a CIDR
                                   instead of a specific IP address.
+                                minLength: 1
                                 type: string
                               macAddress:
                                 description: |-
@@ -2441,10 +2453,12 @@ spec:
                           type: string
                         name:
                           description: name is the name of the port.
+                          minLength: 1
                           type: string
                         networkID:
                           description: networkID is the ID of the network the port
                             will be created in.
+                          minLength: 1
                           type: string
                         profile:
                           description: |-
@@ -2500,14 +2514,17 @@ spec:
                             properties:
                               key:
                                 description: key is the key in the key-value pair.
+                                minLength: 1
                                 type: string
                               name:
                                 description: |-
                                   name is the name of the key-value pair.
                                   This is just for identifying the pair and will not be sent to the OpenStack API.
+                                minLength: 1
                                 type: string
                               value:
                                 description: value is the value in the key-value pair.
+                                minLength: 1
                                 type: string
                             required:
                             - key
@@ -2550,6 +2567,7 @@ spec:
                       properties:
                         id:
                           description: id is the unique identifier of the port.
+                          minLength: 1
                           type: string
                       required:
                       - id

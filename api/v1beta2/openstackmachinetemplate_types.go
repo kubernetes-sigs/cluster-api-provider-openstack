@@ -25,7 +25,7 @@ import (
 type OpenStackMachineTemplateSpec struct {
 	// template is the OpenStackMachineTemplate resource data.
 	// +required
-	Template OpenStackMachineTemplateResource `json:"template"`
+	Template OpenStackMachineTemplateResource `json:"template,omitzero"`
 }
 
 // OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.

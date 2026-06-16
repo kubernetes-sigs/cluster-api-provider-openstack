@@ -24,14 +24,14 @@ import (
 type OpenStackClusterTemplateResource struct {
 	// spec is the desired state of the OpenStackCluster.
 	// +required
-	Spec OpenStackClusterSpec `json:"spec"`
+	Spec OpenStackClusterSpec `json:"spec,omitzero"`
 }
 
 // OpenStackClusterTemplateSpec defines the desired state of OpenStackClusterTemplate.
 type OpenStackClusterTemplateSpec struct {
 	// template is the OpenStackClusterTemplate resource data.
 	// +required
-	Template OpenStackClusterTemplateResource `json:"template"`
+	Template OpenStackClusterTemplateResource `json:"template,omitzero"`
 }
 
 // +genclient

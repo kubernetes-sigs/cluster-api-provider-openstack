@@ -1853,11 +1853,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
-      default: ""
     - name: sizeGiB
       type:
         scalar: numeric
-      default: 0
     - name: storage
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BlockDeviceStorage
@@ -1868,7 +1866,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: ipAddress
       type:
         scalar: string
-      default: ""
     - name: macAddress
       type:
         scalar: string
@@ -1878,11 +1875,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: end
       type:
         scalar: string
-      default: ""
     - name: start
       type:
         scalar: string
-      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Bastion
   map:
     fields:
@@ -1940,7 +1935,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: type
       type:
         scalar: string
-      default: ""
     - name: volume
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BlockDeviceVolume
@@ -2034,22 +2028,18 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
-      default: ""
     - name: internalIP
       type:
         scalar: string
-      default: ""
     - name: ip
       type:
         scalar: string
-      default: ""
     - name: loadBalancerNetwork
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatusWithSubnets
     - name: name
       type:
         scalar: string
-      default: ""
     - name: tags
       type:
         list:
@@ -2095,7 +2085,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: allowAllInClusterTraffic
       type:
         scalar: boolean
-      default: false
     - name: clusterNodesSecurityGroupRules
       type:
         list:
@@ -2171,11 +2160,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
-      default: ""
     - name: name
       type:
         scalar: string
-      default: ""
     - name: tags
       type:
         list:
@@ -2188,11 +2175,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
-      default: ""
     - name: name
       type:
         scalar: string
-      default: ""
     - name: subnets
       type:
         list:
@@ -2380,11 +2365,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: cloudName
       type:
         scalar: string
-      default: ""
     - name: name
       type:
         scalar: string
-      default: ""
     - name: region
       type:
         scalar: string
@@ -2650,7 +2633,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
-      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResolvedFixedIP
   map:
     fields:
@@ -2712,11 +2694,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
-      default: ""
     - name: networkID
       type:
         scalar: string
-      default: ""
     - name: profile
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BindingProfile
@@ -2755,7 +2735,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
-      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RootVolume
   map:
     fields:
@@ -2765,7 +2744,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: sizeGiB
       type:
         scalar: numeric
-      default: 0
     - name: type
       type:
         scalar: string
@@ -2775,7 +2753,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
-      default: ""
     - name: ips
       type:
         list:
@@ -2785,7 +2762,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
-      default: ""
     - name: tags
       type:
         list:
@@ -2843,7 +2819,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
-      default: ""
     - name: value
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SchedulerHintAdditionalValue
@@ -2863,7 +2838,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: type
       type:
         scalar: string
-      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupFilter
   map:
     fields:
@@ -2918,14 +2892,12 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: direction
       type:
         scalar: string
-      default: ""
     - name: etherType
       type:
         scalar: string
     - name: name
       type:
         scalar: string
-      default: ""
     - name: portRangeMax
       type:
         scalar: numeric
@@ -2953,11 +2925,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: id
       type:
         scalar: string
-      default: ""
     - name: name
       type:
         scalar: string
-      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupFilter
   map:
     fields:
@@ -2979,26 +2949,21 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: key
       type:
         scalar: string
-      default: ""
     - name: value
       type:
         scalar: string
-      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Subnet
   map:
     fields:
     - name: cidr
       type:
         scalar: string
-      default: ""
     - name: id
       type:
         scalar: string
-      default: ""
     - name: name
       type:
         scalar: string
-      default: ""
     - name: tags
       type:
         list:
@@ -3077,7 +3042,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: cidr
       type:
         scalar: string
-      default: ""
     - name: dnsNameservers
       type:
         list:
@@ -3090,15 +3054,12 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: key
       type:
         scalar: string
-      default: ""
     - name: name
       type:
         scalar: string
-      default: ""
     - name: value
       type:
         scalar: string
-      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeAvailabilityZone
   map:
     fields:

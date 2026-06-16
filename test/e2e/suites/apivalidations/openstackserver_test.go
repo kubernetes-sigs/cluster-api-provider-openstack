@@ -146,7 +146,7 @@ var _ = Describe("OpenStackServer API validations", func() {
 			server := defaultServer()
 			server.Spec.RootVolume = &infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
 			server.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
-				{Name: "user", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{}},
+				{Name: "user", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice}},
 			}
 
 			By("Creating a server with spec.RootVolume and non-root device name in spec.AdditionalBlockDevices")
@@ -157,7 +157,7 @@ var _ = Describe("OpenStackServer API validations", func() {
 			server := defaultServer()
 			server.Spec.RootVolume = &infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
 			server.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
-				{Name: "root", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{}},
+				{Name: "root", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice}},
 			}
 
 			By("Creating a server with spec.RootVolume and root device name in spec.AdditionalBlockDevices")
