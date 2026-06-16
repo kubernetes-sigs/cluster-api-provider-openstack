@@ -19,10 +19,10 @@ require (
 	go.uber.org/mock v0.6.0
 	golang.org/x/crypto v0.48.0
 	golang.org/x/text v0.34.0
-	gopkg.in/ini.v1 v1.67.2
+	gopkg.in/ini.v1 v1.67.3
 	k8s.io/api v0.34.8
 	k8s.io/apiextensions-apiserver v0.34.8
-	k8s.io/apimachinery v0.34.8
+	k8s.io/apimachinery v0.34.9
 	k8s.io/client-go v0.34.8
 	k8s.io/code-generator v0.34.8
 	k8s.io/component-base v0.34.8
