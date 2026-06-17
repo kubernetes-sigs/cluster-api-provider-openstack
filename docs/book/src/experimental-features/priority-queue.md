@@ -1,6 +1,7 @@
 # Priority Queue
 
-> **Note:** PriorityQueue is available in >= 0.14
+> **Note:** PriorityQueue is available as an alpha feature in 0.14 (disabled by
+> default) and graduated to beta in 0.15 (enabled by default).
 
 The `PriorityQueue` feature flag enables the usage of the controller-runtime PriorityQueue.
 
@@ -11,10 +12,21 @@ More information on controller-runtime PriorityQueue:
 - [design docs](https://github.com/kubernetes-sigs/controller-runtime/pull/3013)
 - [tracking issue](https://github.com/kubernetes-sigs/controller-runtime/issues/2374)
 
-## Enabling Priority Queue
+## Feature gate maturity
 
-You can enable `PriorityQueue` using the following.
+| Version | Stage | Default  |
+|---------|-------|----------|
+| 0.14    | Alpha | Disabled |
+| 0.15    | Beta  | Enabled  |
 
+## Enabling/Disabling Priority Queue
+
+To enable:
 - Environment variable: `EXP_CAPO_PRIORITY_QUEUE=true`
 - clusterctl.yaml variable: `EXP_CAPO_PRIORITY_QUEUE: true`
 - --feature-gates argument: `PriorityQueue=true`
+
+To disable:
+- Environment variable: `EXP_CAPO_PRIORITY_QUEUE=false`
+- clusterctl.yaml variable: `EXP_CAPO_PRIORITY_QUEUE: false`
+- `--feature-gates` argument: `PriorityQueue=false`
