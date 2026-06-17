@@ -52,12 +52,12 @@ type ImageParam struct {
 	// of name and tags must return a single matching image or an error will
 	// be raised.
 	// +optional
-	Filter *ImageFilter `json:"filter,omitempty"`
+	Filter ImageFilter `json:"filter,omitempty,omitzero"`
 
 	// imageRef is a reference to an ORC Image in the same namespace as the
 	// referring object.
 	// +optional
-	ImageRef *ResourceReference `json:"imageRef,omitempty"`
+	ImageRef ResourceReference `json:"imageRef,omitempty,omitzero"`
 }
 
 // ImageFilter describes a query for an image.
@@ -90,7 +90,7 @@ type FlavorParam struct {
 
 	// filter describes a query for a flavor.
 	// +optional
-	Filter *FlavorFilter `json:"filter,omitempty"`
+	Filter FlavorFilter `json:"filter,omitempty,omitzero"`
 }
 
 // FlavorFilter describes a query for a flavor. If defined,
@@ -114,6 +114,7 @@ func (f *FlavorFilter) IsZero() bool {
 type ExternalRouterIPParam struct {
 	// fixedIP is the FixedIP in the corresponding subnet.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	FixedIP string `json:"fixedIP,omitempty"`
 	// subnet is the subnet in which the FixedIP is used for the Gateway of this router.
 	// +required
@@ -176,12 +177,15 @@ type SecurityGroupParam struct {
 type SecurityGroupFilter struct {
 	// name filters security groups by name.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// description filters security groups by description.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Description string `json:"description,omitempty"`
 	// projectID filters security groups by project ID.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -216,12 +220,15 @@ type NetworkParam struct {
 type NetworkFilter struct {
 	// name filters networks by name.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// description filters networks by description.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Description string `json:"description,omitempty"`
 	// projectID filters networks by project ID.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -256,27 +263,36 @@ type SubnetParam struct {
 type SubnetFilter struct {
 	// name filters subnets by name.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// description filters subnets by description.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Description string `json:"description,omitempty"`
 	// projectID filters subnets by project ID.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ProjectID string `json:"projectID,omitempty"`
 	// ipVersion filters subnets by IP version.
 	// +optional
+	// +kubebuilder:validation:Enum=4;6
+	// +kubebuilder:validation:Minimum=1
 	IPVersion int32 `json:"ipVersion,omitempty"`
 	// gatewayIP filters subnets by gateway IP.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	GatewayIP string `json:"gatewayIP,omitempty"`
 	// cidr filters subnets by CIDR.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	CIDR string `json:"cidr,omitempty"`
 	// ipv6AddressMode filters subnets by IPv6 address mode.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	IPv6AddressMode string `json:"ipv6AddressMode,omitempty"`
 	// ipv6RAMode filters subnets by IPv6 Router Advertisement mode.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	IPv6RAMode string `json:"ipv6RAMode,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -316,12 +332,15 @@ type RouterParam struct {
 type RouterFilter struct {
 	// name filters routers by name.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// description filters routers by description.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Description string `json:"description,omitempty"`
 	// projectID filters routers by project ID.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ProjectID string `json:"projectID,omitempty"`
 
 	FilterByNeutronTags `json:",inline"`
@@ -372,7 +391,7 @@ type PortOpts struct {
 	// network is a query for an openstack network that the port will be created or discovered on.
 	// This will fail if the query returns more than one network.
 	// +optional
-	Network *NetworkParam `json:"network,omitempty"`
+	Network NetworkParam `json:"network,omitempty,omitzero"`
 
 	// description is a human-readable description for the port.
 	// +optional
@@ -479,7 +498,8 @@ type ResolvedPortSpec struct {
 
 	// description is a human-readable description for the port.
 	// +optional
-	Description string `json:"description"`
+	// +kubebuilder:validation:MinLength=1
+	Description string `json:"description,omitempty"`
 
 	// networkID is the ID of the network the port will be created in.
 	// +required
@@ -531,7 +551,7 @@ type FixedIP struct {
 	// subnet is an openstack subnet query that will return the id of a subnet to create
 	// the fixed IP of a port in. This query must not return more than one subnet.
 	// +optional
-	Subnet *SubnetParam `json:"subnet,omitempty"`
+	Subnet SubnetParam `json:"subnet,omitempty,omitzero"`
 
 	// ipAddress is a specific IP address to assign to the port. If Subnet
 	// is also specified, IPAddress must be a valid IP address in the
@@ -572,21 +592,26 @@ type AddressPair struct {
 type BastionStatus struct {
 	// id is the unique identifier of the bastion.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ID string `json:"id,omitempty"`
 	// name is the name of the bastion.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// sshKeyName is the name of the SSH key used for the bastion.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 	// state is the current state of the bastion.
 	// +optional
 	State InstanceState `json:"state,omitempty"`
 	// ip is the IP address of the bastion.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	IP string `json:"ip,omitempty"`
 	// floatingIP is the floating IP address of the bastion.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	FloatingIP string `json:"floatingIP,omitempty"`
 
 	// resolved contains parts of the bastion's machine spec with all
@@ -633,6 +658,7 @@ type BlockDeviceVolume struct {
 	// If omitted, the default Cinder volume type that is configured in the OpenStack cloud
 	// will be used.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Type string `json:"type,omitempty"`
 
 	// availabilityZone is the volume availability zone to create the volume
@@ -672,7 +698,7 @@ type VolumeAvailabilityZone struct {
 	// if From is "Name". The volume availability zone name may not contain
 	// spaces.
 	// +optional
-	Name *VolumeAZName `json:"name,omitempty"`
+	Name VolumeAZName `json:"name,omitempty"`
 }
 
 // AdditionalBlockDevice is a block device to attach to the server.
@@ -710,7 +736,7 @@ type ServerGroupParam struct {
 
 	// filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.
 	// +optional
-	Filter *ServerGroupFilter `json:"filter,omitempty"`
+	Filter ServerGroupFilter `json:"filter,omitempty,omitzero"`
 }
 
 // ServerGroupFilter specifies a query to select an OpenStack server group. At least one property must be set.
@@ -832,7 +858,7 @@ type LoadBalancer struct {
 	// If subnets are specified within the LoadBalancerNetwork currently only the first
 	// subnet in the list is taken into account.
 	// +optional
-	LoadBalancerNetwork *NetworkStatusWithSubnets `json:"loadBalancerNetwork,omitempty"`
+	LoadBalancerNetwork NetworkStatusWithSubnets `json:"loadBalancerNetwork,omitempty,omitzero"`
 }
 
 // SecurityGroupStatus represents the basic information of the associated
@@ -877,7 +903,7 @@ type SecurityGroupRuleSpec struct {
 	// ingress or egress rules.
 	// +kubebuilder:validation:Enum=IPv4;IPv6
 	// +optional
-	EtherType *string `json:"etherType,omitempty"`
+	EtherType string `json:"etherType,omitempty"`
 
 	// portRangeMin is a number in the range that is matched by the security group
 	// rule. If the protocol is TCP or UDP, this value must be less than or equal
@@ -964,7 +990,7 @@ type Bastion struct {
 
 	// spec for the bastion itself
 	// +optional
-	Spec *OpenStackMachineSpec `json:"spec,omitempty"`
+	Spec OpenStackMachineSpec `json:"spec,omitempty,omitzero"`
 
 	// availabilityZone is the failure domain that will be used to create the Bastion Spec.
 	// +optional
@@ -1015,7 +1041,7 @@ type APIServerLoadBalancer struct {
 
 	// network defines which network should the load balancer be allocated on.
 	// +optional
-	Network *NetworkParam `json:"network,omitempty"`
+	Network NetworkParam `json:"network,omitempty,omitzero"`
 
 	// subnets define which subnets should the load balancer be allocated on.
 	// It is expected that subnets are located on the network specified in this resource.
@@ -1043,21 +1069,18 @@ type APIServerLoadBalancerMonitor struct {
 	// delay is the time in seconds between sending probes to members.
 	// +optional
 	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:default:10
-	Delay int32 `json:"delay,omitempty"`
+	Delay *int32 `json:"delay,omitempty"`
 
 	// timeout is the maximum time in seconds for a monitor to wait for a connection to be established before it times out.
 	// +optional
 	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:default:5
-	Timeout int32 `json:"timeout,omitempty"`
+	Timeout *int32 `json:"timeout,omitempty"`
 
 	// maxRetries is the number of successful checks before changing the operating status of the member to ONLINE.
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=10
-	// +kubebuilder:default:5
-	MaxRetries int32 `json:"maxRetries,omitempty"`
+	MaxRetries *int32 `json:"maxRetries,omitempty"`
 
 	// maxRetriesDown is the number of allowed check failures before changing the operating status of the member to ERROR.
 	// +optional
@@ -1080,14 +1103,17 @@ func (s *APIServerLoadBalancer) IsEnabled() bool {
 type ResolvedMachineSpec struct {
 	// serverGroupID is the ID of the server group the machine should be added to and is calculated based on ServerGroupFilter.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ServerGroupID string `json:"serverGroupID,omitempty"`
 
 	// imageID is the ID of the image to use for the machine and is calculated based on ImageFilter.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ImageID string `json:"imageID,omitempty"`
 
 	// flavorID is the ID of the flavor to use.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	FlavorID string `json:"flavorID,omitempty"`
 
 	// ports is the fully resolved list of ports to create for the machine.

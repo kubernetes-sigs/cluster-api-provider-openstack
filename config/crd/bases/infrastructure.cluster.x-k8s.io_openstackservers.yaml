@@ -137,6 +137,7 @@ spec:
                                 type is the Cinder volume type of the volume.
                                 If omitted, the default Cinder volume type that is configured in the OpenStack cloud
                                 will be used.
+                              minLength: 1
                               type: string
                           type: object
                       required:
@@ -212,6 +213,7 @@ spec:
                       region specifies an OpenStack region to use. If specified, it overrides
                       any value in clouds.yaml. If specified for an OpenStackMachine, its
                       value will be included in providerID.
+                    minLength: 1
                     type: string
                   type:
                     default: Secret
@@ -344,28 +346,38 @@ spec:
                                 properties:
                                   cidr:
                                     description: cidr filters subnets by CIDR.
+                                    minLength: 1
                                     type: string
                                   description:
                                     description: description filters subnets by description.
+                                    minLength: 1
                                     type: string
                                   gatewayIP:
                                     description: gatewayIP filters subnets by gateway
                                       IP.
+                                    minLength: 1
                                     type: string
                                   ipVersion:
                                     description: ipVersion filters subnets by IP version.
+                                    enum:
+                                    - 4
+                                    - 6
                                     format: int32
+                                    minimum: 1
                                     type: integer
                                   ipv6AddressMode:
                                     description: ipv6AddressMode filters subnets by
                                       IPv6 address mode.
+                                    minLength: 1
                                     type: string
                                   ipv6RAMode:
                                     description: ipv6RAMode filters subnets by IPv6
                                       Router Advertisement mode.
+                                    minLength: 1
                                     type: string
                                   name:
                                     description: name filters subnets by name.
+                                    minLength: 1
                                     type: string
                                   notTags:
                                     description: |-
@@ -396,6 +408,7 @@ spec:
                                   projectID:
                                     description: projectID filters subnets by project
                                       ID.
+                                    minLength: 1
                                     type: string
                                   tags:
                                     description: |-
@@ -461,9 +474,11 @@ spec:
                           properties:
                             description:
                               description: description filters networks by description.
+                              minLength: 1
                               type: string
                             name:
                               description: name filters networks by name.
+                              minLength: 1
                               type: string
                             notTags:
                               description: |-
@@ -493,6 +508,7 @@ spec:
                               x-kubernetes-list-type: set
                             projectID:
                               description: projectID filters networks by project ID.
+                              minLength: 1
                               type: string
                             tags:
                               description: |-
@@ -572,9 +588,11 @@ spec:
                               description:
                                 description: description filters security groups by
                                   description.
+                                minLength: 1
                                 type: string
                               name:
                                 description: name filters security groups by name.
+                                minLength: 1
                                 type: string
                               notTags:
                                 description: |-
@@ -605,6 +623,7 @@ spec:
                               projectID:
                                 description: projectID filters security groups by
                                   project ID.
+                                minLength: 1
                                 type: string
                               tags:
                                 description: |-
@@ -748,6 +767,7 @@ spec:
                       type is the Cinder volume type of the volume.
                       If omitted, the default Cinder volume type that is configured in the OpenStack cloud
                       will be used.
+                    minLength: 1
                     type: string
                 required:
                 - sizeGiB
@@ -840,9 +860,11 @@ spec:
                       properties:
                         description:
                           description: description filters security groups by description.
+                          minLength: 1
                           type: string
                         name:
                           description: name filters security groups by name.
+                          minLength: 1
                           type: string
                         notTags:
                           description: |-
@@ -873,6 +895,7 @@ spec:
                         projectID:
                           description: projectID filters security groups by project
                             ID.
+                          minLength: 1
                           type: string
                         tags:
                           description: |-
@@ -1135,6 +1158,7 @@ spec:
                         description:
                           description: description is a human-readable description
                             for the port.
+                          minLength: 1
                           type: string
                         enablePortSecurity:
                           description: |-

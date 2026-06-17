@@ -128,7 +128,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	if bastionEnabled {
 		openStackCluster.Status.BastionSecurityGroup = convertOSSecGroupToConfigSecGroup(observedSecGroupBySuffix[bastionSuffix])
 	} else {
-		openStackCluster.Status.BastionSecurityGroup = nil
+		openStackCluster.Status.BastionSecurityGroup = infrav1.SecurityGroupStatus{}
 	}
 
 	return nil
@@ -202,7 +202,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 
 	// Fetch subnet to use for worker node port rules
 	// In the future IPv6 support need to be added here
-	if openStackCluster.Status.Network != nil {
+	if openStackCluster.Status.Network.ID != "" {
 		for _, subnet := range openStackCluster.Status.Network.Subnets {
 			if net.IsIPv4CIDRString(subnet.CIDR) {
 				workerRules = append(workerRules, getSGWorkerNodePortCIDR(subnet.CIDR)...)
@@ -297,8 +297,8 @@ func getRulesFromSpecs(remoteManagedGroups map[string]string, securityGroupRules
 		if rule.Description != nil {
 			r.Description = *rule.Description
 		}
-		if rule.EtherType != nil {
-			r.EtherType = *rule.EtherType
+		if rule.EtherType != "" {
+			r.EtherType = rule.EtherType
 		}
 		if rule.PortRangeMin != nil {
 			r.PortRangeMin = int(*rule.PortRangeMin)
@@ -579,8 +579,8 @@ func getSecBastionGroupName(clusterResourceName string) string {
 	return fmt.Sprintf("%s-cluster-%s-secgroup-%s", secGroupPrefix, clusterResourceName, bastionSuffix)
 }
 
-func convertOSSecGroupToConfigSecGroup(osSecGroup *groups.SecGroup) *infrav1.SecurityGroupStatus {
-	return &infrav1.SecurityGroupStatus{
+func convertOSSecGroupToConfigSecGroup(osSecGroup *groups.SecGroup) infrav1.SecurityGroupStatus {
+	return infrav1.SecurityGroupStatus{
 		ID:   osSecGroup.ID,
 		Name: osSecGroup.Name,
 	}

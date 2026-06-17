@@ -55,12 +55,12 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
 	if !ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true) {
 		s.scope.Logger().Info("External network is disabled - proceeding with internal network only")
-		openStackCluster.Status.ExternalNetwork = nil
+		openStackCluster.Status.ExternalNetwork = infrav1.NetworkStatus{}
 		return nil
 	}
 
 	var network *networks.Network
-	if openStackCluster.Spec.ExternalNetwork == nil {
+	if openStackCluster.Spec.ExternalNetwork == (infrav1.NetworkParam{}) {
 		// No external network specified in the cluster spec. Default behaviour: query all external networks.
 		// * If there's only one, use that.
 		// * If there's none don't use an external network.
@@ -70,7 +70,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		var err error
 		network, err = s.getNetworkByFilter(&infrav1.NetworkFilter{}, ExternalNetworksOnly)
 		if errors.Is(err, capoerrors.ErrNoMatches) {
-			openStackCluster.Status.ExternalNetwork = nil
+			openStackCluster.Status.ExternalNetwork = infrav1.NetworkStatus{}
 			s.scope.Logger().Info("No external network found - proceeding with internal network only")
 			return nil
 		}
@@ -79,13 +79,13 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		}
 	} else {
 		var err error
-		network, err = s.GetNetworkByParam(openStackCluster.Spec.ExternalNetwork, ExternalNetworksOnly)
+		network, err = s.GetNetworkByParam(&openStackCluster.Spec.ExternalNetwork, ExternalNetworksOnly)
 		if err != nil {
 			return fmt.Errorf("failed to get external network: %w", err)
 		}
 	}
 
-	openStackCluster.Status.ExternalNetwork = &infrav1.NetworkStatus{
+	openStackCluster.Status.ExternalNetwork = infrav1.NetworkStatus{
 		ID:   network.ID,
 		Name: network.Name,
 		Tags: network.Tags,
@@ -105,7 +105,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 
 	if res.ID != "" {
 		// Network exists
-		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+		openStackCluster.Status.Network = infrav1.NetworkStatusWithSubnets{}
 		openStackCluster.Status.Network.ID = res.ID
 		openStackCluster.Status.Network.Name = res.Name
 		openStackCluster.Status.Network.Tags = res.Tags
@@ -146,7 +146,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		}
 	}
 
-	openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+	openStackCluster.Status.Network = infrav1.NetworkStatusWithSubnets{}
 	openStackCluster.Status.Network.ID = network.ID
 	openStackCluster.Status.Network.Name = network.Name
 	openStackCluster.Status.Network.Tags = openStackCluster.Spec.Tags
@@ -174,7 +174,7 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 }
 
 func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
-	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+	if openStackCluster.Status.Network.ID == "" {
 		s.scope.Logger().V(4).Info("No need to reconcile network components since no network exists")
 		return nil
 	}

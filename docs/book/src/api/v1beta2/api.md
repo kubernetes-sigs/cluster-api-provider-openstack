@@ -58,7 +58,7 @@ Refer to the Kubernetes API documentation for the fields of the
 </tr>
 <tr>
 <td>
-<code>spec</code><br/>
+<code>spec,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">
 OpenStackClusterSpec
@@ -66,290 +66,12 @@ OpenStackClusterSpec
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackCluster.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>managedSubnets</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetSpec">
-[]SubnetSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>managedSubnets describe OpenStack Subnets to be created. Cluster actuator will create a network,
-subnets with the defined CIDR, and a router connected to these subnets. Currently only one IPv4
-subnet is supported. If you leave this empty, no network will be created.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>subnets</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
-[]SubnetParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>subnets specifies existing subnets to use if not ManagedSubnets are
-specified. All subnets must be in the network specified by Network.
-If no subnets are specified, all subnets in Network will be used.
-Multiple subnets of the same IP version are supported when primarySubnet
-is also set to identify which subnet should be used for services like
-load balancer VIP allocation.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>primarySubnet</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
-SubnetParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>primarySubnet identifies the primary subnet for the cluster when multiple
-subnets are specified in Subnets. It is used to determine the subnet for
-load balancer VIP allocation and node member registration.
-If not specified and multiple subnets exist, the first subnet in the
-resolved Subnets list is used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>managedRouter</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedRouter">
-ManagedRouter
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>managedRouter specifies attributes of the router. The values are used only
-if the Cluster actuator creates the router.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>router</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
-RouterParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>router specifies an existing router to be used if ManagedSubnets are
-specified. If specified, no new router will be created.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>managedNetwork</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedNetwork">
-ManagedNetwork
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>managedNetwork specifies attributes of the network. The values are used only
-if the Cluster actuator creates the network.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>network</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
-NetworkParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>network specifies an existing network to use if no ManagedSubnets
-are specified.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>externalNetwork</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
-NetworkParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
-This option is ignored if EnableExternalNetwork is set to false.</p>
-<p>If ExternalNetwork is defined it must refer to exactly one external network.</p>
-<p>If ExternalNetwork is not defined or is empty the controller will use any
-existing external network as long as there is only one. It is an
-error if ExternalNetwork is not defined and there are multiple
-external networks unless EnableExternalNetwork is also set to false.</p>
-<p>If ExternalNetwork is not defined and there are no external networks
-the controller will proceed as though EnableExternalNetwork was set to false.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableExternalNetwork</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>enableExternalNetwork specifies whether to connect the cluster to an external network.
-Set this to false when connecting to an external network is not possible or desirable,
-e.g. if using a provider network.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiServer</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServer">
-APIServer
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiServer configures the API server endpoint and its associated
-load balancer and floating IP.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>managedSecurityGroups</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ManagedSecurityGroups">
-ManagedSecurityGroups
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>managedSecurityGroups determines whether OpenStack security groups for the cluster
-will be managed by the OpenStack provider or whether pre-existing security groups will
-be specified as part of the configuration.
-By default, the managed security groups have rules that allow the Kubelet, etcd, and the
-Kubernetes API server to function correctly.
-It&rsquo;s possible to add additional rules to the managed security groups.
-When defined to an empty struct, the managed security groups will be created with the default rules.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tags</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tags to set on all resources in cluster which support tags</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>controlPlaneEndpoint</code><br/>
-<em>
-sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>controlPlaneEndpoint represents the endpoint used to communicate with the control plane.
-It is normally populated automatically by the OpenStackCluster
-controller during cluster provisioning. If it is set on creation the
-control plane endpoint will use the values set here in preference to
-values set elsewhere.
-ControlPlaneEndpoint cannot be modified after ControlPlaneEndpoint.Host has been set.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>controlPlaneAvailabilityZones</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>controlPlaneAvailabilityZones is the set of availability zones which
-control plane machines may be deployed to.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>controlPlaneOmitAvailabilityZone</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>controlPlaneOmitAvailabilityZone causes availability zone to be
-omitted when creating control plane nodes, allowing the Nova
-scheduler to make a decision on which availability zone to use based
-on other scheduling constraints</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bastion</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.Bastion">
-Bastion
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>bastion is the OpenStack instance to login the nodes</p>
-<p>As a rolling update is not ideal during a bastion host session, we
-prevent changes to a running bastion configuration. To make changes, it&rsquo;s required
-to first set <code>enabled: false</code> which will remove the bastion and then changes can be made.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>identityRef,omitzero</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
-OpenStackIdentityReference
-</a>
-</em>
-</td>
-<td>
-<p>identityRef is a reference to a secret holding OpenStack credentials
-to be used when reconciling this cluster. It is also to reconcile
-machines unless overridden in the machine spec.</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code><br/>
+<code>status,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterStatus">
 OpenStackClusterStatus
@@ -409,7 +131,7 @@ Refer to the Kubernetes API documentation for the fields of the
 </tr>
 <tr>
 <td>
-<code>spec</code><br/>
+<code>spec,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterTemplateSpec">
 OpenStackClusterTemplateSpec
@@ -417,25 +139,7 @@ OpenStackClusterTemplateSpec
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackClusterTemplate.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>template,omitzero</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterTemplateResource">
-OpenStackClusterTemplateResource
-</a>
-</em>
-</td>
-<td>
-<p>template is the OpenStackClusterTemplate resource data.</p>
-</td>
-</tr>
-</table>
 </td>
 </tr>
 </tbody>
@@ -486,7 +190,7 @@ Refer to the Kubernetes API documentation for the fields of the
 </tr>
 <tr>
 <td>
-<code>spec</code><br/>
+<code>spec,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineSpec">
 OpenStackMachineSpec
@@ -494,238 +198,12 @@ OpenStackMachineSpec
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackMachine.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>providerID</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>providerID is the unique identifier as specified by the cloud provider.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>flavor,omitzero</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">
-FlavorParam
-</a>
-</em>
-</td>
-<td>
-<p>flavor is the flavor to use for this machine.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>image,omitzero</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ImageParam">
-ImageParam
-</a>
-</em>
-</td>
-<td>
-<p>image is the image to use for the server instance.
-If the rootVolume is specified, this will be used when creating the root volume.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sshKeyName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>sshKeyName is the name of the SSH key to inject in the instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.PortOpts">
-[]PortOpts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ports to be attached to the server instance. They are created if a port with the given name does not already exist.
-If not specified a default port will be added for the default cluster network.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>securityGroups</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.SecurityGroupParam">
-[]SecurityGroupParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>securityGroups is a list of security groups to assign to the instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>trunk</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>trunk specifies whether the server instance is created on a trunk port or not.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tags</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>tags which will be added to the machine and all dependent resources
-which support them. These are in addition to Tags defined on the
-cluster.
-Requires Nova api 2.52 minimum!</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverMetadata</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ServerMetadata">
-[]ServerMetadata
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>serverMetadata is a list of key/value pairs to add to the server instance.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>configDrive</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>configDrive enables config drive support.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>rootVolume</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.RootVolume">
-RootVolume
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>rootVolume is the volume metadata to boot from.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>additionalBlockDevices</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.AdditionalBlockDevice">
-[]AdditionalBlockDevice
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverGroup</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.ServerGroupParam">
-ServerGroupParam
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>serverGroup is the server group to assign the machine to.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>identityRef</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
-OpenStackIdentityReference
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>identityRef is a reference to a secret holding OpenStack credentials
-to be used when reconciling this machine. If not specified, the
-credentials specified in the cluster will be used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>floatingIPPoolRef</code><br/>
-<em>
-Kubernetes core/v1.TypedLocalObjectReference
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>floatingIPPoolRef is a reference to a IPPool that will be assigned
-to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
-will be assigned to the OpenStackMachine.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>schedulerHintAdditionalProperties</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.SchedulerHintAdditionalProperty">
-[]SchedulerHintAdditionalProperty
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>schedulerHintAdditionalProperties are arbitrary key/value pairs that provide additional hints
-to the OpenStack scheduler. These hints can influence how instances are placed on the infrastructure,
-such as specifying certain host aggregates or availability zones.</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code><br/>
+<code>status,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineStatus">
 OpenStackMachineStatus
@@ -785,7 +263,7 @@ Refer to the Kubernetes API documentation for the fields of the
 </tr>
 <tr>
 <td>
-<code>spec</code><br/>
+<code>spec,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineTemplateSpec">
 OpenStackMachineTemplateSpec
@@ -793,30 +271,12 @@ OpenStackMachineTemplateSpec
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>spec is the desired state of the OpenStackMachineTemplate.</p>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>template,omitzero</code><br/>
-<em>
-<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineTemplateResource">
-OpenStackMachineTemplateResource
-</a>
-</em>
-</td>
-<td>
-<p>template is the OpenStackMachineTemplate resource data.</p>
-</td>
-</tr>
-</table>
 </td>
 </tr>
 <tr>
 <td>
-<code>status</code><br/>
+<code>status,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineTemplateStatus">
 OpenStackMachineTemplateStatus
@@ -993,7 +453,7 @@ specified.</p>
 </tr>
 <tr>
 <td>
-<code>network</code><br/>
+<code>network,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
 NetworkParam
@@ -1310,7 +770,7 @@ waiting until the bastion has been deleted.</p>
 </tr>
 <tr>
 <td>
-<code>spec</code><br/>
+<code>spec,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineSpec">
 OpenStackMachineSpec
@@ -1320,10 +780,6 @@ OpenStackMachineSpec
 <td>
 <em>(Optional)</em>
 <p>spec for the bastion itself</p>
-<br/>
-<br/>
-<table>
-</table>
 </td>
 </tr>
 <tr>
@@ -1816,7 +1272,7 @@ which contain any of the given tags will be excluded from the result.</p>
 <tbody>
 <tr>
 <td>
-<code>subnet</code><br/>
+<code>subnet,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
 SubnetParam
@@ -1910,7 +1366,7 @@ string
 </tr>
 <tr>
 <td>
-<code>filter</code><br/>
+<code>filter,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorFilter">
 FlavorFilter
@@ -2004,7 +1460,7 @@ string
 </tr>
 <tr>
 <td>
-<code>filter</code><br/>
+<code>filter,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ImageFilter">
 ImageFilter
@@ -2020,7 +1476,7 @@ be raised.</p>
 </tr>
 <tr>
 <td>
-<code>imageRef</code><br/>
+<code>imageRef,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ResourceReference">
 ResourceReference
@@ -2132,7 +1588,7 @@ string
 </tr>
 <tr>
 <td>
-<code>loadBalancerNetwork</code><br/>
+<code>loadBalancerNetwork,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkStatusWithSubnets">
 NetworkStatusWithSubnets
@@ -2695,7 +2151,7 @@ load balancer VIP allocation.</p>
 </tr>
 <tr>
 <td>
-<code>primarySubnet</code><br/>
+<code>primarySubnet,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
 SubnetParam
@@ -2728,7 +2184,7 @@ if the Cluster actuator creates the router.</p>
 </tr>
 <tr>
 <td>
-<code>router</code><br/>
+<code>router,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.RouterParam">
 RouterParam
@@ -2758,7 +2214,7 @@ if the Cluster actuator creates the network.</p>
 </tr>
 <tr>
 <td>
-<code>network</code><br/>
+<code>network,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
 NetworkParam
@@ -2773,7 +2229,7 @@ are specified.</p>
 </tr>
 <tr>
 <td>
-<code>externalNetwork</code><br/>
+<code>externalNetwork,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
 NetworkParam
@@ -2983,7 +2439,7 @@ ClusterInitialization
 </tr>
 <tr>
 <td>
-<code>network</code><br/>
+<code>network,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkStatusWithSubnets">
 NetworkStatusWithSubnets
@@ -2997,7 +2453,7 @@ NetworkStatusWithSubnets
 </tr>
 <tr>
 <td>
-<code>externalNetwork</code><br/>
+<code>externalNetwork,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkStatus">
 NetworkStatus
@@ -3011,7 +2467,7 @@ NetworkStatus
 </tr>
 <tr>
 <td>
-<code>router</code><br/>
+<code>router,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.Router">
 Router
@@ -3025,7 +2481,7 @@ Router
 </tr>
 <tr>
 <td>
-<code>apiServerManagedLoadBalancer</code><br/>
+<code>apiServerManagedLoadBalancer,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.LoadBalancer">
 LoadBalancer
@@ -3051,7 +2507,7 @@ LoadBalancer
 </tr>
 <tr>
 <td>
-<code>controlPlaneSecurityGroup</code><br/>
+<code>controlPlaneSecurityGroup,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SecurityGroupStatus">
 SecurityGroupStatus
@@ -3067,7 +2523,7 @@ nodes.</p>
 </tr>
 <tr>
 <td>
-<code>workerSecurityGroup</code><br/>
+<code>workerSecurityGroup,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SecurityGroupStatus">
 SecurityGroupStatus
@@ -3082,7 +2538,7 @@ Security Group that needs to be applied to worker nodes.</p>
 </tr>
 <tr>
 <td>
-<code>bastionSecurityGroup</code><br/>
+<code>bastionSecurityGroup,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SecurityGroupStatus">
 SecurityGroupStatus
@@ -3400,7 +2856,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>rootVolume</code><br/>
+<code>rootVolume,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.RootVolume">
 RootVolume
@@ -3428,7 +2884,7 @@ RootVolume
 </tr>
 <tr>
 <td>
-<code>serverGroup</code><br/>
+<code>serverGroup,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ServerGroupParam">
 ServerGroupParam
@@ -3442,7 +2898,7 @@ ServerGroupParam
 </tr>
 <tr>
 <td>
-<code>identityRef</code><br/>
+<code>identityRef,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
 OpenStackIdentityReference
@@ -3752,7 +3208,7 @@ NodeInfo
 <tbody>
 <tr>
 <td>
-<code>network</code><br/>
+<code>network,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NetworkParam">
 NetworkParam
@@ -5051,7 +4507,7 @@ string
 </tr>
 <tr>
 <td>
-<code>filter</code><br/>
+<code>filter,omitempty,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ServerGroupFilter">
 ServerGroupFilter

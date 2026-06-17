@@ -354,7 +354,7 @@ func (s *Service) DeleteInstanceTrunkAndPort(eventObject runtime.Object, port in
 // DeleteClusterPorts deletes all ports created for the cluster.
 func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster) error {
 	// If the network is not ready, do nothing
-	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+	if openStackCluster.Status.Network.ID == "" {
 		return nil
 	}
 	networkID := openStackCluster.Status.Network.ID
@@ -537,7 +537,7 @@ func defaultNetworkTarget(network *infrav1.NetworkStatusWithSubnets) (string, []
 // normalizePortTarget ensures that the port has a network ID.
 func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *infrav1.NetworkStatusWithSubnets, portIdx int) (string, []infrav1.ResolvedFixedIP, error) {
 	// No network or subnets defined: use cluster defaults
-	if port.Network == nil && len(port.FixedIPs) == 0 {
+	if port.Network == (infrav1.NetworkParam{}) && len(port.FixedIPs) == 0 {
 		return defaultNetworkTarget(defaultNetwork)
 	}
 
@@ -548,9 +548,9 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 	}
 
 	switch {
-	case port.Network != nil:
+	case port.Network != (infrav1.NetworkParam{}):
 		var err error
-		networkID, err = s.GetNetworkIDByParam(port.Network)
+		networkID, err = s.GetNetworkIDByParam(&port.Network)
 		if err != nil {
 			return "", nil, err
 		}
@@ -569,11 +569,11 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 			for i, fixedIP := range port.FixedIPs {
 				resolvedFixedIP := &resolvedFixedIPs[i]
 
-				if fixedIP.Subnet == nil {
+				if fixedIP.Subnet == (infrav1.SubnetParam{}) {
 					continue
 				}
 
-				subnet, err := s.GetSubnetByParam(fixedIP.Subnet)
+				subnet, err := s.GetSubnetByParam(&fixedIP.Subnet)
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
 					if errors.Is(err, capoerrors.ErrMultipleMatches) {
@@ -605,8 +605,8 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 	for i, fixedIP := range port.FixedIPs {
 		resolvedFixedIP := &resolvedFixedIPs[i]
 		resolvedFixedIP.IPAddress = fixedIP.IPAddress
-		if fixedIP.Subnet != nil && resolvedFixedIP.SubnetID == nil {
-			subnet, err := s.GetNetworkSubnetByParam(networkID, fixedIP.Subnet)
+		if fixedIP.Subnet != (infrav1.SubnetParam{}) && resolvedFixedIP.SubnetID == nil {
+			subnet, err := s.GetNetworkSubnetByParam(networkID, &fixedIP.Subnet)
 			if err != nil {
 				return "", nil, err
 			}

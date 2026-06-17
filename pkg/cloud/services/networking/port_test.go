@@ -565,7 +565,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				Ports: []infrav1.PortOpts{
 					{
 						NameSuffix: ptr.To("custom"),
-						Network:    nil,
+						Network:    infrav1.NetworkParam{},
 						FixedIPs:   nil,
 					},
 				},
@@ -590,7 +590,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				Ports: []infrav1.PortOpts{
 					{
 						NameSuffix: ptr.To("custom"),
-						Network:    nil,
+						Network:    infrav1.NetworkParam{},
 						FixedIPs:   nil,
 					},
 				},
@@ -644,7 +644,7 @@ func TestService_ConstructPorts(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkParam{
+						Network: infrav1.NetworkParam{
 							ID: ptr.To(networkID),
 						},
 					},
@@ -666,7 +666,7 @@ func TestService_ConstructPorts(t *testing.T) {
 			spec: infrav1.OpenStackMachineSpec{
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkParam{
+						Network: infrav1.NetworkParam{
 							Filter: &infrav1.NetworkFilter{Name: "test-network"},
 						},
 					},
@@ -695,7 +695,7 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetParam{
+								Subnet: infrav1.SubnetParam{
 									ID: ptr.To(subnetID1),
 								},
 							},
@@ -727,7 +727,7 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetParam{
+								Subnet: infrav1.SubnetParam{
 									Filter: &infrav1.SubnetFilter{Name: "test-subnet"},
 								},
 							},
@@ -763,7 +763,7 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetParam{
+								Subnet: infrav1.SubnetParam{
 									Filter: &infrav1.SubnetFilter{Name: "test-subnet"},
 								},
 							},
@@ -783,7 +783,7 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetParam{
+								Subnet: infrav1.SubnetParam{
 									Filter: &infrav1.SubnetFilter{Name: "test-subnet"},
 								},
 							},
@@ -806,12 +806,12 @@ func TestService_ConstructPorts(t *testing.T) {
 					{
 						FixedIPs: []infrav1.FixedIP{
 							{
-								Subnet: &infrav1.SubnetParam{
+								Subnet: infrav1.SubnetParam{
 									Filter: &infrav1.SubnetFilter{Name: "test-subnet1"},
 								},
 							},
 							{
-								Subnet: &infrav1.SubnetParam{
+								Subnet: infrav1.SubnetParam{
 									Filter: &infrav1.SubnetFilter{Name: "test-subnet2"},
 								},
 							},
@@ -1002,7 +1002,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
 
-			defaultNetwork := &infrav1.NetworkStatusWithSubnets{
+			defaultNetwork := infrav1.NetworkStatusWithSubnets{
 				NetworkStatus: infrav1.NetworkStatus{
 					ID: defaultNetworkID,
 				},
@@ -1014,7 +1014,7 @@ func TestService_ConstructPorts(t *testing.T) {
 			clusterResourceName := "test-cluster"
 			baseName := "test-instance"
 			baseTags := []string{"test-tag"}
-			got, err := s.ConstructPorts(tt.spec.Ports, tt.spec.SecurityGroups, tt.spec.Trunk, clusterResourceName, baseName, defaultNetwork, tt.managedSecurityGroup, baseTags)
+			got, err := s.ConstructPorts(tt.spec.Ports, tt.spec.SecurityGroups, tt.spec.Trunk, clusterResourceName, baseName, &defaultNetwork, tt.managedSecurityGroup, baseTags)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return
@@ -1061,7 +1061,7 @@ func Test_getPortName(t *testing.T) {
 			instanceName: "test-1-instance",
 			spec: &infrav1.PortOpts{
 				NameSuffix: ptr.To("foo2"),
-				Network:    &infrav1.NetworkParam{ID: ptr.To("bar")},
+				Network:    infrav1.NetworkParam{ID: ptr.To("bar")},
 				ResolvedPortSpecFields: infrav1.ResolvedPortSpecFields{
 					EnablePortSecurity: ptr.To(false),
 				},

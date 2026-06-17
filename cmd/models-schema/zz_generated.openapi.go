@@ -22243,6 +22243,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 					"network": {
 						SchemaProps: spec.SchemaProps{
 							Description: "network defines which network should the load balancer be allocated on.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
@@ -22443,6 +22444,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Bastion(ref com
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Description: "spec for the bastion itself",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackMachineSpec"),
 						},
 					},
@@ -22781,6 +22783,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FixedIP(ref com
 					"subnet": {
 						SchemaProps: spec.SchemaProps{
 							Description: "subnet is an openstack subnet query that will return the id of a subnet to create the fixed IP of a port in. This query must not return more than one subnet.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam"),
 						},
 					},
@@ -22836,6 +22839,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorParam(ref
 					"filter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "filter describes a query for a flavor.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorFilter"),
 						},
 					},
@@ -22904,12 +22908,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ImageParam(ref 
 					"filter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "filter describes a query for an image. If specified, the combination of name and tags must return a single matching image or an error will be raised.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ImageFilter"),
 						},
 					},
 					"imageRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "imageRef is a reference to an ORC Image in the same namespace as the referring object.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ResourceReference"),
 						},
 					},
@@ -22989,6 +22995,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 					"loadBalancerNetwork": {
 						SchemaProps: spec.SchemaProps{
 							Description: "loadBalancerNetwork contains information about network and/or subnets which the loadbalancer is allocated on. If subnets are specified within the LoadBalancerNetwork currently only the first subnet in the list is taken into account.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatusWithSubnets"),
 						},
 					},
@@ -23511,6 +23518,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 						},
 					},
 				},
+				Required: []string{"spec"},
 			},
 		},
 		Dependencies: []string{
@@ -23615,6 +23623,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					"primarySubnet": {
 						SchemaProps: spec.SchemaProps{
 							Description: "primarySubnet identifies the primary subnet for the cluster when multiple subnets are specified in Subnets. It is used to determine the subnet for load balancer VIP allocation and node member registration. If not specified and multiple subnets exist, the first subnet in the resolved Subnets list is used.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam"),
 						},
 					},
@@ -23627,6 +23636,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					"router": {
 						SchemaProps: spec.SchemaProps{
 							Description: "router specifies an existing router to be used if ManagedSubnets are specified. If specified, no new router will be created.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam"),
 						},
 					},
@@ -23639,12 +23649,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					"network": {
 						SchemaProps: spec.SchemaProps{
 							Description: "network specifies an existing network to use if no ManagedSubnets are specified.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
 					"externalNetwork": {
 						SchemaProps: spec.SchemaProps{
 							Description: "externalNetwork is the OpenStack Network to be used to get public internet to the VMs. This option is ignored if EnableExternalNetwork is set to false.\n\nIf ExternalNetwork is defined it must refer to exactly one external network.\n\nIf ExternalNetwork is not defined or is empty the controller will use any existing external network as long as there is only one. It is an error if ExternalNetwork is not defined and there are multiple external networks unless EnableExternalNetwork is also set to false.\n\nIf ExternalNetwork is not defined and there are no external networks the controller will proceed as though EnableExternalNetwork was set to false.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
@@ -23780,24 +23792,28 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					"network": {
 						SchemaProps: spec.SchemaProps{
 							Description: "network contains information about the created OpenStack Network.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatusWithSubnets"),
 						},
 					},
 					"externalNetwork": {
 						SchemaProps: spec.SchemaProps{
 							Description: "externalNetwork contains information about the external network used for default ingress and egress traffic.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkStatus"),
 						},
 					},
 					"router": {
 						SchemaProps: spec.SchemaProps{
 							Description: "router describes the default cluster router",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Router"),
 						},
 					},
 					"apiServerManagedLoadBalancer": {
 						SchemaProps: spec.SchemaProps{
 							Description: "apiServerManagedLoadBalancer describes the api server load balancer if one exists",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.LoadBalancer"),
 						},
 					},
@@ -23818,18 +23834,21 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 					"controlPlaneSecurityGroup": {
 						SchemaProps: spec.SchemaProps{
 							Description: "controlPlaneSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to control plane nodes.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupStatus"),
 						},
 					},
 					"workerSecurityGroup": {
 						SchemaProps: spec.SchemaProps{
 							Description: "workerSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to worker nodes.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupStatus"),
 						},
 					},
 					"bastionSecurityGroup": {
 						SchemaProps: spec.SchemaProps{
 							Description: "bastionSecurityGroup contains the information about the OpenStack Security Group that needs to be applied to worker nodes.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SecurityGroupStatus"),
 						},
 					},
@@ -23883,6 +23902,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 						},
 					},
 				},
+				Required: []string{"spec"},
 			},
 		},
 		Dependencies: []string{
@@ -24070,6 +24090,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 						},
 					},
 				},
+				Required: []string{"spec"},
 			},
 		},
 		Dependencies: []string{
@@ -24248,6 +24269,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					"rootVolume": {
 						SchemaProps: spec.SchemaProps{
 							Description: "rootVolume is the volume metadata to boot from.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RootVolume"),
 						},
 					},
@@ -24276,12 +24298,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 					"serverGroup": {
 						SchemaProps: spec.SchemaProps{
 							Description: "serverGroup is the server group to assign the machine to.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupParam"),
 						},
 					},
 					"identityRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "identityRef is a reference to a secret holding OpenStack credentials to be used when reconciling this machine. If not specified, the credentials specified in the cluster will be used.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference"),
 						},
 					},
@@ -24448,6 +24472,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 						},
 					},
 				},
+				Required: []string{"spec"},
 			},
 		},
 		Dependencies: []string{
@@ -24617,6 +24642,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 					"network": {
 						SchemaProps: spec.SchemaProps{
 							Description: "network is a query for an openstack network that the port will be created or discovered on. This will fail if the query returns more than one network.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam"),
 						},
 					},
@@ -24905,7 +24931,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 					"description": {
 						SchemaProps: spec.SchemaProps{
 							Description: "description is a human-readable description for the port.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25801,6 +25826,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ServerGroupPara
 					"filter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "filter specifies a query to select an OpenStack server group. If provided, it cannot be empty.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ServerGroupFilter"),
 						},
 					},

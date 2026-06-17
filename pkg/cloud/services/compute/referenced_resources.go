@@ -126,7 +126,7 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 			}
 
 			if name := spec.Flavor; name != nil {
-				flavorParam.Filter = &infrav1.FlavorFilter{
+				flavorParam.Filter = infrav1.FlavorFilter{
 					Name: optional.String(name),
 				}
 			}

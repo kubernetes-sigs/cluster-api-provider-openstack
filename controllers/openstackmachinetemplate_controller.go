@@ -210,7 +210,7 @@ func (r *OpenStackMachineTemplateReconciler) reconcileNormal(ctx context.Context
 	}
 
 	// storage depends on whether user boots-from-volume or not
-	if openStackMachineTemplate.Spec.Template.Spec.RootVolume != nil && openStackMachineTemplate.Spec.Template.Spec.RootVolume.SizeGiB > 0 {
+	if openStackMachineTemplate.Spec.Template.Spec.RootVolume != (infrav1.RootVolume{}) && openStackMachineTemplate.Spec.Template.Spec.RootVolume.SizeGiB > 0 {
 		// RootVolume.SizeGib is in GiB -> convert to bytes
 		storageBytes := int64(openStackMachineTemplate.Spec.Template.Spec.RootVolume.SizeGiB) * 1024 * 1024 * 1024
 		openStackMachineTemplate.Status.Capacity[corev1.ResourceStorage] = *resource.NewQuantity(storageBytes, resource.BinarySI)

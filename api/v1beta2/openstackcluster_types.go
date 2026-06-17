@@ -57,7 +57,7 @@ type OpenStackClusterSpec struct {
 	// If not specified and multiple subnets exist, the first subnet in the
 	// resolved Subnets list is used.
 	// +optional
-	PrimarySubnet *SubnetParam `json:"primarySubnet,omitempty"`
+	PrimarySubnet SubnetParam `json:"primarySubnet,omitempty,omitzero"`
 
 	// managedRouter specifies attributes of the router. The values are used only
 	// if the Cluster actuator creates the router.
@@ -68,7 +68,7 @@ type OpenStackClusterSpec struct {
 	// router specifies an existing router to be used if ManagedSubnets are
 	// specified. If specified, no new router will be created.
 	// +optional
-	Router *RouterParam `json:"router,omitempty"`
+	Router RouterParam `json:"router,omitempty,omitzero"`
 
 	// managedNetwork specifies attributes of the network. The values are used only
 	// if the Cluster actuator creates the network.
@@ -79,7 +79,7 @@ type OpenStackClusterSpec struct {
 	// network specifies an existing network to use if no ManagedSubnets
 	// are specified.
 	// +optional
-	Network *NetworkParam `json:"network,omitempty"`
+	Network NetworkParam `json:"network,omitempty,omitzero"`
 
 	// externalNetwork is the OpenStack Network to be used to get public internet to the VMs.
 	// This option is ignored if EnableExternalNetwork is set to false.
@@ -94,7 +94,7 @@ type OpenStackClusterSpec struct {
 	// If ExternalNetwork is not defined and there are no external networks
 	// the controller will proceed as though EnableExternalNetwork was set to false.
 	// +optional
-	ExternalNetwork *NetworkParam `json:"externalNetwork,omitempty"`
+	ExternalNetwork NetworkParam `json:"externalNetwork,omitempty,omitzero"`
 
 	// enableExternalNetwork specifies whether to connect the cluster to an external network.
 	// Set this to false when connecting to an external network is not possible or desirable,
@@ -202,6 +202,7 @@ type ClusterInitialization struct {
 }
 
 // OpenStackClusterStatus defines the observed state of OpenStackCluster.
+// +kubebuilder:validation:MinProperties=1
 type OpenStackClusterStatus struct {
 	// conditions defines current service state of the OpenStackCluster.
 	// This field surfaces into Cluster's status.conditions[InfrastructureReady] condition.
@@ -218,19 +219,19 @@ type OpenStackClusterStatus struct {
 
 	// network contains information about the created OpenStack Network.
 	// +optional
-	Network *NetworkStatusWithSubnets `json:"network,omitempty"`
+	Network NetworkStatusWithSubnets `json:"network,omitempty,omitzero"`
 
 	// externalNetwork contains information about the external network used for default ingress and egress traffic.
 	// +optional
-	ExternalNetwork *NetworkStatus `json:"externalNetwork,omitempty"`
+	ExternalNetwork NetworkStatus `json:"externalNetwork,omitempty,omitzero"`
 
 	// router describes the default cluster router
 	// +optional
-	Router *Router `json:"router,omitempty"`
+	Router Router `json:"router,omitempty,omitzero"`
 
 	// apiServerManagedLoadBalancer describes the api server load balancer if one exists
 	// +optional
-	APIServerManagedLoadBalancer *LoadBalancer `json:"apiServerManagedLoadBalancer,omitempty"`
+	APIServerManagedLoadBalancer LoadBalancer `json:"apiServerManagedLoadBalancer,omitempty,omitzero"`
 
 	// failureDomains represent OpenStack availability zones
 	// +optional
@@ -240,17 +241,17 @@ type OpenStackClusterStatus struct {
 	// OpenStack Security Group that needs to be applied to control plane
 	// nodes.
 	// +optional
-	ControlPlaneSecurityGroup *SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty"`
+	ControlPlaneSecurityGroup SecurityGroupStatus `json:"controlPlaneSecurityGroup,omitempty,omitzero"`
 
 	// workerSecurityGroup contains the information about the OpenStack
 	// Security Group that needs to be applied to worker nodes.
 	// +optional
-	WorkerSecurityGroup *SecurityGroupStatus `json:"workerSecurityGroup,omitempty"`
+	WorkerSecurityGroup SecurityGroupStatus `json:"workerSecurityGroup,omitempty,omitzero"`
 
 	// bastionSecurityGroup contains the information about the OpenStack
 	// Security Group that needs to be applied to worker nodes.
 	// +optional
-	BastionSecurityGroup *SecurityGroupStatus `json:"bastionSecurityGroup,omitempty"`
+	BastionSecurityGroup SecurityGroupStatus `json:"bastionSecurityGroup,omitempty,omitzero"`
 
 	// bastion contains the information about the deployed bastion host
 	// +optional
@@ -276,11 +277,11 @@ type OpenStackCluster struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackCluster.
-	// +optional
-	Spec OpenStackClusterSpec `json:"spec,omitempty"`
+	// +required
+	Spec OpenStackClusterSpec `json:"spec,omitempty,omitzero"`
 	// status is the observed state of the OpenStackCluster.
 	// +optional
-	Status OpenStackClusterStatus `json:"status,omitempty"`
+	Status OpenStackClusterStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true

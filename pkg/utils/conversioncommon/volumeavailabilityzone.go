@@ -29,10 +29,9 @@ func Convert_string_To_Pointer_v1beta1_VolumeAvailabilityZone(in *string, out **
 			From: infrav1.VolumeAZFromMachine,
 		}
 	default:
-		azName := infrav1.VolumeAZName(*in)
 		*out = &infrav1.VolumeAvailabilityZone{
 			From: infrav1.VolumeAZFromName,
-			Name: &azName,
+			Name: infrav1.VolumeAZName(*in),
 		}
 	}
 
@@ -49,8 +48,8 @@ func Convert_Pointer_v1beta1_VolumeAvailabilityZone_To_string(in **infrav1.Volum
 	switch (*in).From {
 	case "", infrav1.VolumeAZFromName:
 		name := (*in).Name
-		if name != nil {
-			*out = string(*name)
+		if name != "" {
+			*out = string(name)
 		} else {
 			*out = ""
 		}

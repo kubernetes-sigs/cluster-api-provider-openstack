@@ -40,10 +40,10 @@ var _ = Describe("OpenStackServer API validations", func() {
 					Name:      "test-identity",
 					CloudName: "test-cloud",
 				},
-				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Image: infrav1.ImageParam{Filter: infrav1.ImageFilter{Name: ptr.To("test-image")}},
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkParam{
+						Network: infrav1.NetworkParam{
 							Filter: &infrav1.NetworkFilter{
 								Name: "test-network",
 							},
@@ -247,7 +247,7 @@ var _ = Describe("OpenStackServer API validations", func() {
 		It("should allow volume with defaulted AZ from", func() {
 			azName := infrav1.VolumeAZName("test-az")
 			az := infrav1.VolumeAvailabilityZone{
-				Name: &azName,
+				Name: azName,
 			}
 
 			server := defaultserverWithRootVolumeAZ(&az)
@@ -261,7 +261,7 @@ var _ = Describe("OpenStackServer API validations", func() {
 			azName := infrav1.VolumeAZName("test-az")
 			az := infrav1.VolumeAvailabilityZone{
 				From: infrav1.VolumeAZFromName,
-				Name: &azName,
+				Name: azName,
 			}
 
 			server := defaultserverWithRootVolumeAZ(&az)
@@ -321,7 +321,7 @@ var _ = Describe("OpenStackServer API validations", func() {
 			azName := infrav1.VolumeAZName("test-az")
 			az := infrav1.VolumeAvailabilityZone{
 				From: infrav1.VolumeAZFromMachine,
-				Name: &azName,
+				Name: azName,
 			}
 
 			server := defaultserverWithRootVolumeAZ(&az)
@@ -335,7 +335,7 @@ var _ = Describe("OpenStackServer API validations", func() {
 			azName := infrav1.VolumeAZName("")
 			az := infrav1.VolumeAvailabilityZone{
 				From: infrav1.VolumeAZFromName,
-				Name: &azName,
+				Name: azName,
 			}
 
 			server := defaultserverWithRootVolumeAZ(&az)
