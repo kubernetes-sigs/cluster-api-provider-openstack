@@ -22286,7 +22286,6 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBa
 						},
 					},
 				},
-				Required: []string{"enabled"},
 			},
 		},
 		Dependencies: []string{
@@ -24021,7 +24020,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackIdenti
 						},
 					},
 				},
-				Required: []string{"type", "name", "cloudName"},
+				Required: []string{"name", "cloudName"},
 			},
 		},
 	}

@@ -23,7 +23,7 @@ type OpenStackIdentityReference struct {
 	// type specifies the identity reference type. Defaults to Secret for backward compatibility.
 	// +kubebuilder:validation:Enum=Secret;ClusterIdentity
 	// +kubebuilder:default=Secret
-	// +required
+	// +optional
 	Type string `json:"type,omitempty"`
 
 	// name is the name of a Secret (type=Secret) in the same namespace as the resource being provisioned,

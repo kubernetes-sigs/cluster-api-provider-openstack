@@ -946,6 +946,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>enabled defines whether a load balancer should be created. This value
 defaults to true if an APIServerLoadBalancer is given.</p>
 <p>There is no reason to set this to false. To disable creation of the
@@ -3202,6 +3203,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>type specifies the identity reference type. Defaults to Secret for backward compatibility.</p>
 </td>
 </tr>
