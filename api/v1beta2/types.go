@@ -993,7 +993,7 @@ type APIServerLoadBalancer struct {
 	// API server loadbalancer, omit the APIServerLoadBalancer field in the
 	// cluster spec instead.
 	//
-	// +required
+	// +optional
 	// +kubebuilder:default:=true
 	Enabled *bool `json:"enabled,omitempty"`
 

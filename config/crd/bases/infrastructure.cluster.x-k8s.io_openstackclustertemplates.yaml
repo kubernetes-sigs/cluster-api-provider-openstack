@@ -2591,8 +2591,6 @@ spec:
                                   type: object
                                 type: array
                                 x-kubernetes-list-type: atomic
-                            required:
-                            - enabled
                             type: object
                           port:
                             description: |-
@@ -2812,7 +2810,6 @@ spec:
                                 required:
                                 - cloudName
                                 - name
-                                - type
                                 type: object
                                 x-kubernetes-validations:
                                 - message: region is immutable
@@ -3781,7 +3778,6 @@ spec:
                         required:
                         - cloudName
                         - name
-                        - type
                         type: object
                         x-kubernetes-validations:
                         - message: region is immutable
