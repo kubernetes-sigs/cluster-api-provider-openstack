@@ -2024,7 +2024,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
     - name: id
       type:
         scalar: string
@@ -2045,7 +2045,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.MachineInitialization
   map:
     fields:
@@ -2168,7 +2168,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatusWithSubnets
   map:
     fields:
@@ -2189,7 +2189,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NodeInfo
   map:
     fields:
@@ -2315,7 +2315,9 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             namedType: io.k8s.sigs.cluster-api.api.core.v1beta2.FailureDomain
-          elementRelationship: atomic
+          elementRelationship: associative
+          keys:
+          - name
     - name: initialization
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ClusterInitialization
@@ -2758,7 +2760,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
     - name: name
       type:
         scalar: string
@@ -2767,7 +2769,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterFilter
   map:
     fields:
@@ -2918,7 +2920,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
   map:
     fields:
@@ -2969,7 +2971,7 @@ var schemaYAML = typed.YAMLObject(`types:
         list:
           elementType:
             scalar: string
-          elementRelationship: atomic
+          elementRelationship: associative
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetFilter
   map:
     fields:

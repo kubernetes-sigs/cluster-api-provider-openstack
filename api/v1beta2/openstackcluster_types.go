@@ -233,6 +233,8 @@ type OpenStackClusterStatus struct {
 	APIServerManagedLoadBalancer *LoadBalancer `json:"apiServerManagedLoadBalancer,omitempty"`
 
 	// failureDomains represent OpenStack availability zones
+	// +listType=map
+	// +listMapKey=name
 	// +optional
 	FailureDomains []clusterv1.FailureDomain `json:"failureDomains,omitempty"`
 

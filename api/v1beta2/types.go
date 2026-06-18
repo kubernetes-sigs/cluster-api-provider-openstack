@@ -346,12 +346,14 @@ type SubnetSpec struct {
 
 	// dnsNameservers holds a list of DNS server addresses that will be provided when creating
 	// the subnet. These addresses need to have the same IP version as CIDR.
+	// +listType=atomic
 	// +optional
 	DNSNameservers []string `json:"dnsNameservers,omitempty"`
 
 	// allocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created.
 	// If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from
 	// outside of these ranges manually.
+	// +listType=atomic
 	// +optional
 	AllocationPools []AllocationPool `json:"allocationPools,omitempty"`
 }
@@ -424,6 +426,7 @@ type ResolvedPortSpecFields struct {
 	// addresses. If not specified, the MAC Address will be the MAC Address
 	// of the port. Depending on the configuration of Neutron, it may be
 	// supported to specify a CIDR instead of a specific IP address.
+	// +listType=atomic
 	// +optional
 	AllowedAddressPairs []AddressPair `json:"allowedAddressPairs,omitempty"`
 
@@ -751,6 +754,7 @@ type NetworkStatus struct {
 	ID string `json:"id,omitempty"`
 
 	// tags is a list of tags on the network.
+	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
@@ -760,6 +764,7 @@ type NetworkStatusWithSubnets struct {
 	NetworkStatus `json:",inline"`
 
 	// subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.
+	// +listType=atomic
 	// +optional
 	Subnets []Subnet `json:"subnets,omitempty"`
 }
@@ -781,6 +786,7 @@ type Subnet struct {
 	CIDR string `json:"cidr,omitempty"`
 
 	// tags is a list of tags on the subnet.
+	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 }
@@ -796,9 +802,11 @@ type Router struct {
 	// +kubebuilder:validation:MinLength=1
 	ID string `json:"id,omitempty"`
 	// tags is a list of tags on the router.
+	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// ips is a list of IP addresses assigned to the router.
+	// +listType=set
 	// +optional
 	IPs []string `json:"ips,omitempty"`
 }
@@ -822,9 +830,11 @@ type LoadBalancer struct {
 	// +kubebuilder:validation:MinLength=1
 	InternalIP string `json:"internalIP,omitempty"`
 	// allowedCIDRs is a list of CIDRs that are allowed to access the load balancer.
+	// +listType=set
 	// +optional
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
 	// tags is a list of tags on the load balancer.
+	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// loadBalancerNetwork contains information about network and/or subnets which the
@@ -906,6 +916,7 @@ type SecurityGroupRuleSpec struct {
 
 	// remoteManagedGroups is the remote managed groups to be associated with this security group rule.
 	// You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.
+	// +listType=set
 	// +optional
 	RemoteManagedGroups []ManagedSecurityGroupName `json:"remoteManagedGroups,omitempty"`
 }
@@ -1091,12 +1102,14 @@ type ResolvedMachineSpec struct {
 	FlavorID string `json:"flavorID,omitempty"`
 
 	// ports is the fully resolved list of ports to create for the machine.
+	// +listType=atomic
 	// +optional
 	Ports []ResolvedPortSpec `json:"ports,omitempty"`
 }
 
 type MachineResources struct {
 	// ports is the status of the ports created for the machine.
+	// +listType=atomic
 	// +optional
 	Ports []PortStatus `json:"ports,omitempty"`
 }

@@ -22956,6 +22956,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 						},
 					},
 					"allowedCIDRs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "allowedCIDRs is a list of CIDRs that are allowed to access the load balancer.",
 							Type:        []string{"array"},
@@ -22971,6 +22976,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 						},
 					},
 					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "tags is a list of tags on the load balancer.",
 							Type:        []string{"array"},
@@ -23027,6 +23037,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_MachineResource
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"ports": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "ports is the status of the ports created for the machine.",
 							Type:        []string{"array"},
@@ -23367,6 +23382,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatus(r
 						},
 					},
 					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "tags is a list of tags on the network.",
 							Type:        []string{"array"},
@@ -23410,6 +23430,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatusWi
 						},
 					},
 					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "tags is a list of tags on the network.",
 							Type:        []string{"array"},
@@ -23425,6 +23450,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatusWi
 						},
 					},
 					"subnets": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "subnets is a list of subnets associated with the default cluster network. Machines which use the default cluster network will get an address from all of these subnets.",
 							Type:        []string{"array"},
@@ -23801,6 +23831,14 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 						},
 					},
 					"failureDomains": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "failureDomains represent OpenStack availability zones",
 							Type:        []string{"array"},
@@ -24161,6 +24199,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 						},
 					},
 					"ports": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "ports to be attached to the server instance. They are created if a port with the given name does not already exist. If not specified a default port will be added for the default cluster network.",
 							Type:        []string{"array"},
@@ -24175,6 +24218,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 						},
 					},
 					"securityGroups": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "securityGroups is a list of security groups to assign to the instance.",
 							Type:        []string{"array"},
@@ -24364,6 +24412,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackMachin
 						},
 					},
 					"addresses": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "addresses contains the OpenStack instance associated addresses.",
 							Type:        []string{"array"},
@@ -24713,6 +24766,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_PortOpts(ref co
 						},
 					},
 					"allowedAddressPairs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "allowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
 							Type:        []string{"array"},
@@ -24866,6 +24924,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedMachine
 						},
 					},
 					"ports": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "ports is the fully resolved list of ports to create for the machine.",
 							Type:        []string{"array"},
@@ -24997,6 +25060,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 						},
 					},
 					"allowedAddressPairs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "allowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
 							Type:        []string{"array"},
@@ -25097,6 +25165,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ResolvedPortSpe
 						},
 					},
 					"allowedAddressPairs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "allowedAddressPairs is a list of address pairs which Neutron will allow the port to send traffic from in addition to the port's addresses. If not specified, the MAC Address will be the MAC Address of the port. Depending on the configuration of Neutron, it may be supported to specify a CIDR instead of a specific IP address.",
 							Type:        []string{"array"},
@@ -25251,6 +25324,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Router(ref comm
 						},
 					},
 					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "tags is a list of tags on the router.",
 							Type:        []string{"array"},
@@ -25266,6 +25344,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Router(ref comm
 						},
 					},
 					"ips": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "ips is a list of IP addresses assigned to the router.",
 							Type:        []string{"array"},
@@ -25714,6 +25797,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SecurityGroupRu
 						},
 					},
 					"remoteManagedGroups": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "remoteManagedGroups is the remote managed groups to be associated with this security group rule. You can specify either remoteGroupID or remoteIPPrefix or remoteManagedGroups.",
 							Type:        []string{"array"},
@@ -25867,6 +25955,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 						},
 					},
 					"tags": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "tags is a list of tags on the subnet.",
 							Type:        []string{"array"},
@@ -26079,6 +26172,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetSpec(ref 
 						},
 					},
 					"dnsNameservers": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "dnsNameservers holds a list of DNS server addresses that will be provided when creating the subnet. These addresses need to have the same IP version as CIDR.",
 							Type:        []string{"array"},
@@ -26094,6 +26192,11 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetSpec(ref 
 						},
 					},
 					"allocationPools": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "allocationPools is an array of AllocationPool objects that will be applied to OpenStack Subnet being created. If set, OpenStack will only allocate these IPs for Machines. It will still be possible to create ports from outside of these ranges manually.",
 							Type:        []string{"array"},

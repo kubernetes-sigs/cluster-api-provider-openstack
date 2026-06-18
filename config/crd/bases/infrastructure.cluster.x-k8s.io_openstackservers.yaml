@@ -307,6 +307,7 @@ spec:
                         - ipAddress
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     description:
                       description: description is a human-readable description for
                         the port.
@@ -1131,6 +1132,7 @@ spec:
                             - ipAddress
                             type: object
                           type: array
+                          x-kubernetes-list-type: atomic
                         description:
                           description: description is a human-readable description
                             for the port.

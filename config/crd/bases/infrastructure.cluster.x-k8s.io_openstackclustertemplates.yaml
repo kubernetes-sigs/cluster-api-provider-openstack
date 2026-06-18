@@ -2901,6 +2901,7 @@ spec:
                                         - ipAddress
                                         type: object
                                       type: array
+                                      x-kubernetes-list-type: atomic
                                     description:
                                       description: description is a human-readable
                                         description for the port.
@@ -3315,6 +3316,7 @@ spec:
                                       type: string
                                   type: object
                                 type: array
+                                x-kubernetes-list-type: atomic
                               providerID:
                                 description: providerID is the unique identifier as
                                   specified by the cloud provider.
@@ -3532,6 +3534,7 @@ spec:
                                       type: string
                                   type: object
                                 type: array
+                                x-kubernetes-list-type: atomic
                               serverGroup:
                                 description: serverGroup is the server group to assign
                                   the machine to.
@@ -4027,6 +4030,7 @@ spec:
                                     - worker
                                     type: string
                                   type: array
+                                  x-kubernetes-list-type: set
                               required:
                               - direction
                               - name
@@ -4111,6 +4115,7 @@ spec:
                                     - worker
                                     type: string
                                   type: array
+                                  x-kubernetes-list-type: set
                               required:
                               - direction
                               - name
@@ -4195,6 +4200,7 @@ spec:
                                     - worker
                                     type: string
                                   type: array
+                                  x-kubernetes-list-type: set
                               required:
                               - direction
                               - name
@@ -4234,6 +4240,7 @@ spec:
                                 - start
                                 type: object
                               type: array
+                              x-kubernetes-list-type: atomic
                             cidr:
                               description: |-
                                 cidr is representing the IP address range used to create the subnet, e.g. 10.0.0.0/24.
@@ -4247,6 +4254,7 @@ spec:
                               items:
                                 type: string
                               type: array
+                              x-kubernetes-list-type: atomic
                           required:
                           - cidr
                           type: object
