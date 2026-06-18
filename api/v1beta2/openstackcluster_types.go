@@ -156,7 +156,7 @@ type OpenStackClusterSpec struct {
 	// to be used when reconciling this cluster. It is also to reconcile
 	// machines unless overridden in the machine spec.
 	// +required
-	IdentityRef OpenStackIdentityReference `json:"identityRef"`
+	IdentityRef OpenStackIdentityReference `json:"identityRef,omitzero"`
 }
 
 type APIServer struct {
@@ -348,8 +348,8 @@ type ManagedSecurityGroups struct {
 
 	// allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
 	// +kubebuilder:default=false
-	// +required
-	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic"`
+	// +optional
+	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic,omitempty"`
 }
 
 var _ IdentityRefProvider = &OpenStackCluster{}

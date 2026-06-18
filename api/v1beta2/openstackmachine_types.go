@@ -53,7 +53,7 @@ type SchedulerHintAdditionalValue struct {
 	// Valid values are Bool, String, and Number.
 	// +required
 	// +unionDiscriminator
-	Type SchedulerHintValueType `json:"type"`
+	Type SchedulerHintValueType `json:"type,omitempty"`
 
 	// bool is the boolean value of the scheduler hint, used when Type is "Bool".
 	// This field is required if type is 'Bool', and must not be set otherwise.
@@ -83,12 +83,12 @@ type SchedulerHintAdditionalProperty struct {
 	// It is a unique identifier for the property.
 	// +kubebuilder:validation:MinLength:=1
 	// +required
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 
 	// value is the value of the scheduler hint property, which can be of various types
 	// (e.g., bool, string, int). The type is indicated by the Value.Type field.
 	// +required
-	Value SchedulerHintAdditionalValue `json:"value"`
+	Value SchedulerHintAdditionalValue `json:"value,omitzero"`
 }
 
 // OpenStackMachineSpec defines the desired state of OpenStackMachine.
@@ -99,12 +99,12 @@ type OpenStackMachineSpec struct {
 
 	// flavor is the flavor to use for this machine.
 	// +required
-	Flavor FlavorParam `json:"flavor"`
+	Flavor FlavorParam `json:"flavor,omitzero"`
 
 	// image is the image to use for the server instance.
 	// If the rootVolume is specified, this will be used when creating the root volume.
 	// +required
-	Image ImageParam `json:"image"`
+	Image ImageParam `json:"image,omitzero"`
 
 	// sshKeyName is the name of the SSH key to inject in the instance.
 	// +optional
@@ -179,13 +179,15 @@ type OpenStackMachineSpec struct {
 type ServerMetadata struct {
 	// key is the server metadata key
 	// +kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MinLength=1
 	// +required
-	Key string `json:"key"`
+	Key string `json:"key,omitempty"`
 
 	// value is the server metadata value
 	// +kubebuilder:validation:MaxLength:=255
+	// +kubebuilder:validation:MinLength=1
 	// +required
-	Value string `json:"value"`
+	Value string `json:"value,omitempty"`
 }
 
 // MachineInitialization contains information about the initialization status of the machine.

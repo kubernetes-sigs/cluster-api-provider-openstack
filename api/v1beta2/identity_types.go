@@ -32,12 +32,12 @@ type OpenStackIdentityReference struct {
 	// The Secret may optionally contain a key named `cacert` containing a PEM-encoded CA certificate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 
 	// cloudName specifies the name of the entry in the clouds.yaml file to use.
 	// +required
 	// +kubebuilder:validation:MinLength=1
-	CloudName string `json:"cloudName"`
+	CloudName string `json:"cloudName,omitempty"`
 
 	// region specifies an OpenStack region to use. If specified, it overrides
 	// any value in clouds.yaml. If specified for an OpenStackMachine, its

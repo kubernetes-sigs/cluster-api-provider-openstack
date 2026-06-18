@@ -408,7 +408,8 @@ var _ = Describe("OpenStackCluster controller", func() {
 		testCluster.Status = infrav1.OpenStackClusterStatus{
 			Network: &infrav1.NetworkStatusWithSubnets{
 				NetworkStatus: infrav1.NetworkStatus{
-					ID: "network-id",
+					Name: "network-name",
+					ID:   "network-id",
 				},
 			},
 		}
@@ -1217,6 +1218,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
 				ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 					{
+						Name:      "allow-worker-ingress",
 						Direction: "ingress",
 						Protocol:  ptr.To("tcp"),
 						RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
@@ -1295,6 +1297,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
 				ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{
 					{
+						Name:      "allow-worker-ingress",
 						Direction: "ingress",
 						Protocol:  ptr.To("tcp"),
 						RemoteManagedGroups: []infrav1.ManagedSecurityGroupName{
