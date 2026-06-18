@@ -1589,6 +1589,7 @@ spec:
                         - ipAddress
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     description:
                       description: description is a human-readable description for
                         the port.
@@ -1983,6 +1984,7 @@ spec:
                       type: string
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               providerID:
                 description: providerID is the unique identifier as specified by the
                   cloud provider.
@@ -2194,6 +2196,7 @@ spec:
                       type: string
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               serverGroup:
                 description: serverGroup is the server group to assign the machine
                   to.
@@ -2280,6 +2283,7 @@ spec:
                   - type
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               conditions:
                 description: |-
                   conditions defines current service state of the OpenStackMachine.
@@ -2412,6 +2416,7 @@ spec:
                             - ipAddress
                             type: object
                           type: array
+                          x-kubernetes-list-type: atomic
                         description:
                           description: description is a human-readable description
                             for the port.
@@ -2551,6 +2556,7 @@ spec:
                       - networkID
                       type: object
                     type: array
+                    x-kubernetes-list-type: atomic
                   serverGroupID:
                     description: serverGroupID is the ID of the server group the machine
                       should be added to and is calculated based on ServerGroupFilter.
@@ -2573,6 +2579,7 @@ spec:
                       - id
                       type: object
                     type: array
+                    x-kubernetes-list-type: atomic
                 type: object
             type: object
         type: object

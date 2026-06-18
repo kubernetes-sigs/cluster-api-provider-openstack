@@ -112,10 +112,12 @@ type OpenStackMachineSpec struct {
 
 	// ports to be attached to the server instance. They are created if a port with the given name does not already exist.
 	// If not specified a default port will be added for the default cluster network.
+	// +listType=atomic
 	// +optional
 	Ports []PortOpts `json:"ports,omitempty"`
 
 	// securityGroups is a list of security groups to assign to the instance.
+	// +listType=atomic
 	// +optional
 	SecurityGroups []SecurityGroupParam `json:"securityGroups,omitempty"`
 
@@ -218,6 +220,7 @@ type OpenStackMachineStatus struct {
 	InstanceID optional.String `json:"instanceID,omitempty"`
 
 	// addresses contains the OpenStack instance associated addresses.
+	// +listType=atomic
 	// +optional
 	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 

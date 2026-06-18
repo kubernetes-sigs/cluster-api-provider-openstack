@@ -1333,6 +1333,7 @@ spec:
                                 - ipAddress
                                 type: object
                               type: array
+                              x-kubernetes-list-type: atomic
                             description:
                               description: description is a human-readable description
                                 for the port.
@@ -1737,6 +1738,7 @@ spec:
                               type: string
                           type: object
                         type: array
+                        x-kubernetes-list-type: atomic
                       providerID:
                         description: providerID is the unique identifier as specified
                           by the cloud provider.
@@ -1949,6 +1951,7 @@ spec:
                               type: string
                           type: object
                         type: array
+                        x-kubernetes-list-type: atomic
                       serverGroup:
                         description: serverGroup is the server group to assign the
                           machine to.
