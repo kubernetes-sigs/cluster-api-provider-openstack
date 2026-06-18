@@ -1409,6 +1409,78 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "Setting PrimarySubnet is allowed",
+			oldCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+				},
+			},
+			newCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					PrimarySubnet: &infrav1.SubnetParam{
+						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-111111111111"),
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Changing PrimarySubnet is allowed",
+			oldCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					PrimarySubnet: &infrav1.SubnetParam{
+						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-111111111111"),
+					},
+				},
+			},
+			newCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					PrimarySubnet: &infrav1.SubnetParam{
+						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-222222222222"),
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Clearing PrimarySubnet is allowed",
+			oldCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					PrimarySubnet: &infrav1.SubnetParam{
+						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-111111111111"),
+					},
+				},
+			},
+			newCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

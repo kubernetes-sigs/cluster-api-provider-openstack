@@ -1583,6 +1583,15 @@ func autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in
 	} else {
 		out.Subnets = nil
 	}
+	if in.PrimarySubnet != nil {
+		in, out := &in.PrimarySubnet, &out.PrimarySubnet
+		*out = new(v1beta2.SubnetParam)
+		if err := Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PrimarySubnet = nil
+	}
 	// WARNING: in.NetworkMTU requires manual conversion: does not exist in peer-type
 	// WARNING: in.ExternalRouterIPs requires manual conversion: does not exist in peer-type
 	out.ExternalNetwork = (*v1beta2.NetworkParam)(unsafe.Pointer(in.ExternalNetwork))
@@ -1633,6 +1642,15 @@ func autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in
 		}
 	} else {
 		out.Subnets = nil
+	}
+	if in.PrimarySubnet != nil {
+		in, out := &in.PrimarySubnet, &out.PrimarySubnet
+		*out = new(SubnetParam)
+		if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(*in, *out, s); err != nil {
+			return err
+		}
+	} else {
+		out.PrimarySubnet = nil
 	}
 	// WARNING: in.ManagedRouter requires manual conversion: does not exist in peer-type
 	out.Router = (*RouterParam)(unsafe.Pointer(in.Router))

@@ -19497,7 +19497,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Subnets specifies existing subnets to use if not ManagedSubnets are specified. All subnets must be in the network specified by Network. There can be zero, one, or two subnets. If no subnets are specified, all subnets in Network will be used. If 2 subnets are specified, one must be IPv4 and the other IPv6.",
+							Description: "Subnets specifies existing subnets to use if not ManagedSubnets are specified. All subnets must be in the network specified by Network. If no subnets are specified, all subnets in Network will be used. Multiple subnets of the same IP version are supported when PrimarySubnet is also set to identify which subnet should be used for services like load balancer VIP allocation.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -19507,6 +19507,12 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 									},
 								},
 							},
+						},
+					},
+					"primarySubnet": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PrimarySubnet identifies the primary subnet for the cluster when multiple subnets are specified in Subnets. It is used to determine the subnet for load balancer VIP allocation and node member registration. If not specified and multiple subnets exist, the first subnet in the resolved Subnets list is used.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"),
 						},
 					},
 					"networkMTU": {
@@ -23610,7 +23616,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "subnets specifies existing subnets to use if not ManagedSubnets are specified. All subnets must be in the network specified by Network. There can be zero, one, or two subnets. If no subnets are specified, all subnets in Network will be used. If 2 subnets are specified, one must be IPv4 and the other IPv6.",
+							Description: "subnets specifies existing subnets to use if not ManagedSubnets are specified. All subnets must be in the network specified by Network. If no subnets are specified, all subnets in Network will be used. Multiple subnets of the same IP version are supported when primarySubnet is also set to identify which subnet should be used for services like load balancer VIP allocation.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23620,6 +23626,12 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 									},
 								},
 							},
+						},
+					},
+					"primarySubnet": {
+						SchemaProps: spec.SchemaProps{
+							Description: "primarySubnet identifies the primary subnet for the cluster when multiple subnets are specified in Subnets. It is used to determine the subnet for load balancer VIP allocation and node member registration. If not specified and multiple subnets exist, the first subnet in the resolved Subnets list is used.",
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam"),
 						},
 					},
 					"managedRouter": {

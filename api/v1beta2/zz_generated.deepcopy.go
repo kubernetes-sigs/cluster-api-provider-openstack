@@ -834,6 +834,11 @@ func (in *OpenStackClusterSpec) DeepCopyInto(out *OpenStackClusterSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.PrimarySubnet != nil {
+		in, out := &in.PrimarySubnet, &out.PrimarySubnet
+		*out = new(SubnetParam)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ManagedRouter != nil {
 		in, out := &in.ManagedRouter, &out.ManagedRouter
 		*out = new(ManagedRouter)

@@ -62,7 +62,7 @@ func Test_validateSubnets(t *testing.T) {
 					CIDR: "10.0.0.0/24",
 				},
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "multiple IPv6 subnets",
@@ -71,10 +71,25 @@ func Test_validateSubnets(t *testing.T) {
 					CIDR: "2001:db8:2222:5555::/64",
 				},
 				{
+					CIDR: "2001:db8:2222:6666::/64",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "three subnets mixed IP versions",
+			subnets: []infrav1.Subnet{
+				{
+					CIDR: "192.168.0.0/24",
+				},
+				{
+					CIDR: "10.0.0.0/24",
+				},
+				{
 					CIDR: "2001:db8:2222:5555::/64",
 				},
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "invalid IP address",

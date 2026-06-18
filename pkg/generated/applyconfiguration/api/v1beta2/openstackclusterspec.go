@@ -33,10 +33,17 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	ManagedSubnets []SubnetSpecApplyConfiguration `json:"managedSubnets,omitempty"`
 	// subnets specifies existing subnets to use if not ManagedSubnets are
 	// specified. All subnets must be in the network specified by Network.
-	// There can be zero, one, or two subnets. If no subnets are specified,
-	// all subnets in Network will be used. If 2 subnets are specified, one
-	// must be IPv4 and the other IPv6.
+	// If no subnets are specified, all subnets in Network will be used.
+	// Multiple subnets of the same IP version are supported when primarySubnet
+	// is also set to identify which subnet should be used for services like
+	// load balancer VIP allocation.
 	Subnets []SubnetParamApplyConfiguration `json:"subnets,omitempty"`
+	// primarySubnet identifies the primary subnet for the cluster when multiple
+	// subnets are specified in Subnets. It is used to determine the subnet for
+	// load balancer VIP allocation and node member registration.
+	// If not specified and multiple subnets exist, the first subnet in the
+	// resolved Subnets list is used.
+	PrimarySubnet *SubnetParamApplyConfiguration `json:"primarySubnet,omitempty"`
 	// managedRouter specifies attributes of the router. The values are used only
 	// if the Cluster actuator creates the router.
 	ManagedRouter *ManagedRouterApplyConfiguration `json:"managedRouter,omitempty"`
@@ -135,6 +142,14 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithSubnets(values ...*SubnetPa
 		}
 		b.Subnets = append(b.Subnets, *values[i])
 	}
+	return b
+}
+
+// WithPrimarySubnet sets the PrimarySubnet field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PrimarySubnet field is set to the value of the last call.
+func (b *OpenStackClusterSpecApplyConfiguration) WithPrimarySubnet(value *SubnetParamApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
+	b.PrimarySubnet = value
 	return b
 }
 
