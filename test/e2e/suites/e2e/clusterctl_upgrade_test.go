@@ -90,7 +90,10 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 			MgmtFlavor:                        shared.FlavorDefault,
 			WorkloadFlavor:                    shared.FlavorCapiV1Beta1,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesKindVersion),
-			UseKindForManagementCluster:       true,
+			// Pin the initial workload cluster to a version the old providers
+			// (CAPI v1.10 / CAPO v0.12) can actually bootstrap.
+			WorkloadKubernetesVersion:   e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersionUpgradeFrom),
+			UseKindForManagementCluster: true,
 			// Install ORC v1.0.2 before clusterctl init
 			PreInit: func(managementClusterProxy capi_framework.ClusterProxy) {
 				installORC(context.Background(), managementClusterProxy, orcInitVersion)
