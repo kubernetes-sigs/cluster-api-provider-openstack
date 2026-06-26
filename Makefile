@@ -739,6 +739,10 @@ verify-security: ## Verify code and images for vulnerabilities
 		exit 1; \
 	fi
 
+.PHONY: verify-cloudbuild-image
+verify-cloudbuild-image: ## Verify the gcb-docker-gcloud image in cloudbuild.yaml exists and can build the CAPO container image
+	./scripts/verify-cloudbuild-image.sh
+
 .PHONY: compile-e2e
 compile-e2e: ## Test e2e compilation
 	go test -c -o /dev/null -tags=e2e ./test/e2e/suites/conformance
