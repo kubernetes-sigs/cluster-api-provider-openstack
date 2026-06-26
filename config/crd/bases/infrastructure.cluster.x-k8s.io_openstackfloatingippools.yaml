@@ -55,9 +55,11 @@ spec:
                     properties:
                       description:
                         description: description filters networks by description.
+                        minLength: 1
                         type: string
                       name:
                         description: name filters networks by name.
+                        minLength: 1
                         type: string
                       notTags:
                         description: |-
@@ -87,6 +89,7 @@ spec:
                         x-kubernetes-list-type: set
                       projectID:
                         description: projectID filters networks by project ID.
+                        minLength: 1
                         type: string
                       tags:
                         description: |-
@@ -144,6 +147,7 @@ spec:
                       region specifies an OpenStack region to use. If specified, it overrides
                       any value in clouds.yaml. If specified for an OpenStackMachine, its
                       value will be included in providerID.
+                    minLength: 1
                     type: string
                   type:
                     default: Secret

@@ -100,7 +100,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		case infrav1.SchedulerHintTypeBool:
 			schedulerAdditionalProperties[prop.Name] = *prop.Value.Bool
 		case infrav1.SchedulerHintTypeString:
-			schedulerAdditionalProperties[prop.Name] = *prop.Value.String
+			schedulerAdditionalProperties[prop.Name] = prop.Value.String
 		case infrav1.SchedulerHintTypeNumber:
 			schedulerAdditionalProperties[prop.Name] = *prop.Value.Number
 		}
@@ -255,8 +255,8 @@ func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDevi
 	switch volumeAZ.From {
 	case "", infrav1.VolumeAZFromName:
 		// volumeAZ.Name is nil case should have been caught by validation
-		if volumeAZ.Name != nil {
-			az = string(*volumeAZ.Name)
+		if volumeAZ.Name != "" {
+			az = string(volumeAZ.Name)
 		}
 	case infrav1.VolumeAZFromMachine:
 		az = instanceSpec.FailureDomain
@@ -359,10 +359,10 @@ func (s *Service) GetImageID(ctx context.Context, k8sClient client.Client, names
 	switch {
 	case image.ID != nil:
 		return image.ID, nil
-	case image.Filter != nil:
-		return s.getImageIDByFilter(image.Filter)
-	case image.ImageRef != nil:
-		return s.getImageIDByReference(ctx, k8sClient, namespace, image.ImageRef)
+	case !image.Filter.IsZero():
+		return s.getImageIDByFilter(&image.Filter)
+	case image.ImageRef != (infrav1.ResourceReference{}):
+		return s.getImageIDByReference(ctx, k8sClient, namespace, &image.ImageRef)
 	default:
 		// Should have been caught by validation
 		return nil, errors.New("image id, filter, and reference are all nil")
@@ -431,7 +431,7 @@ func (s *Service) GetFlavorID(flavorParam infrav1.FlavorParam) (string, error) {
 		return *flavorParam.ID, nil
 	}
 
-	if flavorParam.Filter == nil || flavorParam.Filter.Name == nil {
+	if flavorParam.Filter == (infrav1.FlavorFilter{}) || flavorParam.Filter.Name == nil {
 		return "", fmt.Errorf("no flavors were found: no name set")
 	}
 

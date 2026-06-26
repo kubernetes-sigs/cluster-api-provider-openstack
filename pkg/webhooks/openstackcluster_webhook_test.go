@@ -82,14 +82,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					Bastion: &infrav1.Bastion{
-						Spec: &infrav1.OpenStackMachineSpec{
+						Spec: infrav1.OpenStackMachineSpec{
 							Image: infrav1.ImageParam{
-								Filter: &infrav1.ImageFilter{
+								Filter: infrav1.ImageFilter{
 									Name: ptr.To("foobar"),
 								},
 							},
 							Flavor: infrav1.FlavorParam{
-								Filter: &infrav1.FlavorFilter{
+								Filter: infrav1.FlavorFilter{
 									Name: ptr.To("minimal"),
 								},
 							},
@@ -110,14 +110,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						CloudName: "foobar",
 					},
 					Bastion: &infrav1.Bastion{
-						Spec: &infrav1.OpenStackMachineSpec{
+						Spec: infrav1.OpenStackMachineSpec{
 							Image: infrav1.ImageParam{
-								Filter: &infrav1.ImageFilter{
+								Filter: infrav1.ImageFilter{
 									Name: ptr.To("foobarbaz"),
 								},
 							},
 							Flavor: infrav1.FlavorParam{
-								Filter: &infrav1.FlavorFilter{
+								Filter: infrav1.FlavorFilter{
 									Name: ptr.To("medium"),
 								},
 							},
@@ -544,7 +544,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{
+						ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 						IP: "1.2.3.4",
 					},
 				},
@@ -560,7 +561,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{
+						ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 						IP: "1.2.3.4",
 					},
 				},
@@ -577,7 +579,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{
+						ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 						IP: "1.2.3.4",
 					},
 				},
@@ -593,7 +596,8 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{
+						ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 						IP: "1.2.3.4",
 					},
 				},
@@ -610,14 +614,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &infrav1.Bastion{
 						Enabled: ptr.To(true),
-						Spec: &infrav1.OpenStackMachineSpec{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: infrav1.FlavorParam{
-								Filter: &infrav1.FlavorFilter{
+								Filter: infrav1.FlavorFilter{
 									Name: ptr.To("m1.small"),
 								},
 							},
 							Image: infrav1.ImageParam{
-								Filter: &infrav1.ImageFilter{
+								Filter: infrav1.ImageFilter{
 									Name: ptr.To("ubuntu"),
 								},
 							},
@@ -645,14 +649,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 					Bastion: &infrav1.Bastion{
 						Enabled: ptr.To(false),
-						Spec: &infrav1.OpenStackMachineSpec{
+						Spec: infrav1.OpenStackMachineSpec{
 							Flavor: infrav1.FlavorParam{
-								Filter: &infrav1.FlavorFilter{
+								Filter: infrav1.FlavorFilter{
 									Name: ptr.To("m1.small"),
 								},
 							},
 							Image: infrav1.ImageParam{
-								Filter: &infrav1.ImageFilter{
+								Filter: infrav1.ImageFilter{
 									Name: ptr.To("ubuntu"),
 								},
 							},
@@ -678,14 +682,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{
 							Name: "testnetworkname",
 						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "testnetworkid",
 							Name: "testnetworkname",
@@ -699,12 +703,12 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("testnetworkid"),
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "testnetworkid",
 							Name: "testnetworkname",
@@ -722,14 +726,14 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{
 							Name: "testetworkname",
 						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "testetworkid1",
 							Name: "testnetworkname",
@@ -743,12 +747,12 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("testetworkid2"),
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "testetworkid1",
 							Name: "testnetworkname",
@@ -766,7 +770,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("net-123"),
 					},
 					Subnets: []infrav1.SubnetParam{
@@ -778,7 +782,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "net-123",
 							Name: "testnetwork",
@@ -798,7 +802,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("net-123"),
 					},
 					Subnets: []infrav1.SubnetParam{
@@ -808,7 +812,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "net-123",
 							Name: "testnetwork",
@@ -832,7 +836,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("net-123"),
 					},
 					Subnets: []infrav1.SubnetParam{
@@ -844,7 +848,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "net-123",
 							Name: "testnetwork",
@@ -864,7 +868,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("net-123"),
 					},
 					Subnets: []infrav1.SubnetParam{
@@ -874,7 +878,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "net-123",
 							Name: "testnetwork",
@@ -898,7 +902,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("net-123"),
 					},
 					Subnets: []infrav1.SubnetParam{
@@ -915,7 +919,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "net-123",
 							Name: "testnetwork",
@@ -939,7 +943,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					Network: &infrav1.NetworkParam{
+					Network: infrav1.NetworkParam{
 						ID: ptr.To("net-123"),
 					},
 					Subnets: []infrav1.SubnetParam{
@@ -954,7 +958,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   "net-123",
 							Name: "testnetwork",
@@ -1425,7 +1429,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					PrimarySubnet: &infrav1.SubnetParam{
+					PrimarySubnet: infrav1.SubnetParam{
 						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-111111111111"),
 					},
 				},
@@ -1440,7 +1444,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					PrimarySubnet: &infrav1.SubnetParam{
+					PrimarySubnet: infrav1.SubnetParam{
 						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-111111111111"),
 					},
 				},
@@ -1451,7 +1455,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					PrimarySubnet: &infrav1.SubnetParam{
+					PrimarySubnet: infrav1.SubnetParam{
 						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-222222222222"),
 					},
 				},
@@ -1466,7 +1470,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 						Name:      "foobar",
 						CloudName: "foobar",
 					},
-					PrimarySubnet: &infrav1.SubnetParam{
+					PrimarySubnet: infrav1.SubnetParam{
 						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-111111111111"),
 					},
 				},

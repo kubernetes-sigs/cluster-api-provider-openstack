@@ -32,7 +32,7 @@ func (s *Service) GetServerGroupID(serverGroupParam *infrav1.ServerGroupParam) (
 		return *serverGroupParam.ID, nil
 	}
 
-	if serverGroupParam.Filter == nil || serverGroupParam.Filter.Name == nil {
+	if serverGroupParam.Filter == (infrav1.ServerGroupFilter{}) || serverGroupParam.Filter.Name == nil {
 		// Should have been caught by validation
 		return "", errors.New("server group param is empty")
 	}

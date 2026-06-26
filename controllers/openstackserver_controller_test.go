@@ -69,14 +69,14 @@ type recorders struct {
 }
 
 var defaultImage = infrav1.ImageParam{
-	Filter: &infrav1.ImageFilter{
+	Filter: infrav1.ImageFilter{
 		Name: ptr.To(imageName),
 	},
 }
 
 var defaultPortOpts = []infrav1.PortOpts{
 	{
-		Network: &infrav1.NetworkParam{
+		Network: infrav1.NetworkParam{
 			ID: ptr.To(networkUUID),
 		},
 	},
@@ -241,7 +241,7 @@ func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.
 					Spec: infrav1alpha1.OpenStackServerSpec{
 						Flavor: ptr.To("m1.small"),
 						Image: infrav1.ImageParam{
-							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+							Filter: infrav1.ImageFilter{Name: ptr.To("test-image")},
 						},
 					},
 				},
@@ -256,7 +256,7 @@ func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.
 					Spec: infrav1alpha1.OpenStackServerSpec{
 						Flavor: ptr.To("m1.small"),
 						Image: infrav1.ImageParam{
-							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+							Filter: infrav1.ImageFilter{Name: ptr.To("test-image")},
 						},
 					},
 				},
@@ -284,7 +284,7 @@ func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.
 					Spec: infrav1alpha1.OpenStackServerSpec{
 						Flavor: ptr.To("m1.small"),
 						Image: infrav1.ImageParam{
-							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+							Filter: infrav1.ImageFilter{Name: ptr.To("test-image")},
 						},
 					},
 				},
@@ -323,7 +323,7 @@ func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.
 					Spec: infrav1alpha1.OpenStackServerSpec{
 						Flavor: ptr.To("m1.small"),
 						Image: infrav1.ImageParam{
-							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+							Filter: infrav1.ImageFilter{Name: ptr.To("test-image")},
 						},
 					},
 				},
@@ -338,7 +338,7 @@ func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.
 					Spec: infrav1alpha1.OpenStackServerSpec{
 						Flavor: ptr.To("m1.small"),
 						Image: infrav1.ImageParam{
-							Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")},
+							Filter: infrav1.ImageFilter{Name: ptr.To("test-image")},
 						},
 					},
 				},
@@ -1024,7 +1024,7 @@ var _ = Describe("OpenStackServer controller", func() {
 				SSHKeyName: "test-ssh-key",
 				Ports: []infrav1.PortOpts{
 					{
-						Network: &infrav1.NetworkParam{
+						Network: infrav1.NetworkParam{
 							ID: ptr.To(networkUUID),
 						},
 					},

@@ -354,7 +354,7 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 							{
 								Protocol:       ptr.To("tcp"),
 								Direction:      "ingress",
-								EtherType:      ptr.To("IPv4"),
+								EtherType:      "IPv4",
 								PortRangeMin:   ptr.To[int32](30000),
 								PortRangeMax:   ptr.To[int32](32767),
 								RemoteIPPrefix: ptr.To("0.0.0.0/0"),
@@ -600,11 +600,11 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 				}).Times(14)
 			},
 			expectedClusterStatus: infrav1.OpenStackClusterStatus{
-				ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{
+				ControlPlaneSecurityGroup: infrav1.SecurityGroupStatus{
 					ID:   "0",
 					Name: controlPlaneSGName,
 				},
-				WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				WorkerSecurityGroup: infrav1.SecurityGroupStatus{
 					ID:   "1",
 					Name: workerSGName,
 				},
@@ -635,15 +635,15 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 				}).Times(19)
 			},
 			expectedClusterStatus: infrav1.OpenStackClusterStatus{
-				ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{
+				ControlPlaneSecurityGroup: infrav1.SecurityGroupStatus{
 					ID:   "0",
 					Name: controlPlaneSGName,
 				},
-				WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				WorkerSecurityGroup: infrav1.SecurityGroupStatus{
 					ID:   "1",
 					Name: workerSGName,
 				},
-				BastionSecurityGroup: &infrav1.SecurityGroupStatus{
+				BastionSecurityGroup: infrav1.SecurityGroupStatus{
 					ID:   "2",
 					Name: bastionSGName,
 				},

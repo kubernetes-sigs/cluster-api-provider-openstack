@@ -80,10 +80,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 			},
 		},
 		Status: infrav1.OpenStackClusterStatus{
-			ExternalNetwork: &infrav1.NetworkStatus{
+			ExternalNetwork: infrav1.NetworkStatus{
 				ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 			},
-			Network: &infrav1.NetworkStatusWithSubnets{
+			Network: infrav1.NetworkStatusWithSubnets{
 				Subnets: []infrav1.Subnet{
 					{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 				},
@@ -188,9 +188,9 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
 							Enabled: ptr.To(true),
 							Monitor: &infrav1.APIServerLoadBalancerMonitor{
-								Delay:          15,
-								Timeout:        8,
-								MaxRetries:     6,
+								Delay:          ptr.To[int32](15),
+								Timeout:        ptr.To[int32](8),
+								MaxRetries:     ptr.To[int32](6),
 								MaxRetriesDown: 4,
 							},
 						},
@@ -202,10 +202,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
+					ExternalNetwork: infrav1.NetworkStatus{
 						ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 					},
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						Subnets: []infrav1.Subnet{
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 						},
@@ -291,9 +291,9 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
 							Enabled: ptr.To(true),
 							Monitor: &infrav1.APIServerLoadBalancerMonitor{
-								Delay:          15,
-								Timeout:        8,
-								MaxRetries:     6,
+								Delay:          ptr.To[int32](15),
+								Timeout:        ptr.To[int32](8),
+								MaxRetries:     ptr.To[int32](6),
 								MaxRetriesDown: 4,
 							},
 						},
@@ -305,10 +305,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
+					ExternalNetwork: infrav1.NetworkStatus{
 						ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 					},
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						Subnets: []infrav1.Subnet{
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 						},
@@ -386,9 +386,9 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
 							Enabled: ptr.To(true),
 							Monitor: &infrav1.APIServerLoadBalancerMonitor{
-								Delay:          15,
-								Timeout:        8,
-								MaxRetries:     6,
+								Delay:          ptr.To[int32](15),
+								Timeout:        ptr.To[int32](8),
+								MaxRetries:     ptr.To[int32](6),
 								MaxRetriesDown: 4,
 							},
 						},
@@ -400,10 +400,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
+					ExternalNetwork: infrav1.NetworkStatus{
 						ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 					},
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						Subnets: []infrav1.Subnet{
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 						},
@@ -528,7 +528,8 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 			name: "API server VIP is InternalIP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{
+						ID:         "some-id",
 						InternalIP: "1.2.3.4",
 					},
 				},
@@ -623,7 +624,8 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 			name: "API server FIP is API Server LB IP",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{
+						ID: "some-id",
 						IP: "1.2.3.4",
 					},
 				},
@@ -739,7 +741,10 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "some-net-id",
+						},
 						Subnets: []infrav1.Subnet{
 							{
 								CIDR: "192.168.0.0/24",
@@ -761,14 +766,18 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "some-net-id",
+						},
 						Subnets: []infrav1.Subnet{
 							{
 								CIDR: "192.168.0.0/24",
 							},
 						},
 					},
-					Router: &infrav1.Router{
+					Router: infrav1.Router{
+						ID:  "some-router-id",
 						IPs: []string{"1.2.3.5"},
 					},
 				},
@@ -835,15 +844,16 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			name: "loadbalancer created",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "some-net-id",
+						},
 						Subnets: []infrav1.Subnet{
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-333333333333"},
 						},
 					},
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
-						LoadBalancerNetwork: nil,
-					},
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{},
 				},
 			},
 			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
@@ -864,13 +874,16 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			name: "loadbalancer on a specific network created",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "some-net-id",
+						},
 						Subnets: []infrav1.Subnet{
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 						},
 					},
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
-						LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{
+						LoadBalancerNetwork: infrav1.NetworkStatusWithSubnets{
 							NetworkStatus: infrav1.NetworkStatus{
 								Name: "VIPNET",
 								ID:   "VIPNET",
@@ -913,15 +926,16 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: "some-net-id",
+						},
 						Subnets: []infrav1.Subnet{
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-222222222222"},
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-333333333333"},
 						},
 					},
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
-						LoadBalancerNetwork: nil,
-					},
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{},
 				},
 			},
 			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
@@ -943,12 +957,12 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			name: "loadbalancer VIP uses primarySubnet when set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					PrimarySubnet: &infrav1.SubnetParam{
+					PrimarySubnet: infrav1.SubnetParam{
 						ID: ptr.To("aaaaaaaa-bbbb-cccc-dddd-444444444444"),
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 						},
@@ -958,9 +972,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 							{ID: "aaaaaaaa-bbbb-cccc-dddd-444444444444"},
 						},
 					},
-					APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
-						LoadBalancerNetwork: nil,
-					},
+					APIServerManagedLoadBalancer: infrav1.LoadBalancer{},
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
@@ -1034,7 +1046,7 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					ManagedLoadBalancer: &infrav1.APIServerLoadBalancer{
 						Enabled:  ptr.To(true),
 						Provider: provider,
-						Network: &infrav1.NetworkParam{
+						Network: infrav1.NetworkParam{
 							ID: &lbNetworkID,
 						},
 					},
@@ -1047,15 +1059,15 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 				Tags: []string{"k8s", "clusterapi"},
 			},
 			Status: infrav1.OpenStackClusterStatus{
-				APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+				APIServerManagedLoadBalancer: infrav1.LoadBalancer{
 					ID: lbID,
-					LoadBalancerNetwork: &infrav1.NetworkStatusWithSubnets{
+					LoadBalancerNetwork: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: lbNetworkID,
 						},
 					},
 				},
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: clusterNetID,
 					},
@@ -1260,13 +1272,13 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			// LoadBalancerNetwork is nil when the cluster was created with an older CAPO version that
+			// LoadBalancerNetwork is empty when the cluster was created with an older CAPO version that
 			// did not populate this field. The reconciler must return an error to requeue and wait
 			// for the cluster controller to populate the field.
-			name: "nil LoadBalancerNetwork, return error and wait",
+			name: "empty LoadBalancerNetwork, return error and wait",
 			clusterSpec: func() *infrav1.OpenStackCluster {
 				c := makeCluster(nil, clusterNetID)
-				c.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork = nil
+				c.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork = infrav1.NetworkStatusWithSubnets{}
 				return c
 			}(),
 			expectNetwork:      func(*mock.MockNetworkClientMockRecorder) {},

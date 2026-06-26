@@ -73,7 +73,7 @@ type SchedulerHintAdditionalValue struct {
 	// +optional
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:MaxLength:=255
-	String *string `json:"string,omitempty"`
+	String string `json:"string,omitempty"`
 }
 
 // SchedulerHintAdditionalProperty represents a single additional property for a scheduler hint.
@@ -108,6 +108,7 @@ type OpenStackMachineSpec struct {
 
 	// sshKeyName is the name of the SSH key to inject in the instance.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 
 	// ports to be attached to the server instance. They are created if a port with the given name does not already exist.
@@ -145,7 +146,7 @@ type OpenStackMachineSpec struct {
 
 	// rootVolume is the volume metadata to boot from.
 	// +optional
-	RootVolume *RootVolume `json:"rootVolume,omitempty"`
+	RootVolume RootVolume `json:"rootVolume,omitempty,omitzero"`
 
 	// additionalBlockDevices is a list of specifications for additional block devices to attach to the server instance
 	// +listType=map
@@ -155,13 +156,13 @@ type OpenStackMachineSpec struct {
 
 	// serverGroup is the server group to assign the machine to.
 	// +optional
-	ServerGroup *ServerGroupParam `json:"serverGroup,omitempty"`
+	ServerGroup ServerGroupParam `json:"serverGroup,omitempty,omitzero"`
 
 	// identityRef is a reference to a secret holding OpenStack credentials
 	// to be used when reconciling this machine. If not specified, the
 	// credentials specified in the cluster will be used.
 	// +optional
-	IdentityRef *OpenStackIdentityReference `json:"identityRef,omitempty"`
+	IdentityRef OpenStackIdentityReference `json:"identityRef,omitempty,omitzero"`
 
 	// floatingIPPoolRef is a reference to a IPPool that will be assigned
 	// to an IPAddressClaim. Once the IPAddressClaim is fulfilled, the FloatingIP
@@ -201,6 +202,7 @@ type MachineInitialization struct {
 }
 
 // OpenStackMachineStatus defines the observed state of OpenStackMachine.
+// +kubebuilder:validation:MinProperties=1
 type OpenStackMachineStatus struct {
 	// conditions defines current service state of the OpenStackMachine.
 	// This field surfaces into Machine's status.conditions[InfrastructureReady] condition.
@@ -258,11 +260,11 @@ type OpenStackMachine struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackMachine.
-	// +optional
-	Spec OpenStackMachineSpec `json:"spec,omitempty"`
+	// +required
+	Spec OpenStackMachineSpec `json:"spec,omitempty,omitzero"`
 	// status is the observed state of the OpenStackMachine.
 	// +optional
-	Status OpenStackMachineStatus `json:"status,omitempty"`
+	Status OpenStackMachineStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
@@ -289,10 +291,10 @@ var _ IdentityRefProvider = &OpenStackMachine{}
 
 // GetIdentifyRef returns the object's namespace and IdentityRef if it has an IdentityRef, or nulls if it does not.
 func (r *OpenStackMachine) GetIdentityRef() (*string, *OpenStackIdentityReference) {
-	if r.Spec.IdentityRef != nil {
-		return &r.Namespace, r.Spec.IdentityRef
+	if r.Spec.IdentityRef == (OpenStackIdentityReference{}) {
+		return nil, nil
 	}
-	return nil, nil
+	return &r.Namespace, &r.Spec.IdentityRef
 }
 
 func init() {

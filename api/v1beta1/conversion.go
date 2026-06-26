@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"reflect"
 	"sort"
 	"strings"
 	"unsafe"
@@ -182,19 +183,239 @@ func (dst *OpenStackMachineTemplateList) ConvertFrom(srcRaw ctrlconversion.Hub) 
 	return Convert_v1beta2_OpenStackMachineTemplateList_To_v1beta1_OpenStackMachineTemplateList(src, dst, nil)
 }
 
+// Manual conversion functions for types with pointer↔value field differences.
+
+func Convert_v1beta1_APIServerLoadBalancer_To_v1beta2_APIServerLoadBalancer(in *APIServerLoadBalancer, out *infrav1.APIServerLoadBalancer, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_APIServerLoadBalancer_To_v1beta2_APIServerLoadBalancer(in, out, s); err != nil {
+		return err
+	}
+	if in.Network != nil {
+		out.Network = *(*infrav1.NetworkParam)(unsafe.Pointer(in.Network))
+	}
+	return nil
+}
+
+func Convert_v1beta2_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in *infrav1.APIServerLoadBalancer, out *APIServerLoadBalancer, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_APIServerLoadBalancer_To_v1beta1_APIServerLoadBalancer(in, out, s); err != nil {
+		return err
+	}
+	if in.Network != (infrav1.NetworkParam{}) {
+		out.Network = (*NetworkParam)(unsafe.Pointer(&in.Network))
+	}
+	return nil
+}
+
+func Convert_v1beta1_APIServerLoadBalancerMonitor_To_v1beta2_APIServerLoadBalancerMonitor(in *APIServerLoadBalancerMonitor, out *infrav1.APIServerLoadBalancerMonitor, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_APIServerLoadBalancerMonitor_To_v1beta2_APIServerLoadBalancerMonitor(in, out, s); err != nil {
+		return err
+	}
+	out.Delay = ptr.To(int32(in.Delay))           //nolint:gosec // Monitor values are always within int32 range
+	out.Timeout = ptr.To(int32(in.Timeout))       //nolint:gosec // Monitor values are always within int32 range
+	out.MaxRetries = ptr.To(int32(in.MaxRetries)) //nolint:gosec // Monitor values are always within int32 range
+	return nil
+}
+
+func Convert_v1beta2_APIServerLoadBalancerMonitor_To_v1beta1_APIServerLoadBalancerMonitor(in *infrav1.APIServerLoadBalancerMonitor, out *APIServerLoadBalancerMonitor, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_APIServerLoadBalancerMonitor_To_v1beta1_APIServerLoadBalancerMonitor(in, out, s); err != nil {
+		return err
+	}
+	out.Delay = int(ptr.Deref(in.Delay, 0))
+	out.Timeout = int(ptr.Deref(in.Timeout, 0))
+	out.MaxRetries = int(ptr.Deref(in.MaxRetries, 0))
+	return nil
+}
+
+func Convert_v1beta1_Bastion_To_v1beta2_Bastion(in *Bastion, out *infrav1.Bastion, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_Bastion_To_v1beta2_Bastion(in, out, s); err != nil {
+		return err
+	}
+	if in.Spec != nil {
+		if err := Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(in.Spec, &out.Spec, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_v1beta2_Bastion_To_v1beta1_Bastion(in *infrav1.Bastion, out *Bastion, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_Bastion_To_v1beta1_Bastion(in, out, s); err != nil {
+		return err
+	}
+	if !reflect.DeepEqual(in.Spec, infrav1.OpenStackMachineSpec{}) {
+		out.Spec = &OpenStackMachineSpec{}
+		if err := Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(&in.Spec, out.Spec, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_v1beta1_FixedIP_To_v1beta2_FixedIP(in *FixedIP, out *infrav1.FixedIP, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_FixedIP_To_v1beta2_FixedIP(in, out, s); err != nil {
+		return err
+	}
+	if in.Subnet != nil {
+		if err := Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(in.Subnet, &out.Subnet, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_v1beta2_FixedIP_To_v1beta1_FixedIP(in *infrav1.FixedIP, out *FixedIP, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_FixedIP_To_v1beta1_FixedIP(in, out, s); err != nil {
+		return err
+	}
+	if in.Subnet != (infrav1.SubnetParam{}) {
+		out.Subnet = &SubnetParam{}
+		if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(&in.Subnet, out.Subnet, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_v1beta1_ImageParam_To_v1beta2_ImageParam(in *ImageParam, out *infrav1.ImageParam, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_ImageParam_To_v1beta2_ImageParam(in, out, s); err != nil {
+		return err
+	}
+	if in.Filter != nil {
+		if err := Convert_v1beta1_ImageFilter_To_v1beta2_ImageFilter(in.Filter, &out.Filter, s); err != nil {
+			return err
+		}
+	}
+	if in.ImageRef != nil {
+		out.ImageRef = *(*infrav1.ResourceReference)(unsafe.Pointer(in.ImageRef))
+	}
+	return nil
+}
+
+func Convert_v1beta2_ImageParam_To_v1beta1_ImageParam(in *infrav1.ImageParam, out *ImageParam, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_ImageParam_To_v1beta1_ImageParam(in, out, s); err != nil {
+		return err
+	}
+	if !in.Filter.IsZero() {
+		out.Filter = &ImageFilter{}
+		if err := Convert_v1beta2_ImageFilter_To_v1beta1_ImageFilter(&in.Filter, out.Filter, s); err != nil {
+			return err
+		}
+	}
+	if in.ImageRef != (infrav1.ResourceReference{}) {
+		out.ImageRef = (*ResourceReference)(unsafe.Pointer(&in.ImageRef))
+	}
+	return nil
+}
+
+func Convert_v1beta1_LoadBalancer_To_v1beta2_LoadBalancer(in *LoadBalancer, out *infrav1.LoadBalancer, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_LoadBalancer_To_v1beta2_LoadBalancer(in, out, s); err != nil {
+		return err
+	}
+	if in.LoadBalancerNetwork != nil {
+		out.LoadBalancerNetwork = *(*infrav1.NetworkStatusWithSubnets)(unsafe.Pointer(in.LoadBalancerNetwork))
+	}
+	return nil
+}
+
+func Convert_v1beta2_LoadBalancer_To_v1beta1_LoadBalancer(in *infrav1.LoadBalancer, out *LoadBalancer, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_LoadBalancer_To_v1beta1_LoadBalancer(in, out, s); err != nil {
+		return err
+	}
+	if in.LoadBalancerNetwork.ID != "" {
+		out.LoadBalancerNetwork = (*NetworkStatusWithSubnets)(unsafe.Pointer(&in.LoadBalancerNetwork))
+	}
+	return nil
+}
+
+func Convert_v1beta1_PortOpts_To_v1beta2_PortOpts(in *PortOpts, out *infrav1.PortOpts, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_PortOpts_To_v1beta2_PortOpts(in, out, s); err != nil {
+		return err
+	}
+	if in.Network != nil {
+		out.Network = *(*infrav1.NetworkParam)(unsafe.Pointer(in.Network))
+	}
+	return nil
+}
+
+func Convert_v1beta2_PortOpts_To_v1beta1_PortOpts(in *infrav1.PortOpts, out *PortOpts, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_PortOpts_To_v1beta1_PortOpts(in, out, s); err != nil {
+		return err
+	}
+	if in.Network != (infrav1.NetworkParam{}) {
+		out.Network = (*NetworkParam)(unsafe.Pointer(&in.Network))
+	}
+	return nil
+}
+
+func Convert_v1beta1_ServerGroupParam_To_v1beta2_ServerGroupParam(in *ServerGroupParam, out *infrav1.ServerGroupParam, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_ServerGroupParam_To_v1beta2_ServerGroupParam(in, out, s); err != nil {
+		return err
+	}
+	if in.Filter != nil {
+		out.Filter = *(*infrav1.ServerGroupFilter)(unsafe.Pointer(in.Filter))
+	}
+	return nil
+}
+
+func Convert_v1beta2_ServerGroupParam_To_v1beta1_ServerGroupParam(in *infrav1.ServerGroupParam, out *ServerGroupParam, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_ServerGroupParam_To_v1beta1_ServerGroupParam(in, out, s); err != nil {
+		return err
+	}
+	if in.Filter != (infrav1.ServerGroupFilter{}) {
+		out.Filter = (*ServerGroupFilter)(unsafe.Pointer(&in.Filter))
+	}
+	return nil
+}
+
+func Convert_v1beta1_VolumeAvailabilityZone_To_v1beta2_VolumeAvailabilityZone(in *VolumeAvailabilityZone, out *infrav1.VolumeAvailabilityZone, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta1_VolumeAvailabilityZone_To_v1beta2_VolumeAvailabilityZone(in, out, s); err != nil {
+		return err
+	}
+	if in.Name != nil {
+		out.Name = infrav1.VolumeAZName(*in.Name)
+	}
+	return nil
+}
+
+func Convert_v1beta2_VolumeAvailabilityZone_To_v1beta1_VolumeAvailabilityZone(in *infrav1.VolumeAvailabilityZone, out *VolumeAvailabilityZone, s apiconversion.Scope) error {
+	if err := autoConvert_v1beta2_VolumeAvailabilityZone_To_v1beta1_VolumeAvailabilityZone(in, out, s); err != nil {
+		return err
+	}
+	if in.Name != "" {
+		name := VolumeAZName(in.Name)
+		out.Name = &name
+	}
+	return nil
+}
+
 // Manual conversion functions for Status types that conversion-gen cannot
 // auto-generate due to FailureDomains (map↔slice), Conditions (CAPI↔metav1),
 // and deprecated fields (Ready, FailureReason, FailureMessage).
 
 func Convert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatus(in *OpenStackClusterStatus, out *infrav1.OpenStackClusterStatus, _ apiconversion.Scope) error {
 	out.Initialization = (*infrav1.ClusterInitialization)(unsafe.Pointer(in.Initialization))
-	out.Network = (*infrav1.NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*infrav1.NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
-	out.Router = (*infrav1.Router)(unsafe.Pointer(in.Router))
-	out.APIServerManagedLoadBalancer = (*infrav1.LoadBalancer)(unsafe.Pointer(in.APIServerLoadBalancer))
-	out.ControlPlaneSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
-	out.WorkerSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
-	out.BastionSecurityGroup = (*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
+	if in.Network != nil {
+		out.Network = *(*infrav1.NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
+	}
+	if in.ExternalNetwork != nil {
+		out.ExternalNetwork = *(*infrav1.NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
+	}
+	if in.Router != nil {
+		out.Router = *(*infrav1.Router)(unsafe.Pointer(in.Router))
+	}
+	if in.APIServerLoadBalancer != nil {
+		if err := Convert_v1beta1_LoadBalancer_To_v1beta2_LoadBalancer(in.APIServerLoadBalancer, &out.APIServerManagedLoadBalancer, nil); err != nil {
+			return err
+		}
+	}
+	if in.ControlPlaneSecurityGroup != nil {
+		out.ControlPlaneSecurityGroup = *(*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
+	}
+	if in.WorkerSecurityGroup != nil {
+		out.WorkerSecurityGroup = *(*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
+	}
+	if in.BastionSecurityGroup != nil {
+		out.BastionSecurityGroup = *(*infrav1.SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
+	}
 	out.Bastion = (*infrav1.BastionStatus)(unsafe.Pointer(in.Bastion))
 
 	if len(in.FailureDomains) > 0 {
@@ -218,13 +439,30 @@ func Convert_v1beta1_OpenStackClusterStatus_To_v1beta2_OpenStackClusterStatus(in
 
 func Convert_v1beta2_OpenStackClusterStatus_To_v1beta1_OpenStackClusterStatus(in *infrav1.OpenStackClusterStatus, out *OpenStackClusterStatus, _ apiconversion.Scope) error {
 	out.Initialization = (*ClusterInitialization)(unsafe.Pointer(in.Initialization))
-	out.Network = (*NetworkStatusWithSubnets)(unsafe.Pointer(in.Network))
-	out.ExternalNetwork = (*NetworkStatus)(unsafe.Pointer(in.ExternalNetwork))
-	out.Router = (*Router)(unsafe.Pointer(in.Router))
-	out.APIServerLoadBalancer = (*LoadBalancer)(unsafe.Pointer(in.APIServerManagedLoadBalancer))
-	out.ControlPlaneSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.ControlPlaneSecurityGroup))
-	out.WorkerSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.WorkerSecurityGroup))
-	out.BastionSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(in.BastionSecurityGroup))
+	if in.Network.ID != "" {
+		out.Network = (*NetworkStatusWithSubnets)(unsafe.Pointer(&in.Network))
+	}
+	if in.ExternalNetwork.ID != "" {
+		out.ExternalNetwork = (*NetworkStatus)(unsafe.Pointer(&in.ExternalNetwork))
+	}
+	if in.Router.ID != "" {
+		out.Router = (*Router)(unsafe.Pointer(&in.Router))
+	}
+	if in.APIServerManagedLoadBalancer.ID != "" {
+		out.APIServerLoadBalancer = &LoadBalancer{}
+		if err := Convert_v1beta2_LoadBalancer_To_v1beta1_LoadBalancer(&in.APIServerManagedLoadBalancer, out.APIServerLoadBalancer, nil); err != nil {
+			return err
+		}
+	}
+	if in.ControlPlaneSecurityGroup.ID != "" {
+		out.ControlPlaneSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(&in.ControlPlaneSecurityGroup))
+	}
+	if in.WorkerSecurityGroup.ID != "" {
+		out.WorkerSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(&in.WorkerSecurityGroup))
+	}
+	if in.BastionSecurityGroup.ID != "" {
+		out.BastionSecurityGroup = (*SecurityGroupStatus)(unsafe.Pointer(&in.BastionSecurityGroup))
+	}
 	out.Bastion = (*BastionStatus)(unsafe.Pointer(in.Bastion))
 
 	if len(in.FailureDomains) > 0 {
@@ -293,7 +531,8 @@ func Convert_v1_Condition_To_v1beta1_Condition(in *metav1.Condition, out *cluste
 }
 
 // Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec
-// handles manual conversion for Flavor/FlavorID -> FlavorParam.
+// handles manual conversion for Flavor/FlavorID -> FlavorParam, and
+// pointer-to-value conversions for RootVolume, ServerGroup, and IdentityRef.
 func Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(
 	in *OpenStackMachineSpec,
 	out *infrav1.OpenStackMachineSpec,
@@ -318,7 +557,7 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(
 		_ = optional.Convert_string_To_optional_String(in.Flavor, &name, s)
 
 		out.Flavor = infrav1.FlavorParam{
-			Filter: &infrav1.FlavorFilter{
+			Filter: infrav1.FlavorFilter{
 				Name: name,
 			},
 		}
@@ -330,11 +569,28 @@ func Convert_v1beta1_OpenStackMachineSpec_To_v1beta2_OpenStackMachineSpec(
 		// Therefore we return no error.
 	}
 
+	if in.RootVolume != nil {
+		if err := Convert_v1beta1_RootVolume_To_v1beta2_RootVolume(in.RootVolume, &out.RootVolume, s); err != nil {
+			return err
+		}
+	}
+	if in.ServerGroup != nil {
+		if err := Convert_v1beta1_ServerGroupParam_To_v1beta2_ServerGroupParam(in.ServerGroup, &out.ServerGroup, s); err != nil {
+			return err
+		}
+	}
+	if in.IdentityRef != nil {
+		if err := Convert_v1beta1_OpenStackIdentityReference_To_v1beta2_OpenStackIdentityReference(in.IdentityRef, &out.IdentityRef, s); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec
-// handles manual conversion for FlavorParam -> Flavor/FlavorID.
+// handles manual conversion for FlavorParam -> Flavor/FlavorID, and
+// value-to-pointer conversions for RootVolume, ServerGroup, and IdentityRef.
 func Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(
 	in *infrav1.OpenStackMachineSpec,
 	out *OpenStackMachineSpec,
@@ -350,7 +606,7 @@ func Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(
 		out.FlavorID = &id
 		out.Flavor = nil
 
-	case in.Flavor.Filter != nil &&
+	case in.Flavor.Filter != (infrav1.FlavorFilter{}) &&
 		in.Flavor.Filter.Name != nil &&
 		*in.Flavor.Filter.Name != "":
 		name := *in.Flavor.Filter.Name
@@ -364,6 +620,25 @@ func Convert_v1beta2_OpenStackMachineSpec_To_v1beta1_OpenStackMachineSpec(
 		// Therefore we return no error.
 	}
 
+	if in.RootVolume != (infrav1.RootVolume{}) {
+		out.RootVolume = &RootVolume{}
+		if err := Convert_v1beta2_RootVolume_To_v1beta1_RootVolume(&in.RootVolume, out.RootVolume, s); err != nil {
+			return err
+		}
+	}
+	if in.ServerGroup != (infrav1.ServerGroupParam{}) {
+		out.ServerGroup = &ServerGroupParam{}
+		if err := Convert_v1beta2_ServerGroupParam_To_v1beta1_ServerGroupParam(&in.ServerGroup, out.ServerGroup, s); err != nil {
+			return err
+		}
+	}
+	if in.IdentityRef != (infrav1.OpenStackIdentityReference{}) {
+		out.IdentityRef = &OpenStackIdentityReference{}
+		if err := Convert_v1beta2_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(&in.IdentityRef, out.IdentityRef, s); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -374,6 +649,28 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 ) error {
 	if err := autoConvert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(in, out, s); err != nil {
 		return err
+	}
+
+	// Pointer-to-value conversions for Router, Network, ExternalNetwork, and PrimarySubnet.
+	if in.Router != nil {
+		if err := Convert_v1beta1_RouterParam_To_v1beta2_RouterParam(in.Router, &out.Router, s); err != nil {
+			return err
+		}
+	}
+	if in.Network != nil {
+		if err := Convert_v1beta1_NetworkParam_To_v1beta2_NetworkParam(in.Network, &out.Network, s); err != nil {
+			return err
+		}
+	}
+	if in.ExternalNetwork != nil {
+		if err := Convert_v1beta1_NetworkParam_To_v1beta2_NetworkParam(in.ExternalNetwork, &out.ExternalNetwork, s); err != nil {
+			return err
+		}
+	}
+	if in.PrimarySubnet != nil {
+		if err := Convert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(in.PrimarySubnet, &out.PrimarySubnet, s); err != nil {
+			return err
+		}
 	}
 
 	if in.NetworkMTU != nil || in.DisablePortSecurity != nil {
@@ -430,20 +727,22 @@ func Convert_v1beta1_OpenStackClusterSpec_To_v1beta2_OpenStackClusterSpec(
 				Enabled:          lb.Enabled,
 				AllowedCIDRs:     lb.AllowedCIDRs,
 				Provider:         lb.Provider,
-				Network:          (*infrav1.NetworkParam)(unsafe.Pointer(lb.Network)),
 				Subnets:          *(*[]infrav1.SubnetParam)(unsafe.Pointer(&lb.Subnets)),
 				AvailabilityZone: lb.AvailabilityZone,
 				Flavor:           lb.Flavor,
+			}
+			if lb.Network != nil {
+				out.APIServer.ManagedLoadBalancer.Network = *(*infrav1.NetworkParam)(unsafe.Pointer(lb.Network))
 			}
 			for _, p := range lb.AdditionalPorts {
 				out.APIServer.ManagedLoadBalancer.AdditionalPorts = append(out.APIServer.ManagedLoadBalancer.AdditionalPorts, int32(p)) //nolint:gosec // Port values are always within int32 range
 			}
 			if lb.Monitor != nil {
 				out.APIServer.ManagedLoadBalancer.Monitor = &infrav1.APIServerLoadBalancerMonitor{
-					Delay:          int32(lb.Monitor.Delay),          //nolint:gosec // Monitor values are always within int32 range
-					Timeout:        int32(lb.Monitor.Timeout),        //nolint:gosec // Monitor values are always within int32 range
-					MaxRetries:     int32(lb.Monitor.MaxRetries),     //nolint:gosec // Monitor values are always within int32 range
-					MaxRetriesDown: int32(lb.Monitor.MaxRetriesDown), //nolint:gosec // Monitor values are always within int32 range
+					Delay:          ptr.To(int32(lb.Monitor.Delay)),      //nolint:gosec // Monitor values are always within int32 range
+					Timeout:        ptr.To(int32(lb.Monitor.Timeout)),    //nolint:gosec // Monitor values are always within int32 range
+					MaxRetries:     ptr.To(int32(lb.Monitor.MaxRetries)), //nolint:gosec // Monitor values are always within int32 range
+					MaxRetriesDown: int32(lb.Monitor.MaxRetriesDown),     //nolint:gosec // Monitor values are always within int32 range
 				}
 			}
 		}
@@ -459,6 +758,32 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 ) error {
 	if err := autoConvert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(in, out, s); err != nil {
 		return err
+	}
+
+	// Value-to-pointer conversions for Router, Network, ExternalNetwork, and PrimarySubnet.
+	if in.Router != (infrav1.RouterParam{}) {
+		out.Router = &RouterParam{}
+		if err := Convert_v1beta2_RouterParam_To_v1beta1_RouterParam(&in.Router, out.Router, s); err != nil {
+			return err
+		}
+	}
+	if in.Network != (infrav1.NetworkParam{}) {
+		out.Network = &NetworkParam{}
+		if err := Convert_v1beta2_NetworkParam_To_v1beta1_NetworkParam(&in.Network, out.Network, s); err != nil {
+			return err
+		}
+	}
+	if in.ExternalNetwork != (infrav1.NetworkParam{}) {
+		out.ExternalNetwork = &NetworkParam{}
+		if err := Convert_v1beta2_NetworkParam_To_v1beta1_NetworkParam(&in.ExternalNetwork, out.ExternalNetwork, s); err != nil {
+			return err
+		}
+	}
+	if in.PrimarySubnet != (infrav1.SubnetParam{}) {
+		out.PrimarySubnet = &SubnetParam{}
+		if err := Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(&in.PrimarySubnet, out.PrimarySubnet, s); err != nil {
+			return err
+		}
 	}
 
 	if in.ManagedNetwork != nil {
@@ -503,19 +828,21 @@ func Convert_v1beta2_OpenStackClusterSpec_To_v1beta1_OpenStackClusterSpec(
 				Enabled:          lb.Enabled,
 				AllowedCIDRs:     lb.AllowedCIDRs,
 				Provider:         lb.Provider,
-				Network:          (*NetworkParam)(unsafe.Pointer(lb.Network)),
 				Subnets:          *(*[]SubnetParam)(unsafe.Pointer(&lb.Subnets)),
 				AvailabilityZone: lb.AvailabilityZone,
 				Flavor:           lb.Flavor,
+			}
+			if lb.Network != (infrav1.NetworkParam{}) {
+				out.APIServerLoadBalancer.Network = (*NetworkParam)(unsafe.Pointer(&lb.Network))
 			}
 			for _, p := range lb.AdditionalPorts {
 				out.APIServerLoadBalancer.AdditionalPorts = append(out.APIServerLoadBalancer.AdditionalPorts, int(p))
 			}
 			if lb.Monitor != nil {
 				out.APIServerLoadBalancer.Monitor = &APIServerLoadBalancerMonitor{
-					Delay:          int(lb.Monitor.Delay),
-					Timeout:        int(lb.Monitor.Timeout),
-					MaxRetries:     int(lb.Monitor.MaxRetries),
+					Delay:          int(ptr.Deref(lb.Monitor.Delay, 0)),
+					Timeout:        int(ptr.Deref(lb.Monitor.Timeout, 0)),
+					MaxRetries:     int(ptr.Deref(lb.Monitor.MaxRetries, 0)),
 					MaxRetriesDown: int(lb.Monitor.MaxRetriesDown),
 				}
 			}

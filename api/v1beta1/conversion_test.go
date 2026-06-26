@@ -183,10 +183,10 @@ func TestOpenStackMachineConversion_FlavorIDTakesPrecedence(t *testing.T) {
 	dst := &infrav1.OpenStackMachine{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
-	// FlavorID takes precedence: ID must be set, Filter must be nil.
+	// FlavorID takes precedence: ID must be set, Filter must be zero.
 	g.Expect(dst.Spec.Flavor.ID).NotTo(BeNil())
 	g.Expect(*dst.Spec.Flavor.ID).To(Equal("uuid-456"))
-	g.Expect(dst.Spec.Flavor.Filter).To(BeNil())
+	g.Expect(dst.Spec.Flavor.Filter).To(BeZero())
 
 	// Round-trip back: FlavorID is restored from the hub value.
 	// The restore annotation also brings back the original Flavor name, so
@@ -325,10 +325,10 @@ func TestOpenStackMachineConversion_FlavorID(t *testing.T) {
 	dst := &infrav1.OpenStackMachine{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
-	// Expect ID chosen, Filter nil
+	// Expect ID chosen, Filter zero
 	g.Expect(dst.Spec.Flavor.ID).NotTo(BeNil())
 	g.Expect(*dst.Spec.Flavor.ID).To(Equal("uuid-123"))
-	g.Expect(dst.Spec.Flavor.Filter).To(BeNil())
+	g.Expect(dst.Spec.Flavor.Filter).To(BeZero())
 
 	// Round-trip back: expect FlavorID set, Flavor nil
 	restored := &OpenStackMachine{}
@@ -911,12 +911,12 @@ func TestReadyFlagFromConditions(t *testing.T) {
 		},
 		Spec: infrav1.OpenStackMachineSpec{
 			Flavor: infrav1.FlavorParam{
-				Filter: &infrav1.FlavorFilter{
+				Filter: infrav1.FlavorFilter{
 					Name: ptr.To("m1.small"),
 				},
 			},
 			Image: infrav1.ImageParam{
-				Filter: &infrav1.ImageFilter{
+				Filter: infrav1.ImageFilter{
 					Name: ptr.To("ubuntu"),
 				},
 			},
@@ -1148,6 +1148,7 @@ func TestOpenStackCluster_RoundTrip_ManagedSecurityGroups_ClusterNodesRules(t *t
 							{
 								Name:      "allow-http",
 								Direction: "ingress",
+								EtherType: ptr.To("IPv4"),
 							},
 						},
 					},
@@ -1163,10 +1164,12 @@ func TestOpenStackCluster_RoundTrip_ManagedSecurityGroups_ClusterNodesRules(t *t
 							{
 								Name:      "allow-http",
 								Direction: "ingress",
+								EtherType: ptr.To("IPv4"),
 							},
 							{
 								Name:      "allow-https",
 								Direction: "ingress",
+								EtherType: ptr.To("IPv4"),
 							},
 						},
 					},
@@ -1179,13 +1182,13 @@ func TestOpenStackCluster_RoundTrip_ManagedSecurityGroups_ClusterNodesRules(t *t
 				Spec: OpenStackClusterSpec{
 					ManagedSecurityGroups: &ManagedSecurityGroups{
 						AllNodesSecurityGroupRules: []SecurityGroupRuleSpec{
-							{Name: "all-nodes-rule", Direction: "ingress"},
+							{Name: "all-nodes-rule", Direction: "ingress", EtherType: ptr.To("IPv4")},
 						},
 						ControlPlaneNodesSecurityGroupRules: []SecurityGroupRuleSpec{
-							{Name: "cp-rule", Direction: "egress"},
+							{Name: "cp-rule", Direction: "egress", EtherType: ptr.To("IPv4")},
 						},
 						WorkerNodesSecurityGroupRules: []SecurityGroupRuleSpec{
-							{Name: "worker-rule", Direction: "ingress"},
+							{Name: "worker-rule", Direction: "ingress", EtherType: ptr.To("IPv4")},
 						},
 					},
 				},
@@ -1458,8 +1461,8 @@ func TestOpenStackClusterStatusAPIServerLoadBalancerNilConversion(t *testing.T) 
 	dst := &infrav1.OpenStackCluster{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
-	// Verify nil is preserved and does not bleed into renamed field
-	g.Expect(dst.Status.APIServerManagedLoadBalancer).To(BeNil())
+	// Verify zero value is preserved and does not bleed into renamed field
+	g.Expect(dst.Status.APIServerManagedLoadBalancer).To(BeZero())
 
 	// Convert back
 	restored := &OpenStackCluster{}

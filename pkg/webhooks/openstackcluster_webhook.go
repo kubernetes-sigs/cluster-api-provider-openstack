@@ -63,7 +63,7 @@ func (*openStackClusterWebhook) ValidateCreate(_ context.Context, newObj *infrav
 //
 // Returns true if all such transitions are valid; false otherwise.
 func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) bool {
-	if newObj.Spec.Network == nil || oldObj.Spec.Network == nil || oldObj.Status.Network == nil {
+	if newObj.Spec.Network == (infrav1.NetworkParam{}) || oldObj.Spec.Network == (infrav1.NetworkParam{}) || oldObj.Status.Network.ID == "" {
 		return false
 	}
 
@@ -230,7 +230,7 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	newObj.Spec.ControlPlaneOmitAvailabilityZone = nil
 
 	// Allow change on the spec.APIServer.FloatingIP only if it matches the current api server loadbalancer IP.
-	if oldObj.Status.APIServerManagedLoadBalancer != nil &&
+	if oldObj.Status.APIServerManagedLoadBalancer.ID != "" &&
 		ptr.Deref(newObj.Spec.APIServer.GetFloatingIP(), "") == oldObj.Status.APIServerManagedLoadBalancer.IP {
 		if newObj.Spec.APIServer != nil {
 			newObj.Spec.APIServer.FloatingIP = nil
@@ -250,19 +250,19 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 
 	// Allow changes to primarySubnet to support directing new nodes to a
 	// different subnet, e.g. when migrating away from an exhausted subnet.
-	oldObj.Spec.PrimarySubnet = nil
-	newObj.Spec.PrimarySubnet = nil
+	oldObj.Spec.PrimarySubnet = infrav1.SubnetParam{}
+	newObj.Spec.PrimarySubnet = infrav1.SubnetParam{}
 
 	// Allow transitioning spec.network from filter to id and spec.subnets from
 	// filter to id. This lets users pin to resolved IDs after initial creation.
-	if newObj.Spec.Network != nil && oldObj.Spec.Network != nil && oldObj.Status.Network != nil {
+	if newObj.Spec.Network != (infrav1.NetworkParam{}) && oldObj.Spec.Network != (infrav1.NetworkParam{}) && oldObj.Status.Network.ID != "" {
 		if allowSubnetFilterToIDTransition(oldObj, newObj) {
 			oldObj.Spec.Subnets = nil
 			newObj.Spec.Subnets = nil
 		}
 		if ptr.Deref(newObj.Spec.Network.ID, "") == oldObj.Status.Network.ID {
-			newObj.Spec.Network = nil
-			oldObj.Spec.Network = nil
+			newObj.Spec.Network = infrav1.NetworkParam{}
+			oldObj.Spec.Network = infrav1.NetworkParam{}
 		}
 	}
 

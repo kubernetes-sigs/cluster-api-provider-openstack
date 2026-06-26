@@ -49,8 +49,9 @@ func Test_GetOrCreateFloatingIP(t *testing.T) {
 					Return([]floatingips.FloatingIP{}, nil)
 				m.
 					CreateFloatingIP(floatingips.CreateOpts{
-						FloatingIP:  "192.168.111.0",
-						Description: "Created by cluster-api-provider-openstack cluster test-cluster",
+						FloatingNetworkID: "external-network-id",
+						FloatingIP:        "192.168.111.0",
+						Description:       "Created by cluster-api-provider-openstack cluster test-cluster",
 					}).
 					Return(&floatingips.FloatingIP{FloatingIP: "192.168.111.0"}, nil)
 			},
@@ -68,8 +69,8 @@ func Test_GetOrCreateFloatingIP(t *testing.T) {
 		},
 	}
 	openStackCluster := &infrav1.OpenStackCluster{Status: infrav1.OpenStackClusterStatus{
-		ExternalNetwork: &infrav1.NetworkStatus{
-			ID: "",
+		ExternalNetwork: infrav1.NetworkStatus{
+			ID: "external-network-id",
 		},
 	}}
 	for _, tt := range tests {

@@ -195,7 +195,7 @@ func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ct
 		if !ok {
 			return nil
 		}
-		if server.Spec.Image.ImageRef == nil {
+		if server.Spec.Image.ImageRef == (infrav1.ResourceReference{}) {
 			return nil
 		}
 		return []string{server.Spec.Image.ImageRef.Name}

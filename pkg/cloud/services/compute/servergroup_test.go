@@ -57,7 +57,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 		},
 		{
 			testName:         "Return server group ID from filter if only filter (with name) given",
-			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					[]servergroups.ServerGroup{{ID: serverGroupID1, Name: "test-server-group"}},
@@ -68,7 +68,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 		},
 		{
 			testName:         "Return no results",
-			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					[]servergroups.ServerGroup{},
@@ -79,7 +79,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 		},
 		{
 			testName:         "Return multiple results",
-			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					[]servergroups.ServerGroup{
@@ -93,7 +93,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 		},
 		{
 			testName:         "OpenStack returns error",
-			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
+			serverGroupParam: &infrav1.ServerGroupParam{Filter: infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
 				m.ListServerGroups().Return(
 					nil,
