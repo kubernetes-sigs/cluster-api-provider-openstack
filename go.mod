@@ -29,8 +29,8 @@ require (
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
-	sigs.k8s.io/cluster-api v1.12.8
-	sigs.k8s.io/cluster-api/test v1.12.8
+	sigs.k8s.io/cluster-api v1.12.9
+	sigs.k8s.io/cluster-api/test v1.12.9
 	sigs.k8s.io/controller-runtime v0.22.5
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0
 	sigs.k8s.io/yaml v1.6.0
