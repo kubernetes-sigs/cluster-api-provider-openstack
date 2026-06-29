@@ -514,8 +514,8 @@ github.com/olekukonko/tablewriter v1.0.9 h1:XGwRsYLC2bY7bNd93Dk51bcPZksWZmLYuaTH
 github.com/olekukonko/tablewriter v1.0.9/go.mod h1:5c+EBPeSqvXnLLgkm9isDdzR3wjfBkHR9Nhfp3NWrzo=
 github.com/onsi/ginkgo v1.16.5 h1:8xi0RTUf59SOSfEtZMvwTvXYMzG4gV23XVHOZiXNtnE=
 github.com/onsi/ginkgo v1.16.5/go.mod h1:+E8gABHa3K6zRBolWtd+ROzc/U5bkGt0FwiG042wbpU=
-github.com/onsi/ginkgo/v2 v2.31.0 h1:GtuJos5DFUV9EerYJo8RhYxosYNGvOdDE5haKq6Grfs=
-github.com/onsi/ginkgo/v2 v2.31.0/go.mod h1:+aXOY+vzZ5mu2iI2HpTZUPmM//oQfsNFX6gU9kNcA44=
+github.com/onsi/ginkgo/v2 v2.32.0 h1:Hw7s2pVrQo/8Yz5N77qdnpHaoc+c6cC9WIV1Jce+J6E=
+github.com/onsi/ginkgo/v2 v2.32.0/go.mod h1:+aXOY+vzZ5mu2iI2HpTZUPmM//oQfsNFX6gU9kNcA44=
 github.com/onsi/gomega v1.42.0 h1:CJby8u36xb7v34W78F8WKvqTQP7PCMIPB78IVDB73l4=
 github.com/onsi/gomega v1.42.0/go.mod h1:M/Uqpu/8qTjtzCLUA2zJHX9Iilrau25x1PdoSRbWh5A=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
@@ -892,8 +892,8 @@ mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 h1:ssMzja7PDPJV8FStj7hq9IKiu
 mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15/go.mod h1:4M5MMXl2kW6fivUT6yRGpLLPNfuGtU2Z0cPvFquGDYU=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 h1:jpcvIRr3GLoUoEKRkHKSmGjxb6lWwrBlJsXc+eUYQHM=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2/go.mod h1:Ve9uj1L+deCXFrPOk1LpFXqTg7LCFzFso6PA48q/XZw=
-sigs.k8s.io/cluster-api v1.13.2 h1:NVdbVLmh6IyfdtENQAi80AijJf/FjfQLODz/6caDjlc=
-sigs.k8s.io/cluster-api v1.13.2/go.mod h1:h7cyiUh+N7sIBkSerqU8cDkYMtRlXVO1c5RoJE1p5+g=
+sigs.k8s.io/cluster-api v1.13.3 h1:BlNVnjg644NnlWnxIWHbkltleFLVQwm8FmjWCSB9wGY=
+sigs.k8s.io/cluster-api v1.13.3/go.mod h1:7xB2mYn7oOxSlUw7wk6TukNCjR2phn+MI0gRju3TKSk=
 sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519 h1:WkOO6Fg3tmbuFXqTMFfs80mapaQyBbdIC5p86LIVlBI=
 sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519/go.mod h1:/Zjkh19AmjuI4piKJ1fAZW7k0cDZsSoAAcGHKGZJTZU=
 sigs.k8s.io/cluster-api/test v1.13.2 h1:DIcgMPIMyQyHjZWtEx5YlzHPktuU/wRlCU+0gK32RJk=

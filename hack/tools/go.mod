@@ -7,7 +7,7 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20251203005356-667b167b2ade
 	github.com/golangci/golangci-lint/v2 v2.12.2
 	github.com/itchyny/gojq v0.12.19
-	github.com/onsi/ginkgo/v2 v2.31.0
+	github.com/onsi/ginkgo/v2 v2.32.0
 	go.uber.org/mock v0.6.0
 	k8s.io/code-generator v0.35.6
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
@@ -327,7 +327,7 @@ require (
 	mvdan.cc/gofumpt v0.9.2 // indirect
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 // indirect
-	sigs.k8s.io/cluster-api v1.13.2 // indirect
+	sigs.k8s.io/cluster-api v1.13.3 // indirect
 	sigs.k8s.io/controller-runtime v0.23.3 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/kubebuilder/docs/book/utils v0.0.0-20211028165026-57688c578b5d // indirect
