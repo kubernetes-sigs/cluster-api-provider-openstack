@@ -29,11 +29,13 @@ import (
 )
 
 // NewFactory creates the default scope factory. It generates service clients which make OpenStack API calls against a running cloud.
-func NewFactory(maxCacheSize int) Factory {
+// maxTransportCacheSize bounds the number of distinct TLS trust configurations (CA bundle + verify mode) whose connection pools are kept warm; see setMaxCachedTransports.
+func NewFactory(maxCacheSize int, maxTransportCacheSize int) Factory {
 	var c *cache.LRUExpireCache
 	if maxCacheSize > 0 {
 		c = cache.NewLRUExpireCache(maxCacheSize)
 	}
+	setMaxCachedTransports(maxTransportCacheSize)
 	return &providerScopeFactory{
 		clientCache: c,
 	}
