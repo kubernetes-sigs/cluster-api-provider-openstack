@@ -534,6 +534,169 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 				UserDataRef: userData,
 			},
 		},
+		{
+			name: "managedSubnets: port with existing fixedIPs is preserved",
+			cluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{CIDR: "10.0.128.0/17"},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+						ID: workerSecurityGroupUUID,
+					},
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: networkUUID,
+						},
+						Subnets: []infrav1.Subnet{
+							{ID: subnetUUID, CIDR: "10.0.128.0/17"},
+						},
+					},
+				},
+			},
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{Name: ptr.To(flavorName)},
+				},
+				Image:      image,
+				SSHKeyName: sshKeyName,
+				Ports: []infrav1.PortOpts{{
+					FixedIPs: []infrav1.FixedIP{{
+						Subnet: &infrav1.SubnetParam{
+							Filter: &infrav1.SubnetFilter{
+								FilterByNeutronTags: infrav1.FilterByNeutronTags{
+									TagsAny: []infrav1.NeutronTag{"openshiftClusterID=test"},
+								},
+							},
+						},
+					}},
+				}},
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{
+						{ID: ptr.To(workerSecurityGroupUUID)},
+					},
+					FixedIPs: []infrav1.FixedIP{{
+						Subnet: &infrav1.SubnetParam{
+							Filter: &infrav1.SubnetFilter{
+								FilterByNeutronTags: infrav1.FilterByNeutronTags{
+									TagsAny: []infrav1.NeutronTag{"openshiftClusterID=test"},
+								},
+							},
+						},
+					}},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "managedSubnets: port without fixedIPs gets subnet from cluster status",
+			cluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{CIDR: "10.0.128.0/17"},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+						ID: workerSecurityGroupUUID,
+					},
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: networkUUID,
+						},
+						Subnets: []infrav1.Subnet{
+							{ID: subnetUUID, CIDR: "10.0.128.0/17"},
+						},
+					},
+				},
+			},
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{Name: ptr.To(flavorName)},
+				},
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{
+						{ID: ptr.To(workerSecurityGroupUUID)},
+					},
+					FixedIPs: []infrav1.FixedIP{{
+						Subnet: &infrav1.SubnetParam{ID: ptr.To(subnetUUID)},
+					}},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name: "managedSubnets with no spec.Subnets: default port without fixedIPs still gets subnet (no overwrite of nil)",
+			cluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{CIDR: "10.0.128.0/17"},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+						ID: workerSecurityGroupUUID,
+					},
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: networkUUID,
+						},
+						Subnets: []infrav1.Subnet{
+							{ID: subnetUUID, CIDR: "10.0.128.0/17"},
+							{ID: secondSubnetUUID, CIDR: "10.1.0.0/17"},
+						},
+					},
+				},
+			},
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{Name: ptr.To(flavorName)},
+				},
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				Flavor:      ptr.To(flavorName),
+				IdentityRef: identityRef,
+				Image:       image,
+				SSHKeyName:  sshKeyName,
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{
+						{ID: ptr.To(workerSecurityGroupUUID)},
+					},
+					FixedIPs: []infrav1.FixedIP{
+						{Subnet: &infrav1.SubnetParam{ID: ptr.To(subnetUUID)}},
+						{Subnet: &infrav1.SubnetParam{ID: ptr.To(secondSubnetUUID)}},
+					},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
 	}
 	for i := range tests {
 		tt := tests[i]
