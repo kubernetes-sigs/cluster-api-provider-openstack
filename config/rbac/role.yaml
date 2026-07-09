@@ -128,8 +128,23 @@ rules:
 - apiGroups:
   - openstack.k-orc.cloud
   resources:
+  - flavors
   - images
+  - keypairs
+  - networks
+  - ports
+  - securitygroups
+  - servergroups
+  - servers
+  - subnets
+  - trunks
+  - volumes
+  - volumetypes
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch

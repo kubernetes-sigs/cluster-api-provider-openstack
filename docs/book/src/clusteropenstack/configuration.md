@@ -138,7 +138,7 @@ manage some OpenStack resources. ORC is a separate project and is not part of CA
 To install ORC, run the following command:
 
 ```bash
-ORC_VERSION=v2.0.3
+ORC_VERSION=v2.6.0
 kubectl apply -f "https://github.com/k-orc/openstack-resource-controller/releases/download/${ORC_VERSION}/install.yaml"
 ```
 
@@ -156,6 +156,16 @@ Check the [ORC documentation](https://k-orc.cloud) for more information.
 ```bash
 kubectl label crd servers.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
 kubectl label crd images.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd ports.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd volumes.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd flavors.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd keypairs.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd servergroups.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd networks.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd subnets.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd securitygroups.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd trunks.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
+kubectl label crd volumetypes.openstack.k-orc.cloud clusterctl.cluster.x-k8s.io/move=""
 ```
 
 ## OpenStack credential
