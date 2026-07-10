@@ -257,7 +257,7 @@ func IsServerTerminalError(server *infrav1alpha1.OpenStackServer) bool {
 	return false
 }
 
-func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) {
+func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) { //nolint:unparam
 	// If the OpenStackServer is in an error state, return early.
 	if IsServerTerminalError(openStackServer) {
 		log := ctrl.LoggerFrom(ctx).WithValues("OpenStackServer", klog.KObj(openStackServer))

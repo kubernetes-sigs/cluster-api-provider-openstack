@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -124,67 +125,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, openStackServer *infrav1alph
 		orcObjects = append(orcObjects, obj)
 	}
 
-	// Volume types (deduplicated)
-	volumeTypeNameMap := make(map[string]string)
-	collectVolumeType := func(typeName string) {
-		if typeName == "" {
-			return
-		}
-		if _, exists := volumeTypeNameMap[typeName]; exists {
-			return
-		}
-		vtName := VolumeTypeORCName(serverName, typeName)
-		volumeTypeNameMap[typeName] = vtName
-		orcObjects = append(orcObjects, buildVolumeType(serverName, namespace, typeName, credRef))
-	}
-	if spec.RootVolume != nil {
-		collectVolumeType(spec.RootVolume.Type)
-	}
-	for i := range spec.AdditionalBlockDevices {
-		bd := &spec.AdditionalBlockDevices[i]
-		if bd.Storage.Type == infrav1.VolumeBlockDevice && bd.Storage.Volume != nil {
-			collectVolumeType(bd.Storage.Volume.Type)
-		}
-	}
-
-	// Root volume
-	serverAZ := ptr.Deref(spec.AvailabilityZone, "")
-	var rootVolumeORCName string
-	if spec.RootVolume != nil && spec.RootVolume.SizeGiB > 0 {
-		rootVolumeORCName = RootVolumeName(serverName)
-		orcObjects = append(orcObjects, buildRootVolume(serverName, namespace, spec.RootVolume, imageORCName, volumeTypeNameMap, serverAZ, credRef))
-	}
-
-	// Additional volumes
-	var additionalVolumes []VolumeAttachment
-	for i := range spec.AdditionalBlockDevices {
-		bd := &spec.AdditionalBlockDevices[i]
-		switch bd.Storage.Type {
-		case infrav1.VolumeBlockDevice:
-			volName := AdditionalVolumeName(serverName, bd.Name)
-			additionalVolumes = append(additionalVolumes, VolumeAttachment{ORCName: volName, Device: bd.Name})
-			orcObjects = append(orcObjects, buildAdditionalVolume(serverName, namespace, *bd, volumeTypeNameMap, serverAZ, credRef))
-		case infrav1.LocalBlockDevice:
-			log.Info("WARNING: Local block devices are not supported by ORC, skipping", "blockDevice", bd.Name)
-		}
-	}
+	// Volume types, root volume, additional volumes
+	volumeObjects, rootVolumeORCName, additionalVolumes := buildVolumeObjects(log, serverName, namespace, spec, imageORCName, credRef)
+	orcObjects = append(orcObjects, volumeObjects...)
 
 	// Ports and trunks
-	var portORCNames []string
-	for i, portOpts := range spec.Ports {
-		portName := PortORCName(serverName, i)
-		portORCNames = append(portORCNames, portName)
-
-		portObj := buildPort(serverName, namespace, i, portOpts, spec.SecurityGroups,
-			ptr.Deref(spec.Trunk, false), spec.Tags,
-			portRes.NetworkNameMap, portRes.SubnetNameMap, portRes.SGNameMap, credRef)
-		orcObjects = append(orcObjects, portObj)
-
-		trunkEnabled := ptr.Deref(portOpts.Trunk, ptr.Deref(spec.Trunk, false))
-		if trunkEnabled {
-			orcObjects = append(orcObjects, buildTrunk(serverName, namespace, i, portName, spec.Tags, credRef))
-		}
-	}
+	portObjects, portORCNames := buildPortAndTrunkObjects(serverName, namespace, spec, portRes, credRef)
+	orcObjects = append(orcObjects, portObjects...)
 
 	// ORC Server (depends on everything above)
 	serverObj := buildServer(serverName, namespace, spec, imageORCName, FlavorName(serverName),
@@ -193,26 +140,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, openStackServer *infrav1alph
 	orcObjects = append(orcObjects, serverObj)
 
 	// ── 5. Set owner references and ensure all objects exist ────────
-	for _, obj := range orcObjects {
-		if err := controllerutil.SetControllerReference(openStackServer, obj, r.Scheme); err != nil {
-			return nil, fmt.Errorf("setting owner reference on %s: %w", obj.GetName(), err)
-		}
-		if err := r.ensureORCResource(ctx, obj); err != nil {
-			return nil, fmt.Errorf("ensuring ORC resource %s: %w", obj.GetName(), err)
-		}
+	if err := r.ensureAllResources(ctx, openStackServer, orcObjects); err != nil {
+		return nil, err
 	}
 
 	// ── 6. Check for terminal errors on all ORC objects ─────────────
-	for _, obj := range orcObjects {
-		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
-			return nil, fmt.Errorf("fetching ORC resource %s: %w", obj.GetName(), err)
-		}
-		if condObj, ok := obj.(orcv1alpha1.ObjectWithConditions); ok {
-			if termErr := orcv1alpha1.GetTerminalError(condObj); termErr != nil {
-				return nil, capoerrors.Terminal(infrav1.DependencyFailedReason,
-					fmt.Sprintf("ORC resource %s/%s failed: %v", obj.GetNamespace(), obj.GetName(), termErr))
-			}
-		}
+	if err := r.checkTerminalErrors(ctx, orcObjects); err != nil {
+		return nil, err
 	}
 
 	// ── 7. Check if the ORC Server is Available ─────────────────────
@@ -239,6 +173,122 @@ func (r *Reconciler) Reconcile(ctx context.Context, openStackServer *infrav1alph
 	}
 
 	return result, nil
+}
+
+// buildVolumeObjects builds the deduplicated VolumeType objects, the root
+// volume (if boot-from-volume is configured), and any additional block
+// device volumes. It returns the ORC objects to create, the root volume's
+// ORC name (empty if boot-from-image), and the additional volume
+// attachments to pass to buildServer.
+func buildVolumeObjects(
+	log logr.Logger,
+	serverName, namespace string,
+	spec *infrav1alpha1.OpenStackServerSpec,
+	imageORCName string,
+	credRef orcv1alpha1.CloudCredentialsReference,
+) (orcObjects []client.Object, rootVolumeORCName string, additionalVolumes []VolumeAttachment) {
+	// Volume types (deduplicated)
+	volumeTypeNameMap := make(map[string]string)
+	collectVolumeType := func(typeName string) {
+		if typeName == "" {
+			return
+		}
+		if _, exists := volumeTypeNameMap[typeName]; exists {
+			return
+		}
+		vtName := VolumeTypeORCName(serverName, typeName)
+		volumeTypeNameMap[typeName] = vtName
+		orcObjects = append(orcObjects, buildVolumeType(serverName, namespace, typeName, credRef))
+	}
+	if spec.RootVolume != nil {
+		collectVolumeType(spec.RootVolume.Type)
+	}
+	for i := range spec.AdditionalBlockDevices {
+		bd := &spec.AdditionalBlockDevices[i]
+		if bd.Storage.Type == infrav1.VolumeBlockDevice && bd.Storage.Volume != nil {
+			collectVolumeType(bd.Storage.Volume.Type)
+		}
+	}
+
+	// Root volume
+	serverAZ := ptr.Deref(spec.AvailabilityZone, "")
+	if spec.RootVolume != nil && spec.RootVolume.SizeGiB > 0 {
+		rootVolumeORCName = RootVolumeName(serverName)
+		orcObjects = append(orcObjects, buildRootVolume(serverName, namespace, spec.RootVolume, imageORCName, volumeTypeNameMap, serverAZ, credRef))
+	}
+
+	// Additional volumes
+	for i := range spec.AdditionalBlockDevices {
+		bd := &spec.AdditionalBlockDevices[i]
+		switch bd.Storage.Type {
+		case infrav1.VolumeBlockDevice:
+			volName := AdditionalVolumeName(serverName, bd.Name)
+			additionalVolumes = append(additionalVolumes, VolumeAttachment{ORCName: volName, Device: bd.Name})
+			orcObjects = append(orcObjects, buildAdditionalVolume(serverName, namespace, *bd, volumeTypeNameMap, serverAZ, credRef))
+		case infrav1.LocalBlockDevice:
+			log.Info("WARNING: Local block devices are not supported by ORC, skipping", "blockDevice", bd.Name)
+		}
+	}
+
+	return orcObjects, rootVolumeORCName, additionalVolumes
+}
+
+// buildPortAndTrunkObjects builds the managed ORC Port objects (and their
+// Trunks, when enabled) for the server spec. It returns the ORC objects to
+// create and the ordered list of port ORC names to pass to buildServer.
+func buildPortAndTrunkObjects(
+	serverName, namespace string,
+	spec *infrav1alpha1.OpenStackServerSpec,
+	portRes *PortResolution,
+	credRef orcv1alpha1.CloudCredentialsReference,
+) (orcObjects []client.Object, portORCNames []string) {
+	for i, portOpts := range spec.Ports {
+		portName := PortORCName(serverName, i)
+		portORCNames = append(portORCNames, portName)
+
+		portObj := buildPort(serverName, namespace, i, portOpts, spec.SecurityGroups,
+			spec.Tags,
+			portRes.NetworkNameMap, portRes.SubnetNameMap, portRes.SGNameMap, credRef)
+		orcObjects = append(orcObjects, portObj)
+
+		trunkEnabled := ptr.Deref(portOpts.Trunk, ptr.Deref(spec.Trunk, false))
+		if trunkEnabled {
+			orcObjects = append(orcObjects, buildTrunk(serverName, namespace, i, portName, spec.Tags, credRef))
+		}
+	}
+
+	return orcObjects, portORCNames
+}
+
+// ensureAllResources sets the OpenStackServer as the controller owner of
+// each ORC object and ensures each object exists, creating it if missing.
+func (r *Reconciler) ensureAllResources(ctx context.Context, openStackServer *infrav1alpha1.OpenStackServer, orcObjects []client.Object) error {
+	for _, obj := range orcObjects {
+		if err := controllerutil.SetControllerReference(openStackServer, obj, r.Scheme); err != nil {
+			return fmt.Errorf("setting owner reference on %s: %w", obj.GetName(), err)
+		}
+		if err := r.ensureORCResource(ctx, obj); err != nil {
+			return fmt.Errorf("ensuring ORC resource %s: %w", obj.GetName(), err)
+		}
+	}
+	return nil
+}
+
+// checkTerminalErrors refreshes each ORC object from the API server and
+// returns a terminal error if any of them report one.
+func (r *Reconciler) checkTerminalErrors(ctx context.Context, orcObjects []client.Object) error {
+	for _, obj := range orcObjects {
+		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
+			return fmt.Errorf("fetching ORC resource %s: %w", obj.GetName(), err)
+		}
+		if condObj, ok := obj.(orcv1alpha1.ObjectWithConditions); ok {
+			if termErr := orcv1alpha1.GetTerminalError(condObj); termErr != nil {
+				return capoerrors.Terminal(infrav1.DependencyFailedReason,
+					fmt.Sprintf("ORC resource %s/%s failed: %v", obj.GetNamespace(), obj.GetName(), termErr))
+			}
+		}
+	}
+	return nil
 }
 
 // DeleteORCResources deletes the ORC Server and waits for its deletion.

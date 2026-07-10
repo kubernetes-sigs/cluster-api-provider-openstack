@@ -76,16 +76,20 @@ func TestHashedNames_Deterministic(t *testing.T) {
 	const server = "srv"
 	key := "id:abc-123"
 
-	if NetworkORCName(server, key) != NetworkORCName(server, key) {
+	networkFirst, networkSecond := NetworkORCName(server, key), NetworkORCName(server, key)
+	if networkFirst != networkSecond {
 		t.Error("NetworkORCName not deterministic")
 	}
-	if SubnetORCName(server, key) != SubnetORCName(server, key) {
+	subnetFirst, subnetSecond := SubnetORCName(server, key), SubnetORCName(server, key)
+	if subnetFirst != subnetSecond {
 		t.Error("SubnetORCName not deterministic")
 	}
-	if SecurityGroupORCName(server, key) != SecurityGroupORCName(server, key) {
+	sgFirst, sgSecond := SecurityGroupORCName(server, key), SecurityGroupORCName(server, key)
+	if sgFirst != sgSecond {
 		t.Error("SecurityGroupORCName not deterministic")
 	}
-	if VolumeTypeORCName(server, key) != VolumeTypeORCName(server, key) {
+	volTypeFirst, volTypeSecond := VolumeTypeORCName(server, key), VolumeTypeORCName(server, key)
+	if volTypeFirst != volTypeSecond {
 		t.Error("VolumeTypeORCName not deterministic")
 	}
 }

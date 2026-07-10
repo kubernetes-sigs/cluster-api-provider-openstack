@@ -705,11 +705,11 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 			{Subnet: openStackCluster.Spec.PrimarySubnet},
 		}
 	} else if len(openStackCluster.Spec.Subnets) > 0 {
-		clusterSubnets = make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
-		for idx, sn := range openStackCluster.Spec.Subnets {
-			clusterSubnets[idx] = infrav1.FixedIP{
+		clusterSubnets = make([]infrav1.FixedIP, 0, len(openStackCluster.Spec.Subnets))
+		for _, sn := range openStackCluster.Spec.Subnets {
+			clusterSubnets = append(clusterSubnets, infrav1.FixedIP{
 				Subnet: &sn,
-			}
+			})
 		}
 	}
 

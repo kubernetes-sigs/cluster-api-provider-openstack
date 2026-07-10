@@ -31,7 +31,6 @@ func buildPort(
 	index int,
 	portOpts infrav1.PortOpts,
 	globalSGs []infrav1.SecurityGroupParam,
-	defaultTrunk bool,
 	serverTags []string,
 	networkNameMap, subnetNameMap, sgNameMap map[string]string,
 	credRef orcv1alpha1.CloudCredentialsReference,
@@ -124,7 +123,7 @@ func buildPort(
 	}
 
 	// Tags: combine server tags + per-port tags
-	var orcTags []orcv1alpha1.NeutronTag
+	orcTags := make([]orcv1alpha1.NeutronTag, 0, len(serverTags)+len(portOpts.Tags))
 	for _, t := range serverTags {
 		orcTags = append(orcTags, orcv1alpha1.NeutronTag(t))
 	}
@@ -148,7 +147,7 @@ func buildPort(
 
 // buildTrunk builds a managed ORC Trunk for a trunk-enabled port.
 func buildTrunk(serverName, namespace string, portIndex int, portORCName string, serverTags []string, credRef orcv1alpha1.CloudCredentialsReference) *orcv1alpha1.Trunk {
-	var orcTags []orcv1alpha1.NeutronTag
+	orcTags := make([]orcv1alpha1.NeutronTag, 0, len(serverTags))
 	for _, t := range serverTags {
 		orcTags = append(orcTags, orcv1alpha1.NeutronTag(t))
 	}

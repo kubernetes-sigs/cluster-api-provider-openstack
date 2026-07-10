@@ -27,7 +27,6 @@ import (
 type Service struct {
 	scope              *scope.WithLogger
 	_computeClient     clients.ComputeClient
-	_volumeClient      clients.VolumeClient
 	_imageClient       clients.ImageClient
 	_networkingService *networking.Service
 }
@@ -50,19 +49,6 @@ func (s Service) getComputeClient() clients.ComputeClient {
 	}
 
 	return s._computeClient
-}
-
-func (s Service) getVolumeClient() clients.VolumeClient {
-	if s._volumeClient == nil {
-		volumeClient, err := s.scope.NewVolumeClient()
-		if err != nil {
-			return clients.NewVolumeErrorClient(err)
-		}
-
-		s._volumeClient = volumeClient
-	}
-
-	return s._volumeClient
 }
 
 func (s Service) getImageClient() clients.ImageClient {
