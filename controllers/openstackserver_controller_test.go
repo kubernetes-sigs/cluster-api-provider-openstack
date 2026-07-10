@@ -18,9 +18,13 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
 	. "github.com/onsi/gomega"
+	"go.uber.org/mock/gomock"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,6 +38,7 @@ import (
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 const (
@@ -481,6 +486,164 @@ func Test_OpenStackServerReconcileNormal(t *testing.T) {
 				g.Expect(osServer.Status.InstanceID).ToNot(BeNil())
 				g.Expect(*osServer.Status.InstanceID).To(Equal(tt.wantInstanceID))
 				g.Expect(osServer.Status.Addresses).ToNot(BeEmpty())
+			}
+		})
+	}
+}
+
+func Test_cleanupTrunkSubports(t *testing.T) {
+	const (
+		serverUID  = types.UID("server-uid-1234")
+		trunkID    = "neutron-trunk-id-1"
+		subportID1 = "subport-port-id-1"
+		subportID2 = "subport-port-id-2"
+	)
+
+	makeServer := func() *infrav1alpha1.OpenStackServer {
+		return &infrav1alpha1.OpenStackServer{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      openStackServerName,
+				Namespace: "default",
+				UID:       serverUID,
+			},
+		}
+	}
+
+	makeTrunk := func(name string, statusID *string, ownerUID types.UID) *orcv1alpha1.Trunk {
+		return &orcv1alpha1.Trunk{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: "default",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: infrav1alpha1.SchemeGroupVersion.String(),
+						Kind:       "OpenStackServer",
+						Name:       openStackServerName,
+						UID:        ownerUID,
+					},
+				},
+			},
+			Status: orcv1alpha1.TrunkStatus{
+				ID: statusID,
+			},
+		}
+	}
+
+	tests := []struct {
+		name            string
+		existingObjects []client.Object
+		expect          func(mf *scope.MockScopeFactory)
+		wantErr         bool
+	}{
+		{
+			name:            "no trunks: no-op",
+			existingObjects: nil,
+			// No scope/network calls expected — ScopeFactory is not even needed.
+		},
+		{
+			name: "trunk without status ID: skipped",
+			existingObjects: []client.Object{
+				makeTrunk("trunk-no-id", nil, serverUID),
+			},
+			// No scope/network calls expected.
+		},
+		{
+			name: "trunk owned by different server: skipped",
+			existingObjects: []client.Object{
+				makeTrunk("trunk-other", ptr.To(trunkID), "other-uid"),
+			},
+			// No scope/network calls expected.
+		},
+		{
+			name: "trunk with no subports: list returns empty",
+			existingObjects: []client.Object{
+				makeTrunk("trunk-empty", ptr.To(trunkID), serverUID),
+			},
+			expect: func(mf *scope.MockScopeFactory) {
+				mf.NetworkClient.EXPECT().
+					ListTrunkSubports(trunkID).
+					Return([]trunks.Subport{}, nil)
+			},
+		},
+		{
+			name: "trunk with subports: removes and deletes them",
+			existingObjects: []client.Object{
+				makeTrunk("trunk-with-subs", ptr.To(trunkID), serverUID),
+			},
+			expect: func(mf *scope.MockScopeFactory) {
+				mf.NetworkClient.EXPECT().
+					ListTrunkSubports(trunkID).
+					Return([]trunks.Subport{
+						{PortID: subportID1},
+						{PortID: subportID2},
+					}, nil)
+				mf.NetworkClient.EXPECT().
+					RemoveSubports(trunkID, gomock.Any()).
+					Return(nil)
+				mf.NetworkClient.EXPECT().
+					DeletePort(subportID1).
+					Return(nil)
+				mf.NetworkClient.EXPECT().
+					DeletePort(subportID2).
+					Return(nil)
+			},
+		},
+		{
+			name: "transient error propagated",
+			existingObjects: []client.Object{
+				makeTrunk("trunk-err", ptr.To(trunkID), serverUID),
+			},
+			expect: func(mf *scope.MockScopeFactory) {
+				mf.NetworkClient.EXPECT().
+					ListTrunkSubports(trunkID).
+					Return(nil, fmt.Errorf("connection refused"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "trunk already deleted in OpenStack: NotFound tolerated",
+			existingObjects: []client.Object{
+				makeTrunk("trunk-gone", ptr.To(trunkID), serverUID),
+			},
+			expect: func(mf *scope.MockScopeFactory) {
+				mf.NetworkClient.EXPECT().
+					ListTrunkSubports(trunkID).
+					Return(nil, gophercloud.ErrResourceNotFound{})
+			},
+		},
+	}
+
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+			ctx := context.TODO()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+			if tt.expect != nil {
+				tt.expect(mockScopeFactory)
+			}
+
+			scheme := newORCTestScheme(g)
+			fakeClient := fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(tt.existingObjects...).
+				Build()
+
+			reconciler := &OpenStackServerReconciler{
+				Client:       fakeClient,
+				Scheme:       scheme,
+				ScopeFactory: mockScopeFactory,
+			}
+
+			err := reconciler.cleanupTrunkSubports(ctx, makeServer())
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+			} else {
+				g.Expect(err).ToNot(HaveOccurred())
 			}
 		})
 	}

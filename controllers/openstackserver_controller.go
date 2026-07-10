@@ -157,6 +157,12 @@ func (r *OpenStackServerReconciler) reconcileDelete(ctx context.Context, openSta
 	log := ctrl.LoggerFrom(ctx).WithValues("OpenStackServer", klog.KObj(openStackServer))
 	log.Info("Reconciling OpenStackServer delete")
 
+	// Clean up trunk subports before ORC deletes the Neutron trunks.
+	// Once a trunk is gone we can no longer query its subports.
+	if err := r.cleanupTrunkSubports(ctx, openStackServer); err != nil {
+		return err
+	}
+
 	orcReconciler := &orc.Reconciler{Client: r.Client, Scheme: r.Scheme}
 	done, err := orcReconciler.DeleteORCResources(ctx, openStackServer)
 	if err != nil {
@@ -176,6 +182,71 @@ func (r *OpenStackServerReconciler) reconcileDelete(ctx context.Context, openSta
 
 	controllerutil.RemoveFinalizer(openStackServer, infrav1alpha1.OpenStackServerFinalizer)
 	log.Info("Reconciled OpenStackServer deleted successfully")
+	return nil
+}
+
+// cleanupTrunkSubports removes and deletes subports from any ORC Trunks
+// owned by the OpenStackServer. This must be called before ORC deletes
+// the Neutron trunks, because once a trunk is gone we can no longer
+// query its subports.
+//
+// Externally-added subports (e.g. added by a user via the OpenStack API)
+// are removed from the trunk and their Neutron ports are deleted, matching
+// the behaviour of the pre-ORC trunk cleanup code.
+func (r *OpenStackServerReconciler) cleanupTrunkSubports(ctx context.Context, openStackServer *infrav1alpha1.OpenStackServer) error {
+	log := ctrl.LoggerFrom(ctx)
+
+	// List all ORC Trunk objects in the server's namespace.
+	trunkList := &orcv1alpha1.TrunkList{}
+	if err := r.Client.List(ctx, trunkList, client.InNamespace(openStackServer.Namespace)); err != nil {
+		return fmt.Errorf("listing ORC Trunks: %w", err)
+	}
+
+	// Filter to trunks owned by this OpenStackServer and that have a
+	// Neutron trunk ID we can query.
+	var trunksToClean []*orcv1alpha1.Trunk
+	for i := range trunkList.Items {
+		trunk := &trunkList.Items[i]
+		if trunk.Status.ID == nil {
+			continue
+		}
+		for _, ref := range trunk.OwnerReferences {
+			if ref.UID == openStackServer.UID && ref.Kind == "OpenStackServer" {
+				trunksToClean = append(trunksToClean, trunk)
+				break
+			}
+		}
+	}
+
+	if len(trunksToClean) == 0 {
+		return nil
+	}
+
+	// Create the networking service lazily — only needed when there are
+	// trunks to clean up. This is the same pattern used for floating IP
+	// association (the only other Gophercloud usage in this controller).
+	clientScope, err := r.ScopeFactory.NewClientScopeFromObject(ctx, r.Client, r.CaCertificates, log, openStackServer)
+	if err != nil {
+		return fmt.Errorf("creating scope for trunk subport cleanup: %w", err)
+	}
+	s := scope.NewWithLogger(clientScope, log)
+	networkingService, err := networking.NewService(s)
+	if err != nil {
+		return fmt.Errorf("creating networking service for trunk subport cleanup: %w", err)
+	}
+
+	for _, trunk := range trunksToClean {
+		trunkID := *trunk.Status.ID
+		log.Info("Cleaning up trunk subports", "trunk", trunk.Name, "trunkID", trunkID)
+		if err := networkingService.RemoveTrunkSubports(trunkID); err != nil {
+			if capoerrors.IsNotFound(err) {
+				log.Info("Trunk already deleted in OpenStack, skipping subport cleanup", "trunkID", trunkID)
+				continue
+			}
+			return fmt.Errorf("removing subports from trunk %s: %w", trunkID, err)
+		}
+	}
+
 	return nil
 }
 
