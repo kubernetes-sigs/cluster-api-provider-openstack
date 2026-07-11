@@ -33,6 +33,7 @@ func buildPort(
 	globalSGs []infrav1.SecurityGroupParam,
 	serverTags []string,
 	networkNameMap, subnetNameMap, sgNameMap map[string]string,
+	autoAddresses []string,
 	credRef orcv1alpha1.CloudCredentialsReference,
 ) *orcv1alpha1.Port {
 	portSpec := &orcv1alpha1.PortResourceSpec{
@@ -63,6 +64,18 @@ func buildPort(
 		// Only add if we have a subnet ref (required by ORC)
 		if addr.SubnetRef != "" {
 			portSpec.Addresses = append(portSpec.Addresses, addr)
+		}
+	}
+
+	// If no explicit fixedIPs were provided, use auto-resolved subnet
+	// addresses discovered from the ORC Network status. This restores
+	// the legacy behavior where Neutron auto-allocated addresses from
+	// all subnets on the network.
+	if len(portOpts.FixedIPs) == 0 {
+		for _, subnetName := range autoAddresses {
+			portSpec.Addresses = append(portSpec.Addresses, orcv1alpha1.Address{
+				SubnetRef: orcv1alpha1.KubernetesNameRef(subnetName),
+			})
 		}
 	}
 

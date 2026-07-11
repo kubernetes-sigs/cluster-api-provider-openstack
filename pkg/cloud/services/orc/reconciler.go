@@ -83,6 +83,27 @@ func (r *Reconciler) Reconcile(ctx context.Context, openStackServer *infrav1alph
 	// ── 2. Resolve ports → deduplicated Network/Subnet/SG objects ───
 	portRes := ResolvePortsToORC(serverName, namespace, spec.Ports, spec.SecurityGroups, credRef)
 
+	// ── 2a. Ensure Network objects first ────────────────────────────
+	// Networks must be Available before we can auto-resolve subnets
+	// for ports that don't specify explicit fixedIPs.
+	for _, obj := range portRes.Networks {
+		if err := controllerutil.SetControllerReference(openStackServer, obj, r.Scheme); err != nil {
+			return nil, fmt.Errorf("setting owner reference on %s: %w", obj.GetName(), err)
+		}
+		if err := r.ensureORCResource(ctx, obj); err != nil {
+			return nil, fmt.Errorf("ensuring ORC resource %s: %w", obj.GetName(), err)
+		}
+	}
+
+	// ── 2b. Auto-resolve subnets for ports without fixedIPs ─────────
+	autoAddresses, ready, err := resolveAutoSubnets(ctx, r.Client, serverName, namespace, spec.Ports, portRes, credRef)
+	if err != nil {
+		return nil, fmt.Errorf("resolving auto subnets: %w", err)
+	}
+	if !ready {
+		return &ReconcileResult{}, nil
+	}
+
 	// ── 3. Determine image ORC name ─────────────────────────────────
 	imageORCName := ImageName(serverName)
 	if spec.Image.ImageRef != nil {
@@ -130,7 +151,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, openStackServer *infrav1alph
 	orcObjects = append(orcObjects, volumeObjects...)
 
 	// Ports and trunks
-	portObjects, portORCNames := buildPortAndTrunkObjects(serverName, namespace, spec, portRes, credRef)
+	portObjects, portORCNames := buildPortAndTrunkObjects(serverName, namespace, spec, portRes, autoAddresses, credRef)
 	orcObjects = append(orcObjects, portObjects...)
 
 	// ORC Server (depends on everything above)
@@ -240,6 +261,7 @@ func buildPortAndTrunkObjects(
 	serverName, namespace string,
 	spec *infrav1alpha1.OpenStackServerSpec,
 	portRes *PortResolution,
+	autoAddresses map[int][]string,
 	credRef orcv1alpha1.CloudCredentialsReference,
 ) (orcObjects []client.Object, portORCNames []string) {
 	for i, portOpts := range spec.Ports {
@@ -248,7 +270,8 @@ func buildPortAndTrunkObjects(
 
 		portObj := buildPort(serverName, namespace, i, portOpts, spec.SecurityGroups,
 			spec.Tags,
-			portRes.NetworkNameMap, portRes.SubnetNameMap, portRes.SGNameMap, credRef)
+			portRes.NetworkNameMap, portRes.SubnetNameMap, portRes.SGNameMap,
+			autoAddresses[i], credRef)
 		orcObjects = append(orcObjects, portObj)
 
 		trunkEnabled := ptr.Deref(portOpts.Trunk, ptr.Deref(spec.Trunk, false))
@@ -258,6 +281,84 @@ func buildPortAndTrunkObjects(
 	}
 
 	return orcObjects, portORCNames
+}
+
+// resolveAutoSubnets discovers subnets for ports that specify a network
+// but no explicit fixedIPs. It reads the ORC Network status to find
+// subnet IDs, creates unmanaged ORC Subnet objects for them (added to
+// portRes), and returns a map of port index → subnet ORC names that
+// buildPort uses to populate Addresses.
+//
+// This restores the legacy CAPO behavior where Neutron auto-allocated
+// addresses from all subnets on the network. Under ORC delegation,
+// ports are pre-created and must carry explicit addresses because ORC
+// intentionally sends fixed_ips=[] when no addresses are specified.
+//
+// Returns (autoAddresses, ready, error). ready is false when a required
+// Network is not yet Available; the caller should return early and let
+// the controller re-queue via ORC object watches.
+func resolveAutoSubnets(
+	ctx context.Context,
+	c client.Client,
+	serverName, namespace string,
+	ports []infrav1.PortOpts,
+	portRes *PortResolution,
+	credRef orcv1alpha1.CloudCredentialsReference,
+) (map[int][]string, bool, error) {
+	autoAddresses := make(map[int][]string)
+
+	for i, port := range ports {
+		// Skip ports that already have explicit fixedIPs.
+		if len(port.FixedIPs) > 0 {
+			continue
+		}
+		// Skip ports with no network reference.
+		if port.Network == nil {
+			continue
+		}
+
+		key := NetworkParamKey(*port.Network)
+		networkORCName, ok := portRes.NetworkNameMap[key]
+		if !ok {
+			continue
+		}
+
+		// Fetch the ORC Network to read its status.
+		orcNetwork := &orcv1alpha1.Network{}
+		if err := c.Get(ctx, client.ObjectKey{Namespace: namespace, Name: networkORCName}, orcNetwork); err != nil {
+			return nil, false, fmt.Errorf("fetching ORC Network %s: %w", networkORCName, err)
+		}
+
+		if !orcv1alpha1.IsAvailable(orcNetwork) {
+			// Network not ready yet — will be re-queued by watch.
+			return nil, false, nil
+		}
+
+		if orcNetwork.Status.Resource == nil || len(orcNetwork.Status.Resource.Subnets) == 0 {
+			continue
+		}
+
+		var subnetNames []string
+		for _, subnetID := range orcNetwork.Status.Resource.Subnets {
+			subnetParam := infrav1.SubnetParam{ID: &subnetID}
+			subnetKey := SubnetParamKey(subnetParam)
+
+			// Re-use an existing ORC Subnet if already resolved
+			// (e.g. from another port's explicit fixedIPs).
+			if existingName, exists := portRes.SubnetNameMap[subnetKey]; exists {
+				subnetNames = append(subnetNames, existingName)
+				continue
+			}
+
+			obj := buildSubnet(serverName, namespace, subnetParam, networkORCName, credRef)
+			portRes.Subnets = append(portRes.Subnets, obj)
+			portRes.SubnetNameMap[subnetKey] = obj.Name
+			subnetNames = append(subnetNames, obj.Name)
+		}
+		autoAddresses[i] = subnetNames
+	}
+
+	return autoAddresses, true, nil
 }
 
 // ensureAllResources sets the OpenStackServer as the controller owner of

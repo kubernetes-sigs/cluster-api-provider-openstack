@@ -403,6 +403,28 @@ func Test_OpenStackServerReconcileNormal(t *testing.T) {
 				},
 			},
 			existingObjects: []client.Object{
+				// ORC Network must be Available so resolveAutoSubnets
+				// can discover its subnets for ports without fixedIPs.
+				&orcv1alpha1.Network{
+					ObjectMeta: metav1.ObjectMeta{
+						// Deterministic name: hash6("id:" + networkUUID)
+						Name:      openStackServerName + "-net-fad3d8",
+						Namespace: "default",
+					},
+					Status: orcv1alpha1.NetworkStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:               orcv1alpha1.ConditionAvailable,
+								Status:             metav1.ConditionTrue,
+								Reason:             orcv1alpha1.ConditionReasonSuccess,
+								LastTransitionTime: metav1.Now(),
+							},
+						},
+						Resource: &orcv1alpha1.NetworkResourceStatus{
+							Subnets: []string{"test-subnet-uuid"},
+						},
+					},
+				},
 				&orcv1alpha1.Server{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      openStackServerName,
