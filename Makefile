@@ -27,7 +27,7 @@ unexport GOPATH
 TRACE ?= 0
 
 # Go
-GO_VERSION ?= 1.25.11
+GO_VERSION ?= 1.25.12
 
 # Ensure correct toolchain is used
 GOTOOLCHAIN = go$(GO_VERSION)
