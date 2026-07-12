@@ -1010,14 +1010,14 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 
 				rootVolumes[machine.Name] = rootVolume
 				Expect(*rootVolume).To(MatchFields(IgnoreExtras, Fields{
-					"Name":     Equal(fmt.Sprintf("%s-root", server.Name)),
+					"Name":     Equal(fmt.Sprintf("%s-vol-root", server.Name)),
 					"Size":     Equal(25),
 					"Bootable": Equal("true"), // This is genuinely a string, not a bool
 				}), "Boot volume %s for machine %s not as expected", rootVolume.ID, machine.Name)
 
 				additionalVolumes[machine.Name] = additionalVolume
 				Expect(*additionalVolume).To(MatchFields(IgnoreExtras, Fields{
-					"Name": Equal(fmt.Sprintf("%s-extravol", server.Name)),
+					"Name": Equal(fmt.Sprintf("%s-vol-extravol", server.Name)),
 					"Size": Equal(1),
 				}), "Additional block device %s for machine %s not as expected", additionalVolume.ID, machine.Name)
 			}
