@@ -64,7 +64,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation with spec.identityRef should succeed")
 	})
 
-	It("should only allow the providerID to be set once", func() {
+	It("should allow the providerID to be updated", func() {
 		machine := defaultMachine()
 
 		By("Creating a bare machine")
@@ -76,7 +76,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 
 		By("Modifying the providerID")
 		machine.Spec.ProviderID = ptr.To("bar")
-		Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Updating providerID should fail")
+		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Updating providerID should succeed")
 	})
 
 	It("should allow the identityRef to be set several times", func() {
