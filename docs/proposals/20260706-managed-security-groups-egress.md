@@ -25,7 +25,7 @@ CAPO managed security group rules are not all the same kind of rule:
 * Infrastructure rules required for normal cluster operation, such as etcd, kubelet, API server, NodePort, and bastion SSH.
 * Permissive default outbound rules that allow all IPv4 and IPv6 egress.
 
-This proposal targets only the second category. Required infrastructure rules remain managed by CAPO.
+This proposal targets only the second category. Required infrastructure rules remain managed by CAPO, including minimum egress required for cluster operation.
 
 ### Goals
 
@@ -85,24 +85,27 @@ Behavior:
 * If `managedSecurityGroups` is omitted, behavior is unchanged.
 * If `managedSecurityGroups` is set to an empty object, behavior is unchanged.
 * If `allowAllOutboundTraffic` is unset or `true`, CAPO creates the current default allow-all IPv4 and IPv6 egress rules.
-* If `allowAllOutboundTraffic` is `false`, CAPO skips only the default allow-all egress rules.
-* Required infrastructure rules remain unchanged.
+* If `allowAllOutboundTraffic` is `false`, CAPO removes the default allow-all egress rules.
+* When `allowAllOutboundTraffic` is `false`, CAPO creates minimum egress rules between the control plane and worker security groups.
+* When `allowAllOutboundTraffic` is `false`, CAPO creates egress rules to the API server endpoint on the configured API server port.
+* Required ingress rules remain unchanged.
 * User-defined egress rules continue to be reconciled normally.
-* The same allow-all outbound behavior is applied consistently to the node security groups and the bastion security group.
+* The same allow-all outbound setting is applied consistently to the node security groups and the bastion security group.
+* When `allowAllOutboundTraffic` is `false`, CAPO creates TCP port 22 egress rules from the bastion security group to the control plane and worker security groups.
 
 ## API Changes
 
 The change is additive:
 
 ```yaml
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: OpenStackCluster
 metadata:
   name: restricted-egress
 spec:
   managedSecurityGroups:
     allowAllOutboundTraffic: false
-    allNodesSecurityGroupRules:
+    clusterNodesSecurityGroupRules:
     - name: allow-dns
       direction: egress
       etherType: IPv4
@@ -119,7 +122,15 @@ spec:
       remoteIPPrefix: 10.0.10.0/24
 ```
 
+The `allowAllOutboundTraffic` field will be added to both the `v1beta1` and `v1beta2` API versions with the same name and type.
+
 No new status fields are required.
+
+## Conversion
+
+The `allowAllOutboundTraffic` field has the same name and type in `v1beta1` and `v1beta2`.
+
+Conversion between both versions must preserve all possible values: `unset`, `true`, and `false`.
 
 ## Controller Design
 
@@ -140,8 +151,11 @@ func allowAllOutboundTraffic(managedSecurityGroups *infrav1.ManagedSecurityGroup
 ```
 
 4. When building managed security group rules, include the current default allow-all egress rules only if `allowAllOutboundTraffic(...)` returns `true`.
-5. Continue applying all user-provided `SecurityGroupRuleSpec` entries unchanged.
-6. Apply the same behavior to the bastion security group so disabling allow-all outbound traffic does not leave a separate unrestricted egress path there.
+5. When the helper returns `false`, add scoped egress from both node security groups to the control plane and worker security groups.
+6. When the helper returns `false`, add egress from both node security groups to the API server endpoint on the configured API server port.
+7. Continue applying all user-provided `SecurityGroupRuleSpec` entries unchanged.
+8. Apply the same behavior to the bastion security group so disabling allow-all outbound traffic does not leave a separate unrestricted egress path there.
+9. When `allowAllOutboundTraffic` is `false`, add TCP port 22 egress from the bastion security group to the control plane and worker security groups.
 
 The implementation should avoid a generic `enablePredefinedRules` style flag. Such a flag would also disable required infrastructure rules and force users to recreate them by hand, which is not the goal of this change.
 
@@ -164,16 +178,21 @@ No special validation is required for `allowAllOutboundTraffic`.
 
 Existing validation for `SecurityGroupRuleSpec` continues to apply to explicit egress rules. In particular, users are responsible for providing valid `direction`, `etherType`, protocol, port range, and remote fields.
 
+No validation is required between `allowAllInClusterTraffic` and `allowAllOutboundTraffic`.
+
+`allowAllInClusterTraffic` controls ingress between cluster nodes. When `allowAllOutboundTraffic` is `false`, CAPO still creates scoped egress rules towards the cluster node security groups. Therefore, setting both `allowAllInClusterTraffic: true` and `allowAllOutboundTraffic: false` allows all in-cluster traffic while keeping external egress restricted.
+
 ## Testing
 
 Add unit tests for managed security group rule generation:
 
 * `allowAllOutboundTraffic` unset keeps default IPv4 and IPv6 allow-all egress rules.
 * `allowAllOutboundTraffic: true` keeps default IPv4 and IPv6 allow-all egress rules.
-* `allowAllOutboundTraffic: false` removes only default IPv4 and IPv6 allow-all egress rules.
+* `allowAllOutboundTraffic: false` removes the default allow-all IPv4 and IPv6 egress rules.
+* `allowAllOutboundTraffic: false` adds egress between the control plane and worker security groups.
+* `allowAllOutboundTraffic: false` adds egress to the API server endpoint on the configured API server port.
+* `allowAllOutboundTraffic: false` adds egress to TCP port 22 to the control plane and worker security groups on Bastion security group.
 * User-defined egress rules are still included when `allowAllOutboundTraffic: false`.
-* Existing required infrastructure rules are not changed.
-* Bastion security group behavior follows the same setting.
 
 ## Documentation
 
@@ -184,6 +203,7 @@ Update the managed security groups documentation with:
 * A minimal restricted-egress example.
 * A note that users must provide any egress required by their environment, such as DNS, image registry, package mirror, metadata service, or API endpoints.
 * A note that CAPO still manages required infrastructure rules when default outbound traffic is disabled.
+* Document that `spec.bastion.spec.securityGroups` can be used to provide any additional bastion egress.
 
 ## Risks and Mitigations
 
