@@ -1070,6 +1070,102 @@ func Test_ReconcileSubnet(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "creation with IPv6 CIDR uses IPVersion 6",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "fd12:3456:789a::/48",
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: "fd12:3456:789a::/48"}).
+					Return([]subnets.Subnet{}, nil)
+
+				m.
+					CreateSubnet(subnets.CreateOpts{
+						NetworkID:   fakeNetworkID,
+						Name:        expectedSubnetName,
+						IPVersion:   6,
+						CIDR:        "fd12:3456:789a::/48",
+						Description: expectedSubnetDesc,
+					}).
+					Return(&subnets.Subnet{
+						ID:   fakeSubnetID,
+						Name: expectedSubnetName,
+						CIDR: "fd12:3456:789a::/48",
+					}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: "fd12:3456:789a::/48",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "ensures status set when reconciling an existing IPv6 subnet",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: "fd12:3456:789a::/48",
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: "fd12:3456:789a::/48"}).
+					Return([]subnets.Subnet{
+						{
+							ID:   fakeSubnetID,
+							Name: expectedSubnetName,
+							CIDR: "fd12:3456:789a::/48",
+						},
+					}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: "fd12:3456:789a::/48",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

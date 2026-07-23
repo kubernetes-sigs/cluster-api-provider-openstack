@@ -19,6 +19,7 @@ package networking
 import (
 	"errors"
 	"fmt"
+	"net"
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
@@ -224,11 +225,17 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 }
 
 func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, name string) (*subnets.Subnet, error) {
+	cidr := openStackCluster.Spec.ManagedSubnets[0].CIDR
+	ipVersion := gophercloud.IPv4
+	if ip, _, err := net.ParseCIDR(cidr); err == nil && ip.To4() == nil {
+		ipVersion = gophercloud.IPv6
+	}
+
 	opts := subnets.CreateOpts{
 		NetworkID:      openStackCluster.Status.Network.ID,
 		Name:           name,
-		IPVersion:      4,
-		CIDR:           openStackCluster.Spec.ManagedSubnets[0].CIDR,
+		IPVersion:      ipVersion,
+		CIDR:           cidr,
 		DNSNameservers: openStackCluster.Spec.ManagedSubnets[0].DNSNameservers,
 		Description:    names.GetDescription(clusterResourceName),
 	}
