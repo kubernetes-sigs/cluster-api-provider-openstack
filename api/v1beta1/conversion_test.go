@@ -24,6 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
+	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
@@ -373,7 +375,8 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 	dst := &infrav1.OpenStackClusterTemplate{}
 	g.Expect(src.ConvertTo(dst)).To(Succeed())
 
-	// Verify template spec
+	g.Expect(dst.Spec.Template.ObjectMeta).To(BeZero())
+
 	g.Expect(dst.Name).To(Equal("test-template"))
 	g.Expect(dst.Spec.Template.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 	g.Expect(dst.Spec.Template.Spec.ManagedSubnets).To(HaveLen(1))
@@ -384,6 +387,10 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 	g.Expect(dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter.Name).NotTo(BeNil())
 	g.Expect(*dst.Spec.Template.Spec.Bastion.Spec.Flavor.Filter.Name).To(Equal("m1.small"))
 
+	// ConvertTo stashes the v1beta1 object on the hub so spoke-only fields
+	// (e.g. flavor name) survive a later hub -> spoke conversion.
+	g.Expect(dst.GetAnnotations()).To(HaveKey(utilconversion.DataAnnotation))
+
 	// Convert back
 	restored := &OpenStackClusterTemplate{}
 	g.Expect(restored.ConvertFrom(dst)).To(Succeed())
@@ -391,6 +398,88 @@ func TestOpenStackClusterTemplateConversion(t *testing.T) {
 	// Verify round-trip
 	g.Expect(restored.Name).To(Equal(src.Name))
 	g.Expect(restored.Spec.Template.Spec.IdentityRef).To(Equal(src.Spec.Template.Spec.IdentityRef))
+
+	// The bastion flavor name is a spoke-only field preserved via the
+	// conversion-data annotation; it must survive the round trip.
+	g.Expect(restored.Spec.Template.Spec.Bastion).NotTo(BeNil())
+	g.Expect(restored.Spec.Template.Spec.Bastion.Spec).NotTo(BeNil())
+	g.Expect(restored.Spec.Template.Spec.Bastion.Spec.Flavor).To(Equal(ptr.To("m1.small")))
+}
+
+func TestOpenStackClusterTemplateObjectMetaConversion(t *testing.T) {
+	g := NewWithT(t)
+
+	hub := &infrav1.OpenStackClusterTemplate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-template",
+			Namespace: "default",
+		},
+		Spec: infrav1.OpenStackClusterTemplateSpec{
+			Template: infrav1.OpenStackClusterTemplateResource{
+				ObjectMeta: clusterv1.ObjectMeta{
+					Labels: map[string]string{
+						"cluster.x-k8s.io/cluster-name": "my-cluster",
+					},
+					Annotations: map[string]string{
+						"example.com/annotation": "value",
+					},
+				},
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "cloud-config",
+						CloudName: "openstack",
+					},
+				},
+			},
+		},
+	}
+
+	spoke := &OpenStackClusterTemplate{}
+	g.Expect(spoke.ConvertFrom(hub)).To(Succeed())
+
+	g.Expect(spoke.GetAnnotations()).To(HaveKey(utilconversion.DataAnnotation))
+
+	g.Expect(spoke.Name).To(Equal("test-template"))
+	g.Expect(spoke.Spec.Template.Spec.IdentityRef.Name).To(Equal("cloud-config"))
+
+	restored := &infrav1.OpenStackClusterTemplate{}
+	g.Expect(spoke.ConvertTo(restored)).To(Succeed())
+	g.Expect(restored.Spec.Template.ObjectMeta).To(Equal(hub.Spec.Template.ObjectMeta))
+
+	g.Expect(restored.GetAnnotations()).To(HaveKey(utilconversion.DataAnnotation))
+}
+
+func TestOpenStackClusterTemplateConvertToWithoutAnnotation(t *testing.T) {
+	g := NewWithT(t)
+
+	spoke := &OpenStackClusterTemplate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "fresh-template",
+			Namespace: "default",
+		},
+		Spec: OpenStackClusterTemplateSpec{
+			Template: OpenStackClusterTemplateResource{
+				Spec: OpenStackClusterSpec{
+					IdentityRef: OpenStackIdentityReference{
+						Name:      "cloud-config",
+						CloudName: "openstack",
+					},
+				},
+			},
+		},
+	}
+
+	hub := &infrav1.OpenStackClusterTemplate{}
+	g.Expect(spoke.ConvertTo(hub)).To(Succeed())
+
+	// No annotation means nothing to restore; template metadata stays zero.
+	g.Expect(hub.Spec.Template.ObjectMeta).To(BeZero())
+	g.Expect(hub.Spec.Template.ObjectMeta.Labels).To(BeEmpty())
+	g.Expect(hub.Spec.Template.ObjectMeta.Annotations).To(BeEmpty())
+
+	// The rest of the spec converts normally.
+	g.Expect(hub.Name).To(Equal("fresh-template"))
+	g.Expect(hub.Spec.Template.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 }
 
 func TestOpenStackMachineTemplateConversion(t *testing.T) {

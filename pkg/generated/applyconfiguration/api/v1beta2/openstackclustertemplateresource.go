@@ -18,11 +18,18 @@ limitations under the License.
 
 package v1beta2
 
+import (
+	corev1beta2 "sigs.k8s.io/cluster-api/api/core/v1beta2"
+)
+
 // OpenStackClusterTemplateResourceApplyConfiguration represents a declarative configuration of the OpenStackClusterTemplateResource type for use
 // with apply.
 //
 // OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.
 type OpenStackClusterTemplateResourceApplyConfiguration struct {
+	// metadata adds labels/annotations to the resource.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+	ObjectMeta *corev1beta2.ObjectMeta `json:"metadata,omitempty"`
 	// spec is the desired state of the OpenStackCluster.
 	Spec *OpenStackClusterSpecApplyConfiguration `json:"spec,omitempty"`
 }
@@ -31,6 +38,14 @@ type OpenStackClusterTemplateResourceApplyConfiguration struct {
 // apply.
 func OpenStackClusterTemplateResource() *OpenStackClusterTemplateResourceApplyConfiguration {
 	return &OpenStackClusterTemplateResourceApplyConfiguration{}
+}
+
+// WithObjectMeta sets the ObjectMeta field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ObjectMeta field is set to the value of the last call.
+func (b *OpenStackClusterTemplateResourceApplyConfiguration) WithObjectMeta(value corev1beta2.ObjectMeta) *OpenStackClusterTemplateResourceApplyConfiguration {
+	b.ObjectMeta = &value
+	return b
 }
 
 // WithSpec sets the Spec field in the declarative configuration to the given value
