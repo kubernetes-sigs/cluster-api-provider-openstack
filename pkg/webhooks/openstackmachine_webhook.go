@@ -95,17 +95,13 @@ func (*openStackMachineWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 		})
 	}
 
-	// allow changes to providerID once
-	if oldOpenStackMachineSpec["providerID"] == nil {
-		delete(oldOpenStackMachineSpec, "providerID")
-		delete(newOpenStackMachineSpec, "providerID")
-	}
+	// allow changes to providerID (matches AWS, GCP, VSphere providers)
+	delete(oldOpenStackMachineSpec, "providerID")
+	delete(newOpenStackMachineSpec, "providerID")
 
-	// allow changes to instanceID once
-	if oldOpenStackMachineSpec["instanceID"] == nil {
-		delete(oldOpenStackMachineSpec, "instanceID")
-		delete(newOpenStackMachineSpec, "instanceID")
-	}
+	// allow changes to instanceID (matches AWS, GCP, VSphere providers)
+	delete(oldOpenStackMachineSpec, "instanceID")
+	delete(newOpenStackMachineSpec, "instanceID")
 
 	// allow changes to identityRef
 	delete(oldOpenStackMachineSpec, "identityRef")

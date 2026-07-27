@@ -146,7 +146,7 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name: "ProviderID is immutable once set",
+			name: "ProviderID can be updated",
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
@@ -177,7 +177,7 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "ProviderID can be set for the first time",
