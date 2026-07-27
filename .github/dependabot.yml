@@ -105,6 +105,10 @@ updates:
   # Ignore golang.org/x minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "golang.org/x/*"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore all golang.org/x/crypto and golang.org/x/text bumps to prevent cascading Go version requirements
+  # Not sure why the above golang.org/x/* ignore doesn't catch these.
+  - dependency-name: "golang.org/x/crypto"
+  - dependency-name: "golang.org/x/text"
   # Ignore setup-envtest major and minor bumps to prevent cascading Go version requirements
   - dependency-name: "sigs.k8s.io/controller-runtime/tools/setup-envtest"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
@@ -172,6 +176,10 @@ updates:
   # Ignore golang.org/x minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "golang.org/x/*"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # Ignore all golang.org/x/crypto and golang.org/x/text bumps to prevent cascading Go version requirements
+  # Not sure why the above /* doesn't catch these.
+  - dependency-name: "golang.org/x/crypto"
+  - dependency-name: "golang.org/x/text"
   # Ignore setup-envtest major and minor bumps to prevent cascading Go version requirements
   - dependency-name: "sigs.k8s.io/controller-runtime/tools/setup-envtest"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
