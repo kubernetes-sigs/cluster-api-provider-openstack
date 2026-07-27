@@ -142,12 +142,6 @@ ORC_VERSION=v2.0.3
 kubectl apply -f "https://github.com/k-orc/openstack-resource-controller/releases/download/${ORC_VERSION}/install.yaml"
 ```
 
-We also publish a Kustomize module which can be used to install ORC:
-
-```bash
-kubectl apply --server-side -k "https://github.com/k-orc/openstack-resource-controller/dist?ref=${ORC_VERSION}"
-```
-
 In most cases, the default configuration should be sufficient.
 Check the [ORC documentation](https://k-orc.cloud) for more information.
 
