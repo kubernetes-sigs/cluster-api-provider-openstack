@@ -28,24 +28,6 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 )
 
-// InstanceSpec defines the fields which can be set on a new OpenStack instance.
-type InstanceSpec struct {
-	Name                          string
-	ImageID                       string
-	FlavorID                      string
-	SSHKeyName                    string
-	UserData                      string
-	Metadata                      map[string]string
-	ConfigDrive                   bool
-	FailureDomain                 string
-	RootVolume                    *infrav1.RootVolume
-	AdditionalBlockDevices        []infrav1.AdditionalBlockDevice
-	ServerGroupID                 string
-	Trunk                         bool
-	Tags                          []string
-	SchedulerAdditionalProperties []infrav1.SchedulerHintAdditionalProperty
-}
-
 // InstanceIdentifier describes an instance which has not necessarily been fetched.
 type InstanceIdentifier struct {
 	ID   string

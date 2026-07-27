@@ -17,20 +17,12 @@ limitations under the License.
 package networking
 
 import (
-	"fmt"
-
-	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
-	"k8s.io/apimachinery/pkg/runtime"
-
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients"
-	"sigs.k8s.io/cluster-api-provider-openstack/pkg/record"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
 const (
 	networkPrefix string = "k8s-clusterapi"
-	trunkResource string = "trunks"
-	portResource  string = "ports"
 )
 
 // Service interfaces with the OpenStack Networking API.
@@ -51,28 +43,4 @@ func NewService(scope *scope.WithLogger) (*Service, error) {
 		scope:  scope,
 		client: networkClient,
 	}, nil
-}
-
-// replaceAllAttributesTags replaces all tags on a neworking resource.
-// the value of resourceType must match one of the allowed constants: trunkResource or portResource.
-func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceType string, resourceID string, tags []string) error {
-	if len(tags) == 0 {
-		s.scope.Logger().Info("No tags provided to replaceAllAttributesTags", "resource", resourceType, "ID", resourceID)
-		return nil
-	}
-	if resourceType != trunkResource && resourceType != portResource {
-		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Invalid resourceType argument in function call")
-		panic(fmt.Errorf("invalid argument: resourceType, %s, does not match allowed arguments: %s or %s", resourceType, trunkResource, portResource))
-	}
-
-	_, err := s.client.ReplaceAllAttributesTags(resourceType, resourceID, attributestags.ReplaceAllOpts{
-		Tags: tags,
-	})
-	if err != nil {
-		record.Warnf(eventObject, "FailedReplaceAllAttributesTags", "Failed to replace all attributestags, %s: %v", resourceID, err)
-		return err
-	}
-
-	record.Eventf(eventObject, "SuccessfulReplaceAllAttributeTags", "Replaced all attributestags for %s with tags %s", resourceID, tags)
-	return nil
 }
