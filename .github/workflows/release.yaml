@@ -20,7 +20,7 @@ jobs:
     if: github.repository == 'kubernetes-sigs/cluster-api-provider-openstack'
     steps:
     - name: Checkout code # zizmor: ignore[artipacked]
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # tag=v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # tag=v7.0.1
       with:
         fetch-depth: 0
     - name: Get changed files
@@ -93,14 +93,14 @@ jobs:
       env:
         RELEASE_TAG: ${{needs.push_release_tags.outputs.release_tag}}
     - name: checkout code # zizmor: ignore[artipacked]
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # tag=v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # tag=v7.0.1
       with:
         fetch-depth: 0
         ref: ${{ env.RELEASE_TAG }}
     - name: Calculate go version
       run: echo "go_version=$(make go-version)" >> ${GITHUB_ENV}
     - name: Set up Go
-      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # tag=v6.5.0
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # tag=v7.0.0
       with:
         go-version: ${{ env.go_version }}
         cache: false
