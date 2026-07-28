@@ -516,6 +516,42 @@ func Test_EnsurePort(t *testing.T) {
 	}
 }
 
+func TestEnsurePortsUpdatesRecreatedPortStatus(t *testing.T) {
+	const (
+		stalePortID = "stale-port-id"
+		newPortID   = "new-port-id"
+		networkID   = "network-id"
+	)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockClient := mock.NewMockNetworkClient(mockCtrl)
+	mockClient.EXPECT().ListPort(ports.ListOpts{ID: stalePortID}).Return(nil, nil)
+	mockClient.EXPECT().CreatePort(gomock.Any()).Return(&ports.Port{ID: newPortID}, nil)
+	mockClient.EXPECT().ListPort(ports.ListOpts{ID: newPortID}).Return([]ports.Port{{ID: newPortID}}, nil)
+
+	resources := infrav1alpha1.ServerResources{
+		Ports: []infrav1.PortStatus{{ID: stalePortID}},
+	}
+	service := Service{client: mockClient}
+	err := service.EnsurePorts(&infrav1.OpenStackMachine{}, []infrav1.ResolvedPortSpec{{
+		Name:      "server-0",
+		NetworkID: networkID,
+	}}, &resources)
+
+	g := NewWithT(t)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(resources.Ports).To(Equal([]infrav1.PortStatus{{ID: newPortID}}))
+
+	err = service.EnsurePorts(&infrav1.OpenStackMachine{}, []infrav1.ResolvedPortSpec{{
+		Name:      "server-0",
+		NetworkID: networkID,
+	}}, &resources)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(resources.Ports).To(Equal([]infrav1.PortStatus{{ID: newPortID}}))
+}
+
 func TestService_ConstructPorts(t *testing.T) {
 	const (
 		defaultNetworkID = "3c66f3ca-2d26-4d9d-ae3b-568f54129773"

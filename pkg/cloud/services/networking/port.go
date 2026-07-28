@@ -411,7 +411,7 @@ func (s *Service) EnsurePorts(eventObject runtime.Object, desiredPorts []infrav1
 		// If we already have the status, replace it,
 		// otherwise append it.
 		if i < len(resources.Ports) {
-			resources.Ports[i] = portStatus
+			resources.Ports[i] = infrav1.PortStatus{ID: port.ID}
 		} else {
 			resources.Ports = append(resources.Ports, infrav1.PortStatus{
 				ID: port.ID,
