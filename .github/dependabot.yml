@@ -109,11 +109,14 @@ updates:
   # Not sure why the above golang.org/x/* ignore doesn't catch these.
   - dependency-name: "golang.org/x/crypto"
   - dependency-name: "golang.org/x/text"
+  # Ignore all github.com/prometheus/client_golang bumps to prevent cascading Go version requirements.
+  - dependency-name: "github.com/prometheus/client_golang"
   # Ignore setup-envtest major and minor bumps to prevent cascading Go version requirements
   - dependency-name: "sigs.k8s.io/controller-runtime/tools/setup-envtest"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
-  # Ignore ginkgo to prevent cascading Go version requirements
+  # Ignore ginkgo and gomega to prevent cascading Go version requirements
   - dependency-name: "github.com/onsi/ginkgo/v2"
+  - dependency-name: "github.com/onsi/gomega"
   # Ignore gophercloud minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "github.com/gophercloud/gophercloud/v2"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
@@ -180,11 +183,14 @@ updates:
   # Not sure why the above /* doesn't catch these.
   - dependency-name: "golang.org/x/crypto"
   - dependency-name: "golang.org/x/text"
+  # Ignore all github.com/prometheus/client_golang bumps to prevent cascading Go version requirements.
+  - dependency-name: "github.com/prometheus/client_golang"
   # Ignore setup-envtest major and minor bumps to prevent cascading Go version requirements
   - dependency-name: "sigs.k8s.io/controller-runtime/tools/setup-envtest"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
-  # Ignore ginkgo to prevent cascading Go version requirements
+  # Ignore ginkgo and gomega to prevent cascading Go version requirements
   - dependency-name: "github.com/onsi/ginkgo/v2"
+  - dependency-name: "github.com/onsi/gomega"
   # Ignore gophercloud minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "github.com/gophercloud/gophercloud/v2"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
