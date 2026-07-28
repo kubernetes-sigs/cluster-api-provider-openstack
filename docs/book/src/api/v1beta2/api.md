@@ -331,7 +331,7 @@ to first set <code>enabled: false</code> which will remove the bastion and then 
 </tr>
 <tr>
 <td>
-<code>identityRef,omitzero</code><br/>
+<code>identityRef</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
 OpenStackIdentityReference
@@ -424,7 +424,7 @@ OpenStackClusterTemplateSpec
 <table>
 <tr>
 <td>
-<code>template,omitzero</code><br/>
+<code>template</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterTemplateResource">
 OpenStackClusterTemplateResource
@@ -513,7 +513,7 @@ string
 </tr>
 <tr>
 <td>
-<code>flavor,omitzero</code><br/>
+<code>flavor</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">
 FlavorParam
@@ -526,7 +526,7 @@ FlavorParam
 </tr>
 <tr>
 <td>
-<code>image,omitzero</code><br/>
+<code>image</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ImageParam">
 ImageParam
@@ -800,7 +800,7 @@ OpenStackMachineTemplateSpec
 <table>
 <tr>
 <td>
-<code>template,omitzero</code><br/>
+<code>template</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineTemplateResource">
 OpenStackMachineTemplateResource
@@ -1177,7 +1177,7 @@ int32
 </tr>
 <tr>
 <td>
-<code>storage,omitzero</code><br/>
+<code>storage</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.BlockDeviceStorage">
 BlockDeviceStorage
@@ -1704,7 +1704,7 @@ string
 </tr>
 <tr>
 <td>
-<code>subnet,omitzero</code><br/>
+<code>subnet</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
 SubnetParam
@@ -2919,7 +2919,7 @@ to first set <code>enabled: false</code> which will remove the bastion and then 
 </tr>
 <tr>
 <td>
-<code>identityRef,omitzero</code><br/>
+<code>identityRef</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackIdentityReference">
 OpenStackIdentityReference
@@ -3131,7 +3131,7 @@ BastionStatus
 <tbody>
 <tr>
 <td>
-<code>spec,omitzero</code><br/>
+<code>spec</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">
 OpenStackClusterSpec
@@ -3163,7 +3163,7 @@ OpenStackClusterSpec
 <tbody>
 <tr>
 <td>
-<code>template,omitzero</code><br/>
+<code>template</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterTemplateResource">
 OpenStackClusterTemplateResource
@@ -3281,7 +3281,7 @@ string
 </tr>
 <tr>
 <td>
-<code>flavor,omitzero</code><br/>
+<code>flavor</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.FlavorParam">
 FlavorParam
@@ -3294,7 +3294,7 @@ FlavorParam
 </tr>
 <tr>
 <td>
-<code>image,omitzero</code><br/>
+<code>image</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ImageParam">
 ImageParam
@@ -3628,7 +3628,7 @@ MachineResources
 <tbody>
 <tr>
 <td>
-<code>spec,omitzero</code><br/>
+<code>spec</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineSpec">
 OpenStackMachineSpec
@@ -3660,7 +3660,7 @@ OpenStackMachineSpec
 <tbody>
 <tr>
 <td>
-<code>template,omitzero</code><br/>
+<code>template</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackMachineTemplateResource">
 OpenStackMachineTemplateResource
@@ -3722,7 +3722,7 @@ This value is used for autoscaling from zero operations as defined in:
 </tr>
 <tr>
 <td>
-<code>nodeInfo,omitempty,omitzero</code><br/>
+<code>nodeInfo</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.NodeInfo">
 NodeInfo
@@ -4567,7 +4567,7 @@ It is a unique identifier for the property.</p>
 </tr>
 <tr>
 <td>
-<code>value,omitzero</code><br/>
+<code>value</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SchedulerHintAdditionalValue">
 SchedulerHintAdditionalValue

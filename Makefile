@@ -453,6 +453,7 @@ generate-api-docs-%: $(GEN_CRD_API_REFERENCE_DOCS) FORCE
 		-config=./docs/book/gen-crd-api-reference-docs/config.json \
 		-template-dir=./docs/book/gen-crd-api-reference-docs/template \
 		-out-file=./docs/book/src/api/$*/api.md
+	python3 ./hack/strip-api-doc-tag-options.py ./docs/book/src/api/$*/api.md
 
 ## --------------------------------------
 ##@ Docker
