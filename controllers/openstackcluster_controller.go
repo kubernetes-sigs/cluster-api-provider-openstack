@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 	"time"
 
@@ -177,7 +178,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	// A bastion may have been created if cluster initialisation previously reached populating the network status
 	// We attempt to delete it even if no status was written, just in case
-	if openStackCluster.Status.Network != nil {
+	if openStackCluster.Status.Network.ID != "" {
 		if err := r.deleteBastion(ctx, scope, cluster, openStackCluster); err != nil {
 			return reconcile.Result{}, err
 		}
@@ -629,17 +630,17 @@ func bastionToOpenStackServerSpec(openStackCluster *infrav1.OpenStackCluster) (*
 	if bastion == nil {
 		bastion = &infrav1.Bastion{}
 	}
-	if bastion.Spec == nil {
+	if reflect.DeepEqual(bastion.Spec, infrav1.OpenStackMachineSpec{}) {
 		// For the case when Bastion is deleted but we don't have spec, let's use an empty one.
 		// v1beta1 API validations prevent this from happening in normal circumstances.
-		bastion.Spec = &infrav1.OpenStackMachineSpec{}
+		bastion.Spec = infrav1.OpenStackMachineSpec{}
 	}
 
 	az := ""
 	if bastion.AvailabilityZone != nil {
 		az = *bastion.AvailabilityZone
 	}
-	openStackServerSpec, err := openStackMachineSpecToOpenStackServerSpec(bastion.Spec, openStackCluster.Spec.IdentityRef, compute.InstanceTags(bastion.Spec, openStackCluster), az, nil, getBastionSecurityGroupID(openStackCluster), openStackCluster)
+	openStackServerSpec, err := openStackMachineSpecToOpenStackServerSpec(&bastion.Spec, openStackCluster.Spec.IdentityRef, compute.InstanceTags(&bastion.Spec, openStackCluster), az, nil, getBastionSecurityGroupID(openStackCluster), openStackCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -658,7 +659,7 @@ func getBastionSecurityGroupID(openStackCluster *infrav1.OpenStackCluster) *stri
 		return nil
 	}
 
-	if openStackCluster.Status.BastionSecurityGroup != nil {
+	if openStackCluster.Status.BastionSecurityGroup != (infrav1.SecurityGroupStatus{}) {
 		return &openStackCluster.Status.BastionSecurityGroup.ID
 	}
 	return nil
@@ -672,21 +673,12 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 		return nil
 	}
 
-	lbStatus := openStackCluster.Status.APIServerManagedLoadBalancer
-	if lbStatus == nil {
-		lbStatus = &infrav1.LoadBalancer{}
-		openStackCluster.Status.APIServerManagedLoadBalancer = lbStatus
-	}
+	lbStatus := &openStackCluster.Status.APIServerManagedLoadBalancer
 
-	lbNetStatus := lbStatus.LoadBalancerNetwork
-	if lbNetStatus == nil {
-		lbNetStatus = &infrav1.NetworkStatusWithSubnets{
-			NetworkStatus: infrav1.NetworkStatus{},
-		}
-	}
+	lbNetStatus := &lbStatus.LoadBalancerNetwork
 
-	if lbSpec.Network != nil {
-		lbNet, err := networkingService.GetNetworkByParam(lbSpec.Network)
+	if lbSpec.Network != (infrav1.NetworkParam{}) {
+		lbNet, err := networkingService.GetNetworkByParam(&lbSpec.Network)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err))
 			return fmt.Errorf("failed to find network: %w", err)
@@ -723,8 +715,6 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 		lbNetStatus.Name = openStackCluster.Status.Network.Name
 		lbNetStatus.Subnets = openStackCluster.Status.Network.Subnets
 	}
-
-	openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork = lbNetStatus
 
 	return nil
 }
@@ -825,12 +815,8 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) error {
 	scope.Logger().V(4).Info("No need to reconcile network, searching network, subnet and router instead")
 
-	if openStackCluster.Status.Network == nil {
-		openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
-	}
-
-	if openStackCluster.Spec.Network != nil {
-		network, err := networkingService.GetNetworkByParam(openStackCluster.Spec.Network)
+	if openStackCluster.Spec.Network != (infrav1.NetworkParam{}) {
+		network, err := networkingService.GetNetworkByParam(&openStackCluster.Spec.Network)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
 				Type:    infrav1.NetworkReadyCondition,
@@ -900,8 +886,8 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 		Reason: infrav1.ReadyConditionReason,
 	})
 
-	if openStackCluster.Spec.Router != nil {
-		router, err := networkingService.GetRouterByParam(openStackCluster.Spec.Router)
+	if openStackCluster.Spec.Router != (infrav1.RouterParam{}) {
+		router, err := networkingService.GetRouterByParam(&openStackCluster.Spec.Router)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
 				Type:    infrav1.RouterReadyCondition,
@@ -920,7 +906,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 			routerIPs = append(routerIPs, ip.IPAddress)
 		}
 
-		openStackCluster.Status.Router = &infrav1.Router{
+		openStackCluster.Status.Router = infrav1.Router{
 			Name: router.Name,
 			ID:   router.ID,
 			Tags: router.Tags,
@@ -1125,7 +1111,7 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 	var err error
 	openStackClusterSubnets := openStackCluster.Spec.Subnets
 	networkID := ""
-	if openStackCluster.Status.Network != nil {
+	if openStackCluster.Status.Network.ID != "" {
 		networkID = openStackCluster.Status.Network.ID
 	}
 

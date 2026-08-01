@@ -79,7 +79,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Return image ID when name given",
 			image: infrav1.ImageParam{
-				Filter: &infrav1.ImageFilter{
+				Filter: infrav1.ImageFilter{
 					Name: ptr.To(imageName),
 				},
 			},
@@ -94,7 +94,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Return image ID when tags given",
 			image: infrav1.ImageParam{
-				Filter: &infrav1.ImageFilter{
+				Filter: infrav1.ImageFilter{
 					Tags: imageTags,
 				},
 			},
@@ -109,7 +109,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Return no results",
 			image: infrav1.ImageParam{
-				Filter: &infrav1.ImageFilter{
+				Filter: infrav1.ImageFilter{
 					Name: ptr.To(imageName),
 				},
 			},
@@ -124,7 +124,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Return multiple results",
 			image: infrav1.ImageParam{
-				Filter: &infrav1.ImageFilter{
+				Filter: infrav1.ImageFilter{
 					Name: ptr.To(imageName),
 				},
 			},
@@ -141,7 +141,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "OpenStack returns error",
 			image: infrav1.ImageParam{
-				Filter: &infrav1.ImageFilter{
+				Filter: infrav1.ImageFilter{
 					Name: ptr.To(imageName),
 				},
 			},
@@ -156,7 +156,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Image by reference does not exist",
 			image: infrav1.ImageParam{
-				ImageRef: &infrav1.ResourceReference{
+				ImageRef: infrav1.ResourceReference{
 					Name: imageName,
 				},
 			},
@@ -165,7 +165,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Image by reference exists, is available",
 			image: infrav1.ImageParam{
-				ImageRef: &infrav1.ResourceReference{
+				ImageRef: infrav1.ResourceReference{
 					Name: imageName,
 				},
 			},
@@ -191,7 +191,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Image by reference exists, still reconciling",
 			image: infrav1.ImageParam{
-				ImageRef: &infrav1.ResourceReference{
+				ImageRef: infrav1.ResourceReference{
 					Name: imageName,
 				},
 			},
@@ -222,7 +222,7 @@ func TestService_getImageID(t *testing.T) {
 		{
 			testName: "Image by reference exists, terminal failure",
 			image: infrav1.ImageParam{
-				ImageRef: &infrav1.ResourceReference{
+				ImageRef: infrav1.ResourceReference{
 					Name: imageName,
 				},
 			},
@@ -500,7 +500,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}
 				azName := infrav1.VolumeAZName("test-alternate-az")
 				s.RootVolume.AvailabilityZone = &infrav1.VolumeAvailabilityZone{
-					Name: &azName,
+					Name: azName,
 				}
 				s.RootVolume.Type = "test-volume-type"
 				return s
@@ -840,7 +840,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 							Volume: &infrav1.BlockDeviceVolume{
 								Type: "test-volume-type",
 								AvailabilityZone: &infrav1.VolumeAvailabilityZone{
-									Name: &azName,
+									Name: azName,
 								},
 							},
 						},
@@ -967,7 +967,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 						Name: "custom_hint",
 						Value: infrav1.SchedulerHintAdditionalValue{
 							Type:   infrav1.SchedulerHintTypeString,
-							String: ptr.To("custom hint"),
+							String: "custom hint",
 						},
 					},
 				}

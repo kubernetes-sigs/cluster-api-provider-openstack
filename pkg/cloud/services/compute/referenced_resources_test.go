@@ -61,7 +61,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 
 	defaultPortOpts := []infrav1.PortOpts{
 		{
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(networkID1),
 			},
 		},
@@ -96,7 +96,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 		{
 			testName: "Server group by Name not found",
 			spec: infrav1alpha1.OpenStackServerSpec{
-				ServerGroup: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
+				ServerGroup: &infrav1.ServerGroupParam{Filter: infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 				Image:       infrav1.ImageParam{ID: ptr.To(imageID1)},
 				FlavorID:    ptr.To(flavorID),
 				Ports:       defaultPortOpts,
@@ -113,7 +113,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 			testName: "Image by Name not found",
 			spec: infrav1alpha1.OpenStackServerSpec{
 				Image: infrav1.ImageParam{
-					Filter: &infrav1.ImageFilter{
+					Filter: infrav1.ImageFilter{
 						Name: ptr.To("test-image"),
 					},
 				},
@@ -335,7 +335,7 @@ func TestGetFlavorID_ByFilter_Name_ExactlyOne(t *testing.T) {
 	}, nil)
 
 	id, err := svc.GetFlavorID(infrav1.FlavorParam{
-		Filter: &infrav1.FlavorFilter{
+		Filter: infrav1.FlavorFilter{
 			Name: ptr.To("m1.small"),
 		},
 	})
@@ -355,7 +355,7 @@ func TestGetFlavorID_ByFilter_NoResults(t *testing.T) {
 	mockScopeFactory.ComputeClient.EXPECT().ListFlavors().Return([]flavors.Flavor{}, nil)
 
 	_, err := svc.GetFlavorID(infrav1.FlavorParam{
-		Filter: &infrav1.FlavorFilter{
+		Filter: infrav1.FlavorFilter{
 			Name: ptr.To("nonexistent-flavor"),
 		},
 	})
@@ -375,7 +375,7 @@ func TestGetFlavorID_ByFilter_ListError(t *testing.T) {
 	)
 
 	_, err := svc.GetFlavorID(infrav1.FlavorParam{
-		Filter: &infrav1.FlavorFilter{
+		Filter: infrav1.FlavorFilter{
 			Name: ptr.To("m1.small"),
 		},
 	})

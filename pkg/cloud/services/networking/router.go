@@ -33,7 +33,7 @@ import (
 )
 
 func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
-	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
+	if openStackCluster.Status.Network.ID == "" {
 		s.scope.Logger().V(3).Info("No need to reconcile router since no network exists")
 		return nil
 	}
@@ -41,7 +41,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		s.scope.Logger().V(4).Info("No need to reconcile router since no subnet exists")
 		return nil
 	}
-	if openStackCluster.Status.ExternalNetwork == nil || openStackCluster.Status.ExternalNetwork.ID == "" {
+	if openStackCluster.Status.ExternalNetwork.ID == "" {
 		s.scope.Logger().V(3).Info("No need to create router, due to missing ExternalNetworkID")
 		return nil
 	}
@@ -54,7 +54,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	}
 
 	if router == nil {
-		if openStackCluster.Spec.Router != nil {
+		if openStackCluster.Spec.Router != (infrav1.RouterParam{}) {
 			// Should not happen: will have returned ErrNoMatches above
 			return fmt.Errorf("router not found")
 		}
@@ -71,7 +71,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		routerIPs = append(routerIPs, ip.IPAddress)
 	}
 
-	openStackCluster.Status.Router = &infrav1.Router{
+	openStackCluster.Status.Router = infrav1.Router{
 		Name: router.Name,
 		ID:   router.ID,
 		Tags: router.Tags,
@@ -119,14 +119,14 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 
 func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*routers.Router, error) {
 	// For an externally-managed router we always expect it to exist. We will return an error if it doesn't.
-	if openStackCluster.Spec.Router != nil {
+	if openStackCluster.Spec.Router != (infrav1.RouterParam{}) {
 		return s.getExternallyManagedRouter(openStackCluster)
 	}
 
 	// A managed router may not exist either because we haven't created it
 	// or because we deleted it. Swallow NotFound errors and return nil.
 
-	if openStackCluster.Status.Router != nil {
+	if openStackCluster.Status.Router.ID != "" {
 		router, err := s.client.GetRouter(openStackCluster.Status.Router.ID)
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
@@ -136,7 +136,7 @@ func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, 
 
 	routerName := getRouterName(clusterResourceName)
 	listOpts := routers.ListOpts{Name: routerName}
-	if openStackCluster.Spec.Router != nil {
+	if openStackCluster.Spec.Router != (infrav1.RouterParam{}) {
 		listOpts = filterconvert.RouterFilterToListOpts(openStackCluster.Spec.Router.Filter)
 	}
 
@@ -149,15 +149,15 @@ func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, 
 }
 
 func (s *Service) getExternallyManagedRouter(openStackCluster *infrav1.OpenStackCluster) (*routers.Router, error) {
-	if openStackCluster.Spec.Router == nil {
+	if openStackCluster.Spec.Router == (infrav1.RouterParam{}) {
 		return nil, fmt.Errorf("getExternallyManagedRouter called with no external router specified")
 	}
 
 	// Fetch by ID if we previously resolved it
-	if openStackCluster.Status.Router != nil {
+	if openStackCluster.Status.Router.ID != "" {
 		return s.client.GetRouter(openStackCluster.Status.Router.ID)
 	}
-	return s.GetRouterByParam(openStackCluster.Spec.Router)
+	return s.GetRouterByParam(&openStackCluster.Spec.Router)
 }
 
 func (s *Service) GetRouterByParam(routerParam *infrav1.RouterParam) (*routers.Router, error) {
@@ -267,7 +267,7 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 		}
 	}
 
-	if openStackCluster.Spec.Router != nil {
+	if openStackCluster.Spec.Router != (infrav1.RouterParam{}) {
 		s.scope.Logger().V(4).Info("Not deleting pre-existing router", "name", router.Name)
 		return nil
 	}

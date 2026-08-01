@@ -28,7 +28,7 @@ linters:
             - "nomaps" # Ensure maps are not used.
             - "nonullable" # Ensure that types and fields do not have the nullable marker.
             - "notimestamp" # Prevents usage of Timestamp fields.
-            # - "optionalfields" # Ensure that all fields marked as optional adhere to being pointers and
+            - "optionalfields" # Ensure that all fields marked as optional adhere to being pointers and
             # having the omitempty value in their json tag where appropriate.
             - "optionalorrequired" # Every field should be marked as optional or required.
             - "requiredfields" # Required fields should have omitempty/omitzero, and should only be pointers when the zero value is valid.
@@ -82,6 +82,28 @@ linters:
       linters:
       - kubeapilinter
     - path: "api/v1beta1"
+      linters:
+      - kubeapilinter
+
+    ## CAPI contract fields: Provisioned bools cannot be changed.
+    - text: "field (ClusterInitialization|MachineInitialization)\\.Provisioned"
+      linters:
+      - kubeapilinter
+
+    ## Bool fields that are established patterns. The zero value (false) is the intended default.
+    - text: "field (OpenStackMachineSpec\\.Trunk|ManagedSecurityGroups\\.AllowAllInClusterTraffic)"
+      linters:
+      - kubeapilinter
+
+    ## APIServer.ManagedLoadBalancer has a custom IsZero() method that conflicts with omitzero.
+    ## An empty APIServerLoadBalancer{} is considered "zero" by IsZero() but should still be
+    ## serialized to trigger defaulting of the Enabled field.
+    - text: "field APIServer\\.ManagedLoadBalancer"
+      linters:
+      - kubeapilinter
+
+    ## BastionStatus.State uses InstanceState type where empty string is a valid state (InstanceStateUndefined).
+    - text: "field BastionStatus\\.State"
       linters:
       - kubeapilinter
 

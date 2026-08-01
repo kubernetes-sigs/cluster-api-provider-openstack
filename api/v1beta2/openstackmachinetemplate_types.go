@@ -29,6 +29,7 @@ type OpenStackMachineTemplateSpec struct {
 }
 
 // OpenStackMachineTemplateStatus defines the observed state of OpenStackMachineTemplate.
+// +kubebuilder:validation:MinProperties=1
 type OpenStackMachineTemplateStatus struct {
 	// conditions defines current service state of the OpenStackMachineTemplate.
 	// The Ready condition must surface issues during the entire lifecycle of the OpenStackMachineTemplate.
@@ -54,6 +55,7 @@ type NodeInfo struct {
 	// operatingSystem is a string representing the operating system of the node.
 	// This may be a string like 'linux' or 'windows'.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	OperatingSystem string `json:"operatingSystem,omitempty"`
 }
 
@@ -71,11 +73,11 @@ type OpenStackMachineTemplate struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackMachineTemplate.
-	// +optional
-	Spec OpenStackMachineTemplateSpec `json:"spec,omitempty"`
+	// +required
+	Spec OpenStackMachineTemplateSpec `json:"spec,omitempty,omitzero"`
 	// status is the observed state of the OpenStackMachineTemplate.
 	// +optional
-	Status OpenStackMachineTemplateStatus `json:"status,omitempty"`
+	Status OpenStackMachineTemplateStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
@@ -90,10 +92,10 @@ type OpenStackMachineTemplateList struct {
 
 // GetIdentityRef returns the object's namespace and IdentityRef if it has an IdentityRef, or nulls if it does not.
 func (r *OpenStackMachineTemplate) GetIdentityRef() (*string, *OpenStackIdentityReference) {
-	if r.Spec.Template.Spec.IdentityRef != nil {
-		return &r.Namespace, r.Spec.Template.Spec.IdentityRef
+	if r.Spec.Template.Spec.IdentityRef == (OpenStackIdentityReference{}) {
+		return nil, nil
 	}
-	return nil, nil
+	return &r.Namespace, &r.Spec.Template.Spec.IdentityRef
 }
 
 func init() {

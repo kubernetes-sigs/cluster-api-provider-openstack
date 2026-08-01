@@ -290,9 +290,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					return err
 				}
 				openStackCluster.Spec.Bastion = bastionSpec
-				if openStackCluster.Spec.Bastion.Spec.Flavor.Filter == nil {
-					openStackCluster.Spec.Bastion.Spec.Flavor.Filter = &infrav1.FlavorFilter{}
-				}
 				openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name = bastionNewFlavorName
 				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
 			}, "30s", "1s").Should(Succeed())
@@ -332,9 +329,6 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 					return err
 				}
 				openStackCluster.Spec.Bastion = bastionSpec
-				if openStackCluster.Spec.Bastion.Spec.Flavor.Filter == nil {
-					openStackCluster.Spec.Bastion.Spec.Flavor.Filter = &infrav1.FlavorFilter{}
-				}
 				openStackCluster.Spec.Bastion.Spec.Flavor.Filter.Name = bastionFlavor
 				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
 			}, "30s", "1s").Should(Succeed())
@@ -1111,11 +1105,11 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer).ToNot(BeNil())
 			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor).ToNot(BeNil())
 			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay).To(Equal(int32(15)))
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay).To(Equal(ptr.To(int32(15))))
 			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Timeout).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Timeout).To(Equal(int32(10)))
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Timeout).To(Equal(ptr.To(int32(10))))
 			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries).ToNot(BeNil())
-			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries).To(Equal(int32(3)))
+			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries).To(Equal(ptr.To(int32(3))))
 			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetriesDown).ToNot(BeNil())
 			Expect(openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetriesDown).To(Equal(int32(2)))
 
@@ -1168,8 +1162,8 @@ var _ = Describe("e2e tests [PR-Blocking]", func() {
 				if err != nil {
 					return err
 				}
-				openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay = 20
-				openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries = 4
+				openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.Delay = ptr.To(int32(20))
+				openStackCluster.Spec.APIServer.ManagedLoadBalancer.Monitor.MaxRetries = ptr.To(int32(4))
 				return e2eCtx.Environment.BootstrapClusterProxy.GetClient().Update(ctx, openStackCluster)
 			}, "30s", "1s").Should(Succeed())
 
@@ -1431,17 +1425,17 @@ func makeOpenStackMachineTemplate(namespace, clusterName, name string) *infrav1.
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),
 						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
-					IdentityRef: &infrav1.OpenStackIdentityReference{
+					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      fmt.Sprintf("%s-cloud-config", clusterName),
 						CloudName: e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackCloud),
 					},
@@ -1461,17 +1455,17 @@ func makeOpenStackMachineTemplateWithPortOptions(namespace, clusterName, name st
 			Template: infrav1.OpenStackMachineTemplateResource{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackNodeMachineFlavor)),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To(e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackImageName)),
 						},
 					},
 					SSHKeyName: shared.DefaultSSHKeyPairName,
-					IdentityRef: &infrav1.OpenStackIdentityReference{
+					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      fmt.Sprintf("%s-cloud-config", clusterName),
 						CloudName: e2eCtx.E2EConfig.MustGetVariable(shared.OpenStackCloud),
 					},

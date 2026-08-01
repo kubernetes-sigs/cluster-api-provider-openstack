@@ -29,6 +29,111 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
+// ensureNonEmptyIDWhenSet ensures the ID field is non-empty when any field of the struct
+// is set, since conversion uses ID != "" to detect whether the status object is present.
+func ensureNonEmptyID(id *string, c randfill.Continue) {
+	if *id == "" {
+		*id = nonEmptyString(c)
+	}
+}
+
+// fixupSchedulerHints ensures SchedulerHintAdditionalProperties have valid
+// union values for v1beta2. When Type is "String", String must be non-empty.
+// When Type is not "String", String must be "" (zero value).
+func fixupSchedulerHintsV1Beta2(hints []infrav1.SchedulerHintAdditionalProperty, c randfill.Continue) {
+	for i := range hints {
+		// Ensure Name is non-empty (MinLength=1 validation)
+		if hints[i].Name == "" {
+			hints[i].Name = nonEmptyString(c)
+		}
+		v := &hints[i].Value
+		switch c.Intn(3) {
+		case 0:
+			v.Type = "Bool"
+			v.Bool = ptr.To(c.Bool())
+			v.Number = nil
+			v.String = ""
+		case 1:
+			v.Type = "String"
+			v.Bool = nil
+			v.Number = nil
+			v.String = nonEmptyString(c)
+		case 2:
+			v.Type = "Number"
+			v.Bool = nil
+			v.Number = ptr.To(c.Int31())
+			v.String = ""
+		}
+	}
+}
+
+// fixupSecurityGroupRulesV1Beta2 ensures SecurityGroupRuleSpec fields are
+// valid for conversion round-trip.
+func fixupSecurityGroupRulesV1Beta2(rules []infrav1.SecurityGroupRuleSpec, c randfill.Continue) {
+	for i := range rules {
+		if rules[i].Name == "" {
+			rules[i].Name = nonEmptyString(c)
+		}
+		if rules[i].Direction == "" {
+			if c.Bool() {
+				rules[i].Direction = "ingress"
+			} else {
+				rules[i].Direction = "egress"
+			}
+		}
+		// EtherType: string in v1beta2, *string in v1beta1.
+		// Empty string is fine (represents "not set" via omitempty),
+		// but non-empty must be a valid value.
+		if rules[i].EtherType != "" && rules[i].EtherType != "IPv4" && rules[i].EtherType != "IPv6" {
+			if c.Bool() {
+				rules[i].EtherType = "IPv4"
+			} else {
+				rules[i].EtherType = "IPv6"
+			}
+		}
+	}
+}
+
+// fixupOpenStackMachineSpecV1Beta2 ensures OpenStackMachineSpec fields are
+// valid for conversion round-trip.
+func fixupOpenStackMachineSpecV1Beta2(spec *infrav1.OpenStackMachineSpec, c randfill.Continue) {
+	// Fix SchedulerHintAdditionalProperties for round-trip
+	fixupSchedulerHintsV1Beta2(spec.SchedulerHintAdditionalProperties, c)
+}
+
+// fixupAPIServerLoadBalancerV1Beta2 ensures APIServerLoadBalancer fields
+// round-trip correctly through v1beta1.
+func fixupAPIServerLoadBalancerV1Beta2(lb *infrav1.APIServerLoadBalancer, c randfill.Continue) {
+	// Monitor.Delay/Timeout/MaxRetries are *int32 in v1beta2 but int in v1beta1.
+	// nil → 0 → &0, so nil doesn't round-trip. Ensure non-nil.
+	if lb.Monitor != nil {
+		if lb.Monitor.Delay == nil {
+			lb.Monitor.Delay = ptr.To(c.Int31())
+		}
+		if lb.Monitor.Timeout == nil {
+			lb.Monitor.Timeout = ptr.To(c.Int31())
+		}
+		if lb.Monitor.MaxRetries == nil {
+			lb.Monitor.MaxRetries = ptr.To(c.Int31())
+		}
+	}
+
+	// Network is NetworkParam (value type with omitzero).
+	// Ensure valid structure: either zero or has ID/Filter.
+	if lb.Network != (infrav1.NetworkParam{}) {
+		if lb.Network.ID == nil && lb.Network.Filter == nil {
+			lb.Network = infrav1.NetworkParam{ID: ptr.To(nonEmptyString(c))}
+		}
+	}
+
+	// Subnets: each SubnetParam must have valid ID or Filter.
+	for i := range lb.Subnets {
+		if lb.Subnets[i].ID == nil && lb.Subnets[i].Filter == nil {
+			lb.Subnets[i].ID = ptr.To(nonEmptyString(c))
+		}
+	}
+}
+
 // filterInvalidTags removes tags that are empty or contain commas, which are
 // rejected by API validation in both v1beta1 and v1beta2.
 func filterInvalidTags[T ~string](tags []T) []T {
@@ -108,7 +213,7 @@ func ensureValidFlavorParam(param *infrav1.FlavorParam, c randfill.Continue) {
 		}
 	} else {
 		*param = infrav1.FlavorParam{
-			Filter: &infrav1.FlavorFilter{
+			Filter: infrav1.FlavorFilter{
 				Name: ptr.To(nonEmptyString(c)),
 			},
 		}
@@ -130,6 +235,23 @@ func InfraV1beta1FuzzerFuncs() []any {
 				subnet := infrav1beta1.SubnetParam{}
 				c.Fill(&subnet)
 				spec.Subnets = append(spec.Subnets, subnet)
+			}
+
+			// Fix SecurityGroupRuleSpec fields that don't round-trip
+			// when *string is nil (nil → "" → &"" after round-trip).
+			if spec.ManagedSecurityGroups != nil {
+				for i := range spec.ManagedSecurityGroups.AllNodesSecurityGroupRules {
+					rule := &spec.ManagedSecurityGroups.AllNodesSecurityGroupRules[i]
+					// EtherType is *string in v1beta1, string in v1beta2.
+					// nil doesn't round-trip (nil → "" → &""), so ensure non-nil.
+					if rule.EtherType == nil {
+						if c.Bool() {
+							rule.EtherType = ptr.To("IPv4")
+						} else {
+							rule.EtherType = ptr.To("IPv6")
+						}
+					}
+				}
 			}
 		},
 
@@ -225,11 +347,72 @@ func InfraV1beta1FuzzerFuncs() []any {
 					spec.Flavor = &s
 				}
 			}
+
+			// Fix SchedulerHintAdditionalValue.String: *string in v1beta1, string in v1beta2.
+			// nil doesn't round-trip (nil → "" → &""), so ensure non-nil.
+			for i := range spec.SchedulerHintAdditionalProperties {
+				v := &spec.SchedulerHintAdditionalProperties[i].Value
+				if v.String == nil {
+					v.String = ptr.To("")
+				}
+				// Ensure Number fits in int32 for conversion
+				if v.Number != nil {
+					n := int(int32(*v.Number)) //nolint:gosec // intentional truncation to constrain fuzzer output to int32 range
+					v.Number = &n
+				}
+			}
+		},
+
+		// Ensure APIServerLoadBalancer is nil in v1beta1 status to avoid
+		// triggering the unsafe.Pointer cast that reads past struct bounds
+		// (v1beta1.LoadBalancer is smaller than v1beta2.LoadBalancer due to
+		// LoadBalancerNetwork changing from pointer to value type).
+		func(status *infrav1beta1.OpenStackClusterStatus, c randfill.Continue) {
+			c.FillNoCustom(status)
+			status.APIServerLoadBalancer = nil
 		},
 
 		// Ensure VolumeAZ type is valid
 		func(az *infrav1beta1.VolumeAvailabilityZone, c randfill.Continue) {
 			fuzzVolumeAZ(&az.From, &az.Name, c)
+		},
+
+		// SecurityGroupRuleSpec: ensure EtherType is never nil
+		func(rule *infrav1beta1.SecurityGroupRuleSpec, c randfill.Continue) {
+			c.FillNoCustom(rule)
+			// EtherType is *string in v1beta1, string in v1beta2.
+			// nil doesn't round-trip, so always set it.
+			if rule.EtherType == nil {
+				if c.Bool() {
+					rule.EtherType = ptr.To("IPv4")
+				} else {
+					rule.EtherType = ptr.To("IPv6")
+				}
+			}
+			// Ensure Number fits in int32
+			if rule.PortRangeMin != nil {
+				n := int(int32(*rule.PortRangeMin)) //nolint:gosec // intentional truncation to constrain fuzzer output to int32 range
+				rule.PortRangeMin = &n
+			}
+			if rule.PortRangeMax != nil {
+				n := int(int32(*rule.PortRangeMax)) //nolint:gosec // intentional truncation to constrain fuzzer output to int32 range
+				rule.PortRangeMax = &n
+			}
+		},
+
+		// SchedulerHintAdditionalValue: ensure String is never nil
+		func(val *infrav1beta1.SchedulerHintAdditionalValue, c randfill.Continue) {
+			c.FillNoCustom(val)
+			// String is *string in v1beta1, string in v1beta2.
+			// nil doesn't round-trip (nil → "" → &""), use &"" instead.
+			if val.String == nil {
+				val.String = ptr.To("")
+			}
+			// Ensure Number fits in int32
+			if val.Number != nil {
+				n := int(int32(*val.Number)) //nolint:gosec // intentional truncation to constrain fuzzer output to int32 range
+				val.Number = &n
+			}
 		},
 	}
 }
@@ -283,7 +466,7 @@ func fuzzAPIServer(as **infrav1.APIServer, c randfill.Continue) {
 // * Constrain the output in ways which are validated by the API server
 // * Constrain fields that are not preserved during v1beta2 <-> v1beta1 round-trip conversion
 // * Add additional test coverage where it is not generated by the default fuzzer.
-func InfraV1Beta2FuzzerFuncs() []any {
+func InfraV1Beta2FuzzerFuncs() []any { //nolint:gocyclo,cyclop
 	return []any{
 		// Normalize OpenStackCluster fields that are not preserved during
 		// hub-spoke-hub conversion:
@@ -294,9 +477,31 @@ func InfraV1Beta2FuzzerFuncs() []any {
 
 			// FillNoCustom does not invoke custom fuzzers for nested types,
 			// so we explicitly ensure Flavor fields are valid for conversion.
-			if cluster.Spec.Bastion != nil && cluster.Spec.Bastion.Spec != nil {
+			if cluster.Spec.Bastion != nil {
 				ensureValidFlavorParam(&cluster.Spec.Bastion.Spec.Flavor, c)
+				fixupOpenStackMachineSpecV1Beta2(&cluster.Spec.Bastion.Spec, c)
 			}
+
+			// Fix APIServer.ManagedLoadBalancer fields
+			if cluster.Spec.APIServer != nil && cluster.Spec.APIServer.ManagedLoadBalancer != nil {
+				fixupAPIServerLoadBalancerV1Beta2(cluster.Spec.APIServer.ManagedLoadBalancer, c)
+			}
+
+			// Fix ManagedSecurityGroups rules
+			if cluster.Spec.ManagedSecurityGroups != nil {
+				fixupSecurityGroupRulesV1Beta2(cluster.Spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules, c)
+			}
+
+			// Fix status fields: conversion uses .ID != "" to detect presence
+			ensureNonEmptyID(&cluster.Status.Network.ID, c)
+			ensureNonEmptyID(&cluster.Status.ExternalNetwork.ID, c)
+			ensureNonEmptyID(&cluster.Status.Router.ID, c)
+			ensureNonEmptyID(&cluster.Status.ControlPlaneSecurityGroup.ID, c)
+			ensureNonEmptyID(&cluster.Status.WorkerSecurityGroup.ID, c)
+			ensureNonEmptyID(&cluster.Status.BastionSecurityGroup.ID, c)
+			// APIServerManagedLoadBalancer has an unsafe cast issue with
+			// LoadBalancerNetwork (pointer vs value type layout mismatch).
+			cluster.Status.APIServerManagedLoadBalancer = infrav1.LoadBalancer{}
 
 			for i := range cluster.Status.Conditions {
 				cluster.Status.Conditions[i].ObservedGeneration = cluster.Generation
@@ -313,6 +518,7 @@ func InfraV1Beta2FuzzerFuncs() []any {
 			// FillNoCustom does not invoke custom fuzzers for nested types,
 			// so we explicitly ensure Flavor is valid for conversion.
 			ensureValidFlavorParam(&machine.Spec.Flavor, c)
+			fixupOpenStackMachineSpecV1Beta2(&machine.Spec, c)
 
 			for i := range machine.Status.Conditions {
 				machine.Status.Conditions[i].ObservedGeneration = machine.Generation
@@ -328,6 +534,7 @@ func InfraV1Beta2FuzzerFuncs() []any {
 			// FillNoCustom does not invoke custom fuzzers for nested types,
 			// so we explicitly ensure Flavor is valid for conversion.
 			ensureValidFlavorParam(&tmpl.Spec.Template.Spec.Flavor, c)
+			fixupOpenStackMachineSpecV1Beta2(&tmpl.Spec.Template.Spec, c)
 
 			for i := range tmpl.Status.Conditions {
 				tmpl.Status.Conditions[i].ObservedGeneration = 0
@@ -344,6 +551,22 @@ func InfraV1Beta2FuzzerFuncs() []any {
 				subnet := infrav1.SubnetParam{}
 				c.Fill(&subnet)
 				spec.Subnets = append(spec.Subnets, subnet)
+			}
+
+			// Fix APIServer.ManagedLoadBalancer fields
+			if spec.APIServer != nil && spec.APIServer.ManagedLoadBalancer != nil {
+				fixupAPIServerLoadBalancerV1Beta2(spec.APIServer.ManagedLoadBalancer, c)
+			}
+
+			// Fix ManagedSecurityGroups rules
+			if spec.ManagedSecurityGroups != nil {
+				fixupSecurityGroupRulesV1Beta2(spec.ManagedSecurityGroups.ClusterNodesSecurityGroupRules, c)
+			}
+
+			// Fix Bastion.Spec if present
+			if spec.Bastion != nil {
+				ensureValidFlavorParam(&spec.Bastion.Spec.Flavor, c)
+				fixupOpenStackMachineSpecV1Beta2(&spec.Bastion.Spec, c)
 			}
 		},
 
@@ -409,7 +632,15 @@ func InfraV1Beta2FuzzerFuncs() []any {
 		},
 
 		func(param *infrav1.ImageParam, c randfill.Continue) {
-			fuzzFilterParam(&param.ID, &param.Filter, c)
+			if c.Bool() {
+				param.ID = ptr.To(nonEmptyString(c))
+				param.Filter = infrav1.ImageFilter{}
+			} else {
+				param.ID = nil
+				for (&param.Filter).IsZero() {
+					c.Fill(&param.Filter)
+				}
+			}
 		},
 
 		func(param *infrav1.RouterParam, c randfill.Continue) {
@@ -424,7 +655,30 @@ func InfraV1Beta2FuzzerFuncs() []any {
 
 		// Ensure VolumeAZ type is valid
 		func(az *infrav1.VolumeAvailabilityZone, c randfill.Continue) {
-			fuzzVolumeAZ(&az.From, &az.Name, c)
+			stringWithoutSpaces := func() string {
+				for {
+					s := c.String(20)
+					if !strings.Contains(s, " ") && s != "" {
+						return s
+					}
+				}
+			}
+
+			// From is defaulted
+			if c.Bool() {
+				az.Name = infrav1.VolumeAZName(stringWithoutSpaces())
+				return
+			}
+
+			// From is Name
+			if c.Bool() {
+				az.From = infrav1.VolumeAZSource("Name")
+				az.Name = infrav1.VolumeAZName(stringWithoutSpaces())
+				return
+			}
+
+			// From is Machine
+			az.From = infrav1.VolumeAZSource("Machine")
 		},
 
 		// FailureDomains are converted via a map keyed by Name, so names
@@ -463,6 +717,20 @@ func InfraV1Beta2FuzzerFuncs() []any {
 			} else {
 				status.FailureDomains = unique
 			}
+
+			// Conversion uses .ID != "" to detect whether status objects are set.
+			// Ensure IDs are non-empty when other fields are populated.
+			ensureNonEmptyID(&status.Network.ID, c)
+			ensureNonEmptyID(&status.ExternalNetwork.ID, c)
+			ensureNonEmptyID(&status.Router.ID, c)
+			ensureNonEmptyID(&status.ControlPlaneSecurityGroup.ID, c)
+			ensureNonEmptyID(&status.WorkerSecurityGroup.ID, c)
+			ensureNonEmptyID(&status.BastionSecurityGroup.ID, c)
+
+			// APIServerManagedLoadBalancer has an unsafe cast issue:
+			// v1beta1.LoadBalancer and v1beta2.LoadBalancer have different
+			// sizes due to LoadBalancerNetwork changing from pointer to value.
+			status.APIServerManagedLoadBalancer = infrav1.LoadBalancer{}
 		},
 
 		func(mn **infrav1.ManagedNetwork, c randfill.Continue) {

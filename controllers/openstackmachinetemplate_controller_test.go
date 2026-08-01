@@ -395,7 +395,7 @@ func newOSMT(name, clusterName string, paused bool, rootVolume bool, ownerRef bo
 	}
 
 	if rootVolume {
-		osmt.Spec.Template.Spec.RootVolume = &infrav1.RootVolume{
+		osmt.Spec.Template.Spec.RootVolume = infrav1.RootVolume{
 			SizeGiB: 100,
 		}
 	}

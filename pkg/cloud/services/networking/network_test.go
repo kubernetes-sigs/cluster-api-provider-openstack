@@ -163,7 +163,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   fakeNetworkID,
 							Name: expectedNetworkName,
@@ -196,7 +196,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   fakeNetworkID,
 							Name: expectedNetworkName,
@@ -234,7 +234,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   fakeNetworkID,
 							Name: expectedNetworkName,
@@ -272,7 +272,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID:   fakeNetworkID,
 							Name: expectedNetworkName,
@@ -330,7 +330,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by ID",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						ID: ptr.To(fakeNetworkID),
 					},
 				},
@@ -343,12 +343,12 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						ID: ptr.To(fakeNetworkID),
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
+					ExternalNetwork: infrav1.NetworkStatus{
 						ID:   fakeNetworkID,
 						Name: fakeNetworkname,
 					},
@@ -360,7 +360,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by name",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
 					},
 				},
@@ -376,12 +376,12 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
+					ExternalNetwork: infrav1.NetworkStatus{
 						ID:   fakeNetworkID,
 						Name: fakeNetworkname,
 					},
@@ -393,7 +393,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by ID when external network by id not found",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						ID: ptr.To(fakeNetworkID),
 					},
 				},
@@ -403,7 +403,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						ID: ptr.To(fakeNetworkID),
 					},
 				},
@@ -414,7 +414,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			name: "reconcile external network by ID when external network by name not found",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
 					},
 				},
@@ -425,7 +425,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					ExternalNetwork: &infrav1.NetworkParam{
+					ExternalNetwork: infrav1.NetworkParam{
 						Filter: &infrav1.NetworkFilter{Name: fakeNetworkname},
 					},
 				},
@@ -445,7 +445,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 					EnableExternalNetwork: ptr.To(false),
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: nil,
+					ExternalNetwork: infrav1.NetworkStatus{},
 				},
 			},
 			wantErr: false,
@@ -462,7 +462,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: nil,
+					ExternalNetwork: infrav1.NetworkStatus{},
 				},
 			},
 			wantErr: false,
@@ -484,7 +484,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{},
 				Status: infrav1.OpenStackClusterStatus{
-					ExternalNetwork: &infrav1.NetworkStatus{
+					ExternalNetwork: infrav1.NetworkStatus{
 						ID:   fakeNetworkID,
 						Name: fakeNetworkname,
 					},
@@ -577,7 +577,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -596,7 +596,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					}, nil)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -621,7 +621,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -648,7 +648,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					}, nil)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -674,7 +674,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -702,7 +702,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					}, nil)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -737,7 +737,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -774,7 +774,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					}, nil)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -800,7 +800,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -833,7 +833,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					Times(1)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -859,7 +859,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -879,7 +879,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					}, nil)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -905,7 +905,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -938,7 +938,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					Times(1)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -964,7 +964,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -997,7 +997,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					Times(1)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},
@@ -1023,7 +1023,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Network: &infrav1.NetworkStatusWithSubnets{
+					Network: infrav1.NetworkStatusWithSubnets{
 						NetworkStatus: infrav1.NetworkStatus{
 							ID: fakeNetworkID,
 						},
@@ -1056,7 +1056,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					Times(1)
 			},
 			want: &infrav1.OpenStackClusterStatus{
-				Network: &infrav1.NetworkStatusWithSubnets{
+				Network: infrav1.NetworkStatusWithSubnets{
 					NetworkStatus: infrav1.NetworkStatus{
 						ID: fakeNetworkID,
 					},

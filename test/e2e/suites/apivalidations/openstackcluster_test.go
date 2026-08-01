@@ -107,14 +107,14 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		It("should allow bastion.enabled=true with a spec", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Enabled: ptr.To(true),
-				Spec: &infrav1.OpenStackMachineSpec{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("flavor-name"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
 						},
 					},
@@ -137,14 +137,14 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 		It("should default bastion.enabled=true", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
-				Spec: &infrav1.OpenStackMachineSpec{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("flavor-name"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
 						},
 					},
@@ -162,14 +162,14 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		It("should allow IPv4 as bastion floatingIP", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Enabled: ptr.To(true),
-				Spec: &infrav1.OpenStackMachineSpec{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("flavor-name"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
 						},
 					},
@@ -181,14 +181,14 @@ var _ = Describe("OpenStackCluster API validations", func() {
 
 		It("should not allow non-IPv4 as bastion floating IP", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
-				Spec: &infrav1.OpenStackMachineSpec{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("flavor-name"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
 						},
 					},
@@ -201,14 +201,14 @@ var _ = Describe("OpenStackCluster API validations", func() {
 		It("should not allow a bastion floating IP with EnableExternalNetwork set to false", func() {
 			cluster.Spec.Bastion = &infrav1.Bastion{
 				Enabled: ptr.To(true),
-				Spec: &infrav1.OpenStackMachineSpec{
+				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("flavor-name"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("fake-image"),
 						},
 					},

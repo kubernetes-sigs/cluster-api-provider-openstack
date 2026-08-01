@@ -48,7 +48,7 @@ var _ admission.Validator[*infrav1.OpenStackMachine] = &openStackMachineWebhook{
 func (*openStackMachineWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackMachine) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
-	if newObj.Spec.RootVolume != nil && newObj.Spec.AdditionalBlockDevices != nil {
+	if newObj.Spec.RootVolume != (infrav1.RootVolume{}) && newObj.Spec.AdditionalBlockDevices != nil {
 		for _, device := range newObj.Spec.AdditionalBlockDevices {
 			if device.Name == rootVolumeName {
 				allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "additionalBlockDevices"), "cannot contain a device named \"root\" when rootVolume is set"))

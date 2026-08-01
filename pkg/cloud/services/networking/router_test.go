@@ -49,7 +49,7 @@ func TestService_DeleteRouter(t *testing.T) {
 			name: "Managed router in status exists",
 			openStackCluster: infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					Router: &infrav1.Router{
+					Router: infrav1.Router{
 						ID: routerID,
 					},
 				},
@@ -73,7 +73,7 @@ func TestService_DeleteRouter(t *testing.T) {
 			name: "Managed router in status does not exist",
 			openStackCluster: infrav1.OpenStackCluster{
 				Status: infrav1.OpenStackClusterStatus{
-					Router: &infrav1.Router{
+					Router: infrav1.Router{
 						ID: routerID,
 					},
 				},
@@ -123,14 +123,14 @@ func TestService_DeleteRouter(t *testing.T) {
 			name: "Unmanaged router in status exists",
 			openStackCluster: infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					Router: &infrav1.RouterParam{
+					Router: infrav1.RouterParam{
 						Filter: &infrav1.RouterFilter{
 							Name: "my-router",
 						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Router: &infrav1.Router{
+					Router: infrav1.Router{
 						ID: routerID,
 					},
 				},
@@ -153,14 +153,14 @@ func TestService_DeleteRouter(t *testing.T) {
 			name: "Unmanaged router in status does not exist",
 			openStackCluster: infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					Router: &infrav1.RouterParam{
+					Router: infrav1.RouterParam{
 						Filter: &infrav1.RouterFilter{
 							Name: "my-router",
 						},
 					},
 				},
 				Status: infrav1.OpenStackClusterStatus{
-					Router: &infrav1.Router{
+					Router: infrav1.Router{
 						ID: routerID,
 					},
 				},
@@ -176,7 +176,7 @@ func TestService_DeleteRouter(t *testing.T) {
 			name: "Unmanaged router not in status does not exist",
 			openStackCluster: infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
-					Router: &infrav1.RouterParam{
+					Router: infrav1.RouterParam{
 						Filter: &infrav1.RouterFilter{
 							Name: "my-router",
 						},

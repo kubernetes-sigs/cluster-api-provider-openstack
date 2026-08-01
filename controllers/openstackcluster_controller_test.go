@@ -62,12 +62,12 @@ var _ = Describe("OpenStackCluster controller", func() {
 	testNum := 0
 	bastionSpec := infrav1.OpenStackMachineSpec{
 		Flavor: infrav1.FlavorParam{
-			Filter: &infrav1.FlavorFilter{
+			Filter: infrav1.FlavorFilter{
 				Name: ptr.To("m1.small"),
 			},
 		},
 		Image: infrav1.ImageParam{
-			Filter: &infrav1.ImageFilter{
+			Filter: infrav1.ImageFilter{
 				Name: ptr.To("fake-name"),
 			},
 		},
@@ -406,7 +406,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		err = k8sClient.Create(ctx, capiCluster)
 		Expect(err).To(BeNil())
 		testCluster.Status = infrav1.OpenStackClusterStatus{
-			Network: &infrav1.NetworkStatusWithSubnets{
+			Network: infrav1.NetworkStatusWithSubnets{
 				NetworkStatus: infrav1.NetworkStatus{
 					Name: "network-name",
 					ID:   "network-id",
@@ -438,16 +438,16 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.Bastion{
 				Enabled: ptr.To(true),
-				Spec:    &bastionSpec,
+				Spec:    bastionSpec,
 			},
 			APIServer: &infrav1.APIServer{
 				EnableFloatingIP: ptr.To(false),
 				FixedIP:          ptr.To("10.0.0.1"),
 			},
-			ExternalNetwork: &infrav1.NetworkParam{
+			ExternalNetwork: infrav1.NetworkParam{
 				ID: ptr.To(externalNetworkID),
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 		}
@@ -519,16 +519,16 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 			Bastion: &infrav1.Bastion{
 				Enabled: ptr.To(true),
-				Spec:    &bastionSpec,
+				Spec:    bastionSpec,
 			},
 			APIServer: &infrav1.APIServer{
 				EnableFloatingIP: ptr.To(false),
 				FixedIP:          ptr.To("10.0.0.1"),
 			},
-			ExternalNetwork: &infrav1.NetworkParam{
+			ExternalNetwork: infrav1.NetworkParam{
 				ID: ptr.To(externalNetworkID),
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			Subnets: []infrav1.SubnetParam{
@@ -659,7 +659,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			Subnets: []infrav1.SubnetParam{
@@ -668,7 +668,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				},
 			},
 			ManagedSubnets: []infrav1.SubnetSpec{},
-			Router: &infrav1.RouterParam{
+			Router: infrav1.RouterParam{
 				ID: ptr.To(clusterRouterID),
 			},
 		}
@@ -726,7 +726,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				Filter: &infrav1.NetworkFilter{
 					Name: clusterNetworkName,
 				},
@@ -739,7 +739,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				},
 			},
 			ManagedSubnets: []infrav1.SubnetSpec{},
-			Router: &infrav1.RouterParam{
+			Router: infrav1.RouterParam{
 				Filter: &infrav1.RouterFilter{
 					Name: clusterRouterName,
 				},
@@ -810,10 +810,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			ExternalNetwork: &infrav1.NetworkParam{
+			ExternalNetwork: infrav1.NetworkParam{
 				ID: ptr.To(externalNetworkID),
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			// When DisableAPIServerFloatingIP is not set and external network is configured,
@@ -886,7 +886,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			EnableExternalNetwork: ptr.To(false),
@@ -993,7 +993,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			ExternalNetwork: &infrav1.NetworkParam{
+			ExternalNetwork: infrav1.NetworkParam{
 				ID: ptr.To(externalNetworkID),
 			},
 			APIServer: &infrav1.APIServer{
@@ -1040,7 +1040,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			EnableExternalNetwork: ptr.To(false),
@@ -1085,7 +1085,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			EnableExternalNetwork: ptr.To(false),
@@ -1138,10 +1138,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
-			Router: &infrav1.RouterParam{
+			Router: infrav1.RouterParam{
 				ID: ptr.To(clusterRouterID),
 			},
 			EnableExternalNetwork: ptr.To(false),
@@ -1207,7 +1207,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			EnableExternalNetwork: ptr.To(false),
@@ -1286,7 +1286,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			EnableExternalNetwork: ptr.To(false),
@@ -1394,10 +1394,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 				Name:      "test-creds",
 				CloudName: "openstack",
 			},
-			ExternalNetwork: &infrav1.NetworkParam{
+			ExternalNetwork: infrav1.NetworkParam{
 				ID: ptr.To(externalNetworkID),
 			},
-			Network: &infrav1.NetworkParam{
+			Network: infrav1.NetworkParam{
 				ID: ptr.To(clusterNetworkID),
 			},
 			// When DisableAPIServerFloatingIP is not set and external network is configured,
@@ -1468,7 +1468,7 @@ func createRequestFromOSCluster(openStackCluster *infrav1.OpenStackCluster) reco
 
 func Test_setClusterNetwork(t *testing.T) {
 	openStackCluster := &infrav1.OpenStackCluster{}
-	openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
+	openStackCluster.Status.Network = infrav1.NetworkStatusWithSubnets{}
 
 	filterednetwork := &networks.Network{
 		ID:   "network1",

@@ -34,9 +34,9 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		// Initialise a basic machine object in the correct namespace
 		machine := &infrav1.OpenStackMachine{
 			Spec: infrav1.OpenStackMachineSpec{
-				Image: infrav1.ImageParam{Filter: &infrav1.ImageFilter{Name: ptr.To("test-image")}},
+				Image: infrav1.ImageParam{Filter: infrav1.ImageFilter{Name: ptr.To("test-image")}},
 				Flavor: infrav1.FlavorParam{
-					Filter: &infrav1.FlavorFilter{
+					Filter: infrav1.FlavorFilter{
 						Name: ptr.To("flavor-name"),
 					},
 				},
@@ -58,7 +58,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 
 		machine = defaultMachine()
-		machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{Name: "foobar", CloudName: "staging"}
+		machine.Spec.IdentityRef = infrav1.OpenStackIdentityReference{Name: "foobar", CloudName: "staging"}
 
 		By("Creating a machine with spec.identityRef")
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation with spec.identityRef should succeed")
@@ -86,19 +86,19 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 
 		By("Setting the identityRef")
-		machine.Spec.IdentityRef = ptr.To(infrav1.OpenStackIdentityReference{Name: "foo", CloudName: "staging"})
+		machine.Spec.IdentityRef = infrav1.OpenStackIdentityReference{Name: "foo", CloudName: "staging"}
 		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Setting the identityRef should succeed")
 
 		By("Updating the identityRef.Name")
-		machine.Spec.IdentityRef = ptr.To(infrav1.OpenStackIdentityReference{Name: "bar", CloudName: "staging"})
+		machine.Spec.IdentityRef = infrav1.OpenStackIdentityReference{Name: "bar", CloudName: "staging"}
 		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Updating the identityRef.Name should succeed")
 
 		By("Updating the identityRef.CloudName")
-		machine.Spec.IdentityRef = ptr.To(infrav1.OpenStackIdentityReference{Name: "bar", CloudName: "production"})
+		machine.Spec.IdentityRef = infrav1.OpenStackIdentityReference{Name: "bar", CloudName: "production"}
 		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Updating the identityRef.CloudName should succeed")
 
 		By("Clearing the identityRef")
-		machine.Spec.IdentityRef = nil
+		machine.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
 		Expect(k8sClient.Update(ctx, machine)).To(Succeed(), "Clearing the identityRef should succeed")
 	})
 
@@ -137,7 +137,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		machine := defaultMachine()
 
 		By("Creating a machine with identityRef Region field set on creation")
-		machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+		machine.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Name:      "secretName",
 			CloudName: "cloudName",
 			Region:    "regionName",
@@ -150,7 +150,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 
 		machine = defaultMachine()
 		By("Creating a machine with identityRef Region field not set on creation")
-		machine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
+		machine.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Name:      "secretName",
 			CloudName: "cloudName",
 		}
@@ -180,7 +180,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			By("Creating a machine with both flavor id and filter")
 			machine.Spec.Flavor = infrav1.FlavorParam{
 				ID: ptr.To("6aa02f56-c595-4d2f-9f8e-3c6296a4bed9"),
-				Filter: &infrav1.FlavorFilter{
+				Filter: infrav1.FlavorFilter{
 					Name: ptr.To("m1.small"),
 				},
 			}
@@ -192,7 +192,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 
 			By("Creating a machine with an empty flavor filter")
 			machine.Spec.Flavor = infrav1.FlavorParam{
-				Filter: &infrav1.FlavorFilter{},
+				Filter: infrav1.FlavorFilter{},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with an empty flavor filter should fail")
 		})
@@ -200,7 +200,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		It("should allow a flavor filter with name set", func() {
 			By("Creating a machine with a flavor filter name")
 			machine := defaultMachine()
-			machine.Spec.Flavor = infrav1.FlavorParam{Filter: &infrav1.FlavorFilter{Name: ptr.To("m1.small")}}
+			machine.Spec.Flavor = infrav1.FlavorParam{Filter: infrav1.FlavorFilter{Name: ptr.To("m1.small")}}
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with a flavor filter name should succeed")
 		})
 
@@ -211,7 +211,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "OpenStackMachine creation should succeed")
 
 			By("Changing the flavor filter name")
-			machine.Spec.Flavor = infrav1.FlavorParam{Filter: &infrav1.FlavorFilter{Name: ptr.To("m1.large")}}
+			machine.Spec.Flavor = infrav1.FlavorParam{Filter: infrav1.FlavorFilter{Name: ptr.To("m1.large")}}
 			Expect(k8sClient.Update(ctx, machine)).NotTo(Succeed(), "Updating flavor should fail")
 		})
 
@@ -230,8 +230,11 @@ var _ = Describe("OpenStackMachine API validations", func() {
 	Context("volumes", func() {
 		It("should not allow volume with zero size", func() {
 			machine := defaultMachine()
-			machine.Spec.RootVolume = &infrav1.RootVolume{
-				SizeGiB: 0,
+			// Set Type to make RootVolume non-zero so it's not omitted by omitzero.
+			// SizeGiB defaults to 0 (omitted via omitempty), triggering the required field validation.
+			machine.Spec.RootVolume = infrav1.RootVolume{
+				SizeGiB:           0,
+				BlockDeviceVolume: infrav1.BlockDeviceVolume{Type: "test-type"},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with a zero size root volume should fail")
 
@@ -247,7 +250,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 
 		It("should allow to create machine with spec.RootVolume and non-root device name in spec.AdditionalBlockDevices", func() {
 			machine := defaultMachine()
-			machine.Spec.RootVolume = &infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
+			machine.Spec.RootVolume = infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
 			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
 				{Name: "user", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice}},
 			}
@@ -258,7 +261,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 
 		It("should not allow to create machine with spec.RootVolume and root device name in spec.AdditionalBlockDevices", func() {
 			machine := defaultMachine()
-			machine.Spec.RootVolume = &infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
+			machine.Spec.RootVolume = infrav1.RootVolume{SizeGiB: 50, BlockDeviceVolume: infrav1.BlockDeviceVolume{}}
 			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
 				{Name: "root", SizeGiB: 30, Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice}},
 			}
@@ -323,7 +326,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 
 		defaultMachineWithRootVolumeAZ := func(az *infrav1.VolumeAvailabilityZone) *infrav1.OpenStackMachine {
 			machine := defaultMachine()
-			machine.Spec.RootVolume = &infrav1.RootVolume{
+			machine.Spec.RootVolume = infrav1.RootVolume{
 				SizeGiB: 1,
 			}
 			machine.Spec.RootVolume.AvailabilityZone = az
@@ -350,7 +353,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 		It("should allow volume with defaulted AZ from", func() {
 			azName := infrav1.VolumeAZName("test-az")
 			az := infrav1.VolumeAvailabilityZone{
-				Name: &azName,
+				Name: azName,
 			}
 
 			machine := defaultMachineWithRootVolumeAZ(&az)
@@ -364,7 +367,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			azName := infrav1.VolumeAZName("test-az")
 			az := infrav1.VolumeAvailabilityZone{
 				From: infrav1.VolumeAZFromName,
-				Name: &azName,
+				Name: azName,
 			}
 
 			machine := defaultMachineWithRootVolumeAZ(&az)
@@ -424,7 +427,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			azName := infrav1.VolumeAZName("test-az")
 			az := infrav1.VolumeAvailabilityZone{
 				From: infrav1.VolumeAZFromMachine,
-				Name: &azName,
+				Name: azName,
 			}
 
 			machine := defaultMachineWithRootVolumeAZ(&az)
@@ -438,7 +441,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 			azName := infrav1.VolumeAZName("")
 			az := infrav1.VolumeAvailabilityZone{
 				From: infrav1.VolumeAZFromName,
-				Name: &azName,
+				Name: azName,
 			}
 
 			machine := defaultMachineWithRootVolumeAZ(&az)
@@ -511,7 +514,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 					Name: "test-hints",
 					Value: infrav1.SchedulerHintAdditionalValue{
 						Type:   infrav1.SchedulerHintTypeString,
-						String: ptr.To("test-hint"),
+						String: "test-hint",
 					},
 				},
 			}
@@ -538,7 +541,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 					Name: "test-hints",
 					Value: infrav1.SchedulerHintAdditionalValue{
 						Type:   infrav1.SchedulerHintTypeBool,
-						String: ptr.To("test-hint"),
+						String: "test-hint",
 					},
 				},
 			}
@@ -565,7 +568,7 @@ var _ = Describe("OpenStackMachine API validations", func() {
 					Name: "test-hints",
 					Value: infrav1.SchedulerHintAdditionalValue{
 						Type:   infrav1.SchedulerHintTypeNumber,
-						String: ptr.To("test-hint"),
+						String: "test-hint",
 					},
 				},
 			}

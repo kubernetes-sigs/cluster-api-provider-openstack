@@ -47,8 +47,8 @@ type OpenStackClusterTemplate struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec is the desired state of the OpenStackClusterTemplate.
-	// +optional
-	Spec OpenStackClusterTemplateSpec `json:"spec,omitempty"`
+	// +required
+	Spec OpenStackClusterTemplateSpec `json:"spec,omitempty,omitzero"`
 }
 
 //+kubebuilder:object:root=true

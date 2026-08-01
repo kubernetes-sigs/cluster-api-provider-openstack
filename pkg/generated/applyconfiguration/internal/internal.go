@@ -1823,6 +1823,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+      default: {}
     - name: provider
       type:
         scalar: string
@@ -1893,6 +1894,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: spec
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackMachineSpec
+      default: {}
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BastionStatus
   map:
     fields:
@@ -1977,6 +1979,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: subnet
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+      default: {}
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorFilter
   map:
     fields:
@@ -1989,6 +1992,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: filter
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.FlavorFilter
+      default: {}
     - name: id
       type:
         scalar: string
@@ -2010,12 +2014,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: filter
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageFilter
+      default: {}
     - name: id
       type:
         scalar: string
     - name: imageRef
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ResourceReference
+      default: {}
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.LoadBalancer
   map:
     fields:
@@ -2037,6 +2043,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: loadBalancerNetwork
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatusWithSubnets
+      default: {}
     - name: name
       type:
         scalar: string
@@ -2244,6 +2251,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: externalNetwork
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+      default: {}
     - name: identityRef
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
@@ -2266,12 +2274,15 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+      default: {}
     - name: primarySubnet
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
+      default: {}
     - name: router
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RouterParam
+      default: {}
     - name: subnets
       type:
         list:
@@ -2290,12 +2301,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: apiServerManagedLoadBalancer
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.LoadBalancer
+      default: {}
     - name: bastion
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BastionStatus
     - name: bastionSecurityGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
+      default: {}
     - name: conditions
       type:
         list:
@@ -2307,9 +2320,11 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: controlPlaneSecurityGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
+      default: {}
     - name: externalNetwork
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatus
+      default: {}
     - name: failureDomains
       type:
         list:
@@ -2324,12 +2339,15 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkStatusWithSubnets
+      default: {}
     - name: router
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.Router
+      default: {}
     - name: workerSecurityGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SecurityGroupStatus
+      default: {}
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplate
   map:
     fields:
@@ -2421,6 +2439,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: identityRef
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackIdentityReference
+      default: {}
     - name: image
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ImageParam
@@ -2437,6 +2456,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: rootVolume
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.RootVolume
+      default: {}
     - name: schedulerHintAdditionalProperties
       type:
         list:
@@ -2454,6 +2474,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: serverGroup
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupParam
+      default: {}
     - name: serverMetadata
       type:
         list:
@@ -2597,6 +2618,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: network
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.NetworkParam
+      default: {}
     - name: profile
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.BindingProfile
@@ -2677,7 +2699,6 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: description
       type:
         scalar: string
-      default: ""
     - name: enablePortSecurity
       type:
         scalar: boolean
@@ -2942,6 +2963,7 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: filter
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.ServerGroupFilter
+      default: {}
     - name: id
       type:
         scalar: string

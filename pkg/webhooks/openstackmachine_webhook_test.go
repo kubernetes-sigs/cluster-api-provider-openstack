@@ -37,16 +37,16 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 			machine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					RootVolume: &infrav1.RootVolume{
+					RootVolume: infrav1.RootVolume{
 						SizeGiB: 50,
 					},
 					AdditionalBlockDevices: []infrav1.AdditionalBlockDevice{
@@ -64,12 +64,12 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 			machine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -90,12 +90,12 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 			machine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -112,7 +112,7 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 						ID: ptr.To("a-valid-flavor-uuid"),
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -150,13 +150,13 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					ProviderID: ptr.To("openstack:///old-id"),
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -165,13 +165,13 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					ProviderID: ptr.To("openstack:///new-id"),
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -184,12 +184,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -198,13 +198,13 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					ProviderID: ptr.To("openstack:///new-id"),
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -217,16 +217,16 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					IdentityRef: &infrav1.OpenStackIdentityReference{
+					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      "old-ref",
 						CloudName: "old-cloud",
 					},
@@ -235,16 +235,16 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					IdentityRef: &infrav1.OpenStackIdentityReference{
+					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      "new-ref",
 						CloudName: "new-cloud",
 					},
@@ -258,12 +258,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 				Spec: infrav1.OpenStackMachineSpec{
 					ProviderID: ptr.To("openstack:///some-instance-id"),
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -273,12 +273,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 				Spec: infrav1.OpenStackMachineSpec{
 					ProviderID: ptr.To("openstack:///some-instance-id"),
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.medium"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -293,12 +293,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 				Spec: infrav1.OpenStackMachineSpec{
 					ProviderID: ptr.To("openstack:///some-instance-id"),
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -311,7 +311,7 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 						ID: ptr.To("some-uuid"), // changed representation, not just value
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -326,12 +326,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -340,16 +340,16 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"), // identical
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
-					IdentityRef: &infrav1.OpenStackIdentityReference{
+					IdentityRef: infrav1.OpenStackIdentityReference{
 						Name:      "new-ref",
 						CloudName: "openstack",
 					},
@@ -362,12 +362,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -385,12 +385,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -413,12 +413,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -436,12 +436,12 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.large"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
@@ -464,35 +464,35 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
 					Ports: []infrav1.PortOpts{
-						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
+						{Network: infrav1.NetworkParam{ID: ptr.To("net-1")}},
 					},
 				},
 			},
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
 					Ports: []infrav1.PortOpts{
-						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
-						{Network: &infrav1.NetworkParam{ID: ptr.To("net-2")}},
+						{Network: infrav1.NetworkParam{ID: ptr.To("net-1")}},
+						{Network: infrav1.NetworkParam{ID: ptr.To("net-2")}},
 					},
 				},
 			},
@@ -503,35 +503,35 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 			oldMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
 					Ports: []infrav1.PortOpts{
-						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
-						{Network: &infrav1.NetworkParam{ID: ptr.To("net-2")}},
+						{Network: infrav1.NetworkParam{ID: ptr.To("net-1")}},
+						{Network: infrav1.NetworkParam{ID: ptr.To("net-2")}},
 					},
 				},
 			},
 			newMachine: &infrav1.OpenStackMachine{
 				Spec: infrav1.OpenStackMachineSpec{
 					Flavor: infrav1.FlavorParam{
-						Filter: &infrav1.FlavorFilter{
+						Filter: infrav1.FlavorFilter{
 							Name: ptr.To("m1.small"),
 						},
 					},
 					Image: infrav1.ImageParam{
-						Filter: &infrav1.ImageFilter{
+						Filter: infrav1.ImageFilter{
 							Name: ptr.To("ubuntu"),
 						},
 					},
 					Ports: []infrav1.PortOpts{
-						{Network: &infrav1.NetworkParam{ID: ptr.To("net-1")}},
+						{Network: infrav1.NetworkParam{ID: ptr.To("net-1")}},
 					},
 				},
 			},

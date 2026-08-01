@@ -43,6 +43,7 @@ type OpenStackIdentityReference struct {
 	// any value in clouds.yaml. If specified for an OpenStackMachine, its
 	// value will be included in providerID.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	Region string `json:"region,omitempty"`
 }
 

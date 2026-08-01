@@ -234,7 +234,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 	}
 
 	// Nothing to do if the cluster infrastructure was never provisioned because no machine resources were created.
-	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned || openStackCluster.Status.Network == nil {
+	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned || openStackCluster.Status.Network.ID == "" {
 		// The finalizer should not have been added yet in this case,
 		// but the following handles the upgrade case.
 		controllerutil.RemoveFinalizer(openStackMachine, infrav1.MachineFinalizer)
@@ -518,7 +518,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 
 		// Set properties required by CAPI machine controller
 		var region string
-		if openStackMachine.Spec.IdentityRef != nil {
+		if openStackMachine.Spec.IdentityRef != (infrav1.OpenStackIdentityReference{}) {
 			region = openStackMachine.Spec.IdentityRef.Region
 		}
 		openStackMachine.Spec.ProviderID = ptr.To(fmt.Sprintf("openstack://%s/%s", region, *openStackServer.Status.InstanceID))
@@ -627,9 +627,8 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	// Determine default network ID if the cluster status exposes one.
 	var defaultNetworkID string
 	if openStackCluster != nil {
-		clusterNetwork := openStackCluster.Status.Network
-		if clusterNetwork != nil {
-			defaultNetworkID = clusterNetwork.ID
+		if openStackCluster.Status.Network.ID != "" {
+			defaultNetworkID = openStackCluster.Status.Network.ID
 		}
 	}
 	// If no cluster network is available AND the machine spec did not define any ports with a network, we cannot choose a network.
@@ -643,8 +642,17 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	if openStackMachineSpec.Flavor.ID != nil {
 		serverFlavorID = (*string)(openStackMachineSpec.Flavor.ID)
 	}
-	if openStackMachineSpec.Flavor.Filter != nil && openStackMachineSpec.Flavor.Filter.Name != nil {
+	if openStackMachineSpec.Flavor.Filter != (infrav1.FlavorFilter{}) && openStackMachineSpec.Flavor.Filter.Name != nil {
 		serverFlavor = (*string)(openStackMachineSpec.Flavor.Filter.Name)
+	}
+
+	var rootVolume *infrav1.RootVolume
+	if openStackMachineSpec.RootVolume != (infrav1.RootVolume{}) {
+		rootVolume = &openStackMachineSpec.RootVolume
+	}
+	var serverGroup *infrav1.ServerGroupParam
+	if openStackMachineSpec.ServerGroup != (infrav1.ServerGroupParam{}) {
+		serverGroup = &openStackMachineSpec.ServerGroup
 	}
 
 	openStackServerSpec := &infrav1alpha1.OpenStackServerSpec{
@@ -654,10 +662,10 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		FlavorID:                          serverFlavorID,
 		IdentityRef:                       identityRef,
 		Image:                             openStackMachineSpec.Image,
-		RootVolume:                        openStackMachineSpec.RootVolume,
+		RootVolume:                        rootVolume,
 		ServerMetadata:                    openStackMachineSpec.ServerMetadata,
 		SSHKeyName:                        openStackMachineSpec.SSHKeyName,
-		ServerGroup:                       openStackMachineSpec.ServerGroup,
+		ServerGroup:                       serverGroup,
 		SchedulerHintAdditionalProperties: openStackMachineSpec.SchedulerHintAdditionalProperties,
 	}
 
@@ -697,7 +705,7 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	}
 
 	var clusterSubnets []infrav1.FixedIP
-	if openStackCluster.Spec.PrimarySubnet != nil {
+	if openStackCluster.Spec.PrimarySubnet != (infrav1.SubnetParam{}) {
 		// When a primary subnet is set, restrict node ports to that subnet only.
 		// This allows an administrator to direct new nodes to a specific subnet,
 		// e.g. when migrating away from an exhausted subnet.
@@ -708,7 +716,7 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 		clusterSubnets = make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
 		for idx, sn := range openStackCluster.Spec.Subnets {
 			clusterSubnets[idx] = infrav1.FixedIP{
-				Subnet: &sn,
+				Subnet: sn,
 			}
 		}
 	}
@@ -716,8 +724,8 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	for i := range serverPorts {
 		serverPort := &serverPorts[i]
 		// Only inject the default network when we actually have an ID.
-		if serverPort.Network == nil && defaultNetworkID != "" {
-			serverPort.Network = &infrav1.NetworkParam{
+		if serverPort.Network == (infrav1.NetworkParam{}) && defaultNetworkID != "" {
+			serverPort.Network = infrav1.NetworkParam{
 				ID: &openStackCluster.Status.Network.ID,
 			}
 			serverPort.FixedIPs = clusterSubnets
@@ -778,8 +786,8 @@ func (r *OpenStackMachineReconciler) getOrCreateMachineServer(ctx context.Contex
 	if apierrors.IsNotFound(err) {
 		// Use credentials from the machine object by default, falling back to cluster credentials.
 		identityRef := func() infrav1.OpenStackIdentityReference {
-			if openStackMachine.Spec.IdentityRef != nil {
-				return *openStackMachine.Spec.IdentityRef
+			if openStackMachine.Spec.IdentityRef != (infrav1.OpenStackIdentityReference{}) {
+				return openStackMachine.Spec.IdentityRef
 			}
 			return openStackCluster.Spec.IdentityRef
 		}()
@@ -900,11 +908,11 @@ func getManagedSecurityGroup(openStackCluster *infrav1.OpenStackCluster, machine
 	}
 
 	if util.IsControlPlaneMachine(machine) {
-		if openStackCluster.Status.ControlPlaneSecurityGroup != nil {
+		if openStackCluster.Status.ControlPlaneSecurityGroup != (infrav1.SecurityGroupStatus{}) {
 			return &openStackCluster.Status.ControlPlaneSecurityGroup.ID
 		}
 	} else {
-		if openStackCluster.Status.WorkerSecurityGroup != nil {
+		if openStackCluster.Status.WorkerSecurityGroup != (infrav1.SecurityGroupStatus{}) {
 			return &openStackCluster.Status.WorkerSecurityGroup.ID
 		}
 	}
