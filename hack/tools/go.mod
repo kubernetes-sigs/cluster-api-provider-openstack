@@ -9,7 +9,7 @@ require (
 	github.com/itchyny/gojq v0.12.19
 	github.com/onsi/ginkgo/v2 v2.32.0
 	go.uber.org/mock v0.6.0
-	k8s.io/code-generator v0.35.6
+	k8s.io/code-generator v0.35.7
 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
 	sigs.k8s.io/cluster-api/hack/tools v0.0.0-20250805173327-a7b9f27af519
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.24.1
@@ -212,9 +212,9 @@ require (
 	github.com/pjbgf/sha1cd v0.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.24.0 // indirect
+	github.com/prometheus/client_golang v1.24.1 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.70.0 // indirect
+	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.5 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.23 // indirect
@@ -291,7 +291,7 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260209203927-2842357ff358 // indirect
 	golang.org/x/mod v0.37.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
@@ -310,18 +310,18 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.7.0 // indirect
-	k8s.io/api v0.35.6 // indirect
-	k8s.io/apiextensions-apiserver v0.35.6 // indirect
-	k8s.io/apimachinery v0.36.2 // indirect
-	k8s.io/apiserver v0.35.6 // indirect
-	k8s.io/client-go v0.35.6 // indirect
+	k8s.io/api v0.35.7 // indirect
+	k8s.io/apiextensions-apiserver v0.35.7 // indirect
+	k8s.io/apimachinery v0.36.3 // indirect
+	k8s.io/apiserver v0.35.7 // indirect
+	k8s.io/client-go v0.35.7 // indirect
 	k8s.io/cluster-bootstrap v0.35.4 // indirect
-	k8s.io/component-base v0.35.6 // indirect
+	k8s.io/component-base v0.35.7 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250922181213-ec3ebc5fd46b // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
 	k8s.io/release v0.16.9 // indirect
-	k8s.io/streaming v0.36.2 // indirect
+	k8s.io/streaming v0.36.3 // indirect
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
 	mvdan.cc/gofumpt v0.9.2 // indirect
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
