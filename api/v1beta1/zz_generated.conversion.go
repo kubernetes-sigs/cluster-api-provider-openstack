@@ -2927,6 +2927,7 @@ func autoConvert_v1beta1_Subnet_To_v1beta2_Subnet(in *Subnet, out *v1beta2.Subne
 	out.ID = in.ID
 	out.CIDR = in.CIDR
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
+	out.FailureDomain = in.FailureDomain
 	return nil
 }
 
@@ -2940,6 +2941,7 @@ func autoConvert_v1beta2_Subnet_To_v1beta1_Subnet(in *v1beta2.Subnet, out *Subne
 	out.ID = in.ID
 	out.CIDR = in.CIDR
 	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
+	out.FailureDomain = in.FailureDomain
 	return nil
 }
 
@@ -2999,6 +3001,7 @@ func autoConvert_v1beta1_SubnetParam_To_v1beta2_SubnetParam(in *SubnetParam, out
 	} else {
 		out.Filter = nil
 	}
+	out.FailureDomain = in.FailureDomain
 	return nil
 }
 
@@ -3018,6 +3021,7 @@ func autoConvert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(in *v1beta2.SubnetPa
 	} else {
 		out.Filter = nil
 	}
+	out.FailureDomain = in.FailureDomain
 	return nil
 }
 

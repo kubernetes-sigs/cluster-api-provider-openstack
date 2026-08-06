@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
@@ -1496,6 +1497,53 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			}
 			// Nothing emits warnings yet
 			g.Expect(warn).To(BeEmpty())
+		})
+	}
+}
+
+func TestValidateSubnetFailureDomains(t *testing.T) {
+	tests := []struct {
+		name    string
+		subnets []infrav1.SubnetParam
+		wantErr bool
+	}{
+		{
+			name: "legacy subnets without mapping",
+			subnets: []infrav1.SubnetParam{
+				{ID: ptr.To("11111111-1111-1111-1111-111111111111")},
+			},
+		},
+		{
+			name: "one subnet per failure domain",
+			subnets: []infrav1.SubnetParam{
+				{ID: ptr.To("11111111-1111-1111-1111-111111111111"), FailureDomain: "dal-az"},
+				{ID: ptr.To("22222222-2222-2222-2222-222222222222"), FailureDomain: "did-az"},
+			},
+		},
+		{
+			name: "mapping requires every subnet to have a failure domain",
+			subnets: []infrav1.SubnetParam{
+				{ID: ptr.To("11111111-1111-1111-1111-111111111111"), FailureDomain: "dal-az"},
+				{ID: ptr.To("22222222-2222-2222-2222-222222222222")},
+			},
+			wantErr: true,
+		},
+		{
+			name: "failure domains cannot be duplicated",
+			subnets: []infrav1.SubnetParam{
+				{ID: ptr.To("11111111-1111-1111-1111-111111111111"), FailureDomain: "dal-az"},
+				{ID: ptr.To("22222222-2222-2222-2222-222222222222"), FailureDomain: "dal-az"},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := validateSubnetFailureDomains(tt.subnets, field.NewPath("spec", "subnets"))
+			if (len(errs) > 0) != tt.wantErr {
+				t.Fatalf("validateSubnetFailureDomains() errors = %v, wantErr %v", errs, tt.wantErr)
+			}
 		})
 	}
 }

@@ -356,22 +356,53 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	// Only populate failure domains during initial provisioning to avoid
-	// unnecessary status updates from transient AZ changes (e.g. the default
-	// "nova" zone appearing briefly when a new compute host registers).
-	if len(openStackCluster.Status.FailureDomains) == 0 {
-		openStackCluster.Status.FailureDomains = make([]clusterv1.FailureDomain, 0, len(availabilityZones))
-		for _, az := range availabilityZones {
-			// By default, the AZ is used or not used for control plane nodes depending on the flag
-			found := !ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
-			// If explicit AZs for control plane nodes are given, they override the value
-			if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
-				found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
+	if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) == 0 {
+		// Only populate failure domains during initial provisioning to preserve
+		// the legacy behavior when no explicit control-plane AZs are configured.
+		if len(openStackCluster.Status.FailureDomains) == 0 {
+			openStackCluster.Status.FailureDomains = make([]clusterv1.FailureDomain, 0, len(availabilityZones))
+			for _, az := range availabilityZones {
+				openStackCluster.Status.FailureDomains = append(openStackCluster.Status.FailureDomains, clusterv1.FailureDomain{
+					Name:         az.ZoneName,
+					ControlPlane: ptr.To(!ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)),
+				})
 			}
-			openStackCluster.Status.FailureDomains = append(openStackCluster.Status.FailureDomains, clusterv1.FailureDomain{
-				Name:         az.ZoneName,
-				ControlPlane: ptr.To(found),
+			sort.Slice(openStackCluster.Status.FailureDomains, func(i, j int) bool {
+				return openStackCluster.Status.FailureDomains[i].Name < openStackCluster.Status.FailureDomains[j].Name
 			})
+		}
+	} else {
+		// Keep the control-plane eligibility in sync with explicit AZs. CAPI
+		// selects failure domains from Cluster.Status.FailureDomains, so changing
+		// this list must be reflected for subsequent scale-ups.
+		knownAvailabilityZones := make(map[string]struct{}, len(availabilityZones))
+		for _, az := range availabilityZones {
+			knownAvailabilityZones[az.ZoneName] = struct{}{}
+		}
+
+		for i := range openStackCluster.Status.FailureDomains {
+			failureDomain := &openStackCluster.Status.FailureDomains[i]
+			if _, ok := knownAvailabilityZones[failureDomain.Name]; ok {
+				failureDomain.ControlPlane = ptr.To(contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, failureDomain.Name))
+			} else {
+				failureDomain.ControlPlane = ptr.To(false)
+			}
+		}
+
+		for _, az := range availabilityZones {
+			found := false
+			for i := range openStackCluster.Status.FailureDomains {
+				if openStackCluster.Status.FailureDomains[i].Name == az.ZoneName {
+					found = true
+					break
+				}
+			}
+			if !found {
+				openStackCluster.Status.FailureDomains = append(openStackCluster.Status.FailureDomains, clusterv1.FailureDomain{
+					Name:         az.ZoneName,
+					ControlPlane: ptr.To(contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)),
+				})
+			}
 		}
 		sort.Slice(openStackCluster.Status.FailureDomains, func(i, j int) bool {
 			return openStackCluster.Status.FailureDomains[i].Name < openStackCluster.Status.FailureDomains[j].Name
@@ -864,6 +895,9 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 			Name: subnet.Name,
 			CIDR: subnet.CIDR,
 			Tags: subnet.Tags,
+		}
+		if i < len(openStackCluster.Spec.Subnets) {
+			capoSubnets[i].FailureDomain = openStackCluster.Spec.Subnets[i].FailureDomain
 		}
 	}
 	if err := utils.ValidateSubnets(capoSubnets); err != nil {

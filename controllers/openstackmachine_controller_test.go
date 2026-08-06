@@ -224,6 +224,25 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 	}
+	openStackClusterWithFailureDomainSubnets := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			Subnets: []infrav1.SubnetParam{
+				{ID: ptr.To(subnetUUID), FailureDomain: "dal-az"},
+				{ID: ptr.To(secondSubnetUUID), FailureDomain: "did-az"},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+				ID: workerSecurityGroupUUID,
+			},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{
+					ID: networkUUID,
+				},
+			},
+		},
+	}
 	portOptsWithMultipleSubnets := []infrav1.PortOpts{
 		{
 			Network: &infrav1.NetworkParam{
@@ -255,11 +274,12 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 	tags := []string{"tag1", "tag2"}
 	userData := &corev1.LocalObjectReference{Name: "server-data-secret"}
 	tests := []struct {
-		name    string
-		cluster *infrav1.OpenStackCluster
-		spec    *infrav1.OpenStackMachineSpec
-		want    *infrav1alpha1.OpenStackServerSpec
-		wantErr bool
+		name          string
+		cluster       *infrav1.OpenStackCluster
+		failureDomain string
+		spec          *infrav1.OpenStackMachineSpec
+		want          *infrav1alpha1.OpenStackServerSpec
+		wantErr       bool
 	}{
 		{
 			name:    "Test a minimum OpenStackMachineSpec to OpenStackServerSpec conversion",
@@ -461,6 +481,66 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			},
 		},
 		{
+			name:          "failure domain selects the matching subnet only",
+			cluster:       openStackClusterWithFailureDomainSubnets,
+			failureDomain: "did-az",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
+				Image:      image,
+				SSHKeyName: sshKeyName,
+			},
+			want: &infrav1alpha1.OpenStackServerSpec{
+				AvailabilityZone: ptr.To("did-az"),
+				Flavor:           ptr.To(flavorName),
+				IdentityRef:      identityRef,
+				Image:            image,
+				SSHKeyName:       sshKeyName,
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{
+						{ID: ptr.To(workerSecurityGroupUUID)},
+					},
+					FixedIPs: []infrav1.FixedIP{{
+						Subnet: &infrav1.SubnetParam{ID: ptr.To(secondSubnetUUID), FailureDomain: "did-az"},
+					}},
+				}},
+				Tags:        tags,
+				UserDataRef: userData,
+			},
+		},
+		{
+			name:          "failure domain not present in mapping returns an error",
+			cluster:       openStackClusterWithFailureDomainSubnets,
+			failureDomain: "nd2-az",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
+				Image: image,
+			},
+			wantErr: true,
+		},
+		{
+			name:          "mapped subnet requires a machine failure domain",
+			cluster:       openStackClusterWithFailureDomainSubnets,
+			failureDomain: "",
+			spec: &infrav1.OpenStackMachineSpec{
+				Flavor: infrav1.FlavorParam{
+					Filter: &infrav1.FlavorFilter{
+						Name: ptr.To(flavorName),
+					},
+				},
+				Image: image,
+			},
+			wantErr: true,
+		},
+		{
 			name: "Error case: no cluster network and no machine ports",
 			spec: &infrav1.OpenStackMachineSpec{
 				Flavor: infrav1.FlavorParam{
@@ -538,7 +618,7 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			spec, err := openStackMachineSpecToOpenStackServerSpec(tt.spec, identityRef, tags, "", userData, &openStackCluster.Status.WorkerSecurityGroup.ID, tt.cluster)
+			spec, err := openStackMachineSpecToOpenStackServerSpec(tt.spec, identityRef, tags, tt.failureDomain, userData, &openStackCluster.Status.WorkerSecurityGroup.ID, tt.cluster)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("openStackMachineSpecToOpenStackServerSpec() error = %v, wantErr %v", err, tt.wantErr)
 				return

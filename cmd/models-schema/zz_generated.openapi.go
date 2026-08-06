@@ -21839,6 +21839,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref comm
 							},
 						},
 					},
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FailureDomain identifies the Cluster API failure domain associated with this subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"name", "id", "cidr"},
 			},
@@ -21991,7 +21998,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetParam(ref
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.",
+				Description: "SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both. FailureDomain optionally associates the subnet with a Cluster API failure domain.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"id": {
@@ -22005,6 +22012,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetParam(ref
 						SchemaProps: spec.SchemaProps{
 							Description: "Filter specifies a filter to select the subnet. It must match exactly one subnet.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetFilter"),
+						},
+					},
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FailureDomain identifies the Cluster API failure domain associated with this subnet. This field is meaningful when the SubnetParam is used in OpenStackCluster.spec.subnets.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
@@ -25974,6 +25988,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 							},
 						},
 					},
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "failureDomain identifies the Cluster API failure domain associated with this subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"name", "id", "cidr"},
 			},
@@ -26134,7 +26155,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetParam(ref
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.",
+				Description: "SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both. FailureDomain optionally associates the subnet with a Cluster API failure domain.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"id": {
@@ -26148,6 +26169,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetParam(ref
 						SchemaProps: spec.SchemaProps{
 							Description: "filter specifies a filter to select the subnet. It must match exactly one subnet.",
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetFilter"),
+						},
+					},
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "failureDomain identifies the Cluster API failure domain associated with this subnet. This field is meaningful when the SubnetParam is used in OpenStackCluster.spec.subnets.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},

@@ -44,12 +44,16 @@ var _ admission.Validator[*infrav1.OpenStackClusterTemplate] = &openStackCluster
 func (*openStackClusterTemplateWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackClusterTemplate) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.Template.Spec.Subnets, field.NewPath("spec", "template", "spec", "subnets"))...)
+
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
 // ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
 func (*openStackClusterTemplateWebhook) ValidateUpdate(_ context.Context, oldObj, newObj *infrav1.OpenStackClusterTemplate) (admission.Warnings, error) {
 	var allErrs field.ErrorList
+
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.Template.Spec.Subnets, field.NewPath("spec", "template", "spec", "subnets"))...)
 
 	if !reflect.DeepEqual(newObj.Spec.Template.Spec, oldObj.Spec.Template.Spec) {
 		allErrs = append(allErrs,

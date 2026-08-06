@@ -47,6 +47,7 @@ var _ admission.Validator[*infrav1.OpenStackCluster] = &openStackClusterWebhook{
 func (*openStackClusterWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackCluster) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.Subnets, field.NewPath("spec", "subnets"))...)
 	if newObj.Spec.ManagedSecurityGroups != nil {
 		allErrs = append(allErrs, validateManagedSecurityGroupRules(newObj.Spec.ManagedSecurityGroups)...)
 	}
@@ -111,6 +112,8 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 // ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
 func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj *infrav1.OpenStackCluster) (admission.Warnings, error) { //nolint:gocyclo,cyclop
 	var allErrs field.ErrorList
+
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.Subnets, field.NewPath("spec", "subnets"))...)
 
 	// Allow changes to Spec.IdentityRef
 	oldObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
@@ -273,6 +276,39 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	}
 
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
+}
+
+// validateSubnetFailureDomains validates the optional subnet-to-failure-domain mapping.
+// Once one subnet is mapped, every configured subnet must be mapped and each failure domain
+// must identify exactly one subnet.
+func validateSubnetFailureDomains(subnets []infrav1.SubnetParam, path *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	mapped := false
+	for _, subnet := range subnets {
+		if subnet.FailureDomain != "" {
+			mapped = true
+			break
+		}
+	}
+	if !mapped {
+		return nil
+	}
+
+	seen := make(map[string]int, len(subnets))
+	for i := range subnets {
+		failureDomainPath := path.Index(i).Child("failureDomain")
+		failureDomain := subnets[i].FailureDomain
+		if failureDomain == "" {
+			allErrs = append(allErrs, field.Required(failureDomainPath, "must be set when subnet failure-domain mapping is used"))
+			continue
+		}
+		if previousIndex, exists := seen[failureDomain]; exists {
+			allErrs = append(allErrs, field.Duplicate(failureDomainPath, fmt.Sprintf("already used by subnet index %d", previousIndex)))
+			continue
+		}
+		seen[failureDomain] = i
+	}
+	return allErrs
 }
 
 // ValidateDelete implements admission.Validator so a webhook will be registered for the type.

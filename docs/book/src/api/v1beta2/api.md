@@ -5169,6 +5169,18 @@ string
 <p>tags is a list of tags on the subnet.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>failureDomain</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>failureDomain identifies the Cluster API failure domain associated with this subnet.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta2.SubnetFilter">SubnetFilter
@@ -5311,7 +5323,8 @@ FilterByNeutronTags
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">OpenStackClusterSpec</a>)
 </p>
 <p>
-<p>SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.</p>
+<p>SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.
+FailureDomain optionally associates the subnet with a Cluster API failure domain.</p>
 </p>
 <table>
 <thead>
@@ -5345,6 +5358,19 @@ SubnetFilter
 <td>
 <em>(Optional)</em>
 <p>filter specifies a filter to select the subnet. It must match exactly one subnet.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>failureDomain</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>failureDomain identifies the Cluster API failure domain associated with this subnet.
+This field is meaningful when the SubnetParam is used in OpenStackCluster.spec.subnets.</p>
 </td>
 </tr>
 </tbody>
