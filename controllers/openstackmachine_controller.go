@@ -697,14 +697,34 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	}
 
 	var clusterSubnets []infrav1.FixedIP
-	if openStackCluster.Spec.PrimarySubnet != nil {
+	mappedSubnets := false
+	for _, subnet := range openStackCluster.Spec.Subnets {
+		if subnet.FailureDomain == "" {
+			continue
+		}
+		mappedSubnets = true
+		if failureDomain == "" {
+			return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, "cluster subnets are mapped to failure domains but the machine has no failure domain")
+		}
+		if subnet.FailureDomain == failureDomain {
+			subnetParam := subnet
+			clusterSubnets = append(clusterSubnets, infrav1.FixedIP{Subnet: &subnetParam})
+		}
+	}
+	if len(clusterSubnets) > 1 {
+		return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, fmt.Sprintf("more than one cluster subnet is mapped to failure domain %q", failureDomain))
+	}
+	if mappedSubnets && len(clusterSubnets) == 0 {
+		return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, fmt.Sprintf("no cluster subnet is mapped to failure domain %q", failureDomain))
+	}
+	if !mappedSubnets && openStackCluster.Spec.PrimarySubnet != nil {
 		// When a primary subnet is set, restrict node ports to that subnet only.
 		// This allows an administrator to direct new nodes to a specific subnet,
 		// e.g. when migrating away from an exhausted subnet.
 		clusterSubnets = []infrav1.FixedIP{
 			{Subnet: openStackCluster.Spec.PrimarySubnet},
 		}
-	} else if len(openStackCluster.Spec.Subnets) > 0 {
+	} else if !mappedSubnets && len(openStackCluster.Spec.Subnets) > 0 {
 		clusterSubnets = make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
 		for idx, sn := range openStackCluster.Spec.Subnets {
 			clusterSubnets[idx] = infrav1.FixedIP{

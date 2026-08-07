@@ -326,9 +326,14 @@ spec:
                                     description: |-
                                       Subnet is an openstack subnet query that will return the id of a subnet to create
                                       the fixed IP of a port in. This query must not return more than one subnet.
-                                    maxProperties: 1
+                                    maxProperties: 2
                                     minProperties: 1
                                     properties:
+                                      failureDomain:
+                                        description: |-
+                                          FailureDomain identifies the Cluster API failure domain associated with this subnet.
+                                          This field is meaningful when the SubnetParam is used in OpenStackCluster.spec.subnets.
+                                        type: string
                                       filter:
                                         description: Filter specifies a filter to
                                           select the subnet. It must match exactly
@@ -411,6 +416,11 @@ spec:
                                         format: uuid
                                         type: string
                                     type: object
+                                    x-kubernetes-validations:
+                                    - message: one of id or filter must be set
+                                      rule: has(self.id) || has(self.filter)
+                                    - message: id and filter cannot both be set
+                                      rule: '!(has(self.id) && has(self.filter))'
                                 type: object
                               type: array
                               x-kubernetes-list-type: atomic
@@ -1359,9 +1369,14 @@ spec:
                                     description: |-
                                       subnet is an openstack subnet query that will return the id of a subnet to create
                                       the fixed IP of a port in. This query must not return more than one subnet.
-                                    maxProperties: 1
+                                    maxProperties: 2
                                     minProperties: 1
                                     properties:
+                                      failureDomain:
+                                        description: |-
+                                          failureDomain identifies the Cluster API failure domain associated with this subnet.
+                                          This field is meaningful when the SubnetParam is used in OpenStackCluster.spec.subnets.
+                                        type: string
                                       filter:
                                         description: filter specifies a filter to
                                           select the subnet. It must match exactly
@@ -1459,6 +1474,11 @@ spec:
                                         format: uuid
                                         type: string
                                     type: object
+                                    x-kubernetes-validations:
+                                    - message: one of id or filter must be set
+                                      rule: has(self.id) || has(self.filter)
+                                    - message: id and filter cannot both be set
+                                      rule: '!(has(self.id) && has(self.filter))'
                                 type: object
                               type: array
                               x-kubernetes-list-type: atomic

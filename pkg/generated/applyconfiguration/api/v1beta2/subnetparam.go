@@ -22,11 +22,15 @@ package v1beta2
 // with apply.
 //
 // SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.
+// FailureDomain optionally associates the subnet with a Cluster API failure domain.
 type SubnetParamApplyConfiguration struct {
 	// id is the uuid of the subnet. It will not be validated.
 	ID *string `json:"id,omitempty"`
 	// filter specifies a filter to select the subnet. It must match exactly one subnet.
 	Filter *SubnetFilterApplyConfiguration `json:"filter,omitempty"`
+	// failureDomain identifies the Cluster API failure domain associated with this subnet.
+	// This field is meaningful when the SubnetParam is used in OpenStackCluster.spec.subnets.
+	FailureDomain *string `json:"failureDomain,omitempty"`
 }
 
 // SubnetParamApplyConfiguration constructs a declarative configuration of the SubnetParam type for use with
@@ -48,5 +52,13 @@ func (b *SubnetParamApplyConfiguration) WithID(value string) *SubnetParamApplyCo
 // If called multiple times, the Filter field is set to the value of the last call.
 func (b *SubnetParamApplyConfiguration) WithFilter(value *SubnetFilterApplyConfiguration) *SubnetParamApplyConfiguration {
 	b.Filter = value
+	return b
+}
+
+// WithFailureDomain sets the FailureDomain field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FailureDomain field is set to the value of the last call.
+func (b *SubnetParamApplyConfiguration) WithFailureDomain(value string) *SubnetParamApplyConfiguration {
+	b.FailureDomain = &value
 	return b
 }

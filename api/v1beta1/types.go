@@ -188,8 +188,11 @@ func (networkFilter *NetworkFilter) IsZero() bool {
 }
 
 // SubnetParam specifies an OpenStack subnet to use. It may be specified by either ID or filter, but not both.
-// +kubebuilder:validation:MaxProperties:=1
+// FailureDomain optionally associates the subnet with a Cluster API failure domain.
+// +kubebuilder:validation:MaxProperties:=2
 // +kubebuilder:validation:MinProperties:=1
+// +kubebuilder:validation:XValidation:rule="has(self.id) || has(self.filter)",message="one of id or filter must be set"
+// +kubebuilder:validation:XValidation:rule="!(has(self.id) && has(self.filter))",message="id and filter cannot both be set"
 type SubnetParam struct {
 	// ID is the uuid of the subnet. It will not be validated.
 	// +kubebuilder:validation:Format:=uuid
@@ -199,6 +202,11 @@ type SubnetParam struct {
 	// Filter specifies a filter to select the subnet. It must match exactly one subnet.
 	// +optional
 	Filter *SubnetFilter `json:"filter,omitempty"`
+
+	// FailureDomain identifies the Cluster API failure domain associated with this subnet.
+	// This field is meaningful when the SubnetParam is used in OpenStackCluster.spec.subnets.
+	// +optional
+	FailureDomain string `json:"failureDomain,omitempty"`
 }
 
 // SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.
@@ -661,6 +669,10 @@ type Subnet struct {
 
 	//+optional
 	Tags []string `json:"tags,omitempty"`
+
+	// FailureDomain identifies the Cluster API failure domain associated with this subnet.
+	//+optional
+	FailureDomain string `json:"failureDomain,omitempty"`
 }
 
 // Router represents basic information about the associated OpenStack Neutron Router.

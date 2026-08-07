@@ -1658,6 +1658,9 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: ""
+    - name: failureDomain
+      type:
+        scalar: string
     - name: id
       type:
         scalar: string
@@ -1726,6 +1729,9 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetParam
   map:
     fields:
+    - name: failureDomain
+      type:
+        scalar: string
     - name: filter
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.SubnetFilter
@@ -2960,6 +2966,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: cidr
       type:
         scalar: string
+    - name: failureDomain
+      type:
+        scalar: string
     - name: id
       type:
         scalar: string
@@ -3026,6 +3035,9 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetParam
   map:
     fields:
+    - name: failureDomain
+      type:
+        scalar: string
     - name: filter
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.SubnetFilter
