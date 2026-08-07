@@ -35,6 +35,7 @@ import (
 	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
@@ -595,6 +596,7 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 		instanceState                   *infrav1.InstanceState
 		serverConditions                []metav1.Condition
 		expectRequeue                   bool
+		expectRequeueAfter              bool
 		expectedInstanceReadyCondition  *metav1.Condition
 		expectedReadyCondition          *metav1.Condition
 		expectInitializationProvisioned bool
@@ -681,9 +683,10 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 			expectInitializationProvisioned: true,
 		},
 		{
-			name:          "Instance state ERROR sets conditions to False",
-			instanceState: ptr.To(infrav1.InstanceStateError),
-			expectRequeue: true,
+			name:               "Instance state ERROR sets conditions to False",
+			instanceState:      ptr.To(infrav1.InstanceStateError),
+			expectRequeue:      true,
+			expectRequeueAfter: true,
 			expectedInstanceReadyCondition: &metav1.Condition{
 				Type:   infrav1.InstanceReadyCondition,
 				Status: metav1.ConditionFalse,
@@ -706,7 +709,8 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 					Message: "Server entered ERROR state: No valid host was found",
 				},
 			},
-			expectRequeue: true,
+			expectRequeue:      true,
+			expectRequeueAfter: true,
 			expectedInstanceReadyCondition: &metav1.Condition{
 				Type:    infrav1.InstanceReadyCondition,
 				Status:  metav1.ConditionFalse,
@@ -813,6 +817,11 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 			if !tt.expectRequeue && result != nil {
 				t.Errorf("expected no requeue, got %v", result)
 			}
+			if tt.expectRequeueAfter {
+				if result == nil || result.RequeueAfter != waitForInstanceBecomeActiveToReconcile {
+					t.Errorf("expected RequeueAfter %v, got %v", waitForInstanceBecomeActiveToReconcile, result)
+				}
+			}
 
 			// Check InstanceReadyCondition
 			if tt.expectedInstanceReadyCondition != nil {
@@ -862,6 +871,91 @@ func TestReconcileMachineState(t *testing.T) { //nolint:gocyclo,cyclop // this i
 			// So we skip the failure field checks for v1beta2
 		})
 	}
+}
+
+func TestOpenStackServerStatusReportable_MachineRecoversFromError(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	errorServer := &infrav1alpha1.OpenStackServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      openStackMachineName,
+			Namespace: namespace,
+		},
+		Status: infrav1alpha1.OpenStackServerStatus{
+			Ready:         false,
+			InstanceID:    ptr.To(testInstanceID),
+			InstanceState: ptr.To(infrav1.InstanceStateError),
+			Conditions: []metav1.Condition{
+				{
+					Type:    infrav1.InstanceReadyCondition,
+					Status:  metav1.ConditionFalse,
+					Reason:  infrav1.InstanceStateErrorReason,
+					Message: "Instance is in ERROR state",
+				},
+			},
+		},
+	}
+
+	recoveredServer := errorServer.DeepCopy()
+	recoveredServer.Status.Ready = true
+	recoveredServer.Status.InstanceState = ptr.To(infrav1.InstanceStateActive)
+	recoveredServer.Status.Conditions = []metav1.Condition{
+		{
+			Type:   infrav1.InstanceReadyCondition,
+			Status: metav1.ConditionTrue,
+			Reason: infrav1.ReadyConditionReason,
+		},
+	}
+
+	pred := OpenStackServerStatusReportable(logr.Discard())
+	g.Expect(pred.Update(event.UpdateEvent{ObjectOld: errorServer, ObjectNew: recoveredServer})).To(BeTrue())
+
+	openStackMachine := &infrav1.OpenStackMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      openStackMachineName,
+			Namespace: namespace,
+		},
+		Spec: infrav1.OpenStackMachineSpec{
+			Flavor: infrav1.FlavorParam{
+				Filter: &infrav1.FlavorFilter{
+					Name: ptr.To(flavorName),
+				},
+			},
+			Image: infrav1.ImageParam{
+				Filter: &infrav1.ImageFilter{
+					Name: ptr.To("test-image"),
+				},
+			},
+		},
+	}
+	conditions.Set(openStackMachine, metav1.Condition{
+		Type:    infrav1.InstanceReadyCondition,
+		Status:  metav1.ConditionFalse,
+		Reason:  infrav1.InstanceStateErrorReason,
+		Message: "Instance is in ERROR state",
+	})
+	conditions.Set(openStackMachine, metav1.Condition{
+		Type:    clusterv1.ReadyCondition,
+		Status:  metav1.ConditionFalse,
+		Reason:  infrav1.InstanceStateErrorReason,
+		Message: "Instance is in ERROR state",
+	})
+
+	machine := &clusterv1.Machine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-machine",
+			Namespace: namespace,
+		},
+	}
+
+	r := &OpenStackMachineReconciler{}
+	result := r.reconcileMachineState(scope.NewWithLogger(nil, logr.Discard()), openStackMachine, machine, recoveredServer)
+
+	g.Expect(result).To(BeNil())
+	g.Expect(conditions.Get(openStackMachine, clusterv1.ReadyCondition)).ToNot(BeNil())
+	g.Expect(conditions.Get(openStackMachine, clusterv1.ReadyCondition).Status).To(Equal(metav1.ConditionTrue))
+	g.Expect(conditions.Get(openStackMachine, infrav1.InstanceReadyCondition)).ToNot(BeNil())
+	g.Expect(conditions.Get(openStackMachine, infrav1.InstanceReadyCondition).Status).To(Equal(metav1.ConditionTrue))
 }
 
 var _ = Describe("OpenStackMachine controller", func() {

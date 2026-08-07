@@ -220,7 +220,7 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 		Watches(
 			&infrav1alpha1.OpenStackServer{},
 			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &infrav1.OpenStackMachine{}),
-			builder.WithPredicates(OpenStackServerReconcileComplete(log)),
+			builder.WithPredicates(OpenStackServerStatusReportable(log)),
 		).
 		Complete(r)
 }
@@ -355,13 +355,6 @@ func GetPortIDs(ports []infrav1.PortStatus) []string {
 
 func (r *OpenStackMachineReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (_ ctrl.Result, reterr error) {
 	var err error
-
-	// If the OpenStackMachine has a terminal error condition, return early.
-	readyCond := conditions.Get(openStackMachine, clusterv1.ReadyCondition)
-	if readyCond != nil && readyCond.Status == metav1.ConditionFalse && readyCond.Reason == infrav1.InstanceStateErrorReason {
-		scope.Logger().Info("Not reconciling machine in failed state. See openStackMachine.status.conditions or previously logged error for details")
-		return ctrl.Result{}, nil
-	}
 
 	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned {
 		scope.Logger().Info("Cluster infrastructure is not ready yet, re-queuing machine")
@@ -561,7 +554,7 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 			Reason:  infrav1.InstanceStateErrorReason,
 			Message: errorMessage,
 		})
-		return &ctrl.Result{}
+		return &ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
 		scope.Logger().Info("Machine instance state is DELETED, no actions")

@@ -306,21 +306,7 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 	return nil
 }
 
-func IsServerTerminalError(server *infrav1alpha1.OpenStackServer) bool {
-	if server.Status.InstanceState != nil && *server.Status.InstanceState == infrav1.InstanceStateError {
-		return true
-	}
-	return false
-}
-
 func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) (_ ctrl.Result, reterr error) {
-	// If the OpenStackServer is in an error state, return early.
-	if IsServerTerminalError(openStackServer) {
-		log := scope.Logger().WithValues("OpenStackServer", klog.KObj(openStackServer))
-		log.Info("Not reconciling OpenStackServer in error state. See openStackServer.status or previously logged error for details")
-		return ctrl.Result{}, nil
-	}
-
 	log := scope.Logger().WithValues("OpenStackServer", klog.KObj(openStackServer))
 	log.Info("Reconciling OpenStackServer")
 
@@ -426,6 +412,8 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	state := instanceStatus.State()
 	openStackServer.Status.InstanceID = ptr.To(instanceStatus.ID())
 	openStackServer.Status.InstanceState = &state
+	// set to false by default to avoid reporting stale Ready=true.
+	openStackServer.Status.Ready = false
 
 	switch instanceStatus.State() {
 	case infrav1.InstanceStateActive:
@@ -444,7 +432,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 			Status: metav1.ConditionFalse,
 			Reason: infrav1.InstanceStateErrorReason,
 		})
-		return ctrl.Result{}, nil
+		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
 		scope.Logger().Info("Server instance state is DELETED, no actions")
@@ -812,9 +800,25 @@ func (r *OpenStackServerReconciler) reconcileDeleteFloatingAddressFromPool(scope
 	return r.Client.Update(context.Background(), claim)
 }
 
-// OpenStackServerReconcileComplete returns a predicate that determines if a OpenStackServer has finished reconciling.
-func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
-	log = log.WithValues("predicate", "OpenStackServerReconcileComplete")
+// instanceStateReportable returns true when InstanceState is one that dependent
+// controllers (OpenStackMachine, OpenStackCluster) should observe.
+// ACTIVE, ERROR, and DELETED are reportable; BUILD, SHUTOFF, MIGRATING, etc. are not.
+func instanceStateReportable(state *infrav1.InstanceState) bool {
+	if state == nil {
+		return false
+	}
+	switch *state {
+	case infrav1.InstanceStateActive, infrav1.InstanceStateError, infrav1.InstanceStateDeleted:
+		return true
+	default:
+		return false
+	}
+}
+
+// OpenStackServerStatusReportable returns a predicate that filters out OpenstackServer status changes that should not be reported to parent controllers.
+// e.g. when a server is still reconciling, or when a server is in a non-reportable state.
+func OpenStackServerStatusReportable(log logr.Logger) predicate.Funcs {
+	log = log.WithValues("predicate", "OpenStackServerStatusReportable")
 
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
@@ -827,7 +831,7 @@ func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
 			}
 			log = log.WithValues("OpenStackServer", klog.KObj(server))
 
-			if server.Status.Ready || IsServerTerminalError(server) {
+			if server.Status.Ready || instanceStateReportable(server.Status.InstanceState) {
 				log.V(5).Info("OpenStackServer finished reconciling, allowing further processing")
 				return true
 			}
@@ -850,14 +854,20 @@ func OpenStackServerReconcileComplete(log logr.Logger) predicate.Funcs {
 				return false
 			}
 
-			oldFinished := oldServer.Status.Ready || IsServerTerminalError(oldServer)
-			newFinished := newServer.Status.Ready || IsServerTerminalError(newServer)
-			if !oldFinished && newFinished {
-				log.V(5).Info("OpenStackServer finished reconciling, allowing further processing")
+			if oldServer.Status.Ready != newServer.Status.Ready {
+				log.V(5).Info("OpenStackServer Ready changed, allowing further processing")
 				return true
 			}
 
-			log.V(4).Info("OpenStackServer is still reconciling, blocking further processing")
+			oldState := oldServer.Status.InstanceState
+			newState := newServer.Status.InstanceState
+			if ptr.Deref(oldState, "") != ptr.Deref(newState, "") &&
+				(instanceStateReportable(oldState) || instanceStateReportable(newState)) {
+				log.V(5).Info("OpenStackServer reportable InstanceState changed, allowing further processing")
+				return true
+			}
+
+			log.V(4).Info("OpenStackServer status change is not reportable, blocking further processing")
 			return false
 		},
 		DeleteFunc:  func(event.DeleteEvent) bool { return true },
