@@ -3131,6 +3131,21 @@ BastionStatus
 <tbody>
 <tr>
 <td>
+<code>metadata,omitempty,omitzero</code><br/>
+<em>
+sigs.k8s.io/cluster-api/api/core/v1beta2.ObjectMeta
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>metadata adds labels/annotations to the resource.
+More info: <a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
 <code>spec,omitzero</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">

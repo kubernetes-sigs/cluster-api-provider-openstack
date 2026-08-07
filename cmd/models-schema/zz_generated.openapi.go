@@ -23983,6 +23983,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 				Description: "OpenStackClusterTemplateResource describes the data needed to create a OpenStackCluster from a template.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Description: "metadata adds labels/annotations to the resource. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api/api/core/v1beta2.ObjectMeta"),
+						},
+					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Description: "spec is the desired state of the OpenStackCluster.",
@@ -23995,7 +24002,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterSpec"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackClusterSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.ObjectMeta"},
 	}
 }
 

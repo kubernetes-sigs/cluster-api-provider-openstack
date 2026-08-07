@@ -476,6 +476,11 @@ metadata:
   name: dev-test-openstackcluster
 spec:
   template:
+    metadata:
+      labels:
+        capo.e2e.test/template-metadata: propagated
+      annotations:
+        capo.e2e.test/template-metadata: propagated
     spec:
       apiServer:
         managedLoadBalancer:
