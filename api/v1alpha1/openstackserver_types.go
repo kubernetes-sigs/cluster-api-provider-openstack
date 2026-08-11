@@ -211,5 +211,5 @@ func (r *OpenStackServer) ToUnstructured() (*unstructured.Unstructured, error) {
 }
 
 func init() {
-	SchemeBuilder.Register(&OpenStackServer{}, &OpenStackServerList{})
+	objectTypes = append(objectTypes, &OpenStackServer{}, &OpenStackServerList{})
 }
