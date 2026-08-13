@@ -122,15 +122,17 @@ spec:
       remoteIPPrefix: 10.0.10.0/24
 ```
 
-The `allowAllOutboundTraffic` field will be added to both the `v1beta1` and `v1beta2` API versions with the same name and type.
+The `allowAllOutboundTraffic` field will be added only to the `v1beta2` API.
+
+The `v1beta1` API remains unchanged and does not expose this feature.
 
 No new status fields are required.
 
 ## Conversion
 
-The `allowAllOutboundTraffic` field has the same name and type in `v1beta1` and `v1beta2`.
+`allowAllOutboundTraffic` is introduced only in `v1beta2`.
 
-Conversion between both versions must preserve all possible values: `unset`, `true`, and `false`.
+No corresponding field is added to the `v1beta1` API.
 
 ## Controller Design
 
@@ -163,7 +165,8 @@ The implementation should avoid a generic `enablePredefinedRules` style flag. Su
 
 This proposal is backward compatible.
 
-Existing manifests do not need to change. Existing users keep the current unrestricted egress behavior because `allowAllOutboundTraffic` defaults to enabled when omitted.
+Existing `v1beta1` manifests are unaffected because the `v1beta1` API remains unchanged.
+Existing `v1beta2` manifests do not need to change and keep the current unrestricted egress behavior because `allowAllOutboundTraffic` defaults to enabled when omitted.
 
 The new behavior is only used when users explicitly set:
 
