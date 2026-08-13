@@ -25,7 +25,7 @@ CAPO managed security group rules are not all the same kind of rule:
 * Infrastructure rules required for normal cluster operation, such as etcd, kubelet, API server, NodePort, and bastion SSH.
 * Permissive default outbound rules that allow all IPv4 and IPv6 egress.
 
-This proposal targets only the second category. Required infrastructure rules remain managed by CAPO, including minimum egress required for cluster operation.
+This proposal targets only the second category. Required infrastructure rules remain managed by CAPO, including scoped in-cluster egress and egress to the API server endpoint required for cluster operation.
 
 ### Goals
 
@@ -86,12 +86,29 @@ Behavior:
 * If `managedSecurityGroups` is set to an empty object, behavior is unchanged.
 * If `allowAllOutboundTraffic` is unset or `true`, CAPO creates the current default allow-all IPv4 and IPv6 egress rules.
 * If `allowAllOutboundTraffic` is `false`, CAPO removes the default allow-all egress rules.
-* When `allowAllOutboundTraffic` is `false`, CAPO creates minimum egress rules between the control plane and worker security groups.
-* When `allowAllOutboundTraffic` is `false`, CAPO creates egress rules to the API server endpoint on the configured API server port.
+
+* When `allowAllOutboundTraffic` is `false`, CAPO creates scoped egress rules from the control plane and worker security groups to the managed control plane, worker, and self security groups. These rules allow all protocols and all ports and are created for both IPv4 and IPv6.
+* When `allowAllOutboundTraffic` is `false`, CAPO creates TCP egress rules from the control plane and worker security groups to the API server endpoint on the configured API server port. The rule `etherType` matches the address family of the API endpoint.
+
 * Required ingress rules remain unchanged.
 * User-defined egress rules continue to be reconciled normally.
 * The same allow-all outbound setting is applied consistently to the node security groups and the bastion security group.
 * When `allowAllOutboundTraffic` is `false`, CAPO creates TCP port 22 egress rules from the bastion security group to the control plane and worker security groups.
+
+The scoped in-cluster egress rules have the following properties:
+
+* `direction: egress`
+* `remoteGroupID`: the managed control plane, worker, or source security group itself
+* no protocol restriction
+* no port restriction
+* equivalent rules for both `IPv4` and `IPv6`
+
+The API server endpoint rule has:
+
+* `direction: egress`
+* `protocol: tcp`
+* destination port equal to the configured API server port
+* an `etherType` matching the API endpoint address family
 
 ## API Changes
 
@@ -153,8 +170,8 @@ func allowAllOutboundTraffic(managedSecurityGroups *infrav1.ManagedSecurityGroup
 ```
 
 4. When building managed security group rules, include the current default allow-all egress rules only if `allowAllOutboundTraffic(...)` returns `true`.
-5. When the helper returns `false`, add scoped egress from both node security groups to the control plane and worker security groups.
-6. When the helper returns `false`, add egress from both node security groups to the API server endpoint on the configured API server port.
+5. When the helper returns `false`, add unrestricted in-cluster egress rules from both node security groups to the managed control plane, worker, and self security groups. Create equivalent rules for IPv4 and IPv6, with no protocol or port restrictions.
+6. When the helper returns `false`, add TCP egress from both node security groups to the API server endpoint on the configured API server port. Set the rule `etherType` according to the API endpoint address family.
 7. Continue applying all user-provided `SecurityGroupRuleSpec` entries unchanged.
 8. Apply the same behavior to the bastion security group so disabling allow-all outbound traffic does not leave a separate unrestricted egress path there.
 9. When `allowAllOutboundTraffic` is `false`, add TCP port 22 egress from the bastion security group to the control plane and worker security groups.
@@ -183,7 +200,10 @@ Existing validation for `SecurityGroupRuleSpec` continues to apply to explicit e
 
 No validation is required between `allowAllInClusterTraffic` and `allowAllOutboundTraffic`.
 
-`allowAllInClusterTraffic` controls ingress between cluster nodes. When `allowAllOutboundTraffic` is `false`, CAPO still creates scoped egress rules towards the cluster node security groups. Therefore, setting both `allowAllInClusterTraffic: true` and `allowAllOutboundTraffic: false` allows all in-cluster traffic while keeping external egress restricted.
+`allowAllInClusterTraffic` controls ingress between cluster nodes. When `allowAllOutboundTraffic` is `false`, CAPO creates egress rules between the managed node security groups for both IPv4 and IPv6, without protocol or port restrictions.
+
+Therefore, setting both `allowAllInClusterTraffic: true` and `allowAllOutboundTraffic: false` still allows all in-cluster traffic while
+keeping external egress restricted. No CEL validation between these fields is required.
 
 ## Testing
 
@@ -192,8 +212,10 @@ Add unit tests for managed security group rule generation:
 * `allowAllOutboundTraffic` unset keeps default IPv4 and IPv6 allow-all egress rules.
 * `allowAllOutboundTraffic: true` keeps default IPv4 and IPv6 allow-all egress rules.
 * `allowAllOutboundTraffic: false` removes the default allow-all IPv4 and IPv6 egress rules.
-* `allowAllOutboundTraffic: false` adds egress between the control plane and worker security groups.
-* `allowAllOutboundTraffic: false` adds egress to the API server endpoint on the configured API server port.
+* `allowAllOutboundTraffic: false` adds unrestricted egress between the managed control plane, worker, and self security groups for both IPv4 and IPv6.
+* The scoped in-cluster egress rules have no protocol or port restrictions.
+* `allowAllOutboundTraffic: false` adds TCP egress to the API server endpoint on the configured API server port.
+* The API server endpoint egress rule uses the address family of the endpoint.
 * `allowAllOutboundTraffic: false` adds egress to TCP port 22 to the control plane and worker security groups on Bastion security group.
 * User-defined egress rules are still included when `allowAllOutboundTraffic: false`.
 
