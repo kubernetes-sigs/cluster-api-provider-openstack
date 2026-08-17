@@ -1,2 +1,60 @@
 # Only applies to BSD, and requires a go version bump
 CVE-2026-39883
+
+# github.com/google/cel-go GHSA-gcjh-h69q-9w9g: the vulnerable API is
+# ext.NativeTypes(ParseStructTag(...)), which CAPO's dependency graph never
+# calls. Confirmed via `govulncheck -show verbose`: this finding does not
+# appear at all (not even as "imported but not called"), so it's not
+# applicable to CAPO regardless of the k8s.io/apiserver version that
+# pulls cel-go in transitively.
+# https://github.com/advisories/GHSA-gcjh-h69q-9w9g
+GHSA-gcjh-h69q-9w9g
+
+# golang.org/x/net/html CVEs below: fixed in golang.org/x/net v0.55.0,
+# which requires go 1.25.0. Confirmed via `govulncheck -show verbose` as
+# "imported but not called" (GO-2026-5025/5027/5028/5029/5030) - CAPO does
+# not parse untrusted HTML, only transitively imports x/net/html.
+# https://avd.aquasec.com/nvd/cve-2026-25681
+CVE-2026-25681
+# https://avd.aquasec.com/nvd/cve-2026-27136
+CVE-2026-27136
+# https://avd.aquasec.com/nvd/cve-2026-25680
+CVE-2026-25680
+# https://avd.aquasec.com/nvd/cve-2026-42502
+CVE-2026-42502
+# https://avd.aquasec.com/nvd/cve-2026-42506
+CVE-2026-42506
+
+# golang.org/x/net/dns/dnsmessage panic (GO-2026-5942): fixed in x/net
+# v0.56.0, requires go 1.25.0. Confirmed via `govulncheck -show verbose` as
+# "Module Results" only - the dnsmessage package itself is not even
+# imported by CAPO or its dependencies.
+# https://avd.aquasec.com/nvd/cve-2026-46600
+CVE-2026-46600
+
+# golang.org/x/net/http2 infinite loop on bad SETTINGS_MAX_FRAME_SIZE
+# (GO-2026-4918) and golang.org/x/net/idna Punycode validation bypass
+# (GO-2026-5026): both fixed in x/net v0.55.0, requiring go 1.25.0.
+# Govulncheck traces them as reachable via gophercloud's
+# HTTP client / hostname handling, but only exploitable via a compromised
+# or malicious OpenStack/Kubernetes API server, which is outside CAPO's
+# threat model.
+# https://avd.aquasec.com/nvd/cve-2026-33814
+CVE-2026-33814
+# https://avd.aquasec.com/nvd/cve-2026-39821
+CVE-2026-39821
+
+# golang.org/x/text infinite loop (GO-2026-5970): fixed in x/text v0.39.0,
+# which requires go 1.25.0. Reachable via gophercloud's microversion
+# negotiation (openstack API responses) and record.Warnf (object names) -
+# both effectively require a compromised or malicious OpenStack API to
+# exploit.
+# https://avd.aquasec.com/nvd/cve-2026-56852
+CVE-2026-56852
+
+# google.golang.org/grpc GHSA-hrxh-6v49-42gf (xDS RBAC / HTTP2 transport,
+# GO-2026-6061): fixed in grpc v1.82.1, which requires go 1.25.0. Reachable
+# only via the optional OTLP-over-gRPC trace exporter, not used unless
+# OTLP tracing is explicitly configured.
+# https://github.com/advisories/GHSA-hrxh-6v49-42gf
+GHSA-hrxh-6v49-42gf
