@@ -23,6 +23,7 @@ import (
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/rules"
 	. "github.com/onsi/gomega"
@@ -590,6 +591,43 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
 					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
 				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
+
+				// We expect a total of 14 rules to be created.
+				// Nothing actually looks at the generated
+				// rules, but we give them unique IDs anyway
+				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
+					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
+					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
+				}).Times(14)
+			},
+			expectedClusterStatus: infrav1.OpenStackClusterStatus{
+				ControlPlaneSecurityGroup: &infrav1.SecurityGroupStatus{
+					ID:   "0",
+					Name: controlPlaneSGName,
+				},
+				WorkerSecurityGroup: &infrav1.SecurityGroupStatus{
+					ID:   "1",
+					Name: workerSGName,
+				},
+			},
+		},
+		{
+			name: "Skips tag replacement for control plane and worker security groups when standard-attr-tag is not supported",
+			openStackClusterSpec: infrav1.OpenStackClusterSpec{
+				Tags:                  []string{"cluster-tag"},
+				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			},
+			expect: func(log logr.Logger, m *mock.MockNetworkClientMockRecorder) {
+				m.ListSecGroup(groups.ListOpts{Name: controlPlaneSGName}).
+					Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
+				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
+					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
+				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
+
+				// standard-attr-tag support is checked once and reused for both the
+				// control plane and worker security groups, so ListExtensions is
+				// called exactly once and ReplaceAllAttributesTags is never called.
+				m.ListExtensions().Return([]extensions.Extension{}, nil)
 
 				// We expect a total of 14 rules to be created.
 				// Nothing actually looks at the generated

@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/go-logr/logr/testr"
@@ -381,6 +382,11 @@ func Test_EnsurePort(t *testing.T) {
 					return &ports.Port{ID: portID, Name: "test-port"}, nil
 				})
 
+				// Check standard-attr-tag support once, reused for both the port and trunk tag calls below.
+				standardAttrTagExt := extensions.Extension{}
+				standardAttrTagExt.Alias = "standard-attr-tag"
+				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+
 				// Tag the port
 				m.ReplaceAllAttributesTags("ports", portID, attributestags.ReplaceAllOpts{
 					Tags: []string{"tag1", "tag2"},
@@ -458,6 +464,11 @@ func Test_EnsurePort(t *testing.T) {
 					NetworkID: netID,
 				}}, nil)
 
+				// Check standard-attr-tag support once, reused for both the port and trunk tag calls below.
+				standardAttrTagExt := extensions.Extension{}
+				standardAttrTagExt.Alias = "standard-attr-tag"
+				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+
 				// Tag the port
 				m.ReplaceAllAttributesTags("ports", portID, attributestags.ReplaceAllOpts{
 					Tags: []string{"tag1", "tag2"},
@@ -486,6 +497,121 @@ func Test_EnsurePort(t *testing.T) {
 				NetworkID: netID,
 			},
 		},
+		{
+			name: "create port with tags and trunk when standard-attr-tag is not supported",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+				Trunk:     ptr.To(true),
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, g types.Gomega) {
+				var expectedCreateOpts ports.CreateOptsBuilder
+				expectedCreateOpts = ports.CreateOpts{
+					NetworkID: netID,
+					Name:      "test-port",
+				}
+				expectedCreateOpts = portsbinding.CreateOptsExt{
+					CreateOptsBuilder: expectedCreateOpts,
+				}
+
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
+				// Create the port
+				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
+					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
+					return &ports.Port{ID: portID, Name: "test-port"}, nil
+				})
+
+				// standard-attr-tag is not advertised: checked once and reused,
+				// so neither the port nor the trunk tag call is attempted.
+				m.ListExtensions().Return([]extensions.Extension{}, nil)
+
+				// Look for existing trunk
+				m.ListTrunk(trunks.ListOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return([]trunks.Trunk{}, nil)
+
+				// Create the trunk
+				m.CreateTrunk(trunks.CreateOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return(&trunks.Trunk{ID: trunkID}, nil)
+			},
+			want: &ports.Port{ID: portID, Name: "test-port"},
+		},
+		{
+			name: "returns error when checking standard-attr-tag support fails",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				Tags:      []string{"tag1", "tag2"},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, g types.Gomega) {
+				var expectedCreateOpts ports.CreateOptsBuilder
+				expectedCreateOpts = ports.CreateOpts{
+					NetworkID: netID,
+					Name:      "test-port",
+				}
+				expectedCreateOpts = portsbinding.CreateOptsExt{
+					CreateOptsBuilder: expectedCreateOpts,
+				}
+
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return(nil, nil)
+				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
+					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
+					return &ports.Port{ID: portID, Name: "test-port"}, nil
+				})
+
+				m.ListExtensions().Return(nil, errors.New("boom"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "trunk already exists with stale tags and desired tags are empty",
+			port: infrav1.ResolvedPortSpec{
+				Name:      "test-port",
+				NetworkID: netID,
+				Trunk:     ptr.To(true),
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
+				m.ListPort(ports.ListOpts{
+					Name:      "test-port",
+					NetworkID: netID,
+				}).Return([]ports.Port{{
+					ID:        portID,
+					Name:      "test-port",
+					NetworkID: netID,
+				}}, nil)
+
+				// Look for existing trunk, which has stale, non-empty tags.
+				m.ListTrunk(trunks.ListOpts{
+					PortID: portID,
+					Name:   "test-port",
+				}).Return([]trunks.Trunk{{
+					ID:   trunkID,
+					Tags: []string{"stale-tag"},
+				}}, nil)
+
+				// wantedTags is empty: replaceAllAttributesTags would no-op on it
+				// anyway, so neither ListExtensions nor ReplaceAllAttributesTags
+				// must be called, even though the existing trunk has stale tags.
+			},
+			want: &ports.Port{
+				ID:        portID,
+				Name:      "test-port",
+				NetworkID: netID,
+			},
+		},
 	}
 
 	eventObject := &infrav1.OpenStackMachine{}
@@ -496,10 +622,13 @@ func Test_EnsurePort(t *testing.T) {
 			defer mockCtrl.Finish()
 
 			g := NewWithT(t)
+			log := testr.New(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT(), g)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 			s := Service{
 				client: mockClient,
+				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
 			got, err := s.EnsurePort(
 				eventObject,

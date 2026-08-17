@@ -17,11 +17,14 @@ limitations under the License.
 package networking
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/go-logr/logr/testr"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
@@ -144,6 +147,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 		openStackCluster *infrav1.OpenStackCluster
 		expect           func(m *mock.MockNetworkClientMockRecorder)
 		want             *infrav1.OpenStackCluster
+		wantErr          bool
 	}{
 		{
 			name: "ensures status set when reconciling an existing network",
@@ -245,6 +249,116 @@ func Test_ReconcileNetwork(t *testing.T) {
 			},
 		},
 		{
+			name: "creation with tags when standard-attr-tag is not supported",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				// standard-attr-tag support must be checked before the network
+				// is created, and ReplaceAllAttributesTags must not be called
+				// since the extension is not advertised.
+				m.ListExtensions().Return([]extensions.Extension{}, nil)
+
+				m.
+					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					Return([]networks.Network{}, nil)
+
+				m.
+					CreateNetwork(createOpts{
+						AdminStateUp: gophercloud.Enabled,
+						Name:         expectedNetworkName,
+					}).
+					Return(&networks.Network{
+						ID:   fakeNetworkID,
+						Name: expectedNetworkName,
+						// Tags returned by Neutron for the created network, independent
+						// of the unapplied user-requested tags.
+						Tags: []string{"observed-tag"},
+					}, nil)
+			},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   fakeNetworkID,
+							Name: expectedNetworkName,
+							// Tagging was skipped, so status must reflect the
+							// tags actually observed on the created network,
+							// not falsely claim the requested tags were applied.
+							Tags: []string{"observed-tag"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creation with tags when standard-attr-tag is supported",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				standardAttrTagExt := extensions.Extension{}
+				standardAttrTagExt.Alias = "standard-attr-tag"
+				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+
+				m.
+					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					Return([]networks.Network{}, nil)
+
+				m.
+					CreateNetwork(createOpts{
+						AdminStateUp: gophercloud.Enabled,
+						Name:         expectedNetworkName,
+					}).
+					Return(&networks.Network{
+						ID:   fakeNetworkID,
+						Name: expectedNetworkName,
+					}, nil)
+
+				m.ReplaceAllAttributesTags("networks", fakeNetworkID, attributestags.ReplaceAllOpts{
+					Tags: []string{"cluster-tag"},
+				}).Return([]string{"cluster-tag"}, nil)
+			},
+			want: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   fakeNetworkID,
+							Name: expectedNetworkName,
+							Tags: []string{"cluster-tag"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creation with tags fails before creating network when standard-attr-tag discovery fails",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					Return([]networks.Network{}, nil)
+
+				// ListExtensions fails before CreateNetwork is ever called.
+				m.ListExtensions().Return(nil, errors.New("boom"))
+			},
+			wantErr: true,
+		},
+		{
 			name: "creation with mtu set",
 			openStackCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
@@ -297,7 +411,14 @@ func Test_ReconcileNetwork(t *testing.T) {
 				scope:  scope.NewWithLogger(scopeFactory, log),
 			}
 			err := s.ReconcileNetwork(tt.openStackCluster, clusterResourceName)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+				return
+			}
 			g.Expect(err).ShouldNot(HaveOccurred())
+			if len(tt.openStackCluster.Spec.Tags) > 0 {
+				g.Expect(tt.openStackCluster.Status.Network.Tags).To(Equal(tt.want.Status.Network.Tags))
+			}
 		})
 	}
 }
@@ -565,6 +686,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 		openStackCluster *infrav1.OpenStackCluster
 		expect           func(m *mock.MockNetworkClientMockRecorder)
 		want             *infrav1.OpenStackClusterStatus
+		wantErr          bool
 	}{
 		{
 			name: "ensures status set when reconciling an existing subnet",
@@ -661,6 +783,154 @@ func Test_ReconcileSubnet(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "creation with tags when standard-attr-tag is not supported",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				// standard-attr-tag support must be checked before the subnet
+				// is created, and ReplaceAllAttributesTags must not be called
+				// since the extension is not advertised.
+				m.ListExtensions().Return([]extensions.Extension{}, nil)
+
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					Return([]subnets.Subnet{}, nil)
+
+				m.
+					CreateSubnet(subnets.CreateOpts{
+						NetworkID:   fakeNetworkID,
+						Name:        expectedSubnetName,
+						IPVersion:   4,
+						CIDR:        fakeCIDR,
+						Description: expectedSubnetDesc,
+					}).
+					Return(&subnets.Subnet{
+						ID:   fakeSubnetID,
+						Name: expectedSubnetName,
+						CIDR: fakeCIDR,
+					}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creation with tags when standard-attr-tag is supported",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				standardAttrTagExt := extensions.Extension{}
+				standardAttrTagExt.Alias = "standard-attr-tag"
+				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					Return([]subnets.Subnet{}, nil)
+
+				m.
+					CreateSubnet(subnets.CreateOpts{
+						NetworkID:   fakeNetworkID,
+						Name:        expectedSubnetName,
+						IPVersion:   4,
+						CIDR:        fakeCIDR,
+						Description: expectedSubnetDesc,
+					}).
+					Return(&subnets.Subnet{
+						ID:   fakeSubnetID,
+						Name: expectedSubnetName,
+						CIDR: fakeCIDR,
+					}, nil)
+
+				m.ReplaceAllAttributesTags("subnets", fakeSubnetID, attributestags.ReplaceAllOpts{
+					Tags: []string{"cluster-tag"},
+				}).Return([]string{"cluster-tag"}, nil)
+			},
+			want: &infrav1.OpenStackClusterStatus{
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{
+						ID: fakeNetworkID,
+					},
+					Subnets: []infrav1.Subnet{
+						{
+							Name: expectedSubnetName,
+							ID:   fakeSubnetID,
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "creation with tags fails before creating subnet when standard-attr-tag discovery fails",
+			openStackCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: []string{"cluster-tag"},
+					ManagedSubnets: []infrav1.SubnetSpec{
+						{
+							CIDR: fakeCIDR,
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID: fakeNetworkID,
+						},
+					},
+				},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.
+					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					Return([]subnets.Subnet{}, nil)
+
+				// ListExtensions fails before CreateSubnet is ever called.
+				m.ListExtensions().Return(nil, errors.New("boom"))
+			},
+			wantErr: true,
 		},
 		{
 			name: "creation with DNSNameservers",
@@ -1180,6 +1450,10 @@ func Test_ReconcileSubnet(t *testing.T) {
 				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
 			err := s.ReconcileSubnet(tt.openStackCluster, clusterResourceName)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+				return
+			}
 			g.Expect(err).ShouldNot(HaveOccurred())
 			g.Expect(tt.openStackCluster.Status).To(Equal(*tt.want))
 		})

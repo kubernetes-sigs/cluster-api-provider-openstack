@@ -131,6 +131,19 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 		}
 	}
 
+	// Determine standard-attr-tag support before creating the network, so
+	// that a failed extension lookup doesn't leave behind a created network
+	// that CAPO never records in status (and therefore never retries tagging
+	// for).
+	var tagsSupported bool
+	if len(openStackCluster.Spec.Tags) > 0 {
+		var err error
+		tagsSupported, err = s.hasStandardAttrTagExtension()
+		if err != nil {
+			return err
+		}
+	}
+
 	network, err := s.client.CreateNetwork(opts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
@@ -138,19 +151,26 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	}
 	record.Eventf(openStackCluster, "SuccessfulCreateNetwork", "Created network %s with id %s", networkName, network.ID)
 
+	// appliedTags reflects the tags actually observed on the network, so
+	// that status never claims tags were applied when tagging was skipped.
+	appliedTags := network.Tags
 	if len(openStackCluster.Spec.Tags) > 0 {
-		_, err = s.client.ReplaceAllAttributesTags("networks", network.ID, attributestags.ReplaceAllOpts{
-			Tags: openStackCluster.Spec.Tags,
-		})
-		if err != nil {
-			return err
+		if tagsSupported {
+			appliedTags, err = s.client.ReplaceAllAttributesTags("networks", network.ID, attributestags.ReplaceAllOpts{
+				Tags: openStackCluster.Spec.Tags,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			s.scope.Logger().V(4).Info("standard-attr-tag extension not available, skipping tag replacement", "resourceType", "networks", "resourceID", network.ID)
 		}
 	}
 
 	openStackCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{}
 	openStackCluster.Status.Network.ID = network.ID
 	openStackCluster.Status.Network.Name = network.Name
-	openStackCluster.Status.Network.Tags = openStackCluster.Spec.Tags
+	openStackCluster.Status.Network.Tags = appliedTags
 	return nil
 }
 
@@ -244,6 +264,18 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 		opts.AllocationPools = append(opts.AllocationPools, subnets.AllocationPool{Start: pool.Start, End: pool.End})
 	}
 
+	// Determine standard-attr-tag support before creating the subnet, so
+	// that a failed extension lookup doesn't leave behind a created subnet
+	// that reconciliation never retries tagging for.
+	var tagsSupported bool
+	if len(openStackCluster.Spec.Tags) > 0 {
+		var err error
+		tagsSupported, err = s.hasStandardAttrTagExtension()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	subnet, err := s.client.CreateSubnet(opts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
@@ -252,12 +284,16 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 	record.Eventf(openStackCluster, "SuccessfulCreateSubnet", "Created subnet %s with id %s", name, subnet.ID)
 
 	if len(openStackCluster.Spec.Tags) > 0 {
-		mc := metrics.NewMetricPrometheusContext("subnet", "update")
-		_, err = s.client.ReplaceAllAttributesTags("subnets", subnet.ID, attributestags.ReplaceAllOpts{
-			Tags: openStackCluster.Spec.Tags,
-		})
-		if mc.ObserveRequest(err) != nil {
-			return nil, err
+		if tagsSupported {
+			mc := metrics.NewMetricPrometheusContext("subnet", "update")
+			_, err = s.client.ReplaceAllAttributesTags("subnets", subnet.ID, attributestags.ReplaceAllOpts{
+				Tags: openStackCluster.Spec.Tags,
+			})
+			if mc.ObserveRequest(err) != nil {
+				return nil, err
+			}
+		} else {
+			s.scope.Logger().V(4).Info("standard-attr-tag extension not available, skipping tag replacement", "resourceType", "subnets", "resourceID", subnet.ID)
 		}
 	}
 
