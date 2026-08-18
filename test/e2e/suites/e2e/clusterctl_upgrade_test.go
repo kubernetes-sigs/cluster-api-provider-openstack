@@ -43,7 +43,7 @@ var (
 )
 
 // NOTE: clusterctl v1.10 cannot handle RuntimeExtensionProvider in the local
-// filesystem repository created by the CAPI v1.13 test framework. And clusterctl
+// filesystem repository created by the CAPI v1.14 test framework. And clusterctl
 // v1.12 refuses to operate against v1beta1 management clusters. Therefore, we
 // cannot install ORC as a RuntimeExtension and have to use hooks instead.
 //
@@ -69,6 +69,11 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 		capiRelease110, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.10")
 		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
 		capiRelease110 = "v" + capiRelease110
+		// Note: This gives the version without the 'v' prefix, so we need to add it below.
+		// This is used as an intermediate upgrade step below, see the comment on the Upgrades field.
+		capiRelease112, err = capi_e2e.GetStableReleaseOfMinor(ctx, "1.12")
+		Expect(err).ToNot(HaveOccurred(), "failed to get stable release of CAPI")
+		capiRelease112 = "v" + capiRelease112
 	})
 
 	capi_e2e.ClusterctlUpgradeSpec(context.TODO(), func() capi_e2e.ClusterctlUpgradeSpecInput {
@@ -94,14 +99,26 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.12=>current) and
 			// (CAPI v1.10 / CAPO v0.12) can actually bootstrap.
 			WorkloadKubernetesVersion:   e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersionUpgradeFrom),
 			UseKindForManagementCluster: true,
+			// clusterctl refuses to upgrade the core/kubeadm-bootstrap/kubeadm-control-plane
+			// providers by more than 3 minor versions in a single step, and CAPI v1.10=>current
+			// (v1.14) is a 4 minor version jump. Split the upgrade into two steps: first bump
+			// those three providers to the skew-compatible CAPI v1.12, then upgrade everything
+			// (including CAPO) to the latest version for the current contract.
+			Upgrades: []capi_e2e.ClusterctlUpgradeSpecInputUpgrade{
+				{
+					CoreProvider:          "cluster-api:" + capiRelease112,
+					BootstrapProviders:    []string{"kubeadm:" + capiRelease112},
+					ControlPlaneProviders: []string{"kubeadm:" + capiRelease112},
+				},
+			},
 			// Install ORC v1.0.2 before clusterctl init
 			PreInit: func(managementClusterProxy capi_framework.ClusterProxy) {
 				installORC(context.Background(), managementClusterProxy, orcInitVersion)
 			},
-			// Upgrade ORC to the current version before clusterctl upgrade
-			PreUpgrade: func(managementClusterProxy capi_framework.ClusterProxy) {
-				installLatestORC(context.Background(), managementClusterProxy, e2eCtx.E2EConfig)
-			},
+			// Upgrade ORC to the current version right before the final upgrade step, which is
+			// also when CAPO gets upgraded to current. PreUpgrade is invoked once per entry in
+			// Upgrades above, so skip it for the first (intermediate, CAPI-only) step.
+			PreUpgrade: newORCUpgradeOnFinalStep(),
 		}
 	})
 })
@@ -135,7 +152,12 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.13=>current) and
 			MgmtFlavor:                        shared.FlavorDefault,
 			WorkloadFlavor:                    shared.FlavorCapiV1Beta1,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesKindVersion),
-			UseKindForManagementCluster:       true,
+			// The capi-v1beta1 flavor's OpenStackMachineTemplates are pinned to
+			// the OPENSTACK_IMAGE_NAME_UPGRADE_FROM image (Kubernetes
+			// KUBERNETES_VERSION_UPGRADE_FROM), so the workload cluster's
+			// Kubernetes version must match to avoid an unexpected rollout.
+			WorkloadKubernetesVersion:   e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersionUpgradeFrom),
+			UseKindForManagementCluster: true,
 		}
 	})
 })
@@ -168,10 +190,31 @@ var _ = Describe("When testing clusterctl upgrades for CAPO (v0.14=>current) and
 			MgmtFlavor:                        shared.FlavorDefault,
 			WorkloadFlavor:                    shared.FlavorCapiV1Beta1,
 			InitWithKubernetesVersion:         e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesKindVersion),
-			UseKindForManagementCluster:       true,
+			// The capi-v1beta1 flavor's OpenStackMachineTemplates are pinned to
+			// the OPENSTACK_IMAGE_NAME_UPGRADE_FROM image (Kubernetes
+			// KUBERNETES_VERSION_UPGRADE_FROM), so the workload cluster's
+			// Kubernetes version must match to avoid an unexpected rollout.
+			WorkloadKubernetesVersion:   e2eCtx.E2EConfig.MustGetVariable(shared.KubernetesVersionUpgradeFrom),
+			UseKindForManagementCluster: true,
 		}
 	})
 })
+
+// newORCUpgradeOnFinalStep returns a PreUpgrade hook that installs the latest ORC version, but only
+// from its second invocation onwards. This is used for upgrade tests that stage the CAPI core/
+// kubeadm-bootstrap/kubeadm-control-plane providers upgrade into multiple steps (via the Upgrades
+// field): PreUpgrade is called once per step, but ORC (like the infrastructure provider) should only
+// be upgraded to current immediately before the final step, not before every intermediate step.
+func newORCUpgradeOnFinalStep() func(managementClusterProxy capi_framework.ClusterProxy) {
+	isFinalStep := false
+	return func(managementClusterProxy capi_framework.ClusterProxy) {
+		defer func() { isFinalStep = true }()
+		if !isFinalStep {
+			return
+		}
+		installLatestORC(context.Background(), managementClusterProxy, e2eCtx.E2EConfig)
+	}
+}
 
 // installLatestORC downloads and applies the install manifest for the current/latest version of
 // the OpenStack Resource Controller (ORC) to the management cluster.

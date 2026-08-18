@@ -134,5 +134,5 @@ func (r *OpenStackFloatingIPPool) GetIdentityRef() (*string, *infrav1.OpenStackI
 }
 
 func init() {
-	SchemeBuilder.Register(&OpenStackFloatingIPPool{}, &OpenStackFloatingIPPoolList{})
+	objectTypes = append(objectTypes, &OpenStackFloatingIPPool{}, &OpenStackFloatingIPPoolList{})
 }

@@ -26,7 +26,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
-	"k8s.io/apimachinery/pkg/util/dump"
+	"k8s.io/utils/dump"
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 )
 
