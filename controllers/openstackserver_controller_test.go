@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/go-logr/logr/testr"
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
@@ -42,6 +43,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
@@ -676,6 +678,8 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 		osServer      infrav1alpha1.OpenStackServer
 		expect        func(r *recorders)
 		wantErr       error
+		wantResult    *reconcile.Result
+		wantReady     *bool
 		wantCondition *metav1.Condition
 	}{
 		{
@@ -753,6 +757,81 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 				Message: "Error creating port",
 			},
 		},
+		{
+			name: "Server in ERROR state keeps reconciling and recovers when Nova returns ACTIVE",
+			osServer: infrav1alpha1.OpenStackServer{
+				Spec: infrav1alpha1.OpenStackServerSpec{
+					Flavor: ptr.To(defaultFlavor),
+					Image:  defaultImage,
+					Ports:  defaultPortOpts,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					Ready:         false,
+					InstanceID:    ptr.To(instanceUUID),
+					InstanceState: ptr.To(infrav1.InstanceStateError),
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
+					},
+					Resources: &infrav1alpha1.ServerResources{
+						Ports: defaultPortsStatus,
+					},
+				},
+			},
+			expect: func(r *recorders) {
+				listDefaultPortsWithID(r)
+				r.compute.GetServer(instanceUUID).Return(&servers.Server{
+					ID:     instanceUUID,
+					Name:   openStackServerName,
+					Status: "ACTIVE",
+				}, nil)
+			},
+			wantReady: ptr.To(true),
+			wantCondition: &metav1.Condition{
+				Type:   infrav1.InstanceReadyCondition,
+				Status: metav1.ConditionTrue,
+				Reason: infrav1.ReadyConditionReason,
+			},
+		},
+		{
+			name: "Server in ERROR state requeues while Nova still reports ERROR",
+			osServer: infrav1alpha1.OpenStackServer{
+				Spec: infrav1alpha1.OpenStackServerSpec{
+					Flavor: ptr.To(defaultFlavor),
+					Image:  defaultImage,
+					Ports:  defaultPortOpts,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					Ready:         true, // stale Ready from before ERROR
+					InstanceID:    ptr.To(instanceUUID),
+					InstanceState: ptr.To(infrav1.InstanceStateError),
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
+					},
+					Resources: &infrav1alpha1.ServerResources{
+						Ports: defaultPortsStatus,
+					},
+				},
+			},
+			expect: func(r *recorders) {
+				listDefaultPortsWithID(r)
+				r.compute.GetServer(instanceUUID).Return(&servers.Server{
+					ID:     instanceUUID,
+					Name:   openStackServerName,
+					Status: "ERROR",
+				}, nil)
+			},
+			wantResult: &reconcile.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile},
+			wantReady:  ptr.To(false),
+			wantCondition: &metav1.Condition{
+				Type:   infrav1.InstanceReadyCondition,
+				Status: metav1.ConditionFalse,
+				Reason: infrav1.InstanceStateErrorReason,
+			},
+		},
 	}
 	for i := range tests {
 		tt := &tests[i]
@@ -779,13 +858,21 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			osServer.Name = openStackServerName
 			osServer.Finalizers = []string{infrav1alpha1.OpenStackServerFinalizer}
 
-			_, err := reconciler.reconcileNormal(ctx, scopeWithLogger, &tt.osServer)
+			result, err := reconciler.reconcileNormal(ctx, scopeWithLogger, &tt.osServer)
 
 			// Check error result
 			if tt.wantErr != nil {
 				g.Expect(err).To(Equal(tt.wantErr))
 			} else {
 				g.Expect(err).NotTo(HaveOccurred())
+			}
+
+			if tt.wantResult != nil {
+				g.Expect(result).To(Equal(*tt.wantResult))
+			}
+
+			if tt.wantReady != nil {
+				g.Expect(tt.osServer.Status.Ready).To(Equal(*tt.wantReady))
 			}
 
 			// Check the condition is set correctly
@@ -989,6 +1076,70 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestOpenStackServerStatusReportable(t *testing.T) {
+	g := NewGomegaWithT(t)
+	pred := OpenStackServerStatusReportable(logr.Discard())
+
+	building := &infrav1alpha1.OpenStackServer{
+		Status: infrav1alpha1.OpenStackServerStatus{
+			InstanceState: ptr.To(infrav1.InstanceStateBuild),
+		},
+	}
+	errorServer := &infrav1alpha1.OpenStackServer{
+		Status: infrav1alpha1.OpenStackServerStatus{
+			InstanceState: ptr.To(infrav1.InstanceStateError),
+		},
+	}
+	readyServer := &infrav1alpha1.OpenStackServer{
+		Status: infrav1alpha1.OpenStackServerStatus{
+			Ready:         true,
+			InstanceState: ptr.To(infrav1.InstanceStateActive),
+		},
+	}
+	shutoffServer := &infrav1alpha1.OpenStackServer{
+		Status: infrav1alpha1.OpenStackServerStatus{
+			InstanceState: ptr.To(infrav1.InstanceStateShutoff),
+		},
+	}
+	migratingServer := &infrav1alpha1.OpenStackServer{
+		Status: infrav1alpha1.OpenStackServerStatus{
+			InstanceState: ptr.To(infrav1.InstanceState("MIGRATING")),
+		},
+	}
+
+	t.Run("CreateFunc allows Ready and ERROR servers", func(_ *testing.T) {
+		g.Expect(pred.Create(event.CreateEvent{Object: readyServer})).To(BeTrue())
+		g.Expect(pred.Create(event.CreateEvent{Object: errorServer})).To(BeTrue())
+		g.Expect(pred.Create(event.CreateEvent{Object: building})).To(BeFalse())
+	})
+
+	t.Run("UpdateFunc allows becoming Ready", func(_ *testing.T) {
+		g.Expect(pred.Update(event.UpdateEvent{ObjectOld: building, ObjectNew: readyServer})).To(BeTrue())
+	})
+
+	t.Run("UpdateFunc allows becoming ERROR", func(_ *testing.T) {
+		g.Expect(pred.Update(event.UpdateEvent{ObjectOld: building, ObjectNew: errorServer})).To(BeTrue())
+	})
+
+	t.Run("UpdateFunc allows ERROR to Ready recovery", func(_ *testing.T) {
+		g.Expect(pred.Update(event.UpdateEvent{ObjectOld: errorServer, ObjectNew: readyServer})).To(BeTrue())
+	})
+
+	t.Run("UpdateFunc allows Ready to ERROR", func(_ *testing.T) {
+		g.Expect(pred.Update(event.UpdateEvent{ObjectOld: readyServer, ObjectNew: errorServer})).To(BeTrue())
+	})
+
+	t.Run("UpdateFunc blocks unrelated status updates while building", func(_ *testing.T) {
+		buildingUpdated := building.DeepCopy()
+		buildingUpdated.Status.Resolved = &infrav1alpha1.ResolvedServerSpec{ImageID: imageUUID}
+		g.Expect(pred.Update(event.UpdateEvent{ObjectOld: building, ObjectNew: buildingUpdated})).To(BeFalse())
+	})
+
+	t.Run("UpdateFunc blocks transitions between non-reportable InstanceStates", func(_ *testing.T) {
+		g.Expect(pred.Update(event.UpdateEvent{ObjectOld: shutoffServer, ObjectNew: migratingServer})).To(BeFalse())
+	})
 }
 
 var _ = Describe("OpenStackServer controller", func() {
