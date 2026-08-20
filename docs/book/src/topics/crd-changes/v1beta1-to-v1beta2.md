@@ -4,6 +4,8 @@
 
 - [v1beta1 compared to v1beta2](#v1beta1-compared-to-v1beta2)
   - [Migration](#migration)
+  - [API additions](#api-additions)
+    - [OpenStackClusterTemplate template metadata](#openstackclustertemplate-template-metadata)
   - [API Changes](#api-changes)
     - [API server fields restructure](#api-server-fields-restructure)
     - [DisableExternalNetwork renamed to EnableExternalNetwork](#disableexternalnetwork-renamed-to-enableexternalnetwork)
@@ -27,6 +29,34 @@ All users are encouraged to migrate their usage of the CAPO CRDs from `v1beta1` 
 **For most users, no action is required.** The conversion webhooks handle all translation between v1beta1 and v1beta2 automatically. The changes below are relevant primarily for developers writing controllers or tooling that reads CAPO objects directly.
 
 The v1beta2 API introduces **no removals** to spec fields. All existing spec fields from v1beta1 are preserved, though some have been renamed or restructured for consistency. Status fields have additional breaking changes beyond renaming.
+
+## API additions
+
+### OpenStackClusterTemplate template metadata
+
+`OpenStackClusterTemplate` now supports standard object metadata on the embedded template via
+`spec.template.metadata`, aligning with the Cluster API v1beta2 provider contract for
+InfraClusterTemplate resources. Labels and annotations set here are applied to the top-level
+metadata of `OpenStackCluster` objects generated from this template by the Cluster API topology
+controller when using ClusterClass. The field has no effect outside of ClusterClass-managed
+clusters.
+
+```diff
+ spec:
+   template:
++    metadata:
++      labels:
++        environment: production
++      annotations:
++        example.com/owner: platform-team
+     spec:
+       identityRef:
+         name: cloud-config
+         cloudName: openstack
+```
+
+The field is preserved via the conversion data annotation when converting to v1beta1
+and back. Only labels and annotations are supported.
 
 ## API Changes
 

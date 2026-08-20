@@ -90,6 +90,21 @@ func (src *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error 
 	if err := Convert_v1beta1_OpenStackClusterTemplate_To_v1beta2_OpenStackClusterTemplate(src, dst, nil); err != nil {
 		return err
 	}
+
+	// Restore hub-only fields (spec.template.metadata) stashed on the
+	// spoke by ConvertFrom. UnmarshalData also deletes the annotation,
+	// so it can't leak into the stash below.
+	restored := &infrav1.OpenStackClusterTemplate{}
+	ok, err := utilconversion.UnmarshalData(src, restored)
+	if err != nil {
+		return err
+	}
+	if ok {
+		dst.Spec.Template.ObjectMeta = restored.Spec.Template.ObjectMeta
+	}
+
+	// Stash the v1beta1 object on the hub to preserve spoke-only fields
+	// (e.g. bastion flavor name) across a later hub->spoke conversion.
 	return utilconversion.MarshalData(src, dst)
 }
 
@@ -101,8 +116,15 @@ func (dst *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) erro
 	if err := Convert_v1beta2_OpenStackClusterTemplate_To_v1beta1_OpenStackClusterTemplate(src, dst, nil); err != nil {
 		return err
 	}
-	_, err := utilconversion.UnmarshalData(src, dst)
-	return err
+
+	// Restore spoke-only fields stashed on the hub by ConvertTo.
+	if _, err := utilconversion.UnmarshalData(src, dst); err != nil {
+		return err
+	}
+
+	// Stash the hub object on the spoke so hub-only fields
+	// (spec.template.metadata) survive the round trip.
+	return utilconversion.MarshalData(src, dst)
 }
 
 // ConvertTo converts this OpenStackMachineTemplate to the Hub version (v1beta2).
@@ -657,4 +679,9 @@ func Convert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecFields(in
 	}
 
 	return nil
+}
+
+func Convert_v1beta2_OpenStackClusterTemplateResource_To_v1beta1_OpenStackClusterTemplateResource(in *infrav1.OpenStackClusterTemplateResource, out *OpenStackClusterTemplateResource, s apiconversion.Scope) error {
+	// in.ObjectMeta is dropped here and preserved via the conversion-data annotation instead.
+	return autoConvert_v1beta2_OpenStackClusterTemplateResource_To_v1beta1_OpenStackClusterTemplateResource(in, out, s)
 }

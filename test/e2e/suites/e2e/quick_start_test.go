@@ -22,9 +22,14 @@ import (
 	"context"
 
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"k8s.io/utils/ptr"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	capi_e2e "sigs.k8s.io/cluster-api/test/e2e"
+	"sigs.k8s.io/cluster-api/test/framework"
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
+	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	shared "sigs.k8s.io/cluster-api-provider-openstack/test/e2e/shared"
 )
 
@@ -37,6 +42,25 @@ var _ = Describe("When following the Cluster API quick-start with ClusterClass [
 			ArtifactFolder:        e2eCtx.Settings.ArtifactFolder,
 			SkipCleanup:           false,
 			Flavor:                ptr.To(shared.FlavorTopology),
+			PostMachinesProvisioned: func(proxy framework.ClusterProxy, namespace, clusterName string) {
+				shared.Logf("Verifying OpenStackClusterTemplate metadata propagation to OpenStackCluster")
+				ctx := context.TODO()
+				k8sClient := proxy.GetClient()
+
+				cluster := &clusterv1.Cluster{}
+				Expect(k8sClient.Get(ctx, crclient.ObjectKey{Namespace: namespace, Name: clusterName}, cluster)).To(Succeed())
+
+				openStackCluster := &infrav1.OpenStackCluster{}
+				Expect(k8sClient.Get(ctx, crclient.ObjectKey{
+					Namespace: namespace,
+					Name:      cluster.Spec.InfrastructureRef.Name,
+				}, openStackCluster)).To(Succeed())
+
+				Expect(openStackCluster.Labels).To(HaveKeyWithValue("capo.e2e.test/template-metadata", "propagated"),
+					"labels from OpenStackClusterTemplate spec.template.metadata should be applied to the generated OpenStackCluster")
+				Expect(openStackCluster.Annotations).To(HaveKeyWithValue("capo.e2e.test/template-metadata", "propagated"),
+					"annotations from OpenStackClusterTemplate spec.template.metadata should be applied to the generated OpenStackCluster")
+			},
 		}
 	})
 })

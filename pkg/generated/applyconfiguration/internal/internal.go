@@ -2350,6 +2350,10 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterTemplateResource
   map:
     fields:
+    - name: metadata
+      type:
+        namedType: io.k8s.sigs.cluster-api.api.core.v1beta2.ObjectMeta
+      default: {}
     - name: spec
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.OpenStackClusterSpec
@@ -3139,6 +3143,19 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api.api.core.v1beta2.ObjectMeta
+  map:
+    fields:
+    - name: annotations
+      type:
+        map:
+          elementType:
+            scalar: string
+    - name: labels
+      type:
+        map:
+          elementType:
+            scalar: string
 - name: __untyped_atomic_
   scalar: untyped
   list:
