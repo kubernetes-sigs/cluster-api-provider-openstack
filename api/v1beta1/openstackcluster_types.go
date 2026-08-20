@@ -62,6 +62,14 @@ type OpenStackClusterSpec struct {
 	// +optional
 	Subnets []SubnetParam `json:"subnets,omitempty"`
 
+	// FailureDomainSubnets maps Cluster API failure domains to OpenStack subnets.
+	// When specified, these subnets are used for machines with a matching failure domain.
+	// Machines without a failure domain use PrimarySubnet or Subnets as the legacy fallback.
+	// FailureDomainSubnets cannot be used together with ManagedSubnets.
+	// +listType=atomic
+	// +optional
+	FailureDomainSubnets []FailureDomainSubnet `json:"failureDomainSubnets,omitempty"`
+
 	// PrimarySubnet identifies the primary subnet for the cluster when multiple
 	// subnets are specified in Subnets. It is used to determine the subnet for
 	// load balancer VIP allocation and node member registration.
