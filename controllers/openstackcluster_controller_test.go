@@ -712,6 +712,65 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
 	})
 
+	It("includes failure-domain subnets and legacy fallback subnets in status", func() {
+		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
+		const mappedSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
+		const fallbackSubnetID = "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"
+
+		testCluster.SetName("failure-domain-and-legacy-subnets")
+		testCluster.Spec = infrav1.OpenStackClusterSpec{
+			IdentityRef: infrav1.OpenStackIdentityReference{
+				Name:      "test-creds",
+				CloudName: "openstack",
+			},
+			FailureDomainSubnets: []infrav1.FailureDomainSubnet{
+				{
+					FailureDomain: "az1",
+					Subnet:        infrav1.SubnetParam{ID: ptr.To(mappedSubnetID)},
+				},
+			},
+			Subnets: []infrav1.SubnetParam{{ID: ptr.To(fallbackSubnetID)}},
+		}
+		testCluster.Status.Network = &infrav1.NetworkStatusWithSubnets{
+			NetworkStatus: infrav1.NetworkStatus{ID: clusterNetworkID},
+		}
+		err := k8sClient.Create(ctx, testCluster)
+		Expect(err).To(BeNil())
+		err = k8sClient.Create(ctx, capiCluster)
+		Expect(err).To(BeNil())
+
+		log := GinkgoLogr
+		clientScope, err := mockScopeFactory.NewClientScopeFromObject(ctx, k8sClient, nil, log, testCluster)
+		Expect(err).To(BeNil())
+		scope := scope.NewWithLogger(clientScope, log)
+
+		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
+		networkClientRecorder.GetSubnet(mappedSubnetID).Return(&subnets.Subnet{
+			ID:        mappedSubnetID,
+			CIDR:      "192.168.0.0/24",
+			NetworkID: clusterNetworkID,
+		}, nil)
+		networkClientRecorder.GetSubnet(fallbackSubnetID).Return(&subnets.Subnet{
+			ID:        fallbackSubnetID,
+			CIDR:      "192.168.1.0/24",
+			NetworkID: clusterNetworkID,
+		}, nil)
+		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+			ID: clusterNetworkID,
+		}, nil)
+
+		networkingService, err := networking.NewService(scope)
+		Expect(err).To(BeNil())
+
+		err = reconcilePreExistingNetworkComponents(scope, networkingService, testCluster)
+		Expect(err).To(BeNil())
+		Expect(testCluster.Status.Network.Subnets).To(HaveLen(2))
+		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(mappedSubnetID))
+		Expect(testCluster.Status.Network.Subnets[0].FailureDomain).To(Equal("az1"))
+		Expect(testCluster.Status.Network.Subnets[1].ID).To(Equal(fallbackSubnetID))
+		Expect(testCluster.Status.Network.Subnets[1].FailureDomain).To(BeEmpty())
+	})
+
 	It("reconcile pre-existing network components by name", func() {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterNetworkName = "capo"
@@ -1488,6 +1547,90 @@ func Test_setClusterNetwork(t *testing.T) {
 	}
 }
 
+func Test_bastionToOpenStackServerSpecUsesLegacySubnetSelection(t *testing.T) {
+	for _, tt := range []struct {
+		name             string
+		availabilityZone string
+	}{
+		{name: "without availability zone"},
+		{name: "with mapped availability zone", availabilityZone: "dal-az"},
+		{name: "with unmapped availability zone", availabilityZone: "unknown-az"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			cluster := &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Bastion: &infrav1.Bastion{
+						Spec: &infrav1.OpenStackMachineSpec{},
+					},
+					Subnets: []infrav1.SubnetParam{
+						{ID: ptr.To(subnetUUID)},
+						{ID: ptr.To(secondSubnetUUID)},
+					},
+					FailureDomainSubnets: []infrav1.FailureDomainSubnet{
+						{FailureDomain: "dal-az", Subnet: infrav1.SubnetParam{ID: ptr.To(subnetUUID)}},
+						{FailureDomain: "did-az", Subnet: infrav1.SubnetParam{ID: ptr.To(secondSubnetUUID)}},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{ID: networkUUID},
+					},
+				},
+			}
+			if tt.availabilityZone != "" {
+				cluster.Spec.Bastion.AvailabilityZone = ptr.To(tt.availabilityZone)
+			}
+
+			serverSpec, err := bastionToOpenStackServerSpec(cluster)
+			if err != nil {
+				t.Fatalf("bastionToOpenStackServerSpec() error = %v", err)
+			}
+			if got := ptr.Deref(serverSpec.AvailabilityZone, ""); got != tt.availabilityZone {
+				t.Fatalf("bastionToOpenStackServerSpec() AvailabilityZone = %q, want %q", got, tt.availabilityZone)
+			}
+			if len(serverSpec.Ports) != 1 || len(serverSpec.Ports[0].FixedIPs) != 2 {
+				t.Fatalf("bastionToOpenStackServerSpec() FixedIPs = %#v, want both cluster subnets", serverSpec.Ports)
+			}
+			if got := ptr.Deref(serverSpec.Ports[0].FixedIPs[0].Subnet.ID, ""); got != subnetUUID {
+				t.Fatalf("bastionToOpenStackServerSpec() first subnet ID = %q, want %q", got, subnetUUID)
+			}
+			if got := ptr.Deref(serverSpec.Ports[0].FixedIPs[1].Subnet.ID, ""); got != secondSubnetUUID {
+				t.Fatalf("bastionToOpenStackServerSpec() second subnet ID = %q, want %q", got, secondSubnetUUID)
+			}
+		})
+	}
+}
+
+func Test_setFailureDomainControlPlaneEligibility(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		eligible bool
+	}{
+		{name: "control plane eligible", eligible: true},
+		{name: "control plane ineligible", eligible: false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			failureDomains := []clusterv1.FailureDomain{
+				{Name: "az-1", ControlPlane: ptr.To(!tt.eligible)},
+				{Name: "previously-discovered-az", ControlPlane: ptr.To(!tt.eligible)},
+			}
+
+			setFailureDomainControlPlaneEligibility(failureDomains, tt.eligible)
+
+			if len(failureDomains) != 2 ||
+				failureDomains[0].Name != "az-1" ||
+				failureDomains[1].Name != "previously-discovered-az" {
+				t.Fatalf("setFailureDomainControlPlaneEligibility() changed the failure domain set: got %#v", failureDomains)
+			}
+			for _, failureDomain := range failureDomains {
+				if got := ptr.Deref(failureDomain.ControlPlane, false); got != tt.eligible {
+					t.Fatalf("setFailureDomainControlPlaneEligibility() set ControlPlane = %v, want %v", got, tt.eligible)
+				}
+			}
+		})
+	}
+}
+
 func Test_getAPIServerPort(t *testing.T) {
 	tests := []struct {
 		name             string
@@ -1529,5 +1672,32 @@ func Test_getAPIServerPort(t *testing.T) {
 				t.Errorf("getAPIServerPort() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestConfiguredClusterSubnetParamsIncludesLegacyFallback(t *testing.T) {
+	primarySubnet := infrav1.SubnetParam{ID: ptr.To(primarySubnetUUID)}
+	cluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			PrimarySubnet: &primarySubnet,
+			FailureDomainSubnets: []infrav1.FailureDomainSubnet{
+				{FailureDomain: "az1", Subnet: infrav1.SubnetParam{ID: ptr.To(subnetUUID)}},
+			},
+			Subnets: []infrav1.SubnetParam{{ID: ptr.To(secondSubnetUUID)}},
+		},
+	}
+
+	got := configuredClusterSubnetParams(cluster)
+	if len(got) != 3 {
+		t.Fatalf("configuredClusterSubnetParams() returned %d subnets, want 3", len(got))
+	}
+	if got[0].failureDomain != "az1" || ptr.Deref(got[0].param.ID, "") != subnetUUID {
+		t.Fatalf("configuredClusterSubnetParams() first subnet = %#v, want mapped subnet", got[0])
+	}
+	if got[1].failureDomain != "" || ptr.Deref(got[1].param.ID, "") != primarySubnetUUID {
+		t.Fatalf("configuredClusterSubnetParams() second subnet = %#v, want primary subnet fallback", got[1])
+	}
+	if got[2].failureDomain != "" || ptr.Deref(got[2].param.ID, "") != secondSubnetUUID {
+		t.Fatalf("configuredClusterSubnetParams() third subnet = %#v, want legacy subnet fallback", got[2])
 	}
 }

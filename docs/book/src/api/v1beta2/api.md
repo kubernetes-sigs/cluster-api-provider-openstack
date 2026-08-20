@@ -108,6 +108,23 @@ load balancer VIP allocation.</p>
 </tr>
 <tr>
 <td>
+<code>failureDomainSubnets</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FailureDomainSubnet">
+[]FailureDomainSubnet
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>failureDomainSubnets maps Cluster API failure domains to OpenStack subnets.
+When specified, these subnets are used for machines with a matching failure domain.
+Machines without a failure domain use primarySubnet or subnets as the legacy fallback.
+failureDomainSubnets cannot be used together with managedSubnets.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>primarySubnet</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
@@ -1717,6 +1734,49 @@ SubnetParam
 </tr>
 </tbody>
 </table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta2.FailureDomainSubnet">FailureDomainSubnet
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">OpenStackClusterSpec</a>)
+</p>
+<p>
+<p>FailureDomainSubnet associates an OpenStack subnet with a Cluster API failure domain.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>failureDomain</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>failureDomain identifies the Cluster API failure domain associated with this subnet.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>subnet,omitzero</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.SubnetParam">
+SubnetParam
+</a>
+</em>
+</td>
+<td>
+<p>subnet identifies the OpenStack subnet associated with the failure domain.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta2.FilterByNeutronTags">FilterByNeutronTags
 </h3>
 <p>
@@ -2692,6 +2752,23 @@ If no subnets are specified, all subnets in Network will be used.
 Multiple subnets of the same IP version are supported when primarySubnet
 is also set to identify which subnet should be used for services like
 load balancer VIP allocation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>failureDomainSubnets</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FailureDomainSubnet">
+[]FailureDomainSubnet
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>failureDomainSubnets maps Cluster API failure domains to OpenStack subnets.
+When specified, these subnets are used for machines with a matching failure domain.
+Machines without a failure domain use primarySubnet or subnets as the legacy fallback.
+failureDomainSubnets cannot be used together with managedSubnets.</p>
 </td>
 </tr>
 <tr>
@@ -5169,6 +5246,18 @@ string
 <p>tags is a list of tags on the subnet.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>failureDomain</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>failureDomain identifies the Cluster API failure domain associated with this subnet.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta2.SubnetFilter">SubnetFilter
@@ -5307,6 +5396,7 @@ FilterByNeutronTags
 (<em>Appears on:</em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.APIServerLoadBalancer">APIServerLoadBalancer</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.ExternalRouterIPParam">ExternalRouterIPParam</a>, 
+<a href="#infrastructure.cluster.x-k8s.io/v1beta2.FailureDomainSubnet">FailureDomainSubnet</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.FixedIP">FixedIP</a>, 
 <a href="#infrastructure.cluster.x-k8s.io/v1beta2.OpenStackClusterSpec">OpenStackClusterSpec</a>)
 </p>

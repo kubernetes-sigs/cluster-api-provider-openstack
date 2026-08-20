@@ -352,6 +352,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.BlockDeviceVolume":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolume(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ClusterInitialization":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ClusterInitialization(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterIPParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FailureDomainSubnet":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FailureDomainSubnet(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FilterByNeutronTags":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FixedIP":                                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FixedIP(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ImageFilter":                                schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ImageFilter(ref),
@@ -422,6 +423,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.BlockDeviceVolume":                          schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BlockDeviceVolume(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ClusterInitialization":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ClusterInitialization(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ExternalRouterIPParam":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ExternalRouterIPParam(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FailureDomainSubnet":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FailureDomainSubnet(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FilterByNeutronTags":                        schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FilterByNeutronTags(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FixedIP":                                    schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FixedIP(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FlavorFilter":                               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FlavorFilter(ref),
@@ -18682,6 +18684,36 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ExternalRouterI
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FailureDomainSubnet(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "FailureDomainSubnet associates an OpenStack subnet with a Cluster API failure domain.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FailureDomain identifies the Cluster API failure domain associated with this subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subnet": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Subnet identifies the OpenStack subnet associated with the failure domain.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"),
+						},
+					},
+				},
+				Required: []string{"failureDomain", "subnet"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam"},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_FilterByNeutronTags(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -19509,6 +19541,25 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 							},
 						},
 					},
+					"failureDomainSubnets": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "FailureDomainSubnets maps Cluster API failure domains to OpenStack subnets. When specified, these subnets are used for machines with a matching failure domain. Machines without a failure domain use PrimarySubnet or Subnets as the legacy fallback. FailureDomainSubnets cannot be used together with ManagedSubnets.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FailureDomainSubnet"),
+									},
+								},
+							},
+						},
+					},
 					"primarySubnet": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PrimarySubnet identifies the primary subnet for the cluster when multiple subnets are specified in Subnets. It is used to determine the subnet for load balancer VIP allocation and node member registration. If not specified and multiple subnets exist, the first subnet in the resolved Subnets list is used.",
@@ -19672,7 +19723,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_OpenStackCluste
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta1.APIEndpoint"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.APIServerLoadBalancer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ExternalRouterIPParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.FailureDomainSubnet", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta1.APIEndpoint"},
 	}
 }
 
@@ -21839,6 +21890,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_Subnet(ref comm
 							},
 						},
 					},
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "FailureDomain identifies the Cluster API failure domain associated with this subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"name", "id", "cidr"},
 			},
@@ -22672,6 +22730,36 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ExternalRouterI
 					},
 				},
 				Required: []string{"subnet"},
+			},
+		},
+		Dependencies: []string{
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam"},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_FailureDomainSubnet(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "FailureDomainSubnet associates an OpenStack subnet with a Cluster API failure domain.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "failureDomain identifies the Cluster API failure domain associated with this subnet.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subnet": {
+						SchemaProps: spec.SchemaProps{
+							Description: "subnet identifies the OpenStack subnet associated with the failure domain.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam"),
+						},
+					},
+				},
+				Required: []string{"failureDomain", "subnet"},
 			},
 		},
 		Dependencies: []string{
@@ -23641,6 +23729,25 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 							},
 						},
 					},
+					"failureDomainSubnets": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "failureDomainSubnets maps Cluster API failure domains to OpenStack subnets. When specified, these subnets are used for machines with a matching failure domain. Machines without a failure domain use primarySubnet or subnets as the legacy fallback. failureDomainSubnets cannot be used together with managedSubnets.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FailureDomainSubnet"),
+									},
+								},
+							},
+						},
+					},
 					"primarySubnet": {
 						SchemaProps: spec.SchemaProps{
 							Description: "primarySubnet identifies the primary subnet for the cluster when multiple subnets are specified in Subnets. It is used to determine the subnet for load balancer VIP allocation and node member registration. If not specified and multiple subnets exist, the first subnet in the resolved Subnets list is used.",
@@ -23767,7 +23874,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_OpenStackCluste
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServer", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.Bastion", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.FailureDomainSubnet", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedNetwork", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedRouter", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ManagedSecurityGroups", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.NetworkParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.OpenStackIdentityReference", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.RouterParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetParam", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec", "sigs.k8s.io/cluster-api/api/core/v1beta2.APIEndpoint"},
 	}
 }
 
@@ -25972,6 +26079,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 									},
 								},
 							},
+						},
+					},
+					"failureDomain": {
+						SchemaProps: spec.SchemaProps{
+							Description: "failureDomain identifies the Cluster API failure domain associated with this subnet.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
