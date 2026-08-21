@@ -47,6 +47,8 @@ var _ admission.Validator[*infrav1.OpenStackCluster] = &openStackClusterWebhook{
 func (*openStackClusterWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackCluster) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.FailureDomainSubnets, field.NewPath("spec", "failureDomainSubnets"))...)
+	allErrs = append(allErrs, validateManagedSubnetConfiguration(newObj.Spec.ManagedSubnets, newObj.Spec.FailureDomainSubnets, field.NewPath("spec", "failureDomainSubnets"))...)
 	if newObj.Spec.ManagedSecurityGroups != nil {
 		allErrs = append(allErrs, validateManagedSecurityGroupRules(newObj.Spec.ManagedSecurityGroups)...)
 	}
@@ -54,9 +56,9 @@ func (*openStackClusterWebhook) ValidateCreate(_ context.Context, newObj *infrav
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
-// allowSubnetFilterToIDTransition checks if changes to OpenStackCluster.Spec.Subnets
-// are transitioning from a Filter-based definition to an ID-based one, and whether
-// those transitions are valid based on the current status.network.subnets.
+// allowSubnetFilterToIDTransition checks if changes to OpenStackCluster subnet
+// definitions are transitioning from a Filter-based definition to an ID-based one,
+// and whether those transitions are valid based on the current status.network.subnets.
 //
 // This function only allows Filter → ID transitions when the filter name in the old
 // spec matches the subnet name in status, and the new ID matches the corresponding subnet ID.
@@ -67,18 +69,25 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 		return false
 	}
 
-	if len(newObj.Spec.Subnets) != len(oldObj.Spec.Subnets) || len(oldObj.Status.Network.Subnets) == 0 {
+	if allowSubnetParamFilterToIDTransition(oldObj.Spec.Subnets, newObj.Spec.Subnets, oldObj.Status.Network.Subnets) {
+		return true
+	}
+	return allowFailureDomainSubnetFilterToIDTransition(oldObj.Spec.FailureDomainSubnets, newObj.Spec.FailureDomainSubnets, oldObj.Status.Network.Subnets)
+}
+
+func allowSubnetParamFilterToIDTransition(oldSubnets, newSubnets []infrav1.SubnetParam, statusSubnets []infrav1.Subnet) bool {
+	if len(newSubnets) == 0 || len(newSubnets) != len(oldSubnets) || len(statusSubnets) == 0 {
 		return false
 	}
 
-	for i := range newObj.Spec.Subnets {
-		oldSubnet := oldObj.Spec.Subnets[i]
-		newSubnet := newObj.Spec.Subnets[i]
+	for i := range newSubnets {
+		oldSubnet := oldSubnets[i]
+		newSubnet := newSubnets[i]
 
-		// Allow Filter → ID only if both values match a known subnet in status
+		// Allow Filter → ID only if both values match a known subnet in status.
 		if oldSubnet.Filter != nil && newSubnet.ID != nil && newSubnet.Filter == nil {
 			matchFound := false
-			for _, statusSubnet := range oldObj.Status.Network.Subnets {
+			for _, statusSubnet := range statusSubnets {
 				if oldSubnet.Filter.Name == statusSubnet.Name && *newSubnet.ID == statusSubnet.ID {
 					matchFound = true
 					break
@@ -89,12 +98,12 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 			}
 		}
 
-		// Reject any change from ID → Filter
+		// Reject any change from ID → Filter.
 		if oldSubnet.ID != nil && newSubnet.Filter != nil {
 			return false
 		}
 
-		// Reject changes to Filter or ID if they do not match the old values
+		// Reject changes to Filter or ID if they do not match the old values.
 		if oldSubnet.Filter != nil && newSubnet.Filter != nil &&
 			oldSubnet.Filter.Name != newSubnet.Filter.Name {
 			return false
@@ -108,9 +117,28 @@ func allowSubnetFilterToIDTransition(oldObj, newObj *infrav1.OpenStackCluster) b
 	return true
 }
 
+func allowFailureDomainSubnetFilterToIDTransition(oldSubnets, newSubnets []infrav1.FailureDomainSubnet, statusSubnets []infrav1.Subnet) bool {
+	if len(newSubnets) == 0 || len(newSubnets) != len(oldSubnets) {
+		return false
+	}
+	oldParams := make([]infrav1.SubnetParam, len(oldSubnets))
+	newParams := make([]infrav1.SubnetParam, len(newSubnets))
+	for i := range newSubnets {
+		if oldSubnets[i].FailureDomain != newSubnets[i].FailureDomain {
+			return false
+		}
+		oldParams[i] = oldSubnets[i].Subnet
+		newParams[i] = newSubnets[i].Subnet
+	}
+	return allowSubnetParamFilterToIDTransition(oldParams, newParams, statusSubnets)
+}
+
 // ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
 func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj *infrav1.OpenStackCluster) (admission.Warnings, error) { //nolint:gocyclo,cyclop
 	var allErrs field.ErrorList
+
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.FailureDomainSubnets, field.NewPath("spec", "failureDomainSubnets"))...)
+	allErrs = append(allErrs, validateManagedSubnetConfiguration(newObj.Spec.ManagedSubnets, newObj.Spec.FailureDomainSubnets, field.NewPath("spec", "failureDomainSubnets"))...)
 
 	// Allow changes to Spec.IdentityRef
 	oldObj.Spec.IdentityRef = infrav1.OpenStackIdentityReference{}
@@ -257,8 +285,14 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	// filter to id. This lets users pin to resolved IDs after initial creation.
 	if newObj.Spec.Network != nil && oldObj.Spec.Network != nil && oldObj.Status.Network != nil {
 		if allowSubnetFilterToIDTransition(oldObj, newObj) {
-			oldObj.Spec.Subnets = nil
-			newObj.Spec.Subnets = nil
+			if allowSubnetParamFilterToIDTransition(oldObj.Spec.Subnets, newObj.Spec.Subnets, oldObj.Status.Network.Subnets) {
+				oldObj.Spec.Subnets = nil
+				newObj.Spec.Subnets = nil
+			}
+			if allowFailureDomainSubnetFilterToIDTransition(oldObj.Spec.FailureDomainSubnets, newObj.Spec.FailureDomainSubnets, oldObj.Status.Network.Subnets) {
+				oldObj.Spec.FailureDomainSubnets = nil
+				newObj.Spec.FailureDomainSubnets = nil
+			}
 		}
 		if ptr.Deref(newObj.Spec.Network.ID, "") == oldObj.Status.Network.ID {
 			newObj.Spec.Network = nil
@@ -273,6 +307,38 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 	}
 
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
+}
+
+// validateSubnetFailureDomains validates the optional subnet-to-failure-domain mapping.
+// Each mapping must specify a non-empty failure domain, and each failure domain
+// must identify at most one subnet. Legacy fallback subnets are validated separately.
+func validateSubnetFailureDomains(subnets []infrav1.FailureDomainSubnet, path *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	seen := make(map[string]int, len(subnets))
+	for i := range subnets {
+		failureDomainPath := path.Index(i).Child("failureDomain")
+		failureDomain := subnets[i].FailureDomain
+		if failureDomain == "" {
+			allErrs = append(allErrs, field.Required(failureDomainPath, "must be set"))
+			continue
+		}
+		if previousIndex, exists := seen[failureDomain]; exists {
+			allErrs = append(allErrs, field.Duplicate(failureDomainPath, fmt.Sprintf("already used by subnet index %d", previousIndex)))
+			continue
+		}
+		seen[failureDomain] = i
+	}
+	return allErrs
+}
+
+// validateManagedSubnetConfiguration rejects the combination of managed subnets
+// and failure-domain subnet mappings because the managed-network path does not
+// use the mapping.
+func validateManagedSubnetConfiguration(managedSubnets []infrav1.SubnetSpec, failureDomainSubnets []infrav1.FailureDomainSubnet, path *field.Path) field.ErrorList {
+	if len(managedSubnets) == 0 || len(failureDomainSubnets) == 0 {
+		return nil
+	}
+	return field.ErrorList{field.Forbidden(path, "cannot be used together with spec.managedSubnets")}
 }
 
 // ValidateDelete implements admission.Validator so a webhook will be registered for the type.

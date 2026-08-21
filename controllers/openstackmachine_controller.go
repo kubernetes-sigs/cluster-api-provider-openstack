@@ -617,6 +617,10 @@ func (r *OpenStackMachineReconciler) getMachineServer(ctx context.Context, openS
 // openStackMachineSpecToOpenStackServerSpec converts an OpenStackMachineSpec to an OpenStackServerSpec.
 // It returns the OpenStackServerSpec object and an error if there is any.
 func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, openStackCluster *infrav1.OpenStackCluster) (*infrav1alpha1.OpenStackServerSpec, error) {
+	return openStackMachineSpecToOpenStackServerSpecWithSubnetSelection(openStackMachineSpec, identityRef, tags, failureDomain, userDataRef, defaultSecGroup, openStackCluster, true)
+}
+
+func openStackMachineSpecToOpenStackServerSpecWithSubnetSelection(openStackMachineSpec *infrav1.OpenStackMachineSpec, identityRef infrav1.OpenStackIdentityReference, tags []string, failureDomain string, userDataRef *corev1.LocalObjectReference, defaultSecGroup *string, openStackCluster *infrav1.OpenStackCluster, useFailureDomainSubnetMapping bool) (*infrav1alpha1.OpenStackServerSpec, error) {
 	// Determine default network ID if the cluster status exposes one.
 	var defaultNetworkID string
 	if openStackCluster != nil {
@@ -690,19 +694,22 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	}
 
 	var clusterSubnets []infrav1.FixedIP
-	if openStackCluster.Spec.PrimarySubnet != nil {
-		// When a primary subnet is set, restrict node ports to that subnet only.
-		// This allows an administrator to direct new nodes to a specific subnet,
-		// e.g. when migrating away from an exhausted subnet.
-		clusterSubnets = []infrav1.FixedIP{
-			{Subnet: openStackCluster.Spec.PrimarySubnet},
+	needsDefaultNetwork := false
+	for _, port := range serverPorts {
+		if port.Network == nil && defaultNetworkID != "" {
+			needsDefaultNetwork = true
+			break
 		}
-	} else if len(openStackCluster.Spec.Subnets) > 0 {
-		clusterSubnets = make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
-		for idx, sn := range openStackCluster.Spec.Subnets {
-			clusterSubnets[idx] = infrav1.FixedIP{
-				Subnet: &sn,
-			}
+	}
+	if needsDefaultNetwork {
+		var err error
+		if useFailureDomainSubnetMapping {
+			clusterSubnets, err = clusterSubnetsForFailureDomain(openStackCluster, failureDomain)
+		} else {
+			clusterSubnets = legacyClusterSubnets(openStackCluster)
+		}
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -732,6 +739,47 @@ func openStackMachineSpecToOpenStackServerSpec(openStackMachineSpec *infrav1.Ope
 	openStackServerSpec.Ports = serverPorts
 
 	return openStackServerSpec, nil
+}
+
+func clusterSubnetsForFailureDomain(openStackCluster *infrav1.OpenStackCluster, failureDomain string) ([]infrav1.FixedIP, error) {
+	var clusterSubnets []infrav1.FixedIP
+	for i := range openStackCluster.Spec.FailureDomainSubnets {
+		subnet := &openStackCluster.Spec.FailureDomainSubnets[i]
+		if subnet.FailureDomain == failureDomain {
+			clusterSubnets = append(clusterSubnets, infrav1.FixedIP{Subnet: &subnet.Subnet})
+		}
+	}
+	if len(clusterSubnets) > 1 {
+		return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, fmt.Sprintf("more than one cluster subnet is mapped to failure domain %q", failureDomain))
+	}
+	if len(openStackCluster.Spec.FailureDomainSubnets) > 0 {
+		if len(clusterSubnets) == 0 {
+			if failureDomain == "" {
+				legacySubnets := legacyClusterSubnets(openStackCluster)
+				if len(legacySubnets) > 0 {
+					return legacySubnets, nil
+				}
+				return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, "cluster subnets are mapped to failure domains but the machine has no failure domain or legacy subnet fallback")
+			}
+			return nil, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, fmt.Sprintf("no cluster subnet is mapped to failure domain %q", failureDomain))
+		}
+		return clusterSubnets, nil
+	}
+	return legacyClusterSubnets(openStackCluster), nil
+}
+
+func legacyClusterSubnets(openStackCluster *infrav1.OpenStackCluster) []infrav1.FixedIP {
+	if openStackCluster.Spec.PrimarySubnet != nil {
+		return []infrav1.FixedIP{{Subnet: openStackCluster.Spec.PrimarySubnet}}
+	}
+	if len(openStackCluster.Spec.Subnets) > 0 {
+		clusterSubnets := make([]infrav1.FixedIP, len(openStackCluster.Spec.Subnets))
+		for idx := range openStackCluster.Spec.Subnets {
+			clusterSubnets[idx] = infrav1.FixedIP{Subnet: &openStackCluster.Spec.Subnets[idx]}
+		}
+		return clusterSubnets
+	}
+	return nil
 }
 
 // reconcileMachineServer reconciles the OpenStackServer object for the OpenStackMachine.

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
@@ -825,6 +826,72 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Switching OpenStackCluster.Spec.Subnets from filter.name to id while changing FailureDomain is not allowed",
+			oldCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					FailureDomainSubnets: []infrav1.FailureDomainSubnet{
+						{
+							Subnet:        infrav1.SubnetParam{Filter: &infrav1.SubnetFilter{Name: "test-subnet"}},
+							FailureDomain: "az1",
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "subnet-123",
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			newCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					Network: &infrav1.NetworkParam{
+						ID: ptr.To("net-123"),
+					},
+					FailureDomainSubnets: []infrav1.FailureDomainSubnet{
+						{
+							Subnet:        infrav1.SubnetParam{ID: ptr.To("subnet-123")},
+							FailureDomain: "az2",
+						},
+					},
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					Network: &infrav1.NetworkStatusWithSubnets{
+						NetworkStatus: infrav1.NetworkStatus{
+							ID:   "net-123",
+							Name: "testnetwork",
+						},
+						Subnets: []infrav1.Subnet{
+							{
+								ID:   "subnet-123",
+								Name: "test-subnet",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
 			name: "Switching OpenStackCluster.Spec.Subnets from filter.name to id is not allowed when they refer to different subnets",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
@@ -1500,6 +1567,81 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 	}
 }
 
+func TestValidateSubnetFailureDomains(t *testing.T) {
+	tests := []struct {
+		name    string
+		subnets []infrav1.FailureDomainSubnet
+		wantErr bool
+	}{
+		{
+			name:    "legacy subnets without mapping",
+			subnets: []infrav1.FailureDomainSubnet{},
+		},
+		{
+			name: "one subnet per failure domain",
+			subnets: []infrav1.FailureDomainSubnet{
+				{FailureDomain: "dal-az", Subnet: infrav1.SubnetParam{ID: ptr.To("11111111-1111-1111-1111-111111111111")}},
+				{FailureDomain: "did-az", Subnet: infrav1.SubnetParam{ID: ptr.To("22222222-2222-2222-2222-222222222222")}},
+			},
+		},
+		{
+			name: "mapping requires every subnet to have a failure domain",
+			subnets: []infrav1.FailureDomainSubnet{
+				{FailureDomain: "dal-az", Subnet: infrav1.SubnetParam{ID: ptr.To("11111111-1111-1111-1111-111111111111")}},
+				{Subnet: infrav1.SubnetParam{ID: ptr.To("22222222-2222-2222-2222-222222222222")}},
+			},
+			wantErr: true,
+		},
+		{
+			name: "failure domains cannot be duplicated",
+			subnets: []infrav1.FailureDomainSubnet{
+				{FailureDomain: "dal-az", Subnet: infrav1.SubnetParam{ID: ptr.To("11111111-1111-1111-1111-111111111111")}},
+				{FailureDomain: "dal-az", Subnet: infrav1.SubnetParam{ID: ptr.To("22222222-2222-2222-2222-222222222222")}},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := validateSubnetFailureDomains(tt.subnets, field.NewPath("spec", "failureDomainSubnets"))
+			if (len(errs) > 0) != tt.wantErr {
+				t.Fatalf("validateSubnetFailureDomains() errors = %v, wantErr %v", errs, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateManagedSubnetConfiguration(t *testing.T) {
+	path := field.NewPath("spec", "failureDomainSubnets")
+	managedSubnets := []infrav1.SubnetSpec{{CIDR: "192.168.0.0/24"}}
+	failureDomainSubnets := []infrav1.FailureDomainSubnet{{
+		FailureDomain: "az1",
+		Subnet:        infrav1.SubnetParam{ID: ptr.To("11111111-1111-1111-1111-111111111111")},
+	}}
+
+	tests := []struct {
+		name    string
+		managed []infrav1.SubnetSpec
+		mapped  []infrav1.FailureDomainSubnet
+		wantErr bool
+	}{
+		{name: "neither configuration", wantErr: false},
+		{name: "managed subnets only", managed: managedSubnets, wantErr: false},
+		{name: "failure-domain subnets only", mapped: failureDomainSubnets, wantErr: false},
+		{name: "managed and failure-domain subnets", managed: managedSubnets, mapped: failureDomainSubnets, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := validateManagedSubnetConfiguration(tt.managed, tt.mapped, path)
+			if (len(errs) > 0) != tt.wantErr {
+				t.Fatalf("validateManagedSubnetConfiguration() errors = %v, wantErr %v", errs, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -1630,5 +1772,28 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 			// Nothing emits warnings yet
 			g.Expect(warn).To(BeEmpty())
 		})
+	}
+}
+
+func TestOpenStackCluster_ValidateCreateRejectsManagedFailureDomainSubnets(t *testing.T) {
+	cluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSubnets: []infrav1.SubnetSpec{{CIDR: "192.168.0.0/24"}},
+			FailureDomainSubnets: []infrav1.FailureDomainSubnet{{
+				FailureDomain: "az1",
+				Subnet:        infrav1.SubnetParam{ID: ptr.To("11111111-1111-1111-1111-111111111111")},
+			}},
+		},
+	}
+
+	webhook := &openStackClusterWebhook{}
+	_, err := webhook.ValidateCreate(context.TODO(), cluster)
+	if err == nil {
+		t.Fatal("ValidateCreate() error = nil, want an incompatibility error")
+	}
+
+	_, err = webhook.ValidateUpdate(context.TODO(), &infrav1.OpenStackCluster{}, cluster.DeepCopy())
+	if err == nil {
+		t.Fatal("ValidateUpdate() error = nil, want an incompatibility error")
 	}
 }

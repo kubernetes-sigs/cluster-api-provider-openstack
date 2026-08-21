@@ -50,6 +50,16 @@ func TestOpenStackClusterConversion(t *testing.T) {
 					CIDR: "192.168.0.0/24",
 				},
 			},
+			FailureDomainSubnets: []FailureDomainSubnet{
+				{
+					FailureDomain: "az-1",
+					Subnet:        SubnetParam{ID: ptr.To("11111111-1111-1111-1111-111111111111")},
+				},
+				{
+					FailureDomain: "az-2",
+					Subnet:        SubnetParam{ID: ptr.To("22222222-2222-2222-2222-222222222222")},
+				},
+			},
 			ManagedSecurityGroups: &ManagedSecurityGroups{},
 			Bastion: &Bastion{
 				Enabled: ptr.To(true),
@@ -101,6 +111,11 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	g.Expect(dst.Spec.IdentityRef.Name).To(Equal("cloud-config"))
 	g.Expect(dst.Spec.ManagedSubnets).To(HaveLen(1))
 	g.Expect(dst.Spec.ManagedNetwork).To(BeNil())
+	g.Expect(dst.Spec.FailureDomainSubnets).To(HaveLen(2))
+	g.Expect(dst.Spec.FailureDomainSubnets[0].FailureDomain).To(Equal("az-1"))
+	g.Expect(ptr.Deref(dst.Spec.FailureDomainSubnets[0].Subnet.ID, "")).To(Equal("11111111-1111-1111-1111-111111111111"))
+	g.Expect(dst.Spec.FailureDomainSubnets[1].FailureDomain).To(Equal("az-2"))
+	g.Expect(ptr.Deref(dst.Spec.FailureDomainSubnets[1].Subnet.ID, "")).To(Equal("22222222-2222-2222-2222-222222222222"))
 
 	// Verify flavor mapping (name -> FlavorParam.Filter.Name)
 	g.Expect(dst.Spec.Bastion.Spec.Flavor.ID).To(BeNil())
@@ -137,6 +152,9 @@ func TestOpenStackClusterConversion(t *testing.T) {
 	// Verify round-trip
 	g.Expect(restored.Name).To(Equal(src.Name))
 	g.Expect(restored.Spec.IdentityRef).To(Equal(src.Spec.IdentityRef))
+	g.Expect(restored.Spec.FailureDomainSubnets).To(HaveLen(2))
+	g.Expect(restored.Spec.FailureDomainSubnets[0]).To(Equal(src.Spec.FailureDomainSubnets[0]))
+	g.Expect(restored.Spec.FailureDomainSubnets[1]).To(Equal(src.Spec.FailureDomainSubnets[1]))
 	g.Expect(restored.Status.Ready).To(BeTrue())
 	g.Expect(restored.Status.Conditions).To(HaveLen(2))
 	g.Expect(restored.Spec.NetworkMTU).To(BeNil())

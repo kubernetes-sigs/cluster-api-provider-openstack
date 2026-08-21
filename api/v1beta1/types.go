@@ -201,6 +201,18 @@ type SubnetParam struct {
 	Filter *SubnetFilter `json:"filter,omitempty"`
 }
 
+// FailureDomainSubnet associates an OpenStack subnet with a Cluster API failure domain.
+type FailureDomainSubnet struct {
+	// FailureDomain identifies the Cluster API failure domain associated with this subnet.
+	// +required
+	// +kubebuilder:validation:MinLength:=1
+	FailureDomain string `json:"failureDomain,omitempty"`
+
+	// Subnet identifies the OpenStack subnet associated with the failure domain.
+	// +required
+	Subnet SubnetParam `json:"subnet"`
+}
+
 // SubnetFilter specifies a filter to select a subnet. At least one parameter must be specified.
 // +kubebuilder:validation:MinProperties:=1
 type SubnetFilter struct {
@@ -661,6 +673,10 @@ type Subnet struct {
 
 	//+optional
 	Tags []string `json:"tags,omitempty"`
+
+	// FailureDomain identifies the Cluster API failure domain associated with this subnet.
+	//+optional
+	FailureDomain string `json:"failureDomain,omitempty"`
 }
 
 // Router represents basic information about the associated OpenStack Neutron Router.
