@@ -69,6 +69,8 @@ var _ = BeforeSuite(func() {
 		CRDs: []*apiextensionsv1.CustomResourceDefinition{
 			external.TestClusterCRD.DeepCopy(),
 			external.TestMachineCRD.DeepCopy(),
+			external.TestIPAddressClaimCRD.DeepCopy(),
+			external.TestIPAddressCRD.DeepCopy(),
 		},
 	}
 
