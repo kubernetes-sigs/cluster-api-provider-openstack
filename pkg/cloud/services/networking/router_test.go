@@ -17,10 +17,13 @@ limitations under the License.
 package networking
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/go-logr/logr/testr"
 	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	. "github.com/onsi/gomega"
@@ -29,6 +32,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 func TestService_DeleteRouter(t *testing.T) {
@@ -212,6 +216,110 @@ func TestService_DeleteRouter(t *testing.T) {
 			if err := s.DeleteRouter(&tt.openStackCluster, clusterResourceName); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteRouter() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func TestService_createRouter(t *testing.T) {
+	const (
+		clusterResourceName = "test-cluster"
+		routerName          = "k8s-clusterapi-cluster-test-cluster"
+		routerID            = "38052015-5cbc-4cb4-8e45-445d53260f60"
+		externalNetworkID   = "6f2be7de-2f6b-4bdb-b6d3-8e1f1e6b7f01"
+	)
+
+	tests := []struct {
+		name    string
+		tags    []string
+		expect  func(m *mock.MockNetworkClientMockRecorder)
+		wantErr bool
+	}{
+		{
+			name: "no tags requested, no extension lookup needed",
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.CreateRouter(routers.CreateOpts{
+					Name:        routerName,
+					Description: names.GetDescription(clusterResourceName),
+					GatewayInfo: &routers.GatewayInfo{NetworkID: externalNetworkID},
+				}).Return(&routers.Router{ID: routerID}, nil)
+			},
+		},
+		{
+			name: "tags requested, standard-attr-tag not supported",
+			tags: []string{"cluster-tag"},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				// standard-attr-tag support must be checked before the router
+				// is created, and ReplaceAllAttributesTags must not be called
+				// since the extension is not advertised.
+				m.ListExtensions().Return([]extensions.Extension{}, nil)
+
+				m.CreateRouter(routers.CreateOpts{
+					Name:        routerName,
+					Description: names.GetDescription(clusterResourceName),
+					GatewayInfo: &routers.GatewayInfo{NetworkID: externalNetworkID},
+				}).Return(&routers.Router{ID: routerID}, nil)
+			},
+		},
+		{
+			name: "tags requested, standard-attr-tag supported",
+			tags: []string{"cluster-tag"},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				standardAttrTagExt := extensions.Extension{}
+				standardAttrTagExt.Alias = "standard-attr-tag"
+				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+
+				m.CreateRouter(routers.CreateOpts{
+					Name:        routerName,
+					Description: names.GetDescription(clusterResourceName),
+					GatewayInfo: &routers.GatewayInfo{NetworkID: externalNetworkID},
+				}).Return(&routers.Router{ID: routerID}, nil)
+
+				m.ReplaceAllAttributesTags("routers", routerID, attributestags.ReplaceAllOpts{
+					Tags: []string{"cluster-tag"},
+				}).Return([]string{"cluster-tag"}, nil)
+			},
+		},
+		{
+			name: "tags requested, extension discovery fails before router is created",
+			tags: []string{"cluster-tag"},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				// ListExtensions fails before CreateRouter is ever called.
+				m.ListExtensions().Return(nil, errors.New("boom"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			g := NewWithT(t)
+			log := testr.New(t)
+
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+			g.Expect(err).NotTo(HaveOccurred())
+
+			openStackCluster := &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					Tags: tt.tags,
+				},
+				Status: infrav1.OpenStackClusterStatus{
+					ExternalNetwork: &infrav1.NetworkStatus{ID: externalNetworkID},
+				},
+			}
+
+			tt.expect(mockScopeFactory.NetworkClient.EXPECT())
+
+			router, err := s.createRouter(openStackCluster, clusterResourceName, routerName)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+				return
+			}
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(router).To(Equal(&routers.Router{ID: routerID}))
 		})
 	}
 }

@@ -129,11 +129,35 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
 	wantedTags := uniqueSortedTags(portSpec.Tags)
 	actualTags := uniqueSortedTags(port.Tags)
+
+	// hasTagSupport is populated lazily on first use so that ensurePortTagsAndTrunk
+	// performs at most one ListExtensions call, even when both the port and its
+	// trunk need tagging.
+	var hasTagSupport *bool
+	tagSupportChecked := func() (bool, error) {
+		if hasTagSupport == nil {
+			supported, err := s.hasStandardAttrTagExtension()
+			if err != nil {
+				return false, err
+			}
+			hasTagSupport = &supported
+		}
+		return *hasTagSupport, nil
+	}
+
 	// Only replace tags if there is a difference
 	if !slices.Equal(wantedTags, actualTags) && len(wantedTags) > 0 {
-		if err := s.replaceAllAttributesTags(eventObject, portResource, port.ID, wantedTags); err != nil {
-			record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", port.Name, err)
+		supported, err := tagSupportChecked()
+		if err != nil {
 			return err
+		}
+		if supported {
+			if err := s.replaceAllAttributesTags(eventObject, portResource, port.ID, wantedTags); err != nil {
+				record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", port.Name, err)
+				return err
+			}
+		} else {
+			s.scope.Logger().V(4).Info("standard-attr-tag extension not available, skipping tag replacement", "resourceType", portResource, "resourceID", port.ID)
 		}
 	}
 	if ptr.Deref(portSpec.Trunk, false) {
@@ -143,10 +167,18 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 			return err
 		}
 
-		if !slices.Equal(wantedTags, trunk.Tags) {
-			if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, wantedTags); err != nil {
-				record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
+		if len(wantedTags) > 0 && !slices.Equal(wantedTags, trunk.Tags) {
+			supported, err := tagSupportChecked()
+			if err != nil {
 				return err
+			}
+			if supported {
+				if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, wantedTags); err != nil {
+					record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
+					return err
+				}
+			} else {
+				s.scope.Logger().V(4).Info("standard-attr-tag extension not available, skipping tag replacement", "resourceType", trunkResource, "resourceID", trunk.ID)
 			}
 		}
 	}

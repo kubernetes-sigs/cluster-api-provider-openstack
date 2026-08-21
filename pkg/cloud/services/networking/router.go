@@ -189,6 +189,18 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 		}
 	}
 
+	// Determine standard-attr-tag support before creating the router, so
+	// that a failed extension lookup doesn't leave behind a created router
+	// that reconciliation never retries tagging for.
+	var tagsSupported bool
+	if len(openStackCluster.Spec.Tags) > 0 {
+		var err error
+		tagsSupported, err = s.hasStandardAttrTagExtension()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	router, err := s.client.CreateRouter(opts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
@@ -197,11 +209,15 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	record.Eventf(openStackCluster, "SuccessfulCreateRouter", "Created router %s with id %s", name, router.ID)
 
 	if len(openStackCluster.Spec.Tags) > 0 {
-		_, err = s.client.ReplaceAllAttributesTags("routers", router.ID, attributestags.ReplaceAllOpts{
-			Tags: openStackCluster.Spec.Tags,
-		})
-		if err != nil {
-			return nil, err
+		if tagsSupported {
+			_, err = s.client.ReplaceAllAttributesTags("routers", router.ID, attributestags.ReplaceAllOpts{
+				Tags: openStackCluster.Spec.Tags,
+			})
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			s.scope.Logger().V(4).Info("standard-attr-tag extension not available, skipping tag replacement", "resourceType", "routers", "resourceID", router.ID)
 		}
 	}
 

@@ -78,6 +78,22 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 
 	// create security groups first, because desired rules use group ids.
 	observedSecGroupBySuffix := make(map[string]*groups.SecGroup)
+
+	// hasTagSupport is populated lazily on first use so that ReconcileSecurityGroups
+	// performs at most one ListExtensions call, even when multiple security groups
+	// (control plane, worker, bastion) need tagging in the same invocation.
+	var hasTagSupport *bool
+	tagSupportChecked := func() (bool, error) {
+		if hasTagSupport == nil {
+			supported, err := s.hasStandardAttrTagExtension()
+			if err != nil {
+				return false, err
+			}
+			hasTagSupport = &supported
+		}
+		return *hasTagSupport, nil
+	}
+
 	for suffix, secGroupName := range suffixToNameMap {
 		group, err := s.getOrCreateSecurityGroup(openStackCluster, secGroupName)
 		if err != nil {
@@ -92,13 +108,21 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 		}
 
 		if !slices.Equal(normaliseTags(openStackCluster.Spec.Tags), normaliseTags(group.Tags)) {
-			_, err = s.client.ReplaceAllAttributesTags("security-groups", group.ID, attributestags.ReplaceAllOpts{
-				Tags: openStackCluster.Spec.Tags,
-			})
+			supported, err := tagSupportChecked()
 			if err != nil {
 				return err
 			}
-			s.scope.Logger().V(5).Info("Updated tags for security group", "name", group.Name, "id", group.ID)
+			if supported {
+				_, err = s.client.ReplaceAllAttributesTags("security-groups", group.ID, attributestags.ReplaceAllOpts{
+					Tags: openStackCluster.Spec.Tags,
+				})
+				if err != nil {
+					return err
+				}
+				s.scope.Logger().V(5).Info("Updated tags for security group", "name", group.Name, "id", group.ID)
+			} else {
+				s.scope.Logger().V(4).Info("standard-attr-tag extension not available, skipping tag replacement", "resourceType", "security-groups", "resourceID", group.ID)
+			}
 		}
 	}
 
