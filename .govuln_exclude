@@ -1,7 +1,23 @@
 # Requires a go version bump to fix (golang.org/x/net >= v0.55.0).
 # These vulnerabilities require a compromised OpenStack or Kubernetes API
 # server to exploit, which is not something we defend against.
-# https://pkg.go.dev/vuln/GO-2026-5026
+# https://pkg.go.dev/vuln/GO-2026-5026 (alias CVE-2026-39821, see .trivyignore)
 GO-2026-5026
-# https://pkg.go.dev/vuln/GO-2026-4918
+# https://pkg.go.dev/vuln/GO-2026-4918 (alias CVE-2026-33814, see .trivyignore)
 GO-2026-4918
+
+# golang.org/x/text infinite loop on invalid input. Fixed in x/text v0.39.0,
+# which requires go 1.25.0.
+# Reachable via gophercloud microversion negotiation (openstack API responses)
+# and record.Warnf (object names) - both effectively require a compromised or
+# malicious OpenStack API to exploit.
+# https://pkg.go.dev/vuln/GO-2026-5970 (alias CVE-2026-56852, see .trivyignore)
+GO-2026-5970
+
+# google.golang.org/grpc xDS RBAC and HTTP/2 transport vulnerabilities. Fixed
+# in grpc v1.82.1, which requires go 1.25.0.
+# Reachable only via the optional OTLP-over-gRPC trace exporter
+# (go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc), which is
+# not used unless OTLP tracing is explicitly configured.
+# https://pkg.go.dev/vuln/GO-2026-6061 (alias GHSA-hrxh-6v49-42gf, see .trivyignore)
+GO-2026-6061
