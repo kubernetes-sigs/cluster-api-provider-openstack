@@ -294,7 +294,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 	}
 
 	for i := 0; i < len(ipAddresses.Items); i++ {
-		ipAddress := &(ipAddresses.Items[i])
+		ipAddress := &ipAddresses.Items[i]
 		if ipAddress.DeletionTimestamp.IsZero() {
 			pool.Status.ClaimedIPs = append(pool.Status.ClaimedIPs, ipAddress.Spec.Address)
 			continue

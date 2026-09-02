@@ -191,7 +191,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 	}
 	if bastionServer != nil {
 		scope.Logger().Info("Waiting for the bastion OpenStackServer object to be deleted", "openStackServer", bastionServer.Name)
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
 	networkingService, err := networking.NewService(scope)
