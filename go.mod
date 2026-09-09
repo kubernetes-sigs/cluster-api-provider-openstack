@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/go-version v1.9.0
 	github.com/k-orc/openstack-resource-controller/v2 v2.6.0
 	github.com/onsi/ginkgo/v2 v2.32.1
-	github.com/onsi/gomega v1.42.1
+	github.com/onsi/gomega v1.43.0
 	github.com/prometheus/client_golang v1.24.1
 	github.com/spf13/pflag v1.0.10
 	go.uber.org/mock v0.6.0
@@ -28,9 +28,9 @@ require (
 	k8s.io/klog/v2 v2.140.0
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
-	sigs.k8s.io/cluster-api v1.14.0
-	sigs.k8s.io/cluster-api/api v1.14.0
-	sigs.k8s.io/cluster-api/test v1.14.0
+	sigs.k8s.io/cluster-api v1.14.1
+	sigs.k8s.io/cluster-api/api v1.14.1
+	sigs.k8s.io/cluster-api/test v1.14.1
 	sigs.k8s.io/controller-runtime v0.24.1
 	sigs.k8s.io/randfill v1.0.0
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2
@@ -161,5 +161,5 @@ require (
 	k8s.io/streaming v0.36.4 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.34.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
-	sigs.k8s.io/kind v0.32.0 // indirect
+	sigs.k8s.io/kind v0.33.0 // indirect
 )
