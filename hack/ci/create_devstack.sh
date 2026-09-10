@@ -154,6 +154,53 @@ function wait_for_devstack {
     done
 }
 
+function wait_for_network_ready {
+    local ip=$1 && shift
+
+    ssh_cmd=$(get_ssh_cmd)
+
+    # cloud-final completing means devstack's stack.sh reported success, but
+    # Neutron/OVN can still be reconfiguring the external network (br-ex,
+    # chassis registration, etc.) for a short while afterwards. If we start
+    # creating OpenStack resources during this window, outbound requests from
+    # the controller (in particular Glance's image download, which ORC will
+    # only retry a handful of times before giving up permanently) can fail
+    # with "Network is unreachable".
+    # Wait until the controller can reliably reach the outside world before
+    # letting the caller continue.
+    #
+    # Deliberately do NOT use curl's --fail here: an unauthenticated GET
+    # against the bare storage.googleapis.com host always returns HTTP 400
+    # (MissingSecurityHeader), even when the network is perfectly healthy.
+    # --fail would treat that expected 400 as a failure and this check would
+    # never succeed. What we actually want to know is whether curl can
+    # complete the TCP/TLS/HTTP round trip at all, regardless of status code.
+    #
+    # --show-error makes curl print the actual error (DNS failure, connection
+    # refused/timeout, TLS error, etc.) instead of failing silently, and
+    # --max-time bounds how long a single hung attempt can block a retry slot.
+    echo "Waiting for outbound network connectivity on $ip"
+    retry 30 15 "$ssh_cmd $ip -- curl --silent --show-error --max-time 15 --output /dev/null https://storage.googleapis.com" && return
+
+    # We only get here if every attempt above failed. Capture some basic
+    # network diagnostics from the controller so a failure here is
+    # self-explanatory instead of requiring after-the-fact log archaeology.
+    echo "Outbound network connectivity check failed, collecting diagnostics from $ip"
+    $ssh_cmd "$ip" -- '
+        echo "--- ip -4 addr ---"; ip -4 addr show
+        echo "--- ip -4 route ---"; ip -4 route show
+        echo "--- resolv.conf ---"; cat /etc/resolv.conf 2>&1
+        echo "--- resolvectl status ---"; resolvectl status 2>&1
+        echo "--- iptables filter ---"; sudo iptables -S 2>&1
+        echo "--- iptables nat ---"; sudo iptables -t nat -S 2>&1
+        echo "--- curl storage.googleapis.com (verbose) ---"; curl -v --max-time 15 --output /dev/null https://storage.googleapis.com 2>&1
+        echo "--- curl github.com (verbose, alternate target) ---"; curl -v --max-time 15 --output /dev/null https://github.com 2>&1
+    ' > "${devstackdir}/network-ready-failure-diagnostics.log" 2>&1 || true
+    echo "See ${devstackdir}/network-ready-failure-diagnostics.log for diagnostics"
+
+    return 1
+}
+
 function create_devstack {
     local name=$1 && shift
     local ip=$1 && shift
@@ -229,6 +276,13 @@ function main() {
     start_sshuttle
 
     wait_for_devstack controller "$CONTROLLER_IP"
+
+    # Networking (Neutron/OVN) may still be settling for a short while after
+    # devstack itself reports ready. Make sure the controller has stable
+    # outbound connectivity before we start creating OpenStack resources,
+    # notably ORC-managed images, to avoid permanently failing image imports
+    # due to a transient "Network is unreachable" during this window.
+    wait_for_network_ready "$CONTROLLER_IP"
 
     # At this point the controller is a fully functional OpenStack capable of
     # running tests which only require a single availability zone. Here we
