@@ -356,21 +356,22 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	// Only populate failure domains during initial provisioning to avoid
-	// unnecessary status updates from transient AZ changes (e.g. the default
-	// "nova" zone appearing briefly when a new compute host registers).
+	// Populate failure domains only during initial provisioning. Before failure
+	// domain-aware subnet placement was introduced, CAPO populated this status
+	// field once from the availability zones discovered during initial
+	// provisioning and retained that snapshot on later reconciliations. Keep this
+	// behavior to avoid recomputing the list or updating the ControlPlane flags
+	// unnecessarily.
 	if len(openStackCluster.Status.FailureDomains) == 0 {
 		openStackCluster.Status.FailureDomains = make([]clusterv1.FailureDomain, 0, len(availabilityZones))
 		for _, az := range availabilityZones {
-			// By default, the AZ is used or not used for control plane nodes depending on the flag
-			found := !ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
-			// If explicit AZs for control plane nodes are given, they override the value
+			eligible := !ptr.Deref(openStackCluster.Spec.ControlPlaneOmitAvailabilityZone, false)
 			if len(openStackCluster.Spec.ControlPlaneAvailabilityZones) > 0 {
-				found = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
+				eligible = contains(openStackCluster.Spec.ControlPlaneAvailabilityZones, az.ZoneName)
 			}
 			openStackCluster.Status.FailureDomains = append(openStackCluster.Status.FailureDomains, clusterv1.FailureDomain{
 				Name:         az.ZoneName,
-				ControlPlane: ptr.To(found),
+				ControlPlane: ptr.To(eligible),
 			})
 		}
 		sort.Slice(openStackCluster.Status.FailureDomains, func(i, j int) bool {
@@ -639,7 +640,7 @@ func bastionToOpenStackServerSpec(openStackCluster *infrav1.OpenStackCluster) (*
 	if bastion.AvailabilityZone != nil {
 		az = *bastion.AvailabilityZone
 	}
-	openStackServerSpec, err := openStackMachineSpecToOpenStackServerSpec(bastion.Spec, openStackCluster.Spec.IdentityRef, compute.InstanceTags(bastion.Spec, openStackCluster), az, nil, getBastionSecurityGroupID(openStackCluster), openStackCluster)
+	openStackServerSpec, err := openStackMachineSpecToOpenStackServerSpecWithSubnetSelection(bastion.Spec, openStackCluster.Spec.IdentityRef, compute.InstanceTags(bastion.Spec, openStackCluster), az, nil, getBastionSecurityGroupID(openStackCluster), openStackCluster, false)
 	if err != nil {
 		return nil, err
 	}
@@ -858,12 +859,13 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	// Populate the cluster status with the cluster subnets
 	capoSubnets := make([]infrav1.Subnet, len(subnets))
 	for i := range subnets {
-		subnet := &subnets[i]
+		subnet := &subnets[i].Subnet
 		capoSubnets[i] = infrav1.Subnet{
-			ID:   subnet.ID,
-			Name: subnet.Name,
-			CIDR: subnet.CIDR,
-			Tags: subnet.Tags,
+			ID:            subnet.ID,
+			Name:          subnet.Name,
+			CIDR:          subnet.CIDR,
+			Tags:          subnet.Tags,
+			FailureDomain: subnets[i].failureDomain,
 		}
 	}
 	if err := utils.ValidateSubnets(capoSubnets); err != nil {
@@ -1119,11 +1121,22 @@ func handleUpdateOSCError(openstackCluster *infrav1.OpenStackCluster, message er
 	})
 }
 
-// getClusterSubnets retrieves the subnets based on the Subnet filters specified on OpenstackCluster.
-func getClusterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]subnets.Subnet, error) {
-	var clusterSubnets []subnets.Subnet
-	var err error
-	openStackClusterSubnets := openStackCluster.Spec.Subnets
+type configuredClusterSubnetParam struct {
+	param         infrav1.SubnetParam
+	failureDomain string
+}
+
+type resolvedClusterSubnet struct {
+	subnets.Subnet
+	failureDomain string
+}
+
+// getClusterSubnets retrieves the subnets based on the subnet filters specified on OpenStackCluster.
+// Failure-domain subnets are resolved together with the legacy subnet configuration so that all
+// subnets used by machines and bastions are represented in the cluster status.
+func getClusterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]resolvedClusterSubnet, error) {
+	var clusterSubnets []resolvedClusterSubnet
+	openStackClusterSubnets := configuredClusterSubnetParams(openStackCluster)
 	networkID := ""
 	if openStackCluster.Status.Network != nil {
 		networkID = openStackCluster.Status.Network.ID
@@ -1138,7 +1151,7 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 		listOpts := subnets.ListOpts{
 			NetworkID: networkID,
 		}
-		clusterSubnets, err = networkingService.GetSubnetsByFilter(listOpts)
+		resolvedSubnets, err := networkingService.GetSubnetsByFilter(listOpts)
 		if err != nil {
 			err = fmt.Errorf("failed to find subnets: %w", err)
 			if errors.Is(err, capoerrors.ErrFilterMatch) {
@@ -1146,23 +1159,70 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 			}
 			return nil, err
 		}
+		clusterSubnets = make([]resolvedClusterSubnet, len(resolvedSubnets))
+		for i := range resolvedSubnets {
+			clusterSubnets[i].Subnet = resolvedSubnets[i]
+		}
 	} else {
-		for subnet := range openStackClusterSubnets {
-			filteredSubnet, err := networkingService.GetNetworkSubnetByParam(networkID, &openStackClusterSubnets[subnet])
+		clusterSubnets = make([]resolvedClusterSubnet, len(openStackClusterSubnets))
+		subnetCount := 0
+		seen := make(map[string]int, len(openStackClusterSubnets))
+		for i := range openStackClusterSubnets {
+			configuredSubnet := &openStackClusterSubnets[i]
+			filteredSubnet, err := networkingService.GetNetworkSubnetByParam(networkID, &configuredSubnet.param)
 			if err != nil {
-				err = fmt.Errorf("failed to find subnet %d in network %s: %w", subnet, networkID, err)
+				err = fmt.Errorf("failed to find subnet %d in network %s: %w", i, networkID, err)
 				if errors.Is(err, capoerrors.ErrFilterMatch) {
 					handleUpdateOSCError(openStackCluster, err)
 				}
 				return nil, err
 			}
-			clusterSubnets = append(clusterSubnets, *filteredSubnet)
+
+			if existing, ok := seen[filteredSubnet.ID]; ok {
+				if clusterSubnets[existing].failureDomain == "" {
+					clusterSubnets[existing].failureDomain = configuredSubnet.failureDomain
+				}
+			} else {
+				seen[filteredSubnet.ID] = subnetCount
+				clusterSubnets[subnetCount] = resolvedClusterSubnet{
+					Subnet:        *filteredSubnet,
+					failureDomain: configuredSubnet.failureDomain,
+				}
+				subnetCount++
+			}
 
 			// Constrain the next search to the network of the first subnet
 			networkID = filteredSubnet.NetworkID
 		}
+		clusterSubnets = clusterSubnets[:subnetCount]
 	}
 	return clusterSubnets, nil
+}
+
+func configuredClusterSubnetParams(openStackCluster *infrav1.OpenStackCluster) []configuredClusterSubnetParam {
+	if len(openStackCluster.Spec.FailureDomainSubnets) == 0 {
+		clusterSubnets := make([]configuredClusterSubnetParam, len(openStackCluster.Spec.Subnets))
+		for i := range openStackCluster.Spec.Subnets {
+			clusterSubnets[i].param = openStackCluster.Spec.Subnets[i]
+		}
+		return clusterSubnets
+	}
+
+	clusterSubnets := make([]configuredClusterSubnetParam, 0, len(openStackCluster.Spec.FailureDomainSubnets)+len(openStackCluster.Spec.Subnets)+1)
+	for i := range openStackCluster.Spec.FailureDomainSubnets {
+		clusterSubnets = append(clusterSubnets, configuredClusterSubnetParam{
+			param:         openStackCluster.Spec.FailureDomainSubnets[i].Subnet,
+			failureDomain: openStackCluster.Spec.FailureDomainSubnets[i].FailureDomain,
+		})
+	}
+	if openStackCluster.Spec.PrimarySubnet != nil {
+		clusterSubnets = append(clusterSubnets, configuredClusterSubnetParam{param: *openStackCluster.Spec.PrimarySubnet})
+	} else {
+		for i := range openStackCluster.Spec.Subnets {
+			clusterSubnets = append(clusterSubnets, configuredClusterSubnetParam{param: openStackCluster.Spec.Subnets[i]})
+		}
+	}
+	return clusterSubnets
 }
 
 // setClusterNetwork sets network information in the cluster status from an OpenStack network.
