@@ -65,6 +65,11 @@ func TestE2E(t *testing.T) {
 var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
 	data := shared.Node1BeforeSuite(ctx, e2eCtx)
 
+	// Prefetch every glance image used anywhere in the suite before any
+	// spec creates a workload cluster. See the doc comment on
+	// PrefetchNodeImages for why this matters.
+	shared.PrefetchNodeImages(ctx, e2eCtx)
+
 	initialServers, err := shared.DumpOpenStackServers(e2eCtx, servers.ListOpts{})
 	Expect(err).NotTo(HaveOccurred())
 	initialNetworks, err := shared.DumpOpenStackNetworks(e2eCtx, networks.ListOpts{})
