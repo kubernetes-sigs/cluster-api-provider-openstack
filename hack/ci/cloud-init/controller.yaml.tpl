@@ -15,7 +15,6 @@
     # Host tuning
     ENABLE_SYSCTL_MEM_TUNING="True"
     ENABLE_SYSCTL_NET_TUNING="True"
-    ENABLE_ZSWAP="True"
 
     # Octavia
     enable_plugin octavia https://github.com/openstack/octavia stable/${OPENSTACK_RELEASE}
@@ -77,6 +76,23 @@
     IMAGE_URLS="https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/amphora/2022-12-05/amphora-x64-haproxy.qcow2"
     # Increase the total image size limit
     GLANCE_LIMIT_IMAGE_SIZE_TOTAL=20000
+
+    # WORKAROUND:
+    # 	Glance's stable/2026.1 branch picked up a security fix
+    # 	(OSSA-2026-038, CVE-2026-71196/71197/71198) that, for web-download
+    # 	image import, resolves the source host once and pins the HTTP(S)
+    # 	connection to only the first allowed address, with no fallback if
+    # 	that address is unreachable (e.g. an IPv6 address on our single-stack
+    # 	network). This causes our e2e image downloads to hang/fail
+    # 	intermittently. See https://bugs.launchpad.net/glance/+bug/2158999
+    # 	and the introducing commit:
+    # 	https://github.com/openstack/glance/commit/36cbf01e8afcec3851f95385477d785b70283f1b
+    # 	A fix that tries all allowed addresses instead of just the first is
+    # 	merged upstream (https://review.opendev.org/c/openstack/glance/+/1004004)
+    # 	but only on Glance's master branch, not yet backported here.
+    #   We pin the previous commit for now to avoid the issue.
+    # 	Remove this override once a fix is backported to stable/2026.1.
+    GLANCE_BRANCH=24eab18960afaaf246e38efcb9eded21c7e5da9b
 
     [[post-config|$NOVA_CONF]]
     [DEFAULT]
