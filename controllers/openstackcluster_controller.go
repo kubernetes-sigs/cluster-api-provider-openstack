@@ -783,7 +783,11 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 		return fmt.Errorf("failed to reconcile loadbalancer network: %w", err)
 	}
 
-	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
+	// The API server port is configurable, so the control plane security group
+	// must allow traffic to the port the API server actually listens on rather
+	// than assuming the default.
+	apiServerPort := getAPIServerPort(openStackCluster)
+	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterResourceName, apiServerPort)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.SecurityGroupsReadyCondition,
