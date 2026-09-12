@@ -401,7 +401,7 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 				t.Fatalf("Failed to create service: %v", err)
 			}
 
-			gotSecurityGroups, err := s.generateDesiredSecGroups(tt.openStackCluster, secGroupNames, observedSecGroupsBySuffix)
+			gotSecurityGroups, err := s.generateDesiredSecGroups(tt.openStackCluster, secGroupNames, observedSecGroupsBySuffix, 6443)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {
@@ -709,13 +709,98 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 			openStackCluster := &infrav1.OpenStackCluster{
 				Spec: tt.openStackClusterSpec,
 			}
-			err := s.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
+			err := s.ReconcileSecurityGroups(openStackCluster, clusterResourceName, 6443)
 			if tt.wantErr {
 				g.Expect(err).ToNot(BeNil(), "ReconcileSecurityGroups")
 			} else {
 				g.Expect(err).To(BeNil(), "ReconcileSecurityGroups")
 				g.Expect(openStackCluster.Status).To(Equal(tt.expectedClusterStatus), cmp.Diff(openStackCluster.Status, tt.expectedClusterStatus))
 			}
+		})
+	}
+}
+
+func TestService_ReconcileSecurityGroupsAPIServerPort(t *testing.T) {
+	const (
+		clusterResourceName = "test-cluster"
+
+		controlPlaneSGName = "k8s-cluster-test-cluster-secgroup-controlplane"
+		workerSGName       = "k8s-cluster-test-cluster-secgroup-worker"
+		bastionSGName      = "k8s-cluster-test-cluster-secgroup-bastion"
+	)
+
+	tests := []struct {
+		name          string
+		apiServerPort int32
+	}{
+		{name: "default API server port", apiServerPort: 6443},
+		{name: "custom API server port", apiServerPort: 8443},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			g := NewWithT(t)
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+			s := &Service{
+				scope:  scope.NewWithLogger(mockScopeFactory, log),
+				client: mockScopeFactory.NetworkClient,
+			}
+
+			m := mockScopeFactory.NetworkClient.EXPECT()
+			m.ListSecGroup(groups.ListOpts{Name: controlPlaneSGName}).
+				Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
+			m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
+				Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
+			m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
+
+			var apiServerRule *rules.CreateOpts
+			m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
+				if opts.Description == "Kubernetes API" {
+					rule := opts
+					apiServerRule = &rule
+				}
+				return &rules.SecGroupRule{ID: uuid.NewString()}, nil
+			}).Times(14)
+
+			openStackCluster := &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+				},
+			}
+
+			g.Expect(s.ReconcileSecurityGroups(openStackCluster, clusterResourceName, tt.apiServerPort)).To(Succeed())
+			g.Expect(apiServerRule).ToNot(BeNil(), "expected the Kubernetes API security group rule to be created")
+			g.Expect(apiServerRule.PortRangeMin).To(Equal(int(tt.apiServerPort)))
+			g.Expect(apiServerRule.PortRangeMax).To(Equal(int(tt.apiServerPort)))
+		})
+	}
+}
+
+func TestGetSGControlPlaneHTTPS(t *testing.T) {
+	tests := []struct {
+		name          string
+		apiServerPort int32
+	}{
+		{name: "default port", apiServerPort: 6443},
+		{name: "custom port", apiServerPort: 8443},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getSGControlPlaneHTTPS(tt.apiServerPort)
+
+			g := NewWithT(t)
+			g.Expect(got).To(HaveLen(1))
+			g.Expect(got[0].Description).To(Equal("Kubernetes API"))
+			g.Expect(got[0].Direction).To(Equal(securityGroupRuleDirectionIngress))
+			g.Expect(got[0].Protocol).To(Equal(securityGroupRuleProtocolTCP))
+			g.Expect(got[0].PortRangeMin).To(Equal(int(tt.apiServerPort)))
+			g.Expect(got[0].PortRangeMax).To(Equal(int(tt.apiServerPort)))
 		})
 	}
 }
