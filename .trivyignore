@@ -58,3 +58,18 @@ CVE-2026-56852
 # OTLP tracing is explicitly configured.
 # https://github.com/advisories/GHSA-hrxh-6v49-42gf
 GHSA-hrxh-6v49-42gf
+
+# google.golang.org/grpc: further grpc-go CVEs, all fixed in v1.83.2, which
+# requires go 1.25.0. CAPO does not run a grpc server and does not use xDS;
+# grpc is only pulled in transitively via the optional OTLP-over-gRPC trace
+# exporter (used as a client only, and only when OTLP tracing is explicitly
+# configured).
+# HTTP/2 DATA frame fragmentation can cause excessive memory growth (server-side).
+# https://github.com/advisories/GHSA-vp52-pcj8-j9qc
+CVE-2026-84304
+# xDS-enabled servers panic on requests missing :authority/Host headers.
+# https://github.com/advisories/GHSA-2v4p-qf9q-27wj
+CVE-2026-84445
+# xDS RBAC HTTP filter can be bypassed via header name case mismatch.
+# https://github.com/advisories/GHSA-qc2q-p7wx-3px3
+CVE-2026-84303
