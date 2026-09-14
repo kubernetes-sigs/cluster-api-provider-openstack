@@ -140,15 +140,16 @@ func getSGWorkerSSH(secBastionGroupID string) []resolvedSecurityGroupRuleSpec {
 	}
 }
 
-// Allow all traffic, including from outside the cluster, to access the API.
-func getSGControlPlaneHTTPS() []resolvedSecurityGroupRuleSpec {
+// Allow all traffic, including from outside the cluster, to access the API on
+// the port the API server is configured to listen on.
+func getSGControlPlaneHTTPS(apiServerPort int32) []resolvedSecurityGroupRuleSpec {
 	return []resolvedSecurityGroupRuleSpec{
 		{
 			Description:  "Kubernetes API",
 			Direction:    securityGroupRuleDirectionIngress,
 			EtherType:    securityGroupRuleEtherTypeIPv4,
-			PortRangeMin: 6443,
-			PortRangeMax: 6443,
+			PortRangeMin: int(apiServerPort),
+			PortRangeMax: int(apiServerPort),
 			Protocol:     securityGroupRuleProtocolTCP,
 		},
 	}
