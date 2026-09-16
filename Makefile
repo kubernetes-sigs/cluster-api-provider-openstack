@@ -160,6 +160,7 @@ endif
 $(ARTIFACTS):
 	mkdir -p $@
 
+setup_envtest_extra_args=
 # By default setup-envtest will write to $XDG_DATA_HOME, or $HOME/.local/share
 # if that is not defined. Set KUBEBUILDER_ASSETS_DIR to override.
 ifdef KUBEBUILDER_ASSETS_DIR
