@@ -109,3 +109,25 @@ func TestOpenStackClusterTemplate_ValidateUpdate(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenStackClusterTemplate_ValidateCreateRejectsManagedFailureDomainSubnets(t *testing.T) {
+	clusterTemplate := &infrav1.OpenStackClusterTemplate{
+		Spec: infrav1.OpenStackClusterTemplateSpec{
+			Template: infrav1.OpenStackClusterTemplateResource{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSubnets: []infrav1.SubnetSpec{{CIDR: "192.168.0.0/24"}},
+					FailureDomainSubnets: []infrav1.FailureDomainSubnet{{
+						FailureDomain: "az1",
+						Subnet:        infrav1.SubnetParam{ID: ptr.To("11111111-1111-1111-1111-111111111111")},
+					}},
+				},
+			},
+		},
+	}
+
+	webhook := &openStackClusterTemplateWebhook{}
+	_, err := webhook.ValidateCreate(context.TODO(), clusterTemplate)
+	if err == nil {
+		t.Fatal("ValidateCreate() error = nil, want an incompatibility error")
+	}
+}

@@ -44,6 +44,11 @@ type OpenStackClusterSpecApplyConfiguration struct {
 	// is also set to identify which subnet should be used for services like
 	// load balancer VIP allocation.
 	Subnets []SubnetParamApplyConfiguration `json:"subnets,omitempty"`
+	// FailureDomainSubnets maps Cluster API failure domains to OpenStack subnets.
+	// When specified, these subnets are used for machines with a matching failure domain.
+	// Machines without a failure domain use PrimarySubnet or Subnets as the legacy fallback.
+	// FailureDomainSubnets cannot be used together with ManagedSubnets.
+	FailureDomainSubnets []FailureDomainSubnetApplyConfiguration `json:"failureDomainSubnets,omitempty"`
 	// PrimarySubnet identifies the primary subnet for the cluster when multiple
 	// subnets are specified in Subnets. It is used to determine the subnet for
 	// load balancer VIP allocation and node member registration.
@@ -192,6 +197,19 @@ func (b *OpenStackClusterSpecApplyConfiguration) WithSubnets(values ...*SubnetPa
 			panic("nil value passed to WithSubnets")
 		}
 		b.Subnets = append(b.Subnets, *values[i])
+	}
+	return b
+}
+
+// WithFailureDomainSubnets adds the given value to the FailureDomainSubnets field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the FailureDomainSubnets field.
+func (b *OpenStackClusterSpecApplyConfiguration) WithFailureDomainSubnets(values ...*FailureDomainSubnetApplyConfiguration) *OpenStackClusterSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithFailureDomainSubnets")
+		}
+		b.FailureDomainSubnets = append(b.FailureDomainSubnets, *values[i])
 	}
 	return b
 }
