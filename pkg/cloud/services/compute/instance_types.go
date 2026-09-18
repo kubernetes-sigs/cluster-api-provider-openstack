@@ -95,6 +95,15 @@ func (is *InstanceStatus) AvailabilityZone() string {
 	return is.server.AvailabilityZone
 }
 
+// Fault returns a copy of the instance fault, or nil if the instance has no fault.
+func (is *InstanceStatus) Fault() *servers.Fault {
+	if is.server.Fault.Code == 0 || is.server.Fault.Message == "" {
+		return nil
+	}
+	fault := is.server.Fault
+	return &fault
+}
+
 // BastionStatus updates BastionStatus in openStackCluster.
 func (is *InstanceStatus) UpdateBastionStatus(openStackCluster *infrav1.OpenStackCluster) {
 	if openStackCluster.Status.Bastion == nil {

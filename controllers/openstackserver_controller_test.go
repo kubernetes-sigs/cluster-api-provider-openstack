@@ -923,3 +923,96 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenStackServerReconcileInstanceStateError(t *testing.T) {
+	const faultMessage = "Quota exceeded for cores, ram: Requested 16, 32768, but already used 20, 65536 of 20, 65536 cores, ram"
+
+	tests := []struct {
+		name        string
+		fault       *servers.Fault
+		wantMessage string
+	}{
+		{
+			name: "Server in ERROR state with fault",
+			fault: &servers.Fault{
+				Code:    413,
+				Message: faultMessage,
+			},
+			wantMessage: faultMessage,
+		},
+		{
+			name:        "Server in ERROR state without fault",
+			wantMessage: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+			log := testr.New(t)
+			ctx := context.TODO()
+
+			mockCtrl := gomock.NewController(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+			reconciler := OpenStackServerReconciler{}
+
+			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
+			imageRecorder := mockScopeFactory.ImageClient.EXPECT()
+			networkRecorder := mockScopeFactory.NetworkClient.EXPECT()
+			volumeRecorder := mockScopeFactory.VolumeClient.EXPECT()
+			recorders := &recorders{computeRecorder, imageRecorder, networkRecorder, volumeRecorder}
+
+			server := &servers.Server{
+				ID:     instanceUUID,
+				Name:   openStackServerName,
+				Status: string(infrav1.InstanceStateError),
+			}
+			if tt.fault != nil {
+				server.Fault = *tt.fault
+			}
+
+			listDefaultPortsWithID(recorders)
+			recorders.compute.GetServer(instanceUUID).Return(server, nil)
+
+			scopeWithLogger := scope.NewWithLogger(mockScopeFactory, log)
+
+			osServer := &infrav1alpha1.OpenStackServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: openStackServerName,
+				},
+				Spec: infrav1alpha1.OpenStackServerSpec{
+					Flavor: ptr.To(defaultFlavor),
+					Image:  defaultImage,
+					Ports:  defaultPortOpts,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					InstanceID: ptr.To(instanceUUID),
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
+					},
+					Resources: &infrav1alpha1.ServerResources{
+						Ports: defaultPortsStatus,
+					},
+				},
+			}
+			osServer.Finalizers = []string{infrav1alpha1.OpenStackServerFinalizer}
+
+			_, err := reconciler.reconcileNormal(ctx, scopeWithLogger, osServer)
+			g.Expect(err).ToNot(HaveOccurred())
+
+			g.Expect(osServer.Status.InstanceState).ToNot(BeNil())
+			g.Expect(*osServer.Status.InstanceState).To(Equal(infrav1.InstanceStateError))
+
+			unstructuredServer, err := osServer.ToUnstructured()
+			g.Expect(err).ToNot(HaveOccurred())
+			condition, err := conditions.UnstructuredGet(unstructuredServer, string(infrav1.InstanceReadyCondition))
+			g.Expect(err).ToNot(HaveOccurred())
+			g.Expect(condition).ToNot(BeNil())
+			g.Expect(condition.Status).To(Equal(metav1.ConditionFalse))
+			g.Expect(condition.Reason).To(Equal(infrav1.InstanceStateErrorReason))
+			g.Expect(condition.Message).To(Equal(tt.wantMessage))
+		})
+	}
+}
