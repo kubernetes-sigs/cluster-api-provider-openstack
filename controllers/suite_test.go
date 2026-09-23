@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
@@ -128,3 +129,13 @@ var _ = Describe("EnvTest sanity check", func() {
 		// will actually stay in "Terminating" state and never be completely gone.
 	})
 })
+
+// reconcileAfterPausedInit runs a first reconcile that only initialises the
+// Paused condition (EnsurePausedCondition returns early after writing it),
+// then the reconcile under test.
+func reconcileAfterPausedInit(ctx context.Context, r reconcile.Reconciler, req reconcile.Request) (reconcile.Result, error) {
+	result, err := r.Reconcile(ctx, req)
+	Expect(err).To(BeNil())
+	Expect(result).To(Equal(reconcile.Result{}))
+	return r.Reconcile(ctx, req)
+}

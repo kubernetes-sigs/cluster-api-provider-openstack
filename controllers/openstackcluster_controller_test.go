@@ -246,7 +246,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		mockScopeFactory.SetClientScopeCreateError(identityAccessErr)
 
 		req := createRequestFromOSCluster(testCluster)
-		result, err := reconciler.Reconcile(ctx, req)
+		result, err := reconcileAfterPausedInit(ctx, reconciler, req)
 
 		Expect(err).To(MatchError(identityAccessErr))
 		Expect(result).To(Equal(reconcile.Result{}))
@@ -280,7 +280,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		mockScopeFactory.SetClientScopeCreateError(credentialsErr)
 
 		req := createRequestFromOSCluster(testCluster)
-		result, err := reconciler.Reconcile(ctx, req)
+		result, err := reconcileAfterPausedInit(ctx, reconciler, req)
 
 		Expect(err).To(MatchError(credentialsErr))
 		Expect(result).To(Equal(reconcile.Result{}))
@@ -317,25 +317,49 @@ var _ = Describe("OpenStackCluster controller", func() {
 		fetched.Spec.IdentityRef.Region = "RegionTwo"
 		Expect(k8sClient.Update(ctx, fetched)).ToNot(Succeed())
 	})
+	It("should only set the Paused condition when OpenStackCluster is paused", func() {
+		testCluster.SetName("paused")
+		annotations.AddAnnotations(testCluster, map[string]string{clusterv1.PausedAnnotation: "true"})
 
+		Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+		Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+		result, err := reconciler.Reconcile(ctx, createRequestFromOSCluster(testCluster))
+		Expect(err).To(BeNil())
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		updated := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(testCluster), updated)).To(Succeed())
+
+		condition := conditions.Get(updated, clusterv1.PausedCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Status).To(Equal(metav1.ConditionTrue))
+		Expect(condition.Reason).To(Equal(clusterv1.PausedReason))
+
+		// Nothing else was reconciled.
+		Expect(updated.Finalizers).To(BeEmpty())
+		Expect(conditions.Get(updated, infrav1.OpenStackAuthenticationSucceeded)).To(BeNil())
+		Expect(conditions.Get(updated, clusterv1.ReadyCondition)).To(BeNil())
+	})
+	It("should only set the Paused condition when the owning Cluster is paused", func() {
+		testCluster.SetName("cluster-paused")
+		capiCluster.Spec.Paused = ptr.To(true)
+
+		Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+		Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+		result, err := reconciler.Reconcile(ctx, createRequestFromOSCluster(testCluster))
+		Expect(err).To(BeNil())
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		updated := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(testCluster), updated)).To(Succeed())
+		Expect(conditions.IsTrue(updated, clusterv1.PausedCondition)).To(BeTrue())
+		Expect(updated.Finalizers).To(BeEmpty())
+	})
 	It("should do nothing when owner is missing", func() {
 		testCluster.SetName("missing-owner")
 		testCluster.SetOwnerReferences([]metav1.OwnerReference{})
-
-		err := k8sClient.Create(ctx, testCluster)
-		Expect(err).To(BeNil())
-		err = k8sClient.Create(ctx, capiCluster)
-		Expect(err).To(BeNil())
-		req := createRequestFromOSCluster(testCluster)
-
-		result, err := reconciler.Reconcile(ctx, req)
-		// Expect no error and empty result
-		Expect(err).To(BeNil())
-		Expect(result).To(Equal(reconcile.Result{}))
-	})
-	It("should do nothing when paused", func() {
-		testCluster.SetName("paused")
-		annotations.AddAnnotations(testCluster, map[string]string{clusterv1.PausedAnnotation: "true"})
 
 		err := k8sClient.Create(ctx, testCluster)
 		Expect(err).To(BeNil())
@@ -359,7 +383,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		clientCreateErr := fmt.Errorf("Test failure")
 		mockScopeFactory.SetClientScopeCreateError(clientCreateErr)
 
-		result, err := reconciler.Reconcile(ctx, req)
+		result, err := reconcileAfterPausedInit(ctx, reconciler, req)
 		// Expect error for getting OS client and empty result
 		Expect(err).To(MatchError(clientCreateErr))
 		Expect(result).To(Equal(reconcile.Result{}))
