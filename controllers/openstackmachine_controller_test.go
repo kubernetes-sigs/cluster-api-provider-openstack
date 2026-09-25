@@ -441,6 +441,7 @@ func TestReconcileMachineState(t *testing.T) {
 		name                            string
 		instanceState                   infrav1.InstanceState
 		machineHasNodeRef               bool
+		serverInstanceReadyMessage      string
 		expectRequeue                   bool
 		expectedInstanceReadyCondition  *clusterv1beta1.Condition
 		expectedReadyCondition          *clusterv1beta1.Condition
@@ -496,6 +497,28 @@ func TestReconcileMachineState(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: clusterv1beta1.ConditionSeverityError,
 				Reason:   infrav1.InstanceStateErrorReason,
+			},
+			expectFailureSet: false,
+		},
+		{
+			name:                       "Instance state ERROR surfaces the OpenStackServer error message",
+			instanceState:              infrav1.InstanceStateError,
+			machineHasNodeRef:          true,
+			serverInstanceReadyMessage: "Quota exceeded for cores, ram: Requested 16, 32768, but already used 20, 65536 of 20, 65536 cores, ram",
+			expectRequeue:              true,
+			expectedInstanceReadyCondition: &clusterv1beta1.Condition{
+				Type:     infrav1.InstanceReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityError,
+				Reason:   infrav1.InstanceStateErrorReason,
+				Message:  "Quota exceeded for cores, ram: Requested 16, 32768, but already used 20, 65536 of 20, 65536 cores, ram",
+			},
+			expectedReadyCondition: &clusterv1beta1.Condition{
+				Type:     clusterv1beta1.ReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: clusterv1beta1.ConditionSeverityError,
+				Reason:   infrav1.InstanceStateErrorReason,
+				Message:  "Quota exceeded for cores, ram: Requested 16, 32768, but already used 20, 65536 of 20, 65536 cores, ram",
 			},
 			expectFailureSet: false,
 		},
@@ -582,6 +605,16 @@ func TestReconcileMachineState(t *testing.T) {
 					InstanceID:    ptr.To(testInstanceID),
 					InstanceState: ptr.To(tt.instanceState),
 				},
+			}
+			if tt.serverInstanceReadyMessage != "" {
+				openStackServer.Status.Conditions = clusterv1beta1.Conditions{
+					{
+						Type:    infrav1.InstanceReadyCondition,
+						Status:  corev1.ConditionFalse,
+						Reason:  infrav1.InstanceStateErrorReason,
+						Message: tt.serverInstanceReadyMessage,
+					},
+				}
 			}
 
 			r := &OpenStackMachineReconciler{}

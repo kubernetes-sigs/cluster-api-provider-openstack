@@ -464,8 +464,17 @@ func (r *OpenStackMachineReconciler) reconcileMachineState(scope *scope.WithLogg
 			err := fmt.Errorf("instance state %v is unexpected", openStackServer.Status.InstanceState)
 			openStackMachine.SetFailure(capoerrors.DeprecatedCAPIUpdateMachineError, err)
 		}
-		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "")
-		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "Instance is in ERROR state")
+		// Surface the error reported by the OpenStackServer, e.g. the Nova fault message.
+		instanceErrorMessage := ""
+		if serverCondition := v1beta1conditions.Get(openStackServer, infrav1.InstanceReadyCondition); serverCondition != nil {
+			instanceErrorMessage = serverCondition.Message
+		}
+		v1beta1conditions.MarkFalse(openStackMachine, infrav1.InstanceReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "%s", instanceErrorMessage)
+		readyMessage := "Instance is in ERROR state"
+		if instanceErrorMessage != "" {
+			readyMessage = instanceErrorMessage
+		}
+		v1beta1conditions.MarkFalse(openStackMachine, clusterv1beta1.ReadyCondition, infrav1.InstanceStateErrorReason, clusterv1beta1.ConditionSeverityError, "%s", readyMessage)
 		return &ctrl.Result{}
 	case infrav1.InstanceStateDeleted:
 		// we should avoid further actions for DELETED VM
