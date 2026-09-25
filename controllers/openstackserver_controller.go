@@ -427,10 +427,17 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 		openStackServer.Status.Ready = true
 	case infrav1.InstanceStateError:
 		scope.Logger().Info("Server instance state is ERROR", "id", instanceStatus.ID())
+		fault := instanceStatus.Fault()
+		faultMessage := ""
+		if fault != nil {
+			scope.Logger().Info("Server fault", "code", fault.Code, "message", fault.Message)
+			faultMessage = fault.Message
+		}
 		conditions.Set(openStackServer, metav1.Condition{
-			Type:   infrav1.InstanceReadyCondition,
-			Status: metav1.ConditionFalse,
-			Reason: infrav1.InstanceStateErrorReason,
+			Type:    infrav1.InstanceReadyCondition,
+			Status:  metav1.ConditionFalse,
+			Reason:  infrav1.InstanceStateErrorReason,
+			Message: faultMessage,
 		})
 		return ctrl.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile}, nil
 	case infrav1.InstanceStateDeleted:
