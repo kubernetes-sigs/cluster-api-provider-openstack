@@ -40,6 +40,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/collections"
 	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/cluster-api/util/paused"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -105,9 +106,8 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	log = log.WithValues("Cluster", klog.KObj(cluster))
 
-	if annotations.IsPaused(cluster, openStackCluster) {
-		log.Info("OpenStackCluster or linked Cluster is marked as paused. Not reconciling")
-		return reconcile.Result{}, nil
+	if isPaused, requeue, err := paused.EnsurePausedCondition(ctx, r.Client, cluster, openStackCluster); err != nil || isPaused || requeue {
+		return ctrl.Result{}, err
 	}
 
 	patchHelper, err := patch.NewHelper(openStackCluster, r.Client)
@@ -119,6 +119,7 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	defer func() {
 		if err := patchHelper.Patch(ctx, openStackCluster, patch.WithOwnedConditions{Conditions: []string{
 			clusterv1.ReadyCondition,
+			clusterv1.PausedCondition,
 			infrav1.OpenStackAuthenticationSucceeded,
 			infrav1.SecurityGroupsReadyCondition,
 			infrav1.APIEndpointReadyCondition,
@@ -1097,14 +1098,15 @@ func (r *OpenStackClusterReconciler) SetupWithManager(ctx context.Context, mgr c
 				}
 				return requests
 			}),
-			builder.WithPredicates(predicates.ClusterUnpaused(mgr.GetScheme(), ctrl.LoggerFrom(ctx))),
-		).
+			// Enqueue on both pause and unpause so the Paused condition is kept current.
+			builder.WithPredicates(predicates.ClusterPausedTransitions(mgr.GetScheme(), ctrl.LoggerFrom(ctx)))).
 		Watches(
 			&infrav1alpha1.OpenStackServer{},
 			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &infrav1.OpenStackCluster{}),
 			builder.WithPredicates(OpenStackServerStatusReportable(log)),
 		).
-		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(mgr.GetScheme(), ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceHasFilterLabel(mgr.GetScheme(), ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceIsChanged(mgr.GetScheme(), ctrl.LoggerFrom(ctx))).
 		WithEventFilter(predicates.ResourceIsNotExternallyManaged(mgr.GetScheme(), ctrl.LoggerFrom(ctx))).
 		Complete(r)
 }

@@ -34,9 +34,9 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ipamv1 "sigs.k8s.io/cluster-api/api/ipam/v1beta2"
 	"sigs.k8s.io/cluster-api/util"
-	"sigs.k8s.io/cluster-api/util/annotations"
 	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
+	"sigs.k8s.io/cluster-api/util/paused"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -120,9 +120,8 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	log = log.WithValues("Cluster", klog.KObj(cluster))
 
-	if annotations.IsPaused(cluster, openStackMachine) {
-		log.Info("OpenStackMachine or linked Cluster is marked as paused. Won't reconcile")
-		return ctrl.Result{}, nil
+	if isPaused, requeue, err := paused.EnsurePausedCondition(ctx, r.Client, cluster, openStackMachine); err != nil || isPaused || requeue {
+		return ctrl.Result{}, err
 	}
 
 	infraCluster, err := controllers.GetInfraCluster(ctx, r.Client, cluster)
@@ -185,6 +184,7 @@ func patchMachine(ctx context.Context, patchHelper *patch.Helper, openStackMachi
 	options = append(options,
 		patch.WithOwnedConditions{Conditions: []string{
 			clusterv1.ReadyCondition,
+			clusterv1.PausedCondition,
 			infrav1.InstanceReadyCondition,
 			infrav1.APIServerIngressReadyCondition,
 		}},
@@ -202,10 +202,11 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.SchemeGroupVersion.WithKind("OpenStackMachine"))),
 		).
-		WithEventFilter(predicates.ResourceNotPausedAndHasFilterLabel(mgr.GetScheme(), ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceHasFilterLabel(mgr.GetScheme(), ctrl.LoggerFrom(ctx), r.WatchFilterValue)).
+		WithEventFilter(predicates.ResourceIsChanged(mgr.GetScheme(), ctrl.LoggerFrom(ctx))).
 		Watches(
 			&clusterv1.Cluster{},
-			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForUnpausedCluster(ctx)),
+			handler.EnqueueRequestsFromMapFunc(r.requeueOpenStackMachinesForCluster(ctx)),
 			builder.WithPredicates(predicates.ClusterPausedTransitionsOrInfrastructureProvisioned(mgr.GetScheme(), log)),
 		).
 		// NOTE: we don't watch OpenStackCluster here, even though the
@@ -948,7 +949,9 @@ func (r *OpenStackMachineReconciler) OpenStackClusterToOpenStackMachines(ctx con
 	}
 }
 
-func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForUnpausedCluster(ctx context.Context) handler.MapFunc {
+// Enqueues all OpenStackMachines of the Cluster on pause/unpause transitions
+// and when infrastructure becomes provisioned (see the predicate on the watch).
+func (r *OpenStackMachineReconciler) requeueOpenStackMachinesForCluster(ctx context.Context) handler.MapFunc {
 	log := ctrl.LoggerFrom(ctx)
 	return func(ctx context.Context, o client.Object) []ctrl.Request {
 		c, ok := o.(*clusterv1.Cluster)
