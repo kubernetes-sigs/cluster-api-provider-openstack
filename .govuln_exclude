@@ -21,3 +21,11 @@ GO-2026-5970
 # not used unless OTLP tracing is explicitly configured.
 # https://pkg.go.dev/vuln/GO-2026-6061 (alias GHSA-hrxh-6v49-42gf, see .trivyignore)
 GO-2026-6061
+
+# google.golang.org/grpc HTTP/2 DATA frame fragmentation heap exhaustion.
+# Fixed in grpc v1.83.1 (no backport), which requires go 1.25.0.
+# CAPO does not run a grpc server; grpc is only pulled in transitively via
+# k8s.io/component-base/tracing -> otlptracegrpc (client only, used only when
+# OTLP tracing is explicitly configured).
+# https://pkg.go.dev/vuln/GO-2026-6348 (alias CVE-2026-84304, GHSA-vp52-pcj8-j9qc, see .trivyignore)
+GO-2026-6348
