@@ -428,3 +428,46 @@ func TestInstanceNetworkStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestInstanceStatusFault(t *testing.T) {
+	const faultMessage = "Quota exceeded for cores, ram: Requested 16, 32768, but already used 20, 65536 of 20, 65536 cores, ram"
+	tests := []struct {
+		name   string
+		server *servers.Server
+		want   *servers.Fault
+	}{
+		{
+			name:   "No fault",
+			server: &servers.Server{ID: "8308882f-5e46-47e6-8e12-1fe869c43d1d", Status: "ACTIVE"},
+			want:   nil,
+		},
+		{
+			name: "Fault with message",
+			server: &servers.Server{
+				ID:     "8308882f-5e46-47e6-8e12-1fe869c43d1d",
+				Status: "ERROR",
+				Fault: servers.Fault{
+					Code:    413,
+					Message: faultMessage,
+				},
+			},
+			want: &servers.Fault{
+				Code:    413,
+				Message: faultMessage,
+			},
+		},
+		{
+			name:   "Fault without message",
+			server: &servers.Server{ID: "8308882f-5e46-47e6-8e12-1fe869c43d1d", Status: "ERROR", Fault: servers.Fault{Code: 500}},
+			want:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			is := NewInstanceStatusFromServer(tt.server, testr.New(t))
+			g.Expect(is.Fault()).To(Equal(tt.want))
+		})
+	}
+}
