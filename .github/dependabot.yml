@@ -147,6 +147,11 @@ updates:
   # Ignore k8s major and minor bumps and its transitives modules
   - dependency-name: "k8s.io/*"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  # k8s.io v0.34.11 (a patch release) bumps its own go directive to go 1.25.0 (see
+  # https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/3329), which would force
+  # this module's go.mod up to go 1.25.0 too. Ignoring.
+  - dependency-name: "k8s.io/*"
+    versions: [">= 0.34.11"]
   - dependency-name: "sigs.k8s.io/controller-tools"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # Ignore ORC major and minor bumps to prevent cascading Go version requirements
