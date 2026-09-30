@@ -5241,7 +5241,6 @@ spec:
                           required:
                           - cidr
                           - id
-                          - name
                           type: object
                         type: array
                         x-kubernetes-list-type: atomic
@@ -5253,7 +5252,6 @@ spec:
                         x-kubernetes-list-type: set
                     required:
                     - id
-                    - name
                     type: object
                   name:
                     description: name is the name of the load balancer.
@@ -5268,7 +5266,6 @@ spec:
                 required:
                 - id
                 - internalIP
-                - ip
                 - name
                 type: object
               bastion:
@@ -5630,7 +5627,6 @@ spec:
                     x-kubernetes-list-type: set
                 required:
                 - id
-                - name
                 type: object
               failureDomains:
                 description: failureDomains represent OpenStack availability zones
@@ -5712,7 +5708,6 @@ spec:
                       required:
                       - cidr
                       - id
-                      - name
                       type: object
                     type: array
                     x-kubernetes-list-type: atomic
@@ -5724,7 +5719,6 @@ spec:
                     x-kubernetes-list-type: set
                 required:
                 - id
-                - name
                 type: object
               router:
                 description: router describes the default cluster router
@@ -5751,7 +5745,6 @@ spec:
                     x-kubernetes-list-type: set
                 required:
                 - id
-                - name
                 type: object
               workerSecurityGroup:
                 description: |-

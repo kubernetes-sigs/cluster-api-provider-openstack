@@ -2093,6 +2093,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ip is the IP address of the load balancer.</p>
 </td>
 </tr>
@@ -2522,6 +2523,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name is the name of the network.</p>
 </td>
 </tr>
@@ -4395,6 +4397,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name is the name of the router.</p>
 </td>
 </tr>
@@ -5147,6 +5150,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>name is the name of the subnet.</p>
 </td>
 </tr>
