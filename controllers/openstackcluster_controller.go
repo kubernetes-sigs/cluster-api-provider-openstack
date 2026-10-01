@@ -115,6 +115,10 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
+	// Conditions written by CAPO < 0.15 may lack a reason, which makes patching the status fail.
+	// This must happen after creating the patch helper so the fix is included in the patch.
+	utils.EnsureConditionReasons(openStackCluster)
+
 	// Always patch the openStackCluster when exiting this function so we can persist any OpenStackCluster changes.
 	defer func() {
 		if err := patchHelper.Patch(ctx, openStackCluster, patch.WithOwnedConditions{Conditions: []string{

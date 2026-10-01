@@ -41,6 +41,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	utils "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
 )
 
 const (
@@ -83,6 +84,10 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	// Conditions written by CAPO < 0.15 may lack a reason, which makes patching the status fail.
+	// This must happen after creating the patch helper so the fix is included in the patch.
+	utils.EnsureConditionReasons(pool)
 
 	defer func() {
 		if err := patchHelper.Patch(ctx, pool); err != nil {
