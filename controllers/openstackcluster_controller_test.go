@@ -297,6 +297,45 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
+	It("should be able to patch conditions written without a reason by CAPO < 0.15", func() {
+		testCluster.SetName("legacy-conditions")
+		Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+		Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+
+		legacyConditionTypes := []string{string(clusterv1.ReadyCondition), infrav1.NetworkReadyCondition}
+		Expect(writeLegacyV1beta1Conditions(ctx, k8sClient, "OpenStackCluster", client.ObjectKeyFromObject(testCluster), legacyConditionTypes...)).To(Succeed())
+
+		// Make sure the stored conditions really have no reason.
+		stored := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(testCluster), stored)).To(Succeed())
+		Expect(stored.Status.Conditions).To(HaveLen(len(legacyConditionTypes)))
+		for _, c := range stored.Status.Conditions {
+			Expect(c.Reason).To(BeEmpty())
+		}
+
+		credentialsErr := fmt.Errorf("secret not found: non-existent-secret")
+		mockScopeFactory.SetClientScopeCreateError(credentialsErr)
+
+		result, err := reconciler.Reconcile(ctx, createRequestFromOSCluster(testCluster))
+
+		// The only error must be the one from the reconciliation itself, not a failure to patch the status.
+		Expect(err).To(MatchError(credentialsErr))
+		Expect(err.Error()).NotTo(ContainSubstring("failed to patch"))
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		updatedCluster := &infrav1.OpenStackCluster{}
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(testCluster), updatedCluster)).To(Succeed())
+
+		// The new condition was persisted and all legacy conditions got a reason.
+		Expect(conditions.IsFalse(updatedCluster, infrav1.OpenStackAuthenticationSucceeded)).To(BeTrue())
+		for _, conditionType := range legacyConditionTypes {
+			condition := conditions.Get(updatedCluster, conditionType)
+			Expect(condition).ToNot(BeNil(), conditionType)
+			Expect(condition.Status).To(Equal(metav1.ConditionTrue), conditionType)
+			Expect(condition.Reason).To(Equal(infrav1.ReadyConditionReason), conditionType)
+		}
+	})
+
 	It("should reject updates that modify identityRef.region (immutable)", func() {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			IdentityRef: infrav1.OpenStackIdentityReference{

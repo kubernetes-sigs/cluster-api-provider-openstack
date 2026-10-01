@@ -57,6 +57,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/compute"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	utils "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/controllers"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
@@ -102,6 +103,10 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	// Conditions written by CAPO < 0.15 may lack a reason, which makes patching the status fail.
+	// This must happen after creating the patch helper so the fix is included in the patch.
+	utils.EnsureConditionReasons(openStackServer)
 
 	defer func() {
 		// Propagate terminal errors
