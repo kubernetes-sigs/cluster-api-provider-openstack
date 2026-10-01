@@ -745,7 +745,7 @@ const (
 // NetworkStatus contains basic information about an existing neutron network.
 type NetworkStatus struct {
 	// name is the name of the network.
-	// +required
+	// +optional
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// id is the unique identifier of the network.
@@ -772,7 +772,7 @@ type NetworkStatusWithSubnets struct {
 // Subnet represents basic information about the associated OpenStack Neutron Subnet.
 type Subnet struct {
 	// name is the name of the subnet.
-	// +required
+	// +optional
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// id is the unique identifier of the subnet.
@@ -794,7 +794,7 @@ type Subnet struct {
 // Router represents basic information about the associated OpenStack Neutron Router.
 type Router struct {
 	// name is the name of the router.
-	// +required
+	// +optional
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
 	// id is the unique identifier of the router.
@@ -822,7 +822,7 @@ type LoadBalancer struct {
 	// +kubebuilder:validation:MinLength=1
 	ID string `json:"id,omitempty"`
 	// ip is the IP address of the load balancer.
-	// +required
+	// +optional
 	// +kubebuilder:validation:MinLength=1
 	IP string `json:"ip,omitempty"`
 	// internalIP is the internal IP address of the load balancer.

@@ -74,6 +74,46 @@ var _ = Describe("OpenStackCluster API validations", func() {
 			Expect(k8sClient.Update(ctx, cluster)).NotTo(Succeed(), "Updating control plane endpoint should fail")
 		})
 
+		It("should allow a status with unnamed network resources and a load balancer without a floating IP", func() {
+			By("Creating a bare cluster")
+			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			By("Setting a status without resource names or a load balancer floating IP")
+			cluster.Status = infrav1.OpenStackClusterStatus{
+				Initialization: &infrav1.ClusterInitialization{Provisioned: true},
+				Network: &infrav1.NetworkStatusWithSubnets{
+					NetworkStatus: infrav1.NetworkStatus{ID: "6c90b532-7ba0-418a-a276-5ae55060b5b0"},
+					Subnets: []infrav1.Subnet{
+						{ID: "cad5a91a-36de-4388-823b-b0cc82cadfdc", CIDR: "192.168.0.0/24"},
+					},
+				},
+				ExternalNetwork: &infrav1.NetworkStatus{ID: "a9e8f7d6-c5b4-4a3b-9c2d-1e0f9a8b7c6d"},
+				Router:          &infrav1.Router{ID: "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"},
+				APIServerManagedLoadBalancer: &infrav1.LoadBalancer{
+					Name:       "k8s-clusterapi-cluster-test-kubeapi",
+					ID:         "0f1e2d3c-4b5a-4968-8776-a5b4c3d2e1f0",
+					InternalIP: "192.168.0.10",
+				},
+			}
+			Expect(k8sClient.Status().Update(ctx, cluster)).To(Succeed(), "OpenStackCluster status update should succeed")
+
+			fetchedCluster := &infrav1.OpenStackCluster{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, fetchedCluster)).To(Succeed(), "OpenStackCluster fetch should succeed")
+			Expect(fetchedCluster.Status.Initialization).NotTo(BeNil(), "status.initialization should have been persisted")
+			Expect(fetchedCluster.Status.Initialization.Provisioned).To(BeTrue(), "status.initialization.provisioned should have been persisted")
+		})
+
+		It("should not allow a status subnet without an id", func() {
+			By("Creating a bare cluster")
+			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
+
+			cluster.Status.Network = &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{ID: "6c90b532-7ba0-418a-a276-5ae55060b5b0"},
+				Subnets:       []infrav1.Subnet{{CIDR: "192.168.0.0/24"}},
+			}
+			Expect(k8sClient.Status().Update(ctx, cluster)).NotTo(Succeed(), "OpenStackCluster status update should fail")
+		})
+
 		It("should allow an empty managed security groups definition", func() {
 			cluster.Spec.ManagedSecurityGroups = &infrav1.ManagedSecurityGroups{}
 			Expect(createObj(cluster)).To(Succeed(), "OpenStackCluster creation should succeed")
