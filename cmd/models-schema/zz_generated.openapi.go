@@ -22885,7 +22885,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_LoadBalancer(re
 						},
 					},
 				},
-				Required: []string{"name", "id", "ip", "internalIP"},
+				Required: []string{"name", "id", "internalIP"},
 			},
 		},
 		Dependencies: []string{
@@ -23275,7 +23275,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatus(r
 						},
 					},
 				},
-				Required: []string{"name", "id"},
+				Required: []string{"id"},
 			},
 		},
 	}
@@ -23340,7 +23340,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_NetworkStatusWi
 						},
 					},
 				},
-				Required: []string{"name", "id"},
+				Required: []string{"id"},
 			},
 		},
 		Dependencies: []string{
@@ -25208,7 +25208,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Router(ref comm
 						},
 					},
 				},
-				Required: []string{"name", "id"},
+				Required: []string{"id"},
 			},
 		},
 	}
@@ -25809,7 +25809,7 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_Subnet(ref comm
 						},
 					},
 				},
-				Required: []string{"name", "id", "cidr"},
+				Required: []string{"id", "cidr"},
 			},
 		},
 	}

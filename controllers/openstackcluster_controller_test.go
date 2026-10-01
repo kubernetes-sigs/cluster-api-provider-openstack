@@ -710,6 +710,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		// Verify conditions are set correctly
 		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
 		Expect(conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
+
+		By("Persisting the status of network components which have no name")
+		Expect(k8sClient.Status().Update(ctx, testCluster)).To(Succeed())
 	})
 
 	It("reconcile pre-existing network components by name", func() {
