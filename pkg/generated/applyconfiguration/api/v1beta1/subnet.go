@@ -27,6 +27,8 @@ type SubnetApplyConfiguration struct {
 	ID   *string  `json:"id,omitempty"`
 	CIDR *string  `json:"cidr,omitempty"`
 	Tags []string `json:"tags,omitempty"`
+	// FailureDomain identifies the Cluster API failure domain associated with this subnet.
+	FailureDomain *string `json:"failureDomain,omitempty"`
 }
 
 // SubnetApplyConfiguration constructs a declarative configuration of the Subnet type for use with
@@ -66,5 +68,13 @@ func (b *SubnetApplyConfiguration) WithTags(values ...string) *SubnetApplyConfig
 	for i := range values {
 		b.Tags = append(b.Tags, values[i])
 	}
+	return b
+}
+
+// WithFailureDomain sets the FailureDomain field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FailureDomain field is set to the value of the last call.
+func (b *SubnetApplyConfiguration) WithFailureDomain(value string) *SubnetApplyConfiguration {
+	b.FailureDomain = &value
 	return b
 }
