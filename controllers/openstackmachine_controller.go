@@ -142,6 +142,10 @@ func (r *OpenStackMachineReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
+	// Conditions written by CAPO < 0.15 may lack a reason, which makes patching the status fail.
+	// This must happen after creating the patch helper so the fix is included in the patch.
+	controllers.EnsureConditionReasons(openStackMachine)
+
 	// Always patch the openStackMachine when exiting this function so we can persist any OpenStackMachine changes.
 	defer func() {
 		if err := patchMachine(ctx, patchHelper, openStackMachine, machine); err != nil {
