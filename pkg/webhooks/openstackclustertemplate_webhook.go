@@ -42,14 +42,20 @@ var _ admission.Validator[*infrav1.OpenStackClusterTemplate] = &openStackCluster
 
 // ValidateCreate implements admission.Validator so a webhook will be registered for the type.
 func (*openStackClusterTemplateWebhook) ValidateCreate(_ context.Context, newObj *infrav1.OpenStackClusterTemplate) (admission.Warnings, error) {
-	var allErrs field.ErrorList
+	allErrs := make(field.ErrorList, 0, 1)
+
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.Template.Spec.FailureDomainSubnets, field.NewPath("spec", "template", "spec", "failureDomainSubnets"))...)
+	allErrs = append(allErrs, validateManagedSubnetConfiguration(newObj.Spec.Template.Spec.ManagedSubnets, newObj.Spec.Template.Spec.FailureDomainSubnets, field.NewPath("spec", "template", "spec", "failureDomainSubnets"))...)
 
 	return aggregateObjErrors(newObj.GroupVersionKind().GroupKind(), newObj.Name, allErrs)
 }
 
 // ValidateUpdate implements admission.Validator so a webhook will be registered for the type.
 func (*openStackClusterTemplateWebhook) ValidateUpdate(_ context.Context, oldObj, newObj *infrav1.OpenStackClusterTemplate) (admission.Warnings, error) {
-	var allErrs field.ErrorList
+	allErrs := make(field.ErrorList, 0, 2)
+
+	allErrs = append(allErrs, validateSubnetFailureDomains(newObj.Spec.Template.Spec.FailureDomainSubnets, field.NewPath("spec", "template", "spec", "failureDomainSubnets"))...)
+	allErrs = append(allErrs, validateManagedSubnetConfiguration(newObj.Spec.Template.Spec.ManagedSubnets, newObj.Spec.Template.Spec.FailureDomainSubnets, field.NewPath("spec", "template", "spec", "failureDomainSubnets"))...)
 
 	if !reflect.DeepEqual(newObj.Spec.Template.Spec, oldObj.Spec.Template.Spec) {
 		allErrs = append(allErrs,
