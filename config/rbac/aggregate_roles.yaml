@@ -1,0 +1,60 @@
+# Aggregate CAPO resources into the builtin view, edit and admin ClusterRoles.
+# None of these kinds hold credentials, only references to Secrets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aggregate-view-role
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+rules:
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - openstackclusteridentities
+  - openstackclusters
+  - openstackclustertemplates
+  - openstackfloatingippools
+  - openstackmachines
+  - openstackmachinetemplates
+  - openstackservers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - openstackclusters/status
+  - openstackfloatingippools/status
+  - openstackmachines/status
+  - openstackmachinetemplates/status
+  - openstackservers/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aggregate-edit-role
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+rules:
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - openstackclusteridentities
+  - openstackclusters
+  - openstackclustertemplates
+  - openstackfloatingippools
+  - openstackmachines
+  - openstackmachinetemplates
+  - openstackservers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - patch
+  - update
