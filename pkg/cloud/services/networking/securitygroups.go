@@ -39,8 +39,10 @@ const (
 	remoteGroupIDSelf  string = "self"
 )
 
-// ReconcileSecurityGroups reconcile the security groups.
-func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+// ReconcileSecurityGroups reconcile the security groups. apiServerPort is the
+// port the core API server is exposed on, which the control plane security
+// group must allow traffic to.
+func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, apiServerPort int32) error {
 	s.scope.Logger().Info("Reconciling security groups")
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		s.scope.Logger().V(4).Info("No need to reconcile security groups")
@@ -127,7 +129,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	}
 
 	// create desired security groups
-	desiredSecGroupsBySuffix, err := s.generateDesiredSecGroups(openStackCluster, suffixToNameMap, observedSecGroupBySuffix)
+	desiredSecGroupsBySuffix, err := s.generateDesiredSecGroups(openStackCluster, suffixToNameMap, observedSecGroupBySuffix, apiServerPort)
 	if err != nil {
 		return err
 	}
@@ -184,7 +186,7 @@ func (r resolvedSecurityGroupRuleSpec) Matches(other rules.SecGroupRule) bool {
 		r.RemoteIPPrefix == other.RemoteIPPrefix
 }
 
-func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, suffixToNameMap map[string]string, observedSecGroupsBySuffix map[string]*groups.SecGroup) (map[string]securityGroupSpec, error) {
+func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCluster, suffixToNameMap map[string]string, observedSecGroupsBySuffix map[string]*groups.SecGroup, apiServerPort int32) (map[string]securityGroupSpec, error) {
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		return nil, nil
 	}
@@ -222,7 +224,7 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 	controlPlaneRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
 	workerRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
 
-	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
+	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS(apiServerPort)...)
 
 	// Fetch subnet to use for worker node port rules
 	// In the future IPv6 support need to be added here
