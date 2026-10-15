@@ -73,3 +73,18 @@ CVE-2026-84445
 # xDS RBAC HTTP filter can be bypassed via header name case mismatch.
 # https://github.com/advisories/GHSA-qc2q-p7wx-3px3
 CVE-2026-84303
+
+# golang.org/x/net/http2 vulnerabilities: fixed in x/net v0.60.0, which
+# requires go 1.26.0. CAPO does not run an x/net/http2 server, and govulncheck
+# only reaches the client side (see .govuln_exclude); exploiting the
+# client-side issue requires a compromised or malicious OpenStack/Kubernetes
+# API server.
+# HTTP/2 SETTINGS excessive CPU consumption (GO-2026-6611).
+# https://avd.aquasec.com/nvd/cve-2026-78669
+CVE-2026-78669
+# Flow control limit bypass via double refund (GO-2026-6612).
+# https://avd.aquasec.com/nvd/cve-2026-78663
+CVE-2026-78663
+# Concurrent HPACK encoder crash (GO-2026-6617).
+# https://avd.aquasec.com/nvd/cve-2026-97032
+CVE-2026-97032
