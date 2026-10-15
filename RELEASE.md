@@ -83,8 +83,10 @@ There is an [issue template](.github/ISSUE_TEMPLATE/new_release.md) to help trac
    Once the PR is merged, the following GitHub actions are triggered:
 
    - GitHub action `Create Release` runs following jobs
-     - GitHub job `push_release_tags` will create and push the tags. This action
-     will also create release branch if its missing and release is `rc` or minor.
+     - GitHub job `push_release_tags` waits for the staging-image post-submit job
+       for the release commit to succeed before it creates and pushes tags. This
+       action will also create the release branch if it is missing and the release
+       is `rc` or minor.
      - GitHub job `create draft release` creates draft release. Don't publish the
      release yet. Running actions are visible on the
       [Actions](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/actions)
@@ -137,10 +139,12 @@ Releasing requires a particular set of permissions.
 
 ## Staging
 
-There is a post-submit Prow job running after each commit on `main` which pushes a new image to the staging repo (`gcr.io/k8s-staging-capi-openstack/capi-openstack-controller:latest`). Following configuration is involved:
+There is a post-submit Prow job running after commits on `main`, release branches,
+and release tags. It pushes images to the staging repo; a release-tag image uses
+the release version as its tag. The following configuration is involved:
 
 1. staging gcr bucket: [kubernetes/k8s.io/blob/main/registry.k8s.io/manifests/k8s-staging-capi-openstack/promoter-manifest.yaml](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/manifests/k8s-staging-capi-openstack/promoter-manifest.yaml)
 
-1. post-submit `post-capi-openstack-push-images` Prow job: [kubernetes/test-infra/blob/master/config/jobs/image-pushing/k8s-staging-cluster-api.yaml](https://github.com/kubernetes/test-infra/blob/master/config/jobs/image-pushing/k8s-staging-cluster-api.yaml) (corresponding dashboard is located at [https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-capi-openstack-push-images](https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-capi-openstack-push-images))
+1. post-submit `post-cluster-api-provider-openstack-push-images` Prow job: [kubernetes/test-infra/blob/master/config/jobs/image-pushing/k8s-staging-cluster-api.yaml](https://github.com/kubernetes/test-infra/blob/master/config/jobs/image-pushing/k8s-staging-cluster-api.yaml) (corresponding dashboard is located at [https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-cluster-api-provider-openstack-push-images](https://testgrid.k8s.io/sig-cluster-lifecycle-image-pushes#post-cluster-api-provider-openstack-push-images))
 
 1. Google Cloud Build configuration which is used by the Prow job: [kubernetes-sigs/cluster-api-provider-openstack/cloudbuild.yaml](https://github.com/kubernetes-sigs/cluster-api-provider-openstack/blob/main/cloudbuild.yaml)
