@@ -663,7 +663,7 @@ func uniqueSortedTags(tags []string) []string {
 		tagsMap[t] = t
 	}
 
-	uniqueTags := []string{}
+	uniqueTags := make([]string, 0, len(tagsMap))
 	for k := range tagsMap {
 		uniqueTags = append(uniqueTags, k)
 	}

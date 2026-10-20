@@ -356,7 +356,9 @@ hash_sha256_verify() {
     return 1
   fi
   BASENAME=${TARGET##*/}
-  want=$(grep "${BASENAME}" "${checksums}" 2>/dev/null | tr '\t' ' ' | cut -d ' ' -f 1)
+  # Match the filename exactly: newer releases also list a
+  # "<name>.sbom.json" entry, which a substring match would also pick up.
+  want=$(awk -v f="${BASENAME}" '$2 == f || $2 == "*" f { print $1 }' "${checksums}" 2>/dev/null)
   if [ -z "$want" ]; then
     log_err "hash_sha256_verify unable to find checksum for '${TARGET}' in '${checksums}'"
     return 1

@@ -26,6 +26,11 @@ import (
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
+const (
+	metricsNamespace = "capo"
+	requestLabel     = "request"
+)
+
 type OpenstackPrometheusMetrics struct {
 	Duration *prometheus.HistogramVec
 	Total    *prometheus.CounterVec
@@ -93,22 +98,22 @@ func (mc *MetricPrometheusContext) Observe(om *OpenstackPrometheusMetrics, err e
 var apiRequestPrometheusMetrics = &OpenstackPrometheusMetrics{
 	Duration: prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: "capo",
+			Namespace: metricsNamespace,
 			Name:      "openstack_api_request_duration_seconds",
 			Help:      "Latency of an OpenStack API call",
-		}, []string{"request"}),
+		}, []string{requestLabel}),
 	Total: prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "capo",
+			Namespace: metricsNamespace,
 			Name:      "openstack_api_requests_total",
 			Help:      "Total number of OpenStack API calls",
-		}, []string{"request"}),
+		}, []string{requestLabel}),
 	Errors: prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "capo",
+			Namespace: metricsNamespace,
 			Name:      "openstack_api_request_errors_total",
 			Help:      "Total number of errors for an OpenStack API call",
-		}, []string{"request"}),
+		}, []string{requestLabel}),
 }
 
 var registerAPIPrometheusMetrics sync.Once
