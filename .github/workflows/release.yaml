@@ -12,11 +12,12 @@ permissions: {}
 
 jobs:
   push_release_tags:
-    permissions:
-      contents: write # Allow to push tags
     runs-on: ubuntu-latest
     outputs:
       release_tag: ${{ steps.release-version.outputs.release_version }}
+    permissions:
+      contents: write # Allow to push tags.
+      statuses: read # Allow reading the Prow commit status for the release commit.
     if: github.repository == 'kubernetes-sigs/cluster-api-provider-openstack'
     steps:
     - name: Checkout code # zizmor: ignore[artipacked]
@@ -68,6 +69,45 @@ jobs:
           git push origin "${RELEASE_BRANCH}"
           echo "Created branch ${RELEASE_BRANCH}"
         fi
+    - name: Wait for post-submit image build
+      env:
+        GH_TOKEN: ${{ github.token }}
+        POSTSUBMIT_CONTEXT: post-cluster-api-provider-openstack-push-images
+      run: |
+        release_commit="$(git rev-parse HEAD)"
+        max_attempts=90
+        for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+          if ! status_json="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${release_commit}/status")"; then
+            echo "Could not read commit statuses for ${release_commit}; retrying (${attempt}/${max_attempts})"
+          else
+            status="$(jq -r \
+              --arg context "${POSTSUBMIT_CONTEXT}" \
+              '[.statuses[] | select(.context == $context)]
+               | sort_by(.updated_at)
+               | last
+               | .state // empty' <<< "${status_json}")"
+            case "${status}" in
+              success)
+                echo "Post-submit image build succeeded for ${release_commit}"
+                exit 0
+                ;;
+              failure|error)
+                echo "Post-submit image build ${status} for ${release_commit}"
+                exit 1
+                ;;
+              *)
+                echo "Waiting for post-submit image build for ${release_commit} (${attempt}/${max_attempts})"
+                ;;
+            esac
+          fi
+
+          if (( attempt < max_attempts )); then
+            sleep 30
+          fi
+        done
+
+        echo "Timed out waiting for post-submit image build for ${release_commit}"
+        exit 1
     - name: Validate tag does not already exist
       run: |
         if [[ -n "$(git tag -l "${RELEASE_VERSION}")" ]]; then
@@ -78,9 +118,9 @@ jobs:
       run: |
         git config user.name "${GITHUB_ACTOR}"
         git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-        git tag -a ${RELEASE_VERSION} -m ${RELEASE_VERSION}
-        git push origin ${RELEASE_VERSION}
-        echo "Created tags ${RELEASE_VERSION}"
+        git tag -a "${RELEASE_VERSION}" -m "${RELEASE_VERSION}"
+        git push origin "${RELEASE_VERSION}"
+        echo "Created tag ${RELEASE_VERSION}"
   release:
     name: create draft release
     runs-on: ubuntu-latest
