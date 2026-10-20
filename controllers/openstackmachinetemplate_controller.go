@@ -352,11 +352,26 @@ func (r *OpenStackMachineTemplateReconciler) reconcileAllowedAddressPairs(ctx co
 				}
 			}
 
+			// Previously-applied pairs per port; a missing/invalid annotation means none.
+			var applied []portPairs
+			_ = json.Unmarshal([]byte(osm.Annotations[annotationAllowedAddressPairs]), &applied)
+
 			for portIdx, portStatus := range openStackServer.Status.Resources.Ports {
 				if portIdx >= len(templatePorts) {
 					break
 				}
 				pairs := templatePorts[portIdx].AllowedAddressPairs
+
+				// Skip no-op updates: even an empty PUT is policy-checked by Neutron
+				// and returns 403 on networks the project doesn't own.
+				var prev portPairs
+				if portIdx < len(applied) {
+					prev = applied[portIdx]
+				}
+				if len(prev) == 0 && len(pairs) == 0 {
+					continue
+				}
+
 				log.Info("Updating spec.template.spec.ports[*].allowedAddressPairs on Neutron port",
 					"OpenStackMachine", klog.KObj(osm), "portID", portStatus.ID, "portIndex", portIdx)
 				if err := networkingService.UpdateAllowedAddressPairs(portStatus.ID, pairs); err != nil {
