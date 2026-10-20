@@ -76,7 +76,7 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 			return nil
 		}
 
-		sourceTemplate, err := os.ReadFile(f)
+		sourceTemplate, err := os.ReadFile(f) //nolint:gosec // G122: This is test code, symlink TOCTOU is not a concern
 		Expect(err).NotTo(HaveOccurred())
 
 		platformKustomization, err := os.ReadFile(filepath.Join(e2eCtx.Settings.DataFolder, "ci-artifacts-platform-kustomization.yaml"))
@@ -98,7 +98,7 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 		// ciTemplate is the same for all templates
 		ciTemplateBytes, err := os.ReadFile(ciTemplate)
 		Expect(err).NotTo(HaveOccurred())
-		err = os.WriteFile(targetTemplate, ciTemplateBytes, 0o600)
+		err = os.WriteFile(targetTemplate, ciTemplateBytes, 0o600) //nolint:gosec // G703: This is test code, paths are derived from trusted test configuration
 		Expect(err).NotTo(HaveOccurred())
 
 		clusterctlCITemplate := clusterctl.Files{
@@ -119,12 +119,12 @@ func Node1BeforeSuite(ctx context.Context, e2eCtx *E2EContext) []byte {
 			return nil
 		}
 
-		t, err := os.ReadFile(f)
+		t, err := os.ReadFile(f) //nolint:gosec // G122: This is test code, symlink TOCTOU is not a concern
 		Expect(err).NotTo(HaveOccurred())
 
 		targetTemplate := path.Join(templatesDir, filename)
 
-		err = os.WriteFile(targetTemplate, t, 0o600)
+		err = os.WriteFile(targetTemplate, t, 0o600) //nolint:gosec // G703: This is test code, paths are derived from trusted test configuration
 		Expect(err).NotTo(HaveOccurred())
 
 		clusterctlTemplate := clusterctl.Files{

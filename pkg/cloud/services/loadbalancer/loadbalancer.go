@@ -53,6 +53,7 @@ const (
 	loadBalancerProvisioningStatusActive        = "ACTIVE"
 	loadBalancerProvisioningStatusPendingDelete = "PENDING_DELETE"
 	poolMemberProvisioningStatusActive          = "ACTIVE"
+	loadBalancerProtocolTCP                     = "TCP"
 )
 
 // Default values for Monitor, sync with `kubebuilder:default` annotations on APIServerLoadBalancerMonitor object.
@@ -153,7 +154,8 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		lbStatus.AllowedCIDRs = nil
 	}
 
-	portList := []int{apiServerPort}
+	portList := make([]int, 0, 1+len(lbSpec.AdditionalPorts))
+	portList = append(portList, apiServerPort)
 	portList = append(portList, lbSpec.AdditionalPorts...)
 	for _, port := range portList {
 		if err := s.reconcileAPILoadBalancerListener(lb, openStackCluster, clusterResourceName, port); err != nil {
@@ -447,7 +449,7 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 
 	listenerCreateOpts := listeners.CreateOpts{
 		Name:           listenerName,
-		Protocol:       "TCP",
+		Protocol:       loadBalancerProtocolTCP,
 		ProtocolPort:   port,
 		LoadbalancerID: lbID,
 		Tags:           openStackCluster.Spec.Tags,
@@ -521,7 +523,7 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 
 	poolCreateOpts := pools.CreateOpts{
 		Name:       poolName,
-		Protocol:   "TCP",
+		Protocol:   loadBalancerProtocolTCP,
 		LBMethod:   method,
 		ListenerID: listenerID,
 		Tags:       openStackCluster.Spec.Tags,
@@ -611,7 +613,7 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 	monitor, err = s.loadbalancerClient.CreateMonitor(monitors.CreateOpts{
 		Name:           monitorName,
 		PoolID:         poolID,
-		Type:           "TCP",
+		Type:           loadBalancerProtocolTCP,
 		Delay:          cfg.Delay,
 		Timeout:        cfg.Timeout,
 		MaxRetries:     cfg.MaxRetries,
