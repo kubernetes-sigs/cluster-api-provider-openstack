@@ -216,7 +216,7 @@ The recommmend minimum value of control plane flavor's vCPU is 2 and minimum val
 
 ## CNI security group rules
 
-Depending on the CNI that will be deployed on the cluster, you may need to add specific security group rules to the control plane and worker nodes. For example, if you are using Calico with BGP, you will need to add the following security group rules to the control plane and worker nodes:
+Depending on the CNI that will be deployed on the cluster, you may need to add specific security group rules to the control plane and worker nodes. For example, if you are using Calico with BGP, you will need to add the following security group rules to the control plane and worker nodes. Keep the rule that matches the encapsulation you use: IP-in-IP (IP protocol 4) or VXLAN (UDP 4789):
 
  ```yaml
  apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
@@ -246,8 +246,23 @@ Depending on the CNI that will be deployed on the cluster, you may need to add s
         name: IP-in-IP (Calico)
         protocol: 4
         description: "Allow IP-in-IP between control plane and workers"
+      - remoteManagedGroups:
+        - controlplane
+        - worker
+        direction: ingress
+        etherType: IPv4
+        name: VXLAN (Calico)
+        portRangeMin: 4789
+        portRangeMax: 4789
+        protocol: udp
+        description: "Allow VXLAN between control plane and workers"
       allowAllInClusterTraffic: false
  ```
+
+> **Note:** with port security enabled, Neutron drops packets whose source address does not belong to the port (anti-spoofing).
+> If pod traffic leaves a node **without encapsulation**, for example with a Calico IP pool where both IP-in-IP and VXLAN are set to `Never`, or with the `CrossSubnet` modes between nodes in the same subnet, the packets carry pod IPs and are dropped silently.
+> The usual symptom is that pods can reach pods on the same node but not on other nodes, which often shows up as cluster DNS failures.
+> Either encapsulate all pod traffic (for example `vxlanMode: Always`, or `ipipMode: Always` with the IP-in-IP rule above), or add the pod CIDR to the ports' `allowedAddressPairs`.
 
 # Optional Configuration
 
