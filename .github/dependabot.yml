@@ -96,6 +96,8 @@ updates:
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - dependency-name: "sigs.k8s.io/controller-tools"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+   # Ignore all kustomize bumps: v5.8.3+ requires Go 1.27
+  - dependency-name: "sigs.k8s.io/kustomize/*"
   cooldown:
     default-days: 7
   labels:
