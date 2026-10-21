@@ -627,6 +627,43 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 			},
 			wantErr: "neutron error",
 		},
+		{
+			// Regression: ports without pairs and no annotation used to be PUT anyway,
+			// which returns 403 on networks the project doesn't own.
+			name:        "no pairs in template and no annotation - no UpdatePort, annotation backfilled",
+			clusterName: testCluster,
+			osmt:        makeOSMTWithPorts(nil),
+			objects:     []client.Object{makeMS(), makeMachine(), makeOSM(""), makeOSS()},
+			setupMock: func(_ *mockclient.MockNetworkClient) {
+				// no UpdatePort expected; any call fails the test
+			},
+			verify: func(g Gomega, cl client.Client) {
+				osm := &infrav1.OpenStackMachine{}
+				g.Expect(cl.Get(ctx, client.ObjectKey{Namespace: testNS, Name: osmName}, osm)).To(Succeed())
+				g.Expect(osm.Annotations[annotationAllowedAddressPairs]).To(Equal("[null]"))
+			},
+		},
+		{
+			name:        "pairs removed from template - UpdatePort still called to clear them",
+			clusterName: testCluster,
+			osmt:        makeOSMTWithPorts(nil),
+			objects: []client.Object{
+				makeMS(),
+				makeMachine(),
+				makeOSM(`[[{"ipAddress":"192.0.2.100"}]]`),
+				makeOSS(),
+			},
+			setupMock: func(nc *mockclient.MockNetworkClient) {
+				nc.EXPECT().
+					UpdatePort(portID, gomock.Any()).
+					Return(nil, nil)
+			},
+			verify: func(g Gomega, cl client.Client) {
+				osm := &infrav1.OpenStackMachine{}
+				g.Expect(cl.Get(ctx, client.ObjectKey{Namespace: testNS, Name: osmName}, osm)).To(Succeed())
+				g.Expect(osm.Annotations[annotationAllowedAddressPairs]).To(Equal("[null]"))
+			},
+		},
 	}
 
 	for _, tt := range tests {
