@@ -14,6 +14,7 @@ linters:
   - copyloopvar
   - cyclop
   - dogsled
+  - depguard
   - dupword
   - durationcheck
   - errcheck
@@ -49,11 +50,19 @@ linters:
   - wastedassign
   - whitespace
   settings:
-    goconst:
-      ignore-tests: true
     # TODO(sbuerin) fix remaining findings and set to 20 afterwards
     cyclop:
       max-complexity: 30
+    depguard:
+      rules:
+        api:
+          files:
+          - "**/api/**/*.go"
+          deny:
+          - pkg: sigs.k8s.io/controller-runtime
+            desc: API packages must not depend on controller-runtime.
+    goconst:
+      ignore-tests: true
     gocritic:
       disabled-checks:
       - appendAssign
