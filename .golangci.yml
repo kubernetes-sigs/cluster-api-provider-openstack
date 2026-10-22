@@ -79,8 +79,6 @@ linters:
           - sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors$
           - sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional$
           - sigs.k8s.io/cluster-api-provider-openstack/test/helpers$
-          # TODO(stephenfin): Remove and replace with sigs.k8s.io/cluster-api/util/conversion
-          - sigs.k8s.io/controller-runtime/pkg/conversion$
     goconst:
       ignore-tests: true
     gocritic:
