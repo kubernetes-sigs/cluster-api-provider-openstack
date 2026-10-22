@@ -56,11 +56,31 @@ linters:
     depguard:
       rules:
         api:
+          list-mode: strict
           files:
           - "**/api/**/*.go"
-          deny:
-          - pkg: sigs.k8s.io/controller-runtime
-            desc: API packages must not depend on controller-runtime.
+          allow:
+          - $gostd
+          - github.com/onsi/gomega$
+          - k8s.io/api/core/v1$
+          - k8s.io/apimachinery/pkg/api/apitesting/fuzzer$
+          - k8s.io/apimachinery/pkg/apis/meta/v1$
+          - k8s.io/apimachinery/pkg/apis/meta/v1/unstructured$
+          - k8s.io/apimachinery/pkg/conversion$
+          - k8s.io/apimachinery/pkg/runtime$
+          - k8s.io/apimachinery/pkg/runtime/schema$
+          - k8s.io/apimachinery/pkg/runtime/serializer$
+          - k8s.io/utils/ptr$
+          - sigs.k8s.io/cluster-api/api/core/v1beta1$
+          - sigs.k8s.io/cluster-api/api/core/v1beta2$
+          - sigs.k8s.io/cluster-api/util/conversion$
+          - sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1$
+          - sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2$
+          - sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors$
+          - sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional$
+          - sigs.k8s.io/cluster-api-provider-openstack/test/helpers$
+          # TODO(stephenfin): Remove and replace with sigs.k8s.io/cluster-api/util/conversion
+          - sigs.k8s.io/controller-runtime/pkg/conversion$
     goconst:
       ignore-tests: true
     gocritic:
