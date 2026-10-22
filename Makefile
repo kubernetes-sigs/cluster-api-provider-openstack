@@ -456,6 +456,10 @@ generate-api-docs-%: $(GEN_CRD_API_REFERENCE_DOCS) FORCE
 		-config=./docs/book/gen-crd-api-reference-docs/config.json \
 		-template-dir=./docs/book/gen-crd-api-reference-docs/template \
 		-out-file=./docs/book/src/api/$*/api.md
+	# Temporary workaround for https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/3222:
+	# gen-crd-api-reference-docs only strips ",omitempty" and ",inline" from field names, so strip any
+	# remaining json tag options (e.g. ",omitzero") from the generated field names.
+	sed -i'' -e 's#<code>\([A-Za-z0-9_][A-Za-z0-9_]*\),[a-z,]*</code>#<code>\1</code>#g' ./docs/book/src/api/$*/api.md
 
 ## --------------------------------------
 ##@ Docker
