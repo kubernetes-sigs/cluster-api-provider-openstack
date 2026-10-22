@@ -177,7 +177,7 @@ make clean-release
 3. Create controller in `/controllers`
 4. Create service implementation in `/pkg/cloud/services/<category>`
 5. Update or create scope in `/pkg/scope` if needed
-6. Add webhooks in `/pkg/webhooks` for validation/defaulting
+6. Add webhooks in `/pkg/webhooks` for validation/defaulting. For versioned resources, add typed hub/spoke conversion functions in `/pkg/webhooks/conversion` and register them with `WithConverter`. Keep generated and manual field conversions in `/api`, without controller-runtime conversion interfaces.
 7. Add unit tests for controller and services
 8. Update documentation
 9. Generate cluster templates if applicable with `make templates`
