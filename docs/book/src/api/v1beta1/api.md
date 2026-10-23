@@ -4263,7 +4263,7 @@ This value is used for autoscaling from zero operations as defined in:
 </tr>
 <tr>
 <td>
-<code>nodeInfo,omitempty,omitzero</code><br/>
+<code>nodeInfo</code><br/>
 <em>
 <a href="#infrastructure.cluster.x-k8s.io/v1beta1.NodeInfo">
 NodeInfo
