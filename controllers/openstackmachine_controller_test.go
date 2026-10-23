@@ -32,6 +32,7 @@ import (
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/cluster-api/test/framework"
+	"sigs.k8s.io/cluster-api/util/annotations"
 	conditions "sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -1126,6 +1127,52 @@ var _ = Describe("OpenStackMachine controller", func() {
 		Expect(err).To(BeNil())
 	})
 
+	It("should only set the Paused condition when OpenStackMachine is paused", func() {
+		testMachine.SetName("paused-machine")
+		annotations.AddAnnotations(testMachine, map[string]string{clusterv1.PausedAnnotation: "true"})
+
+		Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+		Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+		Expect(k8sClient.Create(ctx, capiMachine)).To(Succeed())
+		Expect(k8sClient.Create(ctx, testMachine)).To(Succeed())
+
+		result, err := machineReconciler.Reconcile(ctx, reconcile.Request{NamespacedName: client.ObjectKeyFromObject(testMachine)})
+		Expect(err).To(BeNil())
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		updated := &infrav1.OpenStackMachine{}
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(testMachine), updated)).To(Succeed())
+
+		condition := conditions.Get(updated, clusterv1.PausedCondition)
+		Expect(condition).ToNot(BeNil())
+		Expect(condition.Status).To(Equal(metav1.ConditionTrue))
+		Expect(condition.Reason).To(Equal(clusterv1.PausedReason))
+
+		// Nothing else was reconciled.
+		Expect(updated.Finalizers).To(BeEmpty())
+		Expect(conditions.Get(updated, infrav1.OpenStackAuthenticationSucceeded)).To(BeNil())
+		Expect(conditions.Get(updated, clusterv1.ReadyCondition)).To(BeNil())
+	})
+
+	It("should only set the Paused condition when the owning Cluster is paused", func() {
+		testMachine.SetName("cluster-paused-machine")
+		capiCluster.Spec.Paused = ptr.To(true)
+
+		Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
+		Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
+		Expect(k8sClient.Create(ctx, capiMachine)).To(Succeed())
+		Expect(k8sClient.Create(ctx, testMachine)).To(Succeed())
+
+		result, err := machineReconciler.Reconcile(ctx, reconcile.Request{NamespacedName: client.ObjectKeyFromObject(testMachine)})
+		Expect(err).To(BeNil())
+		Expect(result).To(Equal(reconcile.Result{}))
+
+		updated := &infrav1.OpenStackMachine{}
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(testMachine), updated)).To(Succeed())
+		Expect(conditions.IsTrue(updated, clusterv1.PausedCondition)).To(BeTrue())
+		Expect(updated.Finalizers).To(BeEmpty())
+	})
+
 	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
 		testMachine.SetName("missing-machine-credentials")
 		testMachine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
@@ -1152,7 +1199,7 @@ var _ = Describe("OpenStackMachine controller", func() {
 				Namespace: testMachine.Namespace,
 			},
 		}
-		result, err := machineReconciler.Reconcile(ctx, req)
+		result, err := reconcileAfterPausedInit(ctx, machineReconciler, req)
 
 		Expect(err).To(MatchError(credentialsErr))
 		Expect(result).To(Equal(reconcile.Result{}))
@@ -1198,7 +1245,7 @@ var _ = Describe("OpenStackMachine controller", func() {
 				Namespace: testMachine.Namespace,
 			},
 		}
-		result, err := machineReconciler.Reconcile(ctx, req)
+		result, err := reconcileAfterPausedInit(ctx, machineReconciler, req)
 
 		Expect(err).To(MatchError(identityAccessErr))
 		Expect(result).To(Equal(reconcile.Result{}))
