@@ -5,6 +5,7 @@ CAPO now ships with experimental features the users can enable.
 Currently CAPO has the following experimental features:
 * `PriorityQueue` (env var: `EXP_CAPO_PRIORITY_QUEUE`): [PriorityQueue](./priority-queue.md)
 * `AutoScaleFromZero` (env var: `EXP_CAPO_AUTOSCALE_FROM_ZERO`): [AutoScaleFromZero](./autoscale-from-zero.md)
+* `PortGarbageCollection` (env var: `EXP_CAPO_PORT_GARBAGE_COLLECTION`): [PortGarbageCollection](./port-garbage-collection.md)
 
 ## Enabling Experimental Features for Management Clusters Started with clusterctl
 

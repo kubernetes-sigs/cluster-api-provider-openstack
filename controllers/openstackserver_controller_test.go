@@ -57,6 +57,7 @@ const (
 	openStackServerName = "test-openstack-server"
 	instanceUUID        = "8308882f-5e46-47e6-8e12-1fe869c43d1d"
 	portUUID            = "55eac199-4836-4a98-b31c-9f65f382ad46"
+	orphanedPortUUID    = "c7c1f5a2-3b8e-4d9f-9a6b-2e1d0f4c8b7a"
 	rootVolumeUUID      = "4724a66d-bd5e-47f3-bb57-a67fcb4168e0"
 	trunkUUID           = "9d348baa-93b1-4e63-932f-dd0527fbd789"
 	imageName           = "my-image"
@@ -152,6 +153,28 @@ var listDefaultPortsNotFound = func(r *recorders) {
 		Name:      openStackServerName + "-0",
 		NetworkID: networkUUID,
 	}).Return(nil, nil)
+}
+
+// listOrphanedDefaultPorts returns the recorded default port, still attached
+// to its server, and an unrecorded unattached port with the same name.
+var listOrphanedDefaultPorts = func(r *recorders) {
+	r.network.ListPort(ports.ListOpts{
+		Name:      openStackServerName + "-0",
+		NetworkID: networkUUID,
+	}).Return([]ports.Port{
+		{
+			ID:          portUUID,
+			Name:        openStackServerName + "-0",
+			NetworkID:   networkUUID,
+			DeviceID:    instanceUUID,
+			DeviceOwner: "compute:nova",
+		},
+		{
+			ID:        orphanedPortUUID,
+			Name:      openStackServerName + "-0",
+			NetworkID: networkUUID,
+		},
+	}, nil)
 }
 
 var listDefaultServerNotFound = func(r *recorders) {
@@ -497,12 +520,41 @@ func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
 
 func Test_OpenStackServerReconcileDelete(t *testing.T) {
 	tests := []struct {
-		name                string
-		osServer            infrav1alpha1.OpenStackServer
-		expect              func(r *recorders)
-		wantErr             bool
-		wantRemoveFinalizer bool
+		name                  string
+		osServer              infrav1alpha1.OpenStackServer
+		portGarbageCollection bool
+		expect                func(r *recorders)
+		wantErr               bool
+		wantRemoveFinalizer   bool
 	}{
+		{
+			name: "Port garbage collection deletes unrecorded ports",
+			osServer: infrav1alpha1.OpenStackServer{
+				Spec: infrav1alpha1.OpenStackServerSpec{
+					Flavor: ptr.To(defaultFlavor),
+					Image:  defaultImage,
+					Ports:  defaultPortOpts,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					InstanceID: ptr.To(instanceUUID),
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID: imageUUID,
+						Ports:   defaultResolvedPorts,
+					},
+					Resources: &infrav1alpha1.ServerResources{
+						Ports: defaultPortsStatus,
+					},
+				},
+			},
+			portGarbageCollection: true,
+			expect: func(r *recorders) {
+				deleteServerByID(r)
+				deleteDefaultPorts(r)
+				listOrphanedDefaultPorts(r)
+				r.network.DeletePort(orphanedPortUUID).Return(nil)
+			},
+			wantRemoveFinalizer: true,
+		},
 		{
 			name: "No volumes, resolved and resources populated",
 			osServer: infrav1alpha1.OpenStackServer{
@@ -639,7 +691,7 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			reconciler := OpenStackServerReconciler{}
+			reconciler := OpenStackServerReconciler{PortGarbageCollection: tt.portGarbageCollection}
 
 			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
 			imageRecorder := mockScopeFactory.ImageClient.EXPECT()
@@ -674,14 +726,50 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 
 func Test_OpenStackServerReconcileCreate(t *testing.T) {
 	tests := []struct {
-		name          string
-		osServer      infrav1alpha1.OpenStackServer
-		expect        func(r *recorders)
-		wantErr       error
-		wantResult    *reconcile.Result
-		wantReady     *bool
-		wantCondition *metav1.Condition
+		name                  string
+		osServer              infrav1alpha1.OpenStackServer
+		portGarbageCollection bool
+		expect                func(r *recorders)
+		wantErr               error
+		wantResult            *reconcile.Result
+		wantReady             *bool
+		wantCondition         *metav1.Condition
 	}{
+		{
+			name: "Port garbage collection deletes unrecorded ports of a server in ERROR state",
+			osServer: infrav1alpha1.OpenStackServer{
+				Spec: infrav1alpha1.OpenStackServerSpec{
+					Flavor: ptr.To(defaultFlavor),
+					Image:  defaultImage,
+					Ports:  defaultPortOpts,
+				},
+				Status: infrav1alpha1.OpenStackServerStatus{
+					InstanceID:    ptr.To(instanceUUID),
+					InstanceState: ptr.To(infrav1.InstanceStateError),
+					Resolved: &infrav1alpha1.ResolvedServerSpec{
+						ImageID:  imageUUID,
+						FlavorID: flavorUUID,
+						Ports:    defaultResolvedPorts,
+					},
+					Resources: &infrav1alpha1.ServerResources{
+						Ports: defaultPortsStatus,
+					},
+				},
+			},
+			portGarbageCollection: true,
+			expect: func(r *recorders) {
+				listDefaultPortsWithID(r)
+				listOrphanedDefaultPorts(r)
+				r.network.DeletePort(orphanedPortUUID).Return(nil)
+				r.compute.GetServer(instanceUUID).Return(&servers.Server{
+					ID:     instanceUUID,
+					Name:   openStackServerName,
+					Status: "ERROR",
+				}, nil)
+			},
+			wantResult: &reconcile.Result{RequeueAfter: waitForInstanceBecomeActiveToReconcile},
+			wantReady:  ptr.To(false),
+		},
 		{
 			name: "Minimal server spec creating port and server",
 			osServer: infrav1alpha1.OpenStackServer{
@@ -842,7 +930,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
 
-			reconciler := OpenStackServerReconciler{}
+			reconciler := OpenStackServerReconciler{PortGarbageCollection: tt.portGarbageCollection}
 
 			computeRecorder := mockScopeFactory.ComputeClient.EXPECT()
 			imageRecorder := mockScopeFactory.ImageClient.EXPECT()
