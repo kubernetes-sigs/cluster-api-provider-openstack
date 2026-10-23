@@ -287,7 +287,7 @@ func InfraV1Beta2FuzzerFuncs() []any {
 	return []any{
 		// Normalize OpenStackCluster fields that are not preserved during
 		// hub-spoke-hub conversion:
-		// - ObservedGeneration on conditions is set from ObjectMeta.Generation during ConvertTo
+		// - ObservedGeneration on conditions is set from ObjectMeta.Generation during conversion to the hub
 		// - FailureDomains ordering is lost during map<->slice conversion
 		func(cluster *infrav1.OpenStackCluster, c randfill.Continue) {
 			c.FillNoCustom(cluster)
@@ -306,7 +306,7 @@ func InfraV1Beta2FuzzerFuncs() []any {
 			})
 		},
 
-		// Normalize OpenStackMachine ObservedGeneration (set from ObjectMeta.Generation during ConvertTo).
+		// Normalize OpenStackMachine ObservedGeneration (set from ObjectMeta.Generation during conversion to the hub).
 		func(machine *infrav1.OpenStackMachine, c randfill.Continue) {
 			c.FillNoCustom(machine)
 
@@ -320,7 +320,7 @@ func InfraV1Beta2FuzzerFuncs() []any {
 		},
 
 		// Normalize OpenStackMachineTemplate ObservedGeneration.
-		// The template ConvertTo does not set ObservedGeneration, so it is
+		// Template conversion to the hub does not set ObservedGeneration, so it is
 		// always zero after a hub-spoke-hub round-trip.
 		func(tmpl *infrav1.OpenStackMachineTemplate, c randfill.Continue) {
 			c.FillNoCustom(tmpl)

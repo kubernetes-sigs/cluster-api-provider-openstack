@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/webhooks/conversion"
 )
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1beta2-openstackmachine,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=openstackmachines,versions=v1beta2,name=validation.openstackmachine.v1beta2.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1
@@ -37,6 +38,7 @@ import (
 func SetupOpenStackMachineWebhook(mgr manager.Manager) error {
 	return builder.WebhookManagedBy(mgr, &infrav1.OpenStackMachine{}).
 		WithValidator(&openStackMachineWebhook{}).
+		WithConverter(conversion.OpenStackMachine).
 		Complete()
 }
 
