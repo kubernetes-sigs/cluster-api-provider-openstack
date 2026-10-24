@@ -219,6 +219,11 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 		}
 	}
 
+	if err := deleteAPIServerEndpoint(scope, openStackCluster, clusterResourceName); err != nil {
+		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete API server floating IP: %w", err))
+		return reconcile.Result{}, fmt.Errorf("failed to delete API server floating IP: %w", err)
+	}
+
 	// if ManagedSubnets was not set, no network was created.
 	if len(openStackCluster.Spec.ManagedSubnets) > 0 {
 		if err = networkingService.DeleteRouter(openStackCluster, clusterResourceName); err != nil {
@@ -246,6 +251,27 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 	controllerutil.RemoveFinalizer(openStackCluster, infrav1.ClusterFinalizer)
 	scope.Logger().Info("Reconciled Cluster deleted successfully")
 	return ctrl.Result{}, nil
+}
+
+func deleteAPIServerEndpoint(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+	if openStackCluster.Spec.APIServer.GetManagedLoadBalancer().IsEnabled() ||
+		openStackCluster.Spec.APIServer.GetFloatingIP() != nil ||
+		openStackCluster.Spec.ControlPlaneEndpoint == nil ||
+		!openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
+		return nil
+	}
+
+	networkingService, err := networking.NewService(scope)
+	if err != nil {
+		return err
+	}
+
+	_, err = networkingService.DeleteFloatingIPCreatedForCluster(
+		openStackCluster,
+		openStackCluster.Spec.ControlPlaneEndpoint.Host,
+		clusterResourceName,
+	)
+	return err
 }
 
 func contains(arr []string, target string) bool {
