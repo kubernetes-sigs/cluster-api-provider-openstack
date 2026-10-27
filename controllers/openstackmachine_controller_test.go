@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	. "github.com/onsi/gomega" //nolint:revive
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -393,6 +394,141 @@ func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 			if !tt.wantErr && !reflect.DeepEqual(spec, tt.want) {
 				t.Errorf("openStackMachineSpecToOpenStackServerSpec() got = %+v, want %+v", spec, tt.want)
 			}
+		})
+	}
+}
+
+// TestOpenStackMachineSpecToOpenStackServerSpecDoesNotMutateInput verifies that the conversion
+// never modifies the OpenStackMachineSpec it is given. The spec is the baseline of the
+// patch helper in the OpenStackMachine reconciler, so any in-place mutation (e.g. injecting
+// the default security group into a port) ends up in the deferred patch of the OpenStackMachine
+// and is rejected by the spec immutability webhook.
+func TestOpenStackMachineSpecToOpenStackServerSpecDoesNotMutateInput(t *testing.T) {
+	identityRef := infrav1.OpenStackIdentityReference{
+		Name:      "foo",
+		CloudName: "my-cloud",
+	}
+	openStackCluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+			Subnets: []infrav1.SubnetParam{
+				{ID: ptr.To(subnetUUID)},
+			},
+		},
+		Status: infrav1.OpenStackClusterStatus{
+			WorkerSecurityGroup: &infrav1.SecurityGroupStatus{ID: workerSecurityGroupUUID},
+			Network: &infrav1.NetworkStatusWithSubnets{
+				NetworkStatus: infrav1.NetworkStatus{ID: networkUUID},
+			},
+		},
+	}
+	userData := &corev1.LocalObjectReference{Name: "bootstrap-data"}
+
+	tests := []struct {
+		name string
+		spec infrav1.OpenStackMachineSpec
+		// wantPortSecurityGroups are the expected security group IDs of each port in the output.
+		wantPortSecurityGroups [][]string
+	}{
+		{
+			name: "explicit port with network and subnet, no security groups",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					FixedIPs: []infrav1.FixedIP{{
+						Subnet: &infrav1.SubnetParam{ID: ptr.To(subnetUUID)},
+					}},
+				}},
+			},
+			wantPortSecurityGroups: [][]string{{workerSecurityGroupUUID}},
+		},
+		{
+			name: "multiple explicit ports, no security groups",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{
+					{Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)}},
+					{Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)}},
+				},
+			},
+			wantPortSecurityGroups: [][]string{{workerSecurityGroupUUID}, {workerSecurityGroupUUID}},
+		},
+		{
+			name: "explicit port without network gets the default network injected",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{}},
+			},
+			wantPortSecurityGroups: [][]string{{workerSecurityGroupUUID}},
+		},
+		{
+			name: "machine level security groups are appended to the port",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{
+					Network: &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+				}},
+				SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(extraSecurityGroupUUID)}},
+			},
+			wantPortSecurityGroups: [][]string{{workerSecurityGroupUUID, extraSecurityGroupUUID}},
+		},
+		{
+			name: "port with its own security groups plus machine level security groups",
+			spec: infrav1.OpenStackMachineSpec{
+				Ports: []infrav1.PortOpts{{
+					Network:        &infrav1.NetworkParam{ID: ptr.To(networkUUID)},
+					SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(controlPlaneSecurityGroupUUID)}},
+				}},
+				SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(extraSecurityGroupUUID)}},
+			},
+			wantPortSecurityGroups: [][]string{{controlPlaneSecurityGroupUUID, extraSecurityGroupUUID}},
+		},
+		{
+			name: "no ports gets a single default port",
+			spec: infrav1.OpenStackMachineSpec{
+				SecurityGroups: []infrav1.SecurityGroupParam{{ID: ptr.To(extraSecurityGroupUUID)}},
+			},
+			wantPortSecurityGroups: [][]string{{workerSecurityGroupUUID, extraSecurityGroupUUID}},
+		},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			input := tt.spec.DeepCopy()
+			original := input.DeepCopy()
+
+			convert := func() *infrav1alpha1.OpenStackServerSpec {
+				serverSpec, err := openStackMachineSpecToOpenStackServerSpec(input, identityRef, nil, "", userData, ptr.To(workerSecurityGroupUUID), openStackCluster)
+				g.Expect(err).ToNot(HaveOccurred())
+				return serverSpec
+			}
+
+			first := convert()
+
+			// The input must be untouched.
+			g.Expect(input).To(Equal(original), "conversion must not modify the OpenStackMachineSpec it is given")
+
+			// The output must still contain the expected defaults.
+			g.Expect(first.Ports).To(HaveLen(len(tt.wantPortSecurityGroups)))
+			for idx, want := range tt.wantPortSecurityGroups {
+				got := make([]string, 0, len(first.Ports[idx].SecurityGroups))
+				for _, sg := range first.Ports[idx].SecurityGroups {
+					got = append(got, ptr.Deref(sg.ID, ""))
+				}
+				g.Expect(got).To(Equal(want), "unexpected security groups on port %d", idx)
+				g.Expect(first.Ports[idx].Network).ToNot(BeNil(), "port %d must have a network", idx)
+			}
+
+			// Converting again must give the same result: defaults must not accumulate.
+			second := convert()
+			g.Expect(second).To(Equal(first), "repeated conversion must be idempotent")
+			g.Expect(input).To(Equal(original), "repeated conversion must not modify the OpenStackMachineSpec it is given")
+
+			// Mutating the output must not leak into the input either.
+			for idx := range first.Ports {
+				first.Ports[idx].SecurityGroups = append(first.Ports[idx].SecurityGroups, infrav1.SecurityGroupParam{ID: ptr.To("mutated")})
+			}
+			g.Expect(input).To(Equal(original), "output must not share memory with the input")
 		})
 	}
 }
