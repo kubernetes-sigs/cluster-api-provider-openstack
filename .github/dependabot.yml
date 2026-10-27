@@ -177,6 +177,8 @@ updates:
   # Ignore gophercloud minor and major bumps to prevent cascading Go version requirements
   - dependency-name: "github.com/gophercloud/gophercloud/v2"
     update-types: ["version-update:semver-major", "version-update:semver-minor"]
+   # Ignore all kustomize bumps: v5.8.3+ requires Go 1.27
+  - dependency-name: "sigs.k8s.io/kustomize/*"
   cooldown:
     default-days: 7
   labels:
