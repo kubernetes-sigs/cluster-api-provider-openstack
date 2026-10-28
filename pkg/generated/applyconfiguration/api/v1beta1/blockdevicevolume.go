@@ -23,6 +23,7 @@ package v1beta1
 type BlockDeviceVolumeApplyConfiguration struct {
 	Type             *string                                   `json:"type,omitempty"`
 	AvailabilityZone *VolumeAvailabilityZoneApplyConfiguration `json:"availabilityZone,omitempty"`
+	Metadata         []VolumeMetadataApplyConfiguration        `json:"metadata,omitempty"`
 }
 
 // BlockDeviceVolumeApplyConfiguration constructs a declarative configuration of the BlockDeviceVolume type for use with
@@ -44,5 +45,18 @@ func (b *BlockDeviceVolumeApplyConfiguration) WithType(value string) *BlockDevic
 // If called multiple times, the AvailabilityZone field is set to the value of the last call.
 func (b *BlockDeviceVolumeApplyConfiguration) WithAvailabilityZone(value *VolumeAvailabilityZoneApplyConfiguration) *BlockDeviceVolumeApplyConfiguration {
 	b.AvailabilityZone = value
+	return b
+}
+
+// WithMetadata adds the given value to the Metadata field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Metadata field.
+func (b *BlockDeviceVolumeApplyConfiguration) WithMetadata(values ...*VolumeMetadataApplyConfiguration) *BlockDeviceVolumeApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithMetadata")
+		}
+		b.Metadata = append(b.Metadata, *values[i])
+	}
 	return b
 }

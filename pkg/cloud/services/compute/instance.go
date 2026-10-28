@@ -226,7 +226,7 @@ func (s *Service) waitForVolume(volumeID string, timeout time.Duration, retryInt
 // getOrCreateVolumeBuilder gets or creates a volume with the given options. It returns the volume that already exists or the newly created one.
 // It returns an error if the volume creation failed or if the expected volume is different from the one that already exists.
 func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceSpec *InstanceSpec, blockDeviceSpec *infrav1.AdditionalBlockDevice, imageID string, description string) (*volumes.Volume, error) {
-	availabilityZone, volType := resolveVolumeOpts(instanceSpec, blockDeviceSpec.Storage.Volume)
+	availabilityZone, volType, metadata := resolveVolumeOpts(instanceSpec, blockDeviceSpec.Storage.Volume)
 
 	createOpts := volumes.CreateOpts{
 		Name:             volumeName(instanceSpec.Name, blockDeviceSpec.Name),
@@ -235,21 +235,28 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 		ImageID:          imageID,
 		AvailabilityZone: availabilityZone,
 		VolumeType:       volType,
+		Metadata:         metadata,
 	}
 
 	return s.getOrCreateVolume(eventObject, createOpts)
 }
 
-func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDeviceVolume) (az, volType string) {
+func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDeviceVolume) (az, volType string, metadata map[string]string) {
 	if volumeOpts == nil {
-		return az, volType
+		return az, volType, metadata
 	}
 
 	volType = volumeOpts.Type
+	if len(volumeOpts.Metadata) > 0 {
+		metadata = make(map[string]string, len(volumeOpts.Metadata))
+		for _, m := range volumeOpts.Metadata {
+			metadata[m.Key] = m.Value
+		}
+	}
 
 	volumeAZ := volumeOpts.AvailabilityZone
 	if volumeAZ == nil {
-		return az, volType
+		return az, volType, metadata
 	}
 
 	switch volumeAZ.From {
@@ -261,7 +268,7 @@ func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDevi
 	case infrav1.VolumeAZFromMachine:
 		az = instanceSpec.FailureDomain
 	}
-	return az, volType
+	return az, volType, metadata
 }
 
 // getBlockDevices returns a list of block devices that were created and attached to the instance. It returns an error
