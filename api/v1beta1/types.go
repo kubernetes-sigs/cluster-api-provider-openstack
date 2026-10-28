@@ -553,6 +553,35 @@ type BlockDeviceVolume struct {
 	// availability zone.
 	// +optional
 	AvailabilityZone *VolumeAvailabilityZone `json:"availabilityZone,omitempty"`
+
+	// Metadata is a list of key/value pairs that will be set as metadata on
+	// the Cinder volume when it is created. Keys must be unique.
+	// At most 128 entries are allowed.
+	// +optional
+	// +listType=map
+	// +listMapKey=key
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=128
+	Metadata []VolumeMetadata `json:"metadata,omitempty"`
+}
+
+// VolumeMetadata is a key/value pair set as metadata on a Cinder volume.
+type VolumeMetadata struct {
+	// Key is the metadata key.
+	// It must be between 1 and 255 characters long and may only contain
+	// letters, digits, spaces and the characters "-_:./".
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	// +kubebuilder:validation:Pattern:="^[a-zA-Z0-9_:. /-]+$"
+	Key string `json:"key"`
+
+	// Value is the metadata value.
+	// It must be between 1 and 255 characters long.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	Value string `json:"value"`
 }
 
 // VolumeAZSource specifies where to obtain the availability zone for a volume.

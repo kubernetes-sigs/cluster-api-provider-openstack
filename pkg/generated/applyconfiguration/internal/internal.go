@@ -622,6 +622,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: availabilityZone
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.VolumeAvailabilityZone
+    - name: metadata
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.VolumeMetadata
+          elementRelationship: associative
+          keys:
+          - key
     - name: type
       type:
         scalar: string
@@ -1445,6 +1453,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: availabilityZone
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.VolumeAvailabilityZone
+    - name: metadata
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.VolumeMetadata
+          elementRelationship: associative
+          keys:
+          - key
     - name: sizeGiB
       type:
         scalar: numeric
@@ -1794,6 +1810,17 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: name
       type:
         scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta1.VolumeMetadata
+  map:
+    fields:
+    - name: key
+      type:
+        scalar: string
+      default: ""
+    - name: value
+      type:
+        scalar: string
+      default: ""
 - name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.APIServer
   map:
     fields:
@@ -1968,6 +1995,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: availabilityZone
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeAvailabilityZone
+    - name: metadata
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeMetadata
+          elementRelationship: associative
+          keys:
+          - key
     - name: type
       type:
         scalar: string
@@ -2782,6 +2817,14 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: availabilityZone
       type:
         namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeAvailabilityZone
+    - name: metadata
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeMetadata
+          elementRelationship: associative
+          keys:
+          - key
     - name: sizeGiB
       type:
         scalar: numeric
@@ -3111,6 +3154,15 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
     - name: name
+      type:
+        scalar: string
+- name: io.k8s.sigs.cluster-api-provider-openstack.api.v1beta2.VolumeMetadata
+  map:
+    fields:
+    - name: key
+      type:
+        scalar: string
+    - name: value
       type:
         scalar: string
 - name: io.k8s.sigs.cluster-api.api.core.v1beta1.APIEndpoint
