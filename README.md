@@ -48,6 +48,7 @@ This provider's versions are compatible with the following versions of Cluster A
 
 | Minor release | CAPI version |
 |---------------|--------------|
+| v0.15         | >=v1.12      |
 | v0.14         | >=v1.12      |
 | v0.13         | >=v1.11      |
 | v0.12         | >=v1.9       |
