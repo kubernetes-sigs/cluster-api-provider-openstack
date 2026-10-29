@@ -33,7 +33,7 @@
         <code>metadata</code> field.
     {{ end }}
 
-    {{ if or (eq (fieldName .) "spec") }}
+    {{ if or (eq (fieldName .) "spec") (eq .Name "Spec") }}
         <br/>
         <br/>
         <table>
