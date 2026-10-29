@@ -17,6 +17,7 @@ limitations under the License.
 package apivalidations
 
 import (
+	"fmt"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -319,6 +320,55 @@ var _ = Describe("OpenStackMachine API validations", func() {
 				},
 			}
 			Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with duplicate named additional block device should fail")
+		})
+
+		It("should allow volume metadata", func() {
+			metadata := []infrav1.VolumeMetadata{
+				{Key: "key", Value: "value"},
+				{Key: "Key-1_a:b.c d/e", Value: "value"},
+			}
+
+			machine := defaultMachine()
+			machine.Spec.RootVolume = &infrav1.RootVolume{
+				SizeGiB:           1,
+				BlockDeviceVolume: infrav1.BlockDeviceVolume{Metadata: metadata},
+			}
+			machine.Spec.AdditionalBlockDevices = []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "test-volume",
+					SizeGiB: 1,
+					Storage: infrav1.BlockDeviceStorage{
+						Type:   infrav1.VolumeBlockDevice,
+						Volume: &infrav1.BlockDeviceVolume{Metadata: metadata},
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, machine)).To(Succeed(), "Creating a machine with volume metadata should succeed")
+		})
+
+		It("should not allow invalid volume metadata", func() {
+			tooMany := make([]infrav1.VolumeMetadata, 129)
+			for i := range tooMany {
+				tooMany[i] = infrav1.VolumeMetadata{Key: fmt.Sprintf("key-%d", i), Value: "value"}
+			}
+
+			for name, metadata := range map[string][]infrav1.VolumeMetadata{
+				"too many entries": tooMany,
+				"empty key":        {{Key: "", Value: "value"}},
+				"too long key":     {{Key: strings.Repeat("k", 256), Value: "value"}},
+				"invalid key char": {{Key: "key@", Value: "value"}},
+				"non ascii key":    {{Key: "clé", Value: "value"}},
+				"empty value":      {{Key: "key", Value: ""}},
+				"too long value":   {{Key: "key", Value: strings.Repeat("v", 256)}},
+				"duplicate key":    {{Key: "key", Value: "a"}, {Key: "key", Value: "b"}},
+			} {
+				machine := defaultMachine()
+				machine.Spec.RootVolume = &infrav1.RootVolume{
+					SizeGiB:           1,
+					BlockDeviceVolume: infrav1.BlockDeviceVolume{Metadata: metadata},
+				}
+				Expect(k8sClient.Create(ctx, machine)).NotTo(Succeed(), "Creating a machine with volume metadata with %s should fail", name)
+			}
 		})
 
 		defaultMachineWithRootVolumeAZ := func(az *infrav1.VolumeAvailabilityZone) *infrav1.OpenStackMachine {
