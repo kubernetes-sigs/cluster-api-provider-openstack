@@ -218,9 +218,26 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		}
 	}
 
-	// Start with the default rules
-	controlPlaneRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
-	workerRules := append([]resolvedSecurityGroupRuleSpec{}, defaultRules...)
+	allowAllOutbound := allowAllOutboundTraffic(openStackCluster.Spec.ManagedSecurityGroups)
+
+	var controlPlaneRules, workerRules []resolvedSecurityGroupRuleSpec
+	if allowAllOutbound {
+		// Start with the default rules
+		controlPlaneRules = append(controlPlaneRules, defaultRules...)
+		workerRules = append(workerRules, defaultRules...)
+	} else {
+		// Only permit egress inside the cluster and to the API server endpoint
+		controlPlaneRules = append(controlPlaneRules, getSGInClusterEgress(remoteGroupIDSelf, secWorkerGroupID)...)
+		workerRules = append(workerRules, getSGInClusterEgress(remoteGroupIDSelf, secControlPlaneGroupID)...)
+
+		// The control plane endpoint is only known after it has been reconciled,
+		// so this rule is added on a later reconcile.
+		if endpoint := openStackCluster.Spec.ControlPlaneEndpoint; endpoint != nil && endpoint.IsValid() {
+			apiServerEgressRules := getSGAPIServerEgress(endpoint.Host, int(endpoint.Port))
+			controlPlaneRules = append(controlPlaneRules, apiServerEgressRules...)
+			workerRules = append(workerRules, apiServerEgressRules...)
+		}
+	}
 
 	controlPlaneRules = append(controlPlaneRules, getSGControlPlaneHTTPS()...)
 
@@ -278,21 +295,25 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		controlPlaneRules = append(controlPlaneRules, getSGControlPlaneSSH(secBastionGroupID)...)
 		workerRules = append(workerRules, getSGWorkerSSH(secBastionGroupID)...)
 
+		bastionRules := []resolvedSecurityGroupRuleSpec{
+			{
+				Description:  securityGroupRuleDescriptionSSH,
+				Direction:    securityGroupRuleDirectionIngress,
+				EtherType:    securityGroupRuleEtherTypeIPv4,
+				PortRangeMin: 22,
+				PortRangeMax: 22,
+				Protocol:     securityGroupRuleProtocolTCP,
+			},
+		}
+		if allowAllOutbound {
+			bastionRules = append(bastionRules, defaultRules...)
+		} else {
+			bastionRules = append(bastionRules, getSGBastionSSHEgress(secControlPlaneGroupID, secWorkerGroupID)...)
+		}
+
 		desiredSecGroupsBySuffix[bastionSuffix] = securityGroupSpec{
-			Name: suffixToNameMap[bastionSuffix],
-			Rules: append(
-				[]resolvedSecurityGroupRuleSpec{
-					{
-						Description:  securityGroupRuleDescriptionSSH,
-						Direction:    securityGroupRuleDirectionIngress,
-						EtherType:    securityGroupRuleEtherTypeIPv4,
-						PortRangeMin: 22,
-						PortRangeMax: 22,
-						Protocol:     securityGroupRuleProtocolTCP,
-					},
-				},
-				defaultRules...,
-			),
+			Name:  suffixToNameMap[bastionSuffix],
+			Rules: bastionRules,
 		}
 	}
 
@@ -306,6 +327,13 @@ func (s *Service) generateDesiredSecGroups(openStackCluster *infrav1.OpenStackCl
 		Rules: workerRules,
 	}
 	return desiredSecGroupsBySuffix, nil
+}
+
+// allowAllOutboundTraffic returns true if the default allow-all egress rules should be added to the managed security groups.
+func allowAllOutboundTraffic(managedSecurityGroups *infrav1.ManagedSecurityGroups) bool {
+	return managedSecurityGroups == nil ||
+		managedSecurityGroups.AllowAllOutboundTraffic == nil ||
+		*managedSecurityGroups.AllowAllOutboundTraffic
 }
 
 // getAllNodesRules returns the rules for the allNodes security group that should be created.

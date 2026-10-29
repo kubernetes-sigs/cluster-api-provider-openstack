@@ -180,6 +180,10 @@ func (*openStackClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj
 		// Allow change to the allowAllInClusterTraffic.
 		oldObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
 		newObj.Spec.ManagedSecurityGroups.AllowAllInClusterTraffic = false
+
+		// Allow change to the allowAllOutboundTraffic.
+		oldObj.Spec.ManagedSecurityGroups.AllowAllOutboundTraffic = nil
+		newObj.Spec.ManagedSecurityGroups.AllowAllOutboundTraffic = nil
 	}
 
 	// Allow changes only to DNSNameservers in ManagedSubnets spec.

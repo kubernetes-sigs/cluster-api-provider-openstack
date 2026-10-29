@@ -1405,6 +1405,7 @@ func autoConvert_v1beta2_ManagedSecurityGroups_To_v1beta1_ManagedSecurityGroups(
 		out.WorkerNodesSecurityGroupRules = nil
 	}
 	out.AllowAllInClusterTraffic = in.AllowAllInClusterTraffic
+	// WARNING: in.AllowAllOutboundTraffic requires manual conversion: does not exist in peer-type
 	return nil
 }
 

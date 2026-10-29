@@ -23175,6 +23175,13 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ManagedSecurity
 							Format:      "",
 						},
 					},
+					"allowAllOutboundTraffic": {
+						SchemaProps: spec.SchemaProps{
+							Description: "allowAllOutboundTraffic controls whether the default allow-all IPv4 and IPv6 egress rules are added to the managed security groups.\n\nWhen unset or true, the managed security groups allow all outbound traffic.\n\nWhen false, the default allow-all egress rules are not created. Instead, the control plane and worker security groups allow all egress to the managed control plane and worker security groups, and TCP egress to the API server endpoint when it is an IP address. The bastion security group allows SSH egress to the control plane and worker security groups. Any other required egress, e.g. DNS, image registries or the metadata service, must be added with the security group rules above.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
