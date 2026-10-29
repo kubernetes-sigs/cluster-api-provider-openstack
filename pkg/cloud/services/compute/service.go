@@ -39,7 +39,7 @@ func NewService(scope *scope.WithLogger) (*Service, error) {
 	}, nil
 }
 
-func (s Service) getComputeClient() clients.ComputeClient {
+func (s *Service) getComputeClient() clients.ComputeClient {
 	if s._computeClient == nil {
 		computeClient, err := s.scope.NewComputeClient()
 		if err != nil {
@@ -52,7 +52,7 @@ func (s Service) getComputeClient() clients.ComputeClient {
 	return s._computeClient
 }
 
-func (s Service) getVolumeClient() clients.VolumeClient {
+func (s *Service) getVolumeClient() clients.VolumeClient {
 	if s._volumeClient == nil {
 		volumeClient, err := s.scope.NewVolumeClient()
 		if err != nil {
@@ -65,7 +65,7 @@ func (s Service) getVolumeClient() clients.VolumeClient {
 	return s._volumeClient
 }
 
-func (s Service) getImageClient() clients.ImageClient {
+func (s *Service) getImageClient() clients.ImageClient {
 	if s._imageClient == nil {
 		imageClient, err := s.scope.NewImageClient()
 		if err != nil {
@@ -78,7 +78,7 @@ func (s Service) getImageClient() clients.ImageClient {
 	return s._imageClient
 }
 
-func (s Service) getNetworkingService() (*networking.Service, error) {
+func (s *Service) getNetworkingService() (*networking.Service, error) {
 	if s._networkingService == nil {
 		networkingService, err := networking.NewService(s.scope)
 		if err != nil {
