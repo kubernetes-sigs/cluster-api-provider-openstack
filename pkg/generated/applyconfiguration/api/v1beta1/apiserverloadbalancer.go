@@ -27,6 +27,7 @@ type APIServerLoadBalancerApplyConfiguration struct {
 	// There is no reason to set this to false. To disable creation of the
 	// API server loadbalancer, omit the APIServerLoadBalancer field in the
 	// cluster spec instead.
+	//
 	Enabled *bool `json:"enabled,omitempty"`
 	// AdditionalPorts adds additional tcp ports to the load balancer.
 	AdditionalPorts []int `json:"additionalPorts,omitempty"`
