@@ -18,10 +18,7 @@ package scope
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -256,22 +253,11 @@ func NewProviderClient(cloud clientconfig.Cloud, regionName string, caCert []byt
 	ua.Prepend(fmt.Sprintf("cluster-api-provider-openstack/%s", version.Get().String()))
 	provider.UserAgent = ua
 
-	config := &tls.Config{
-		MinVersion: tls.VersionTLS12,
+	transport, err := getOrCreateTransport(caCert, cloud.Verify)
+	if err != nil {
+		return nil, nil, "", fmt.Errorf("get transport for cloud %v: %w", cloud.Cloud, err)
 	}
-	if cloud.Verify != nil {
-		config.InsecureSkipVerify = !*cloud.Verify
-	}
-	if caCert != nil {
-		config.RootCAs = x509.NewCertPool()
-		ok := config.RootCAs.AppendCertsFromPEM(caCert)
-		if !ok {
-			// If no certificates were successfully parsed, set RootCAs to nil to use the host's root CA
-			config.RootCAs = nil
-		}
-	}
-
-	provider.HTTPClient.Transport = &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
+	provider.HTTPClient.Transport = transport
 	if klog.V(5).Enabled() {
 		provider.HTTPClient.Transport = &osclient.RoundTripper{
 			Rt:     provider.HTTPClient.Transport,
