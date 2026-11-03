@@ -43,9 +43,9 @@ GO-2026-6617
 GO-2026-6612
 # https://pkg.go.dev/vuln/GO-2026-6611 (alias CVE-2026-78669, see .trivyignore)
 GO-2026-6611
-# https://pkg.go.dev/vuln/GO-2026-6610 (alias CVE-2026-78660)
+# https://pkg.go.dev/vuln/GO-2026-6610 (alias CVE-2026-78660, see .trivyignore)
 GO-2026-6610
-# https://pkg.go.dev/vuln/GO-2026-6603 (alias CVE-2026-78659)
+# https://pkg.go.dev/vuln/GO-2026-6603 (alias CVE-2026-78659, see .trivyignore)
 GO-2026-6603
 
 # OpenTelemetry-Go: OTLP exporter config logging may leak endpoint URLs in
