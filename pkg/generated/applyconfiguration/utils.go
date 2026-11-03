@@ -182,6 +182,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.ValueSpecApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("VolumeAvailabilityZone"):
 		return &apiv1beta1.VolumeAvailabilityZoneApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("VolumeMetadata"):
+		return &apiv1beta1.VolumeMetadataApplyConfiguration{}
 
 	}
 	return nil
