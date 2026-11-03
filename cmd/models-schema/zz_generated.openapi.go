@@ -414,6 +414,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.SubnetSpec":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_SubnetSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.ValueSpec":                                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_ValueSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabilityZone(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeMetadata":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeMetadata(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServer":                                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServer(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancer":                      schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBalancer(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.APIServerLoadBalancerMonitor":               schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServerLoadBalancerMonitor(ref),
@@ -489,6 +490,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.SubnetSpec":                                 schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_SubnetSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.ValueSpec":                                  schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_ValueSpec(ref),
 		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone":                     schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_VolumeAvailabilityZone(ref),
+		"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeMetadata":                             schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_VolumeMetadata(ref),
 		"sigs.k8s.io/cluster-api/api/core/v1beta1.APIEndpoint":                                              schema_cluster_api_api_core_v1beta1_APIEndpoint(ref),
 		"sigs.k8s.io/cluster-api/api/core/v1beta1.Bootstrap":                                                schema_cluster_api_api_core_v1beta1_Bootstrap(ref),
 		"sigs.k8s.io/cluster-api/api/core/v1beta1.Cluster":                                                  schema_cluster_api_api_core_v1beta1_Cluster(ref),
@@ -18589,11 +18591,32 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_BlockDeviceVolu
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone"),
 						},
 					},
+					"metadata": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"key",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Metadata is a list of key/value pairs that will be set as metadata on the Cinder volume when it is created. Keys must be unique. At most 128 entries are allowed.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeMetadata"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeMetadata"},
 	}
 }
 
@@ -21140,12 +21163,33 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_RootVolume(ref 
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone"),
 						},
 					},
+					"metadata": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"key",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Metadata is a list of key/value pairs that will be set as metadata on the Cinder volume when it is created. Keys must be unique. At most 128 entries are allowed.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeMetadata"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"sizeGiB"},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeAvailabilityZone", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta1.VolumeMetadata"},
 	}
 }
 
@@ -22082,6 +22126,36 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeAvailabil
 	}
 }
 
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta1_VolumeMetadata(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "VolumeMetadata is a key/value pair set as metadata on a Cinder volume.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"key": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Key is the metadata key. It must be between 1 and 255 characters long and may only contain letters, digits, spaces and the characters \"-_:./\".",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"value": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Value is the metadata value. It must be between 1 and 255 characters long.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"key", "value"},
+			},
+		},
+	}
+}
+
 func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_APIServer(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -22569,11 +22643,32 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_BlockDeviceVolu
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone"),
 						},
 					},
+					"metadata": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"key",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "metadata is a list of key/value pairs that will be set as metadata on the Cinder volume when it is created. Keys must be unique. At most 128 entries are allowed.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeMetadata"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeMetadata"},
 	}
 }
 
@@ -25244,12 +25339,33 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_RootVolume(ref 
 							Ref:         ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone"),
 						},
 					},
+					"metadata": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"key",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "metadata is a list of key/value pairs that will be set as metadata on the Cinder volume when it is created. Keys must be unique. At most 128 entries are allowed.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeMetadata"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"sizeGiB"},
 			},
 		},
 		Dependencies: []string{
-			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone"},
+			"sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeAvailabilityZone", "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2.VolumeMetadata"},
 	}
 }
 
@@ -26216,6 +26332,34 @@ func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_VolumeAvailabil
 						},
 					},
 				},
+			},
+		},
+	}
+}
+
+func schema_sigsk8sio_cluster_api_provider_openstack_api_v1beta2_VolumeMetadata(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "VolumeMetadata is a key/value pair set as metadata on a Cinder volume.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"key": {
+						SchemaProps: spec.SchemaProps{
+							Description: "key is the metadata key. It must be between 1 and 255 characters long and may only contain letters, digits, spaces and the characters \"-_:./\".",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"value": {
+						SchemaProps: spec.SchemaProps{
+							Description: "value is the metadata value. It must be between 1 and 255 characters long.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"key", "value"},
 			},
 		},
 	}

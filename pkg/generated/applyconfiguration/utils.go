@@ -186,6 +186,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta1.ValueSpecApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("VolumeAvailabilityZone"):
 		return &apiv1beta1.VolumeAvailabilityZoneApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("VolumeMetadata"):
+		return &apiv1beta1.VolumeMetadataApplyConfiguration{}
 
 		// Group=infrastructure.cluster.x-k8s.io, Version=v1beta2
 	case v1beta2.SchemeGroupVersion.WithKind("AdditionalBlockDevice"):
@@ -330,6 +332,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1beta2.ValueSpecApplyConfiguration{}
 	case v1beta2.SchemeGroupVersion.WithKind("VolumeAvailabilityZone"):
 		return &apiv1beta2.VolumeAvailabilityZoneApplyConfiguration{}
+	case v1beta2.SchemeGroupVersion.WithKind("VolumeMetadata"):
+		return &apiv1beta2.VolumeMetadataApplyConfiguration{}
 
 	}
 	return nil
