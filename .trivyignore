@@ -88,3 +88,19 @@ CVE-2026-78663
 # Concurrent HPACK encoder crash (GO-2026-6617).
 # https://avd.aquasec.com/nvd/cve-2026-97032
 CVE-2026-97032
+# HTTP/2 server memory exhaustion via Trailer headers (GO-2026-6603).
+# Server-side only.
+# https://avd.aquasec.com/nvd/cve-2026-78659
+CVE-2026-78659
+# HTTP/2 transport accepts malformed framing-related headers (GO-2026-6610).
+# Only exploitable for response smuggling when forwarding responses to an
+# HTTP/1 client as a reverse proxy, which CAPO does not do.
+# https://avd.aquasec.com/nvd/cve-2026-78660
+CVE-2026-78660
+
+# golang.org/x/text/secure/precis panic on crafted input (GO-2026-6629):
+# fixed in x/text v0.41.0, which requires go 1.25.0. Confirmed via
+# `govulncheck -show verbose` as "Module Results" only - the precis package
+# itself is not even imported by CAPO or its dependencies.
+# https://avd.aquasec.com/nvd/cve-2026-56851
+CVE-2026-56851
