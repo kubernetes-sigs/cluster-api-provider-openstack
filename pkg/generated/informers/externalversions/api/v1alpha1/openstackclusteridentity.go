@@ -34,11 +34,39 @@ import (
 )
 
 // OpenStackClusterIdentityInformer provides access to a shared informer and lister for
-// OpenStackClusterIdentities.
+// OpenStackClusterIdentities. Prefer using the type-safe variant (see [TypedOpenStackClusterIdentityInformer]).
 type OpenStackClusterIdentityInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() apiv1alpha1.OpenStackClusterIdentityLister
 }
+
+// TypedOpenStackClusterIdentityInformer provides access to a shared informer and lister for
+// OpenStackClusterIdentities, including the type-safe TypedInformer variant.
+// It is a superset of OpenStackClusterIdentityInformer.
+type TypedOpenStackClusterIdentityInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() OpenStackClusterIdentityIndexInformer
+	Lister() apiv1alpha1.OpenStackClusterIdentityLister
+}
+
+// OpenStackClusterIdentityIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type OpenStackClusterIdentityIndexInformer cache.TypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity]
+
+// OpenStackClusterIdentityHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for OpenStackClusterIdentity.
+type OpenStackClusterIdentityHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity]
+
+// OpenStackClusterIdentityDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for OpenStackClusterIdentity.
+type OpenStackClusterIdentityDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity]
+
+// OpenStackClusterIdentityFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for OpenStackClusterIdentity.
+type OpenStackClusterIdentityFilteringHandler = cache.TypedFilteringResourceEventHandler[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity]
+
+// OpenStackClusterIdentityIndexers is a specialization of [cache.TypedIndexers] for OpenStackClusterIdentity.
+type OpenStackClusterIdentityIndexers = cache.TypedIndexers[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity]
+
+// DeletedOpenStackClusterIdentity is a specialization of [cache.DeletedObject] for OpenStackClusterIdentity.
+type DeletedOpenStackClusterIdentity = cache.DeletedObject[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity]
 
 type openStackClusterIdentityInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -49,25 +77,49 @@ type openStackClusterIdentityInformer struct {
 // NewOpenStackClusterIdentityInformer constructs a new informer for OpenStackClusterIdentity type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedOpenStackClusterIdentityInformer]).
 func NewOpenStackClusterIdentityInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewOpenStackClusterIdentityInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedOpenStackClusterIdentityInformer constructs a new informer for OpenStackClusterIdentity type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedOpenStackClusterIdentityInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers OpenStackClusterIdentityIndexers) OpenStackClusterIdentityIndexInformer {
+	return NewTypedOpenStackClusterIdentityInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredOpenStackClusterIdentityInformer constructs a new informer for OpenStackClusterIdentity type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredOpenStackClusterIdentityInformer]).
 func NewFilteredOpenStackClusterIdentityInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewOpenStackClusterIdentityInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedOpenStackClusterIdentityInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredOpenStackClusterIdentityInformer constructs a new informer for OpenStackClusterIdentity type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredOpenStackClusterIdentityInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers OpenStackClusterIdentityIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) OpenStackClusterIdentityIndexInformer {
+	return NewTypedOpenStackClusterIdentityInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewOpenStackClusterIdentityInformerWithOptions constructs a new informer for OpenStackClusterIdentity type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedOpenStackClusterIdentityInformerWithOptions]).
 func NewOpenStackClusterIdentityInformerWithOptions(client clientset.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedOpenStackClusterIdentityInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedOpenStackClusterIdentityInformerWithOptions constructs a new informer for OpenStackClusterIdentity type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedOpenStackClusterIdentityInformerWithOptions(client clientset.Interface, namespace string, options internalinterfaces.InformerOptions) OpenStackClusterIdentityIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Resource: "openstackclusteridentitys"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -100,17 +152,57 @@ func NewOpenStackClusterIdentityInformerWithOptions(client clientset.Interface, 
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *openStackClusterIdentityInformer) defaultInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewOpenStackClusterIdentityInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedOpenStackClusterIdentityInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *openStackClusterIdentityInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *openStackClusterIdentityInformer) TypedInformer() OpenStackClusterIdentityIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity](f.factory.InformerFor(&clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity{}, f.defaultInformer))
 }
 
 func (f *openStackClusterIdentityInformer) Lister() apiv1alpha1.OpenStackClusterIdentityLister {
 	return apiv1alpha1.NewOpenStackClusterIdentityLister(f.Informer().GetIndexer())
+}
+
+// ToTypedOpenStackClusterIdentityInformer converts an untyped informer into a TypedOpenStackClusterIdentityInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *OpenStackClusterIdentity. If that is not the case, calling type-safe methods of the returned
+// TypedOpenStackClusterIdentityInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedOpenStackClusterIdentityInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedOpenStackClusterIdentityInformer(informer OpenStackClusterIdentityInformer) TypedOpenStackClusterIdentityInformer {
+	if informer, ok := informer.(TypedOpenStackClusterIdentityInformer); ok {
+		return informer
+	}
+	return &openStackClusterIdentityTypedInformerAdapter{informer}
+}
+
+type openStackClusterIdentityTypedInformerAdapter struct {
+	OpenStackClusterIdentityInformer
+}
+
+func (a *openStackClusterIdentityTypedInformerAdapter) TypedInformer() OpenStackClusterIdentityIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity](a.Informer())
+}
+
+// ToOpenStackClusterIdentityIndexInformer converts an untyped informer into a OpenStackClusterIdentityIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *OpenStackClusterIdentity. If that is not the case, calling type-safe methods of the returned
+// OpenStackClusterIdentityIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a OpenStackClusterIdentityIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToOpenStackClusterIdentityIndexInformer(informer cache.SharedIndexInformer) OpenStackClusterIdentityIndexInformer {
+	if informer, ok := informer.(OpenStackClusterIdentityIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackClusterIdentity](informer)
 }

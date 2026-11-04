@@ -25,9 +25,9 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// OpenStackClusterIdentities returns a OpenStackClusterIdentityInformer.
-	OpenStackClusterIdentities() OpenStackClusterIdentityInformer
+	OpenStackClusterIdentities() TypedOpenStackClusterIdentityInformer
 	// OpenStackServers returns a OpenStackServerInformer.
-	OpenStackServers() OpenStackServerInformer
+	OpenStackServers() TypedOpenStackServerInformer
 }
 
 type version struct {
@@ -41,12 +41,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// OpenStackClusterIdentities returns a OpenStackClusterIdentityInformer.
-func (v *version) OpenStackClusterIdentities() OpenStackClusterIdentityInformer {
+// OpenStackClusterIdentities returns a TypedOpenStackClusterIdentityInformer.
+func (v *version) OpenStackClusterIdentities() TypedOpenStackClusterIdentityInformer {
 	return &openStackClusterIdentityInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// OpenStackServers returns a OpenStackServerInformer.
-func (v *version) OpenStackServers() OpenStackServerInformer {
+// OpenStackServers returns a TypedOpenStackServerInformer.
+func (v *version) OpenStackServers() TypedOpenStackServerInformer {
 	return &openStackServerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

@@ -23,7 +23,7 @@ package v1beta2
 type RootVolumeApplyConfiguration struct {
 	// sizeGiB is the size of the block device in gibibytes (GiB).
 	SizeGiB                             *int32 `json:"sizeGiB,omitempty"`
-	BlockDeviceVolumeApplyConfiguration `json:",inline"`
+	BlockDeviceVolumeApplyConfiguration `json:""`
 }
 
 // RootVolumeApplyConfiguration constructs a declarative configuration of the RootVolume type for use with

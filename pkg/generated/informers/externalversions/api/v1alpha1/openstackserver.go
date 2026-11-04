@@ -34,11 +34,39 @@ import (
 )
 
 // OpenStackServerInformer provides access to a shared informer and lister for
-// OpenStackServers.
+// OpenStackServers. Prefer using the type-safe variant (see [TypedOpenStackServerInformer]).
 type OpenStackServerInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() apiv1alpha1.OpenStackServerLister
 }
+
+// TypedOpenStackServerInformer provides access to a shared informer and lister for
+// OpenStackServers, including the type-safe TypedInformer variant.
+// It is a superset of OpenStackServerInformer.
+type TypedOpenStackServerInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() OpenStackServerIndexInformer
+	Lister() apiv1alpha1.OpenStackServerLister
+}
+
+// OpenStackServerIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type OpenStackServerIndexInformer cache.TypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer]
+
+// OpenStackServerHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for OpenStackServer.
+type OpenStackServerHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer]
+
+// OpenStackServerDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for OpenStackServer.
+type OpenStackServerDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer]
+
+// OpenStackServerFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for OpenStackServer.
+type OpenStackServerFilteringHandler = cache.TypedFilteringResourceEventHandler[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer]
+
+// OpenStackServerIndexers is a specialization of [cache.TypedIndexers] for OpenStackServer.
+type OpenStackServerIndexers = cache.TypedIndexers[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer]
+
+// DeletedOpenStackServer is a specialization of [cache.DeletedObject] for OpenStackServer.
+type DeletedOpenStackServer = cache.DeletedObject[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer]
 
 type openStackServerInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -49,25 +77,49 @@ type openStackServerInformer struct {
 // NewOpenStackServerInformer constructs a new informer for OpenStackServer type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedOpenStackServerInformer]).
 func NewOpenStackServerInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewOpenStackServerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedOpenStackServerInformer constructs a new informer for OpenStackServer type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedOpenStackServerInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers OpenStackServerIndexers) OpenStackServerIndexInformer {
+	return NewTypedOpenStackServerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredOpenStackServerInformer constructs a new informer for OpenStackServer type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredOpenStackServerInformer]).
 func NewFilteredOpenStackServerInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewOpenStackServerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedOpenStackServerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredOpenStackServerInformer constructs a new informer for OpenStackServer type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredOpenStackServerInformer(client clientset.Interface, namespace string, resyncPeriod time.Duration, indexers OpenStackServerIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) OpenStackServerIndexInformer {
+	return NewTypedOpenStackServerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewOpenStackServerInformerWithOptions constructs a new informer for OpenStackServer type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedOpenStackServerInformerWithOptions]).
 func NewOpenStackServerInformerWithOptions(client clientset.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedOpenStackServerInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedOpenStackServerInformerWithOptions constructs a new informer for OpenStackServer type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedOpenStackServerInformerWithOptions(client clientset.Interface, namespace string, options internalinterfaces.InformerOptions) OpenStackServerIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Resource: "openstackservers"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -100,17 +152,57 @@ func NewOpenStackServerInformerWithOptions(client clientset.Interface, namespace
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *openStackServerInformer) defaultInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewOpenStackServerInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedOpenStackServerInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *openStackServerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&clusterapiprovideropenstackapiv1alpha1.OpenStackServer{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *openStackServerInformer) TypedInformer() OpenStackServerIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer](f.factory.InformerFor(&clusterapiprovideropenstackapiv1alpha1.OpenStackServer{}, f.defaultInformer))
 }
 
 func (f *openStackServerInformer) Lister() apiv1alpha1.OpenStackServerLister {
 	return apiv1alpha1.NewOpenStackServerLister(f.Informer().GetIndexer())
+}
+
+// ToTypedOpenStackServerInformer converts an untyped informer into a TypedOpenStackServerInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *OpenStackServer. If that is not the case, calling type-safe methods of the returned
+// TypedOpenStackServerInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedOpenStackServerInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedOpenStackServerInformer(informer OpenStackServerInformer) TypedOpenStackServerInformer {
+	if informer, ok := informer.(TypedOpenStackServerInformer); ok {
+		return informer
+	}
+	return &openStackServerTypedInformerAdapter{informer}
+}
+
+type openStackServerTypedInformerAdapter struct {
+	OpenStackServerInformer
+}
+
+func (a *openStackServerTypedInformerAdapter) TypedInformer() OpenStackServerIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer](a.Informer())
+}
+
+// ToOpenStackServerIndexInformer converts an untyped informer into a OpenStackServerIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *OpenStackServer. If that is not the case, calling type-safe methods of the returned
+// OpenStackServerIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a OpenStackServerIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToOpenStackServerIndexInformer(informer cache.SharedIndexInformer) OpenStackServerIndexInformer {
+	if informer, ok := informer.(OpenStackServerIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*clusterapiprovideropenstackapiv1alpha1.OpenStackServer](informer)
 }

@@ -30,7 +30,7 @@ type RouterFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`
 	ProjectID                             *string `json:"projectID,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // RouterFilterApplyConfiguration constructs a declarative configuration of the RouterFilter type for use with

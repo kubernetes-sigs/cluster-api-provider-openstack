@@ -32,7 +32,7 @@ import (
 //
 // OpenStackCluster is the Schema for the openstackclusters API.
 type OpenStackClusterApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	v1.TypeMetaApplyConfiguration    `json:""`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	Spec                             *OpenStackClusterSpecApplyConfiguration   `json:"spec,omitempty"`
 	Status                           *OpenStackClusterStatusApplyConfiguration `json:"status,omitempty"`

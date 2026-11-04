@@ -37,7 +37,7 @@ type ResolvedPortSpecApplyConfiguration struct {
 	FixedIPs []ResolvedFixedIPApplyConfiguration `json:"fixedIPs,omitempty"`
 	// securityGroups is a list of security group IDs to assign to the port.
 	SecurityGroups                           []string `json:"securityGroups,omitempty"`
-	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
+	ResolvedPortSpecFieldsApplyConfiguration `json:""`
 }
 
 // ResolvedPortSpecApplyConfiguration constructs a declarative configuration of the ResolvedPortSpec type for use with

@@ -32,7 +32,7 @@ import (
 //
 // OpenStackServer is the Schema for the openstackservers API.
 type OpenStackServerApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	v1.TypeMetaApplyConfiguration    `json:""`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	Spec                             *OpenStackServerSpecApplyConfiguration   `json:"spec,omitempty"`
 	Status                           *OpenStackServerStatusApplyConfiguration `json:"status,omitempty"`
