@@ -30,7 +30,7 @@ type NetworkFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`
 	ProjectID                             *string `json:"projectID,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // NetworkFilterApplyConfiguration constructs a declarative configuration of the NetworkFilter type for use with

@@ -25,13 +25,13 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// OpenStackClusters returns a OpenStackClusterInformer.
-	OpenStackClusters() OpenStackClusterInformer
+	OpenStackClusters() TypedOpenStackClusterInformer
 	// OpenStackClusterTemplates returns a OpenStackClusterTemplateInformer.
-	OpenStackClusterTemplates() OpenStackClusterTemplateInformer
+	OpenStackClusterTemplates() TypedOpenStackClusterTemplateInformer
 	// OpenStackMachines returns a OpenStackMachineInformer.
-	OpenStackMachines() OpenStackMachineInformer
+	OpenStackMachines() TypedOpenStackMachineInformer
 	// OpenStackMachineTemplates returns a OpenStackMachineTemplateInformer.
-	OpenStackMachineTemplates() OpenStackMachineTemplateInformer
+	OpenStackMachineTemplates() TypedOpenStackMachineTemplateInformer
 }
 
 type version struct {
@@ -45,22 +45,22 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// OpenStackClusters returns a OpenStackClusterInformer.
-func (v *version) OpenStackClusters() OpenStackClusterInformer {
+// OpenStackClusters returns a TypedOpenStackClusterInformer.
+func (v *version) OpenStackClusters() TypedOpenStackClusterInformer {
 	return &openStackClusterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// OpenStackClusterTemplates returns a OpenStackClusterTemplateInformer.
-func (v *version) OpenStackClusterTemplates() OpenStackClusterTemplateInformer {
+// OpenStackClusterTemplates returns a TypedOpenStackClusterTemplateInformer.
+func (v *version) OpenStackClusterTemplates() TypedOpenStackClusterTemplateInformer {
 	return &openStackClusterTemplateInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// OpenStackMachines returns a OpenStackMachineInformer.
-func (v *version) OpenStackMachines() OpenStackMachineInformer {
+// OpenStackMachines returns a TypedOpenStackMachineInformer.
+func (v *version) OpenStackMachines() TypedOpenStackMachineInformer {
 	return &openStackMachineInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// OpenStackMachineTemplates returns a OpenStackMachineTemplateInformer.
-func (v *version) OpenStackMachineTemplates() OpenStackMachineTemplateInformer {
+// OpenStackMachineTemplates returns a TypedOpenStackMachineTemplateInformer.
+func (v *version) OpenStackMachineTemplates() TypedOpenStackMachineTemplateInformer {
 	return &openStackMachineTemplateInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

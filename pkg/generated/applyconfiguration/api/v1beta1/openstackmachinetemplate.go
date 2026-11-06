@@ -32,7 +32,7 @@ import (
 //
 // OpenStackMachineTemplate is the Schema for the openstackmachinetemplates API.
 type OpenStackMachineTemplateApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	v1.TypeMetaApplyConfiguration    `json:""`
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	Spec                             *OpenStackMachineTemplateSpecApplyConfiguration   `json:"spec,omitempty"`
 	Status                           *OpenStackMachineTemplateStatusApplyConfiguration `json:"status,omitempty"`

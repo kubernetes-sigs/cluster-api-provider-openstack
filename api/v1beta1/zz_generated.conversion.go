@@ -897,8 +897,7 @@ func Convert_v1beta2_AdditionalBlockDevice_To_v1beta1_AdditionalBlockDevice(in *
 }
 
 func autoConvert_v1beta1_AddressPair_To_v1beta2_AddressPair(in *AddressPair, out *v1beta2.AddressPair, s conversion.Scope) error {
-	out.IPAddress = in.IPAddress
-	out.MACAddress = (optional.String)(unsafe.Pointer(in.MACAddress))
+	*out = *(*v1beta2.AddressPair)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -908,8 +907,7 @@ func Convert_v1beta1_AddressPair_To_v1beta2_AddressPair(in *AddressPair, out *v1
 }
 
 func autoConvert_v1beta2_AddressPair_To_v1beta1_AddressPair(in *v1beta2.AddressPair, out *AddressPair, s conversion.Scope) error {
-	out.IPAddress = in.IPAddress
-	out.MACAddress = (optional.String)(unsafe.Pointer(in.MACAddress))
+	*out = *(*AddressPair)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -919,8 +917,7 @@ func Convert_v1beta2_AddressPair_To_v1beta1_AddressPair(in *v1beta2.AddressPair,
 }
 
 func autoConvert_v1beta1_AllocationPool_To_v1beta2_AllocationPool(in *AllocationPool, out *v1beta2.AllocationPool, s conversion.Scope) error {
-	out.Start = in.Start
-	out.End = in.End
+	*out = *(*v1beta2.AllocationPool)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -930,8 +927,7 @@ func Convert_v1beta1_AllocationPool_To_v1beta2_AllocationPool(in *AllocationPool
 }
 
 func autoConvert_v1beta2_AllocationPool_To_v1beta1_AllocationPool(in *v1beta2.AllocationPool, out *AllocationPool, s conversion.Scope) error {
-	out.Start = in.Start
-	out.End = in.End
+	*out = *(*AllocationPool)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1033,8 +1029,7 @@ func Convert_v1beta2_BastionStatus_To_v1beta1_BastionStatus(in *v1beta2.BastionS
 }
 
 func autoConvert_v1beta1_BindingProfile_To_v1beta2_BindingProfile(in *BindingProfile, out *v1beta2.BindingProfile, s conversion.Scope) error {
-	out.OVSHWOffload = (*bool)(unsafe.Pointer(in.OVSHWOffload))
-	out.TrustedVF = (*bool)(unsafe.Pointer(in.TrustedVF))
+	*out = *(*v1beta2.BindingProfile)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1044,8 +1039,7 @@ func Convert_v1beta1_BindingProfile_To_v1beta2_BindingProfile(in *BindingProfile
 }
 
 func autoConvert_v1beta2_BindingProfile_To_v1beta1_BindingProfile(in *v1beta2.BindingProfile, out *BindingProfile, s conversion.Scope) error {
-	out.OVSHWOffload = (*bool)(unsafe.Pointer(in.OVSHWOffload))
-	out.TrustedVF = (*bool)(unsafe.Pointer(in.TrustedVF))
+	*out = *(*BindingProfile)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1055,8 +1049,7 @@ func Convert_v1beta2_BindingProfile_To_v1beta1_BindingProfile(in *v1beta2.Bindin
 }
 
 func autoConvert_v1beta1_BlockDeviceStorage_To_v1beta2_BlockDeviceStorage(in *BlockDeviceStorage, out *v1beta2.BlockDeviceStorage, s conversion.Scope) error {
-	out.Type = v1beta2.BlockDeviceType(in.Type)
-	out.Volume = (*v1beta2.BlockDeviceVolume)(unsafe.Pointer(in.Volume))
+	*out = *(*v1beta2.BlockDeviceStorage)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1066,8 +1059,7 @@ func Convert_v1beta1_BlockDeviceStorage_To_v1beta2_BlockDeviceStorage(in *BlockD
 }
 
 func autoConvert_v1beta2_BlockDeviceStorage_To_v1beta1_BlockDeviceStorage(in *v1beta2.BlockDeviceStorage, out *BlockDeviceStorage, s conversion.Scope) error {
-	out.Type = BlockDeviceType(in.Type)
-	out.Volume = (*BlockDeviceVolume)(unsafe.Pointer(in.Volume))
+	*out = *(*BlockDeviceStorage)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1077,8 +1069,7 @@ func Convert_v1beta2_BlockDeviceStorage_To_v1beta1_BlockDeviceStorage(in *v1beta
 }
 
 func autoConvert_v1beta1_BlockDeviceVolume_To_v1beta2_BlockDeviceVolume(in *BlockDeviceVolume, out *v1beta2.BlockDeviceVolume, s conversion.Scope) error {
-	out.Type = in.Type
-	out.AvailabilityZone = (*v1beta2.VolumeAvailabilityZone)(unsafe.Pointer(in.AvailabilityZone))
+	*out = *(*v1beta2.BlockDeviceVolume)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1088,8 +1079,7 @@ func Convert_v1beta1_BlockDeviceVolume_To_v1beta2_BlockDeviceVolume(in *BlockDev
 }
 
 func autoConvert_v1beta2_BlockDeviceVolume_To_v1beta1_BlockDeviceVolume(in *v1beta2.BlockDeviceVolume, out *BlockDeviceVolume, s conversion.Scope) error {
-	out.Type = in.Type
-	out.AvailabilityZone = (*VolumeAvailabilityZone)(unsafe.Pointer(in.AvailabilityZone))
+	*out = *(*BlockDeviceVolume)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1099,7 +1089,7 @@ func Convert_v1beta2_BlockDeviceVolume_To_v1beta1_BlockDeviceVolume(in *v1beta2.
 }
 
 func autoConvert_v1beta1_ClusterInitialization_To_v1beta2_ClusterInitialization(in *ClusterInitialization, out *v1beta2.ClusterInitialization, s conversion.Scope) error {
-	out.Provisioned = in.Provisioned
+	*out = *(*v1beta2.ClusterInitialization)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1109,7 +1099,7 @@ func Convert_v1beta1_ClusterInitialization_To_v1beta2_ClusterInitialization(in *
 }
 
 func autoConvert_v1beta2_ClusterInitialization_To_v1beta1_ClusterInitialization(in *v1beta2.ClusterInitialization, out *ClusterInitialization, s conversion.Scope) error {
-	out.Provisioned = in.Provisioned
+	*out = *(*ClusterInitialization)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1171,10 +1161,7 @@ func Convert_v1beta2_FailureDomainSubnet_To_v1beta1_FailureDomainSubnet(in *v1be
 }
 
 func autoConvert_v1beta1_FilterByNeutronTags_To_v1beta2_FilterByNeutronTags(in *FilterByNeutronTags, out *v1beta2.FilterByNeutronTags, s conversion.Scope) error {
-	out.Tags = *(*[]v1beta2.NeutronTag)(unsafe.Pointer(&in.Tags))
-	out.TagsAny = *(*[]v1beta2.NeutronTag)(unsafe.Pointer(&in.TagsAny))
-	out.NotTags = *(*[]v1beta2.NeutronTag)(unsafe.Pointer(&in.NotTags))
-	out.NotTagsAny = *(*[]v1beta2.NeutronTag)(unsafe.Pointer(&in.NotTagsAny))
+	*out = *(*v1beta2.FilterByNeutronTags)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1184,10 +1171,7 @@ func Convert_v1beta1_FilterByNeutronTags_To_v1beta2_FilterByNeutronTags(in *Filt
 }
 
 func autoConvert_v1beta2_FilterByNeutronTags_To_v1beta1_FilterByNeutronTags(in *v1beta2.FilterByNeutronTags, out *FilterByNeutronTags, s conversion.Scope) error {
-	out.Tags = *(*[]NeutronTag)(unsafe.Pointer(&in.Tags))
-	out.TagsAny = *(*[]NeutronTag)(unsafe.Pointer(&in.TagsAny))
-	out.NotTags = *(*[]NeutronTag)(unsafe.Pointer(&in.NotTags))
-	out.NotTagsAny = *(*[]NeutronTag)(unsafe.Pointer(&in.NotTagsAny))
+	*out = *(*FilterByNeutronTags)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1235,8 +1219,7 @@ func Convert_v1beta2_FixedIP_To_v1beta1_FixedIP(in *v1beta2.FixedIP, out *FixedI
 }
 
 func autoConvert_v1beta1_ImageFilter_To_v1beta2_ImageFilter(in *ImageFilter, out *v1beta2.ImageFilter, s conversion.Scope) error {
-	out.Name = (optional.String)(unsafe.Pointer(in.Name))
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
+	*out = *(*v1beta2.ImageFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1246,8 +1229,7 @@ func Convert_v1beta1_ImageFilter_To_v1beta2_ImageFilter(in *ImageFilter, out *v1
 }
 
 func autoConvert_v1beta2_ImageFilter_To_v1beta1_ImageFilter(in *v1beta2.ImageFilter, out *ImageFilter, s conversion.Scope) error {
-	out.Name = (optional.String)(unsafe.Pointer(in.Name))
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
+	*out = *(*ImageFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1257,9 +1239,7 @@ func Convert_v1beta2_ImageFilter_To_v1beta1_ImageFilter(in *v1beta2.ImageFilter,
 }
 
 func autoConvert_v1beta1_ImageParam_To_v1beta2_ImageParam(in *ImageParam, out *v1beta2.ImageParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*v1beta2.ImageFilter)(unsafe.Pointer(in.Filter))
-	out.ImageRef = (*v1beta2.ResourceReference)(unsafe.Pointer(in.ImageRef))
+	*out = *(*v1beta2.ImageParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1269,9 +1249,7 @@ func Convert_v1beta1_ImageParam_To_v1beta2_ImageParam(in *ImageParam, out *v1bet
 }
 
 func autoConvert_v1beta2_ImageParam_To_v1beta1_ImageParam(in *v1beta2.ImageParam, out *ImageParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*ImageFilter)(unsafe.Pointer(in.Filter))
-	out.ImageRef = (*ResourceReference)(unsafe.Pointer(in.ImageRef))
+	*out = *(*ImageParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1281,13 +1259,7 @@ func Convert_v1beta2_ImageParam_To_v1beta1_ImageParam(in *v1beta2.ImageParam, ou
 }
 
 func autoConvert_v1beta1_LoadBalancer_To_v1beta2_LoadBalancer(in *LoadBalancer, out *v1beta2.LoadBalancer, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.IP = in.IP
-	out.InternalIP = in.InternalIP
-	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.LoadBalancerNetwork = (*v1beta2.NetworkStatusWithSubnets)(unsafe.Pointer(in.LoadBalancerNetwork))
+	*out = *(*v1beta2.LoadBalancer)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1297,13 +1269,7 @@ func Convert_v1beta1_LoadBalancer_To_v1beta2_LoadBalancer(in *LoadBalancer, out 
 }
 
 func autoConvert_v1beta2_LoadBalancer_To_v1beta1_LoadBalancer(in *v1beta2.LoadBalancer, out *LoadBalancer, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.IP = in.IP
-	out.InternalIP = in.InternalIP
-	out.AllowedCIDRs = *(*[]string)(unsafe.Pointer(&in.AllowedCIDRs))
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.LoadBalancerNetwork = (*NetworkStatusWithSubnets)(unsafe.Pointer(in.LoadBalancerNetwork))
+	*out = *(*LoadBalancer)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1313,7 +1279,7 @@ func Convert_v1beta2_LoadBalancer_To_v1beta1_LoadBalancer(in *v1beta2.LoadBalanc
 }
 
 func autoConvert_v1beta1_MachineInitialization_To_v1beta2_MachineInitialization(in *MachineInitialization, out *v1beta2.MachineInitialization, s conversion.Scope) error {
-	out.Provisioned = in.Provisioned
+	*out = *(*v1beta2.MachineInitialization)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1323,7 +1289,7 @@ func Convert_v1beta1_MachineInitialization_To_v1beta2_MachineInitialization(in *
 }
 
 func autoConvert_v1beta2_MachineInitialization_To_v1beta1_MachineInitialization(in *v1beta2.MachineInitialization, out *MachineInitialization, s conversion.Scope) error {
-	out.Provisioned = in.Provisioned
+	*out = *(*MachineInitialization)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1333,7 +1299,7 @@ func Convert_v1beta2_MachineInitialization_To_v1beta1_MachineInitialization(in *
 }
 
 func autoConvert_v1beta1_MachineResources_To_v1beta2_MachineResources(in *MachineResources, out *v1beta2.MachineResources, s conversion.Scope) error {
-	out.Ports = *(*[]v1beta2.PortStatus)(unsafe.Pointer(&in.Ports))
+	*out = *(*v1beta2.MachineResources)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1343,7 +1309,7 @@ func Convert_v1beta1_MachineResources_To_v1beta2_MachineResources(in *MachineRes
 }
 
 func autoConvert_v1beta2_MachineResources_To_v1beta1_MachineResources(in *v1beta2.MachineResources, out *MachineResources, s conversion.Scope) error {
-	out.Ports = *(*[]PortStatus)(unsafe.Pointer(&in.Ports))
+	*out = *(*MachineResources)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1409,12 +1375,7 @@ func autoConvert_v1beta2_ManagedSecurityGroups_To_v1beta1_ManagedSecurityGroups(
 }
 
 func autoConvert_v1beta1_NetworkFilter_To_v1beta2_NetworkFilter(in *NetworkFilter, out *v1beta2.NetworkFilter, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Description = in.Description
-	out.ProjectID = in.ProjectID
-	if err := Convert_v1beta1_FilterByNeutronTags_To_v1beta2_FilterByNeutronTags(&in.FilterByNeutronTags, &out.FilterByNeutronTags, s); err != nil {
-		return err
-	}
+	*out = *(*v1beta2.NetworkFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1424,12 +1385,7 @@ func Convert_v1beta1_NetworkFilter_To_v1beta2_NetworkFilter(in *NetworkFilter, o
 }
 
 func autoConvert_v1beta2_NetworkFilter_To_v1beta1_NetworkFilter(in *v1beta2.NetworkFilter, out *NetworkFilter, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Description = in.Description
-	out.ProjectID = in.ProjectID
-	if err := Convert_v1beta2_FilterByNeutronTags_To_v1beta1_FilterByNeutronTags(&in.FilterByNeutronTags, &out.FilterByNeutronTags, s); err != nil {
-		return err
-	}
+	*out = *(*NetworkFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1439,8 +1395,7 @@ func Convert_v1beta2_NetworkFilter_To_v1beta1_NetworkFilter(in *v1beta2.NetworkF
 }
 
 func autoConvert_v1beta1_NetworkParam_To_v1beta2_NetworkParam(in *NetworkParam, out *v1beta2.NetworkParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*v1beta2.NetworkFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*v1beta2.NetworkParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1450,8 +1405,7 @@ func Convert_v1beta1_NetworkParam_To_v1beta2_NetworkParam(in *NetworkParam, out 
 }
 
 func autoConvert_v1beta2_NetworkParam_To_v1beta1_NetworkParam(in *v1beta2.NetworkParam, out *NetworkParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*NetworkFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*NetworkParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1461,9 +1415,7 @@ func Convert_v1beta2_NetworkParam_To_v1beta1_NetworkParam(in *v1beta2.NetworkPar
 }
 
 func autoConvert_v1beta1_NetworkStatus_To_v1beta2_NetworkStatus(in *NetworkStatus, out *v1beta2.NetworkStatus, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
+	*out = *(*v1beta2.NetworkStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1473,9 +1425,7 @@ func Convert_v1beta1_NetworkStatus_To_v1beta2_NetworkStatus(in *NetworkStatus, o
 }
 
 func autoConvert_v1beta2_NetworkStatus_To_v1beta1_NetworkStatus(in *v1beta2.NetworkStatus, out *NetworkStatus, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
+	*out = *(*NetworkStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1485,10 +1435,7 @@ func Convert_v1beta2_NetworkStatus_To_v1beta1_NetworkStatus(in *v1beta2.NetworkS
 }
 
 func autoConvert_v1beta1_NetworkStatusWithSubnets_To_v1beta2_NetworkStatusWithSubnets(in *NetworkStatusWithSubnets, out *v1beta2.NetworkStatusWithSubnets, s conversion.Scope) error {
-	if err := Convert_v1beta1_NetworkStatus_To_v1beta2_NetworkStatus(&in.NetworkStatus, &out.NetworkStatus, s); err != nil {
-		return err
-	}
-	out.Subnets = *(*[]v1beta2.Subnet)(unsafe.Pointer(&in.Subnets))
+	*out = *(*v1beta2.NetworkStatusWithSubnets)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1498,10 +1445,7 @@ func Convert_v1beta1_NetworkStatusWithSubnets_To_v1beta2_NetworkStatusWithSubnet
 }
 
 func autoConvert_v1beta2_NetworkStatusWithSubnets_To_v1beta1_NetworkStatusWithSubnets(in *v1beta2.NetworkStatusWithSubnets, out *NetworkStatusWithSubnets, s conversion.Scope) error {
-	if err := Convert_v1beta2_NetworkStatus_To_v1beta1_NetworkStatus(&in.NetworkStatus, &out.NetworkStatus, s); err != nil {
-		return err
-	}
-	out.Subnets = *(*[]Subnet)(unsafe.Pointer(&in.Subnets))
+	*out = *(*NetworkStatusWithSubnets)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1511,7 +1455,7 @@ func Convert_v1beta2_NetworkStatusWithSubnets_To_v1beta1_NetworkStatusWithSubnet
 }
 
 func autoConvert_v1beta1_NodeInfo_To_v1beta2_NodeInfo(in *NodeInfo, out *v1beta2.NodeInfo, s conversion.Scope) error {
-	out.OperatingSystem = in.OperatingSystem
+	*out = *(*v1beta2.NodeInfo)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1521,7 +1465,7 @@ func Convert_v1beta1_NodeInfo_To_v1beta2_NodeInfo(in *NodeInfo, out *v1beta2.Nod
 }
 
 func autoConvert_v1beta2_NodeInfo_To_v1beta1_NodeInfo(in *v1beta2.NodeInfo, out *NodeInfo, s conversion.Scope) error {
-	out.OperatingSystem = in.OperatingSystem
+	*out = *(*NodeInfo)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1927,10 +1871,7 @@ func Convert_v1beta2_OpenStackClusterTemplateSpec_To_v1beta1_OpenStackClusterTem
 }
 
 func autoConvert_v1beta1_OpenStackIdentityReference_To_v1beta2_OpenStackIdentityReference(in *OpenStackIdentityReference, out *v1beta2.OpenStackIdentityReference, s conversion.Scope) error {
-	out.Type = in.Type
-	out.Name = in.Name
-	out.CloudName = in.CloudName
-	out.Region = in.Region
+	*out = *(*v1beta2.OpenStackIdentityReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1940,10 +1881,7 @@ func Convert_v1beta1_OpenStackIdentityReference_To_v1beta2_OpenStackIdentityRefe
 }
 
 func autoConvert_v1beta2_OpenStackIdentityReference_To_v1beta1_OpenStackIdentityReference(in *v1beta2.OpenStackIdentityReference, out *OpenStackIdentityReference, s conversion.Scope) error {
-	out.Type = in.Type
-	out.Name = in.Name
-	out.CloudName = in.CloudName
-	out.Region = in.Region
+	*out = *(*OpenStackIdentityReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2437,7 +2375,7 @@ func Convert_v1beta2_PortOpts_To_v1beta1_PortOpts(in *v1beta2.PortOpts, out *Por
 }
 
 func autoConvert_v1beta1_PortStatus_To_v1beta2_PortStatus(in *PortStatus, out *v1beta2.PortStatus, s conversion.Scope) error {
-	out.ID = in.ID
+	*out = *(*v1beta2.PortStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2447,7 +2385,7 @@ func Convert_v1beta1_PortStatus_To_v1beta2_PortStatus(in *PortStatus, out *v1bet
 }
 
 func autoConvert_v1beta2_PortStatus_To_v1beta1_PortStatus(in *v1beta2.PortStatus, out *PortStatus, s conversion.Scope) error {
-	out.ID = in.ID
+	*out = *(*PortStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2457,8 +2395,7 @@ func Convert_v1beta2_PortStatus_To_v1beta1_PortStatus(in *v1beta2.PortStatus, ou
 }
 
 func autoConvert_v1beta1_ResolvedFixedIP_To_v1beta2_ResolvedFixedIP(in *ResolvedFixedIP, out *v1beta2.ResolvedFixedIP, s conversion.Scope) error {
-	out.SubnetID = (optional.String)(unsafe.Pointer(in.SubnetID))
-	out.IPAddress = (optional.String)(unsafe.Pointer(in.IPAddress))
+	*out = *(*v1beta2.ResolvedFixedIP)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2468,8 +2405,7 @@ func Convert_v1beta1_ResolvedFixedIP_To_v1beta2_ResolvedFixedIP(in *ResolvedFixe
 }
 
 func autoConvert_v1beta2_ResolvedFixedIP_To_v1beta1_ResolvedFixedIP(in *v1beta2.ResolvedFixedIP, out *ResolvedFixedIP, s conversion.Scope) error {
-	out.SubnetID = (optional.String)(unsafe.Pointer(in.SubnetID))
-	out.IPAddress = (optional.String)(unsafe.Pointer(in.IPAddress))
+	*out = *(*ResolvedFixedIP)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2589,7 +2525,7 @@ func autoConvert_v1beta2_ResolvedPortSpecFields_To_v1beta1_ResolvedPortSpecField
 }
 
 func autoConvert_v1beta1_ResourceReference_To_v1beta2_ResourceReference(in *ResourceReference, out *v1beta2.ResourceReference, s conversion.Scope) error {
-	out.Name = in.Name
+	*out = *(*v1beta2.ResourceReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2599,7 +2535,7 @@ func Convert_v1beta1_ResourceReference_To_v1beta2_ResourceReference(in *Resource
 }
 
 func autoConvert_v1beta2_ResourceReference_To_v1beta1_ResourceReference(in *v1beta2.ResourceReference, out *ResourceReference, s conversion.Scope) error {
-	out.Name = in.Name
+	*out = *(*ResourceReference)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2635,10 +2571,7 @@ func Convert_v1beta2_RootVolume_To_v1beta1_RootVolume(in *v1beta2.RootVolume, ou
 }
 
 func autoConvert_v1beta1_Router_To_v1beta2_Router(in *Router, out *v1beta2.Router, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.IPs = *(*[]string)(unsafe.Pointer(&in.IPs))
+	*out = *(*v1beta2.Router)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2648,10 +2581,7 @@ func Convert_v1beta1_Router_To_v1beta2_Router(in *Router, out *v1beta2.Router, s
 }
 
 func autoConvert_v1beta2_Router_To_v1beta1_Router(in *v1beta2.Router, out *Router, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.IPs = *(*[]string)(unsafe.Pointer(&in.IPs))
+	*out = *(*Router)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2661,12 +2591,7 @@ func Convert_v1beta2_Router_To_v1beta1_Router(in *v1beta2.Router, out *Router, s
 }
 
 func autoConvert_v1beta1_RouterFilter_To_v1beta2_RouterFilter(in *RouterFilter, out *v1beta2.RouterFilter, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Description = in.Description
-	out.ProjectID = in.ProjectID
-	if err := Convert_v1beta1_FilterByNeutronTags_To_v1beta2_FilterByNeutronTags(&in.FilterByNeutronTags, &out.FilterByNeutronTags, s); err != nil {
-		return err
-	}
+	*out = *(*v1beta2.RouterFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2676,12 +2601,7 @@ func Convert_v1beta1_RouterFilter_To_v1beta2_RouterFilter(in *RouterFilter, out 
 }
 
 func autoConvert_v1beta2_RouterFilter_To_v1beta1_RouterFilter(in *v1beta2.RouterFilter, out *RouterFilter, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Description = in.Description
-	out.ProjectID = in.ProjectID
-	if err := Convert_v1beta2_FilterByNeutronTags_To_v1beta1_FilterByNeutronTags(&in.FilterByNeutronTags, &out.FilterByNeutronTags, s); err != nil {
-		return err
-	}
+	*out = *(*RouterFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2691,8 +2611,7 @@ func Convert_v1beta2_RouterFilter_To_v1beta1_RouterFilter(in *v1beta2.RouterFilt
 }
 
 func autoConvert_v1beta1_RouterParam_To_v1beta2_RouterParam(in *RouterParam, out *v1beta2.RouterParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*v1beta2.RouterFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*v1beta2.RouterParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2702,8 +2621,7 @@ func Convert_v1beta1_RouterParam_To_v1beta2_RouterParam(in *RouterParam, out *v1
 }
 
 func autoConvert_v1beta2_RouterParam_To_v1beta1_RouterParam(in *v1beta2.RouterParam, out *RouterParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*RouterFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*RouterParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2777,12 +2695,7 @@ func Convert_v1beta2_SchedulerHintAdditionalValue_To_v1beta1_SchedulerHintAdditi
 }
 
 func autoConvert_v1beta1_SecurityGroupFilter_To_v1beta2_SecurityGroupFilter(in *SecurityGroupFilter, out *v1beta2.SecurityGroupFilter, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Description = in.Description
-	out.ProjectID = in.ProjectID
-	if err := Convert_v1beta1_FilterByNeutronTags_To_v1beta2_FilterByNeutronTags(&in.FilterByNeutronTags, &out.FilterByNeutronTags, s); err != nil {
-		return err
-	}
+	*out = *(*v1beta2.SecurityGroupFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2792,12 +2705,7 @@ func Convert_v1beta1_SecurityGroupFilter_To_v1beta2_SecurityGroupFilter(in *Secu
 }
 
 func autoConvert_v1beta2_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *v1beta2.SecurityGroupFilter, out *SecurityGroupFilter, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Description = in.Description
-	out.ProjectID = in.ProjectID
-	if err := Convert_v1beta2_FilterByNeutronTags_To_v1beta1_FilterByNeutronTags(&in.FilterByNeutronTags, &out.FilterByNeutronTags, s); err != nil {
-		return err
-	}
+	*out = *(*SecurityGroupFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2807,8 +2715,7 @@ func Convert_v1beta2_SecurityGroupFilter_To_v1beta1_SecurityGroupFilter(in *v1be
 }
 
 func autoConvert_v1beta1_SecurityGroupParam_To_v1beta2_SecurityGroupParam(in *SecurityGroupParam, out *v1beta2.SecurityGroupParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*v1beta2.SecurityGroupFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*v1beta2.SecurityGroupParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2818,8 +2725,7 @@ func Convert_v1beta1_SecurityGroupParam_To_v1beta2_SecurityGroupParam(in *Securi
 }
 
 func autoConvert_v1beta2_SecurityGroupParam_To_v1beta1_SecurityGroupParam(in *v1beta2.SecurityGroupParam, out *SecurityGroupParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*SecurityGroupFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*SecurityGroupParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2891,8 +2797,7 @@ func Convert_v1beta2_SecurityGroupRuleSpec_To_v1beta1_SecurityGroupRuleSpec(in *
 }
 
 func autoConvert_v1beta1_SecurityGroupStatus_To_v1beta2_SecurityGroupStatus(in *SecurityGroupStatus, out *v1beta2.SecurityGroupStatus, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
+	*out = *(*v1beta2.SecurityGroupStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2902,8 +2807,7 @@ func Convert_v1beta1_SecurityGroupStatus_To_v1beta2_SecurityGroupStatus(in *Secu
 }
 
 func autoConvert_v1beta2_SecurityGroupStatus_To_v1beta1_SecurityGroupStatus(in *v1beta2.SecurityGroupStatus, out *SecurityGroupStatus, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
+	*out = *(*SecurityGroupStatus)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2913,7 +2817,7 @@ func Convert_v1beta2_SecurityGroupStatus_To_v1beta1_SecurityGroupStatus(in *v1be
 }
 
 func autoConvert_v1beta1_ServerGroupFilter_To_v1beta2_ServerGroupFilter(in *ServerGroupFilter, out *v1beta2.ServerGroupFilter, s conversion.Scope) error {
-	out.Name = (optional.String)(unsafe.Pointer(in.Name))
+	*out = *(*v1beta2.ServerGroupFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2923,7 +2827,7 @@ func Convert_v1beta1_ServerGroupFilter_To_v1beta2_ServerGroupFilter(in *ServerGr
 }
 
 func autoConvert_v1beta2_ServerGroupFilter_To_v1beta1_ServerGroupFilter(in *v1beta2.ServerGroupFilter, out *ServerGroupFilter, s conversion.Scope) error {
-	out.Name = (optional.String)(unsafe.Pointer(in.Name))
+	*out = *(*ServerGroupFilter)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2933,8 +2837,7 @@ func Convert_v1beta2_ServerGroupFilter_To_v1beta1_ServerGroupFilter(in *v1beta2.
 }
 
 func autoConvert_v1beta1_ServerGroupParam_To_v1beta2_ServerGroupParam(in *ServerGroupParam, out *v1beta2.ServerGroupParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*v1beta2.ServerGroupFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*v1beta2.ServerGroupParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2944,8 +2847,7 @@ func Convert_v1beta1_ServerGroupParam_To_v1beta2_ServerGroupParam(in *ServerGrou
 }
 
 func autoConvert_v1beta2_ServerGroupParam_To_v1beta1_ServerGroupParam(in *v1beta2.ServerGroupParam, out *ServerGroupParam, s conversion.Scope) error {
-	out.ID = (optional.String)(unsafe.Pointer(in.ID))
-	out.Filter = (*ServerGroupFilter)(unsafe.Pointer(in.Filter))
+	*out = *(*ServerGroupParam)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2955,8 +2857,7 @@ func Convert_v1beta2_ServerGroupParam_To_v1beta1_ServerGroupParam(in *v1beta2.Se
 }
 
 func autoConvert_v1beta1_ServerMetadata_To_v1beta2_ServerMetadata(in *ServerMetadata, out *v1beta2.ServerMetadata, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Value = in.Value
+	*out = *(*v1beta2.ServerMetadata)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2966,8 +2867,7 @@ func Convert_v1beta1_ServerMetadata_To_v1beta2_ServerMetadata(in *ServerMetadata
 }
 
 func autoConvert_v1beta2_ServerMetadata_To_v1beta1_ServerMetadata(in *v1beta2.ServerMetadata, out *ServerMetadata, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Value = in.Value
+	*out = *(*ServerMetadata)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2977,11 +2877,7 @@ func Convert_v1beta2_ServerMetadata_To_v1beta1_ServerMetadata(in *v1beta2.Server
 }
 
 func autoConvert_v1beta1_Subnet_To_v1beta2_Subnet(in *Subnet, out *v1beta2.Subnet, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.CIDR = in.CIDR
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.FailureDomain = in.FailureDomain
+	*out = *(*v1beta2.Subnet)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -2991,11 +2887,7 @@ func Convert_v1beta1_Subnet_To_v1beta2_Subnet(in *Subnet, out *v1beta2.Subnet, s
 }
 
 func autoConvert_v1beta2_Subnet_To_v1beta1_Subnet(in *v1beta2.Subnet, out *Subnet, s conversion.Scope) error {
-	out.Name = in.Name
-	out.ID = in.ID
-	out.CIDR = in.CIDR
-	out.Tags = *(*[]string)(unsafe.Pointer(&in.Tags))
-	out.FailureDomain = in.FailureDomain
+	*out = *(*Subnet)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3083,9 +2975,7 @@ func Convert_v1beta2_SubnetParam_To_v1beta1_SubnetParam(in *v1beta2.SubnetParam,
 }
 
 func autoConvert_v1beta1_SubnetSpec_To_v1beta2_SubnetSpec(in *SubnetSpec, out *v1beta2.SubnetSpec, s conversion.Scope) error {
-	out.CIDR = in.CIDR
-	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
-	out.AllocationPools = *(*[]v1beta2.AllocationPool)(unsafe.Pointer(&in.AllocationPools))
+	*out = *(*v1beta2.SubnetSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3095,9 +2985,7 @@ func Convert_v1beta1_SubnetSpec_To_v1beta2_SubnetSpec(in *SubnetSpec, out *v1bet
 }
 
 func autoConvert_v1beta2_SubnetSpec_To_v1beta1_SubnetSpec(in *v1beta2.SubnetSpec, out *SubnetSpec, s conversion.Scope) error {
-	out.CIDR = in.CIDR
-	out.DNSNameservers = *(*[]string)(unsafe.Pointer(&in.DNSNameservers))
-	out.AllocationPools = *(*[]AllocationPool)(unsafe.Pointer(&in.AllocationPools))
+	*out = *(*SubnetSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3107,9 +2995,7 @@ func Convert_v1beta2_SubnetSpec_To_v1beta1_SubnetSpec(in *v1beta2.SubnetSpec, ou
 }
 
 func autoConvert_v1beta1_ValueSpec_To_v1beta2_ValueSpec(in *ValueSpec, out *v1beta2.ValueSpec, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Key = in.Key
-	out.Value = in.Value
+	*out = *(*v1beta2.ValueSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3119,9 +3005,7 @@ func Convert_v1beta1_ValueSpec_To_v1beta2_ValueSpec(in *ValueSpec, out *v1beta2.
 }
 
 func autoConvert_v1beta2_ValueSpec_To_v1beta1_ValueSpec(in *v1beta2.ValueSpec, out *ValueSpec, s conversion.Scope) error {
-	out.Name = in.Name
-	out.Key = in.Key
-	out.Value = in.Value
+	*out = *(*ValueSpec)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3131,8 +3015,7 @@ func Convert_v1beta2_ValueSpec_To_v1beta1_ValueSpec(in *v1beta2.ValueSpec, out *
 }
 
 func autoConvert_v1beta1_VolumeAvailabilityZone_To_v1beta2_VolumeAvailabilityZone(in *VolumeAvailabilityZone, out *v1beta2.VolumeAvailabilityZone, s conversion.Scope) error {
-	out.From = v1beta2.VolumeAZSource(in.From)
-	out.Name = (*v1beta2.VolumeAZName)(unsafe.Pointer(in.Name))
+	*out = *(*v1beta2.VolumeAvailabilityZone)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3142,8 +3025,7 @@ func Convert_v1beta1_VolumeAvailabilityZone_To_v1beta2_VolumeAvailabilityZone(in
 }
 
 func autoConvert_v1beta2_VolumeAvailabilityZone_To_v1beta1_VolumeAvailabilityZone(in *v1beta2.VolumeAvailabilityZone, out *VolumeAvailabilityZone, s conversion.Scope) error {
-	out.From = VolumeAZSource(in.From)
-	out.Name = (*VolumeAZName)(unsafe.Pointer(in.Name))
+	*out = *(*VolumeAvailabilityZone)(unsafe.Pointer(in))
 	return nil
 }
 

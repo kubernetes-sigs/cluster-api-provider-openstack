@@ -33,7 +33,7 @@ type SecurityGroupFilterApplyConfiguration struct {
 	Description *string `json:"description,omitempty"`
 	// projectID filters security groups by project ID.
 	ProjectID                             *string `json:"projectID,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // SecurityGroupFilterApplyConfiguration constructs a declarative configuration of the SecurityGroupFilter type for use with

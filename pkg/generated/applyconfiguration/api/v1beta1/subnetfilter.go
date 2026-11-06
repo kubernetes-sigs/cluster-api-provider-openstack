@@ -35,7 +35,7 @@ type SubnetFilterApplyConfiguration struct {
 	CIDR                                  *string `json:"cidr,omitempty"`
 	IPv6AddressMode                       *string `json:"ipv6AddressMode,omitempty"`
 	IPv6RAMode                            *string `json:"ipv6RAMode,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // SubnetFilterApplyConfiguration constructs a declarative configuration of the SubnetFilter type for use with

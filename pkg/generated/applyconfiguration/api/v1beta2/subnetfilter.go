@@ -43,7 +43,7 @@ type SubnetFilterApplyConfiguration struct {
 	IPv6AddressMode *string `json:"ipv6AddressMode,omitempty"`
 	// ipv6RAMode filters subnets by IPv6 Router Advertisement mode.
 	IPv6RAMode                            *string `json:"ipv6RAMode,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // SubnetFilterApplyConfiguration constructs a declarative configuration of the SubnetFilter type for use with

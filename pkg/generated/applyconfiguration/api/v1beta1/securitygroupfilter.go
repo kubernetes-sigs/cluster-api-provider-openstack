@@ -30,7 +30,7 @@ type SecurityGroupFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
 	Description                           *string `json:"description,omitempty"`
 	ProjectID                             *string `json:"projectID,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // SecurityGroupFilterApplyConfiguration constructs a declarative configuration of the SecurityGroupFilter type for use with

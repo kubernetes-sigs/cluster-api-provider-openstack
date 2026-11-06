@@ -33,7 +33,7 @@ type RouterFilterApplyConfiguration struct {
 	Description *string `json:"description,omitempty"`
 	// projectID filters routers by project ID.
 	ProjectID                             *string `json:"projectID,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // RouterFilterApplyConfiguration constructs a declarative configuration of the RouterFilter type for use with

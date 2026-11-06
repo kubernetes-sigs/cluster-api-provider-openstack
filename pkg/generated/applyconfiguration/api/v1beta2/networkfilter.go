@@ -33,7 +33,7 @@ type NetworkFilterApplyConfiguration struct {
 	Description *string `json:"description,omitempty"`
 	// projectID filters networks by project ID.
 	ProjectID                             *string `json:"projectID,omitempty"`
-	FilterByNeutronTagsApplyConfiguration `json:",inline"`
+	FilterByNeutronTagsApplyConfiguration `json:""`
 }
 
 // NetworkFilterApplyConfiguration constructs a declarative configuration of the NetworkFilter type for use with

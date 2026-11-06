@@ -39,7 +39,7 @@ type PortOptsApplyConfiguration struct {
 	// provided the value is inherited from the machine, or false for a
 	// bastion host.
 	Trunk                                    *bool `json:"trunk,omitempty"`
-	ResolvedPortSpecFieldsApplyConfiguration `json:",inline"`
+	ResolvedPortSpecFieldsApplyConfiguration `json:""`
 }
 
 // PortOptsApplyConfiguration constructs a declarative configuration of the PortOpts type for use with
