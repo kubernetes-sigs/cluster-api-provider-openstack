@@ -170,13 +170,32 @@ func (s *Service) DeleteFloatingIP(eventObject runtime.Object, ip string) error 
 		return nil
 	}
 
-	err = s.client.DeleteFloatingIP(fip.ID)
+	return s.deleteFloatingIP(eventObject, fip)
+}
+
+// DeleteFloatingIPCreatedForCluster deletes the floating IP only when it was
+// created by CAPO for the given cluster. This protects user-provided API
+// endpoint addresses from being deleted during cluster teardown.
+func (s *Service) DeleteFloatingIPCreatedForCluster(eventObject runtime.Object, ip, clusterResourceName string) (bool, error) {
+	fip, err := s.GetFloatingIP(ip)
 	if err != nil {
-		record.Warnf(eventObject, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
+		return false, err
+	}
+	if fip == nil || fip.Description != names.GetDescription(clusterResourceName) {
+		return false, nil
+	}
+
+	return true, s.deleteFloatingIP(eventObject, fip)
+}
+
+func (s *Service) deleteFloatingIP(eventObject runtime.Object, fip *floatingips.FloatingIP) error {
+	err := s.client.DeleteFloatingIP(fip.ID)
+	if err != nil {
+		record.Warnf(eventObject, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", fip.FloatingIP, err)
 		return err
 	}
 
-	record.Eventf(eventObject, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", ip)
+	record.Eventf(eventObject, "SuccessfulDeleteFloatingIP", "Deleted floating IP %s", fip.FloatingIP)
 	return nil
 }
 
@@ -225,6 +244,25 @@ func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) 
 		return nil
 	}
 
+	return s.disassociateFloatingIP(eventObject, fip)
+}
+
+// DisassociateFloatingIPCreatedForCluster disassociates the floating IP only
+// when it was created by CAPO for the given cluster. The API server endpoint
+// is cluster-scoped, so it must remain allocated while a control plane machine
+// is being replaced.
+func (s *Service) DisassociateFloatingIPCreatedForCluster(eventObject runtime.Object, ip, clusterResourceName string) (bool, error) {
+	fip, err := s.GetFloatingIP(ip)
+	if err != nil {
+		return false, err
+	}
+	if fip == nil || fip.Description != names.GetDescription(clusterResourceName) {
+		return false, nil
+	}
+	return true, s.disassociateFloatingIP(eventObject, fip)
+}
+
+func (s *Service) disassociateFloatingIP(eventObject runtime.Object, fip *floatingips.FloatingIP) error {
 	s.scope.Logger().Info("Disassociating floating IP", "ID", fip.ID, "IP", fip.FloatingIP)
 
 	fpUpdateOpts := &floatingips.UpdateOpts{
