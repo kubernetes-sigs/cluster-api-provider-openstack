@@ -2438,6 +2438,27 @@ bool
 <p>allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>allowAllOutboundTraffic</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>allowAllOutboundTraffic controls whether the default allow-all IPv4 and
+IPv6 egress rules are added to the managed security groups.</p>
+<p>When unset or true, the managed security groups allow all outbound traffic.</p>
+<p>When false, the default allow-all egress rules are not created. Instead,
+the control plane and worker security groups allow all egress to the
+managed control plane and worker security groups, and TCP egress to the
+API server endpoint when it is an IP address. The bastion security group
+allows SSH egress to the control plane and worker security groups. Any
+other required egress, e.g. DNS, image registries or the metadata service,
+must be added with the security group rules above.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta2.NetworkFilter">NetworkFilter

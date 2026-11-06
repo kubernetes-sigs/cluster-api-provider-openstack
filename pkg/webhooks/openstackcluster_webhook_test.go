@@ -262,6 +262,32 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Changing OpenStackCluster.Spec.ManagedSecurityGroups.AllowAllOutboundTraffic is allowed",
+			oldCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						AllowAllOutboundTraffic: ptr.To(true),
+					},
+				},
+			},
+			newCluster: &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					IdentityRef: infrav1.OpenStackIdentityReference{
+						Name:      "foobar",
+						CloudName: "foobar",
+					},
+					ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{
+						AllowAllOutboundTraffic: ptr.To(false),
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "Mutually exclusive security group rule fields on update are rejected",
 			oldCluster: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{

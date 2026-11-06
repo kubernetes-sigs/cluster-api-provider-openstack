@@ -16,6 +16,10 @@ limitations under the License.
 
 package networking
 
+import (
+	"k8s.io/utils/net"
+)
+
 const (
 	securityGroupRuleDirectionIngress            = "ingress"
 	securityGroupRuleDirectionEgress             = "egress"
@@ -27,6 +31,8 @@ const (
 	securityGroupRuleDescriptionKubeletAPI       = "Kubelet API"
 	securityGroupRuleDescriptionNodePortServices = "Node Port Services"
 	securityGroupRuleDescriptionInClusterIngress = "In-cluster Ingress"
+	securityGroupRuleDescriptionInClusterEgress  = "In-cluster Egress"
+	securityGroupRuleDescriptionKubernetesAPI    = "Kubernetes API"
 )
 
 var defaultRules = []resolvedSecurityGroupRuleSpec{
@@ -144,7 +150,7 @@ func getSGWorkerSSH(secBastionGroupID string) []resolvedSecurityGroupRuleSpec {
 func getSGControlPlaneHTTPS() []resolvedSecurityGroupRuleSpec {
 	return []resolvedSecurityGroupRuleSpec{
 		{
-			Description:  "Kubernetes API",
+			Description:  securityGroupRuleDescriptionKubernetesAPI,
 			Direction:    securityGroupRuleDirectionIngress,
 			EtherType:    securityGroupRuleEtherTypeIPv4,
 			PortRangeMin: 6443,
@@ -264,6 +270,76 @@ func getSGWorkerAllowAll(remoteGroupIDSelf, secControlPlaneGroupID string) []res
 			PortRangeMax:  0,
 			Protocol:      "",
 			RemoteGroupID: secControlPlaneGroupID,
+		},
+	}
+}
+
+// Permit all egress to the given security groups, for both IPv4 and IPv6.
+// Used instead of defaultRules when allow-all outbound traffic is disabled.
+func getSGInClusterEgress(remoteGroupIDs ...string) []resolvedSecurityGroupRuleSpec {
+	r := make([]resolvedSecurityGroupRuleSpec, 0, 2*len(remoteGroupIDs))
+	for _, remoteGroupID := range remoteGroupIDs {
+		for _, etherType := range []string{securityGroupRuleEtherTypeIPv4, securityGroupRuleEtherTypeIPv6} {
+			r = append(r, resolvedSecurityGroupRuleSpec{
+				Description:   securityGroupRuleDescriptionInClusterEgress,
+				Direction:     securityGroupRuleDirectionEgress,
+				EtherType:     etherType,
+				PortRangeMin:  0,
+				PortRangeMax:  0,
+				Protocol:      "",
+				RemoteGroupID: remoteGroupID,
+			})
+		}
+	}
+	return r
+}
+
+// Permit egress to the API server endpoint. The ether type matches the address family of the endpoint.
+// No rule is returned when the endpoint is not an IP address.
+func getSGAPIServerEgress(host string, port int) []resolvedSecurityGroupRuleSpec {
+	ip := net.ParseIPSloppy(host)
+	if ip == nil {
+		return nil
+	}
+
+	etherType, remoteIPPrefix := securityGroupRuleEtherTypeIPv6, ip.String()+"/128"
+	if ip.To4() != nil {
+		etherType, remoteIPPrefix = securityGroupRuleEtherTypeIPv4, ip.String()+"/32"
+	}
+
+	return []resolvedSecurityGroupRuleSpec{
+		{
+			Description:    securityGroupRuleDescriptionKubernetesAPI,
+			Direction:      securityGroupRuleDirectionEgress,
+			EtherType:      etherType,
+			PortRangeMin:   port,
+			PortRangeMax:   port,
+			Protocol:       securityGroupRuleProtocolTCP,
+			RemoteIPPrefix: remoteIPPrefix,
+		},
+	}
+}
+
+// Permit ssh from the bastion to the control plane and worker nodes.
+func getSGBastionSSHEgress(secControlPlaneGroupID, secWorkerGroupID string) []resolvedSecurityGroupRuleSpec {
+	return []resolvedSecurityGroupRuleSpec{
+		{
+			Description:   securityGroupRuleDescriptionSSH,
+			Direction:     securityGroupRuleDirectionEgress,
+			EtherType:     securityGroupRuleEtherTypeIPv4,
+			PortRangeMin:  22,
+			PortRangeMax:  22,
+			Protocol:      securityGroupRuleProtocolTCP,
+			RemoteGroupID: secControlPlaneGroupID,
+		},
+		{
+			Description:   securityGroupRuleDescriptionSSH,
+			Direction:     securityGroupRuleDirectionEgress,
+			EtherType:     securityGroupRuleEtherTypeIPv4,
+			PortRangeMin:  22,
+			PortRangeMax:  22,
+			Protocol:      securityGroupRuleProtocolTCP,
+			RemoteGroupID: secWorkerGroupID,
 		},
 	}
 }

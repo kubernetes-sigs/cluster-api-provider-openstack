@@ -1342,6 +1342,74 @@ func TestOpenStackCluster_RoundTrip_ManagedSecurityGroups_ClusterNodesRules(t *t
 	}
 }
 
+func TestOpenStackCluster_HubSpokeHub_ManagedSecurityGroups_AllowAllOutboundTraffic(t *testing.T) {
+	tests := []struct {
+		name                  string
+		managedSecurityGroups *infrav1.ManagedSecurityGroups
+	}{
+		{
+			name: "allowAllOutboundTraffic false",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic:  ptr.To(false),
+				AllowAllInClusterTraffic: true,
+			},
+		},
+		{
+			name: "allowAllOutboundTraffic true",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic: ptr.To(true),
+			},
+		},
+		{
+			name:                  "allowAllOutboundTraffic unset",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{},
+		},
+		{
+			name: "no ManagedSecurityGroups at all",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name+" (OpenStackCluster)", func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSecurityGroups: tt.managedSecurityGroups.DeepCopy(),
+				},
+			}
+
+			spoke := &OpenStackCluster{}
+			g.Expect(spoke.ConvertFrom(hub.DeepCopy())).To(Succeed())
+
+			restored := &infrav1.OpenStackCluster{}
+			g.Expect(spoke.ConvertTo(restored)).To(Succeed())
+			g.Expect(restored.Spec.ManagedSecurityGroups).To(Equal(tt.managedSecurityGroups))
+		})
+
+		t.Run(tt.name+" (OpenStackClusterTemplate)", func(t *testing.T) {
+			g := NewWithT(t)
+
+			hub := &infrav1.OpenStackClusterTemplate{
+				Spec: infrav1.OpenStackClusterTemplateSpec{
+					Template: infrav1.OpenStackClusterTemplateResource{
+						Spec: infrav1.OpenStackClusterSpec{
+							ManagedSecurityGroups: tt.managedSecurityGroups.DeepCopy(),
+						},
+					},
+				},
+			}
+
+			spoke := &OpenStackClusterTemplate{}
+			g.Expect(spoke.ConvertFrom(hub.DeepCopy())).To(Succeed())
+
+			restored := &infrav1.OpenStackClusterTemplate{}
+			g.Expect(spoke.ConvertTo(restored)).To(Succeed())
+			g.Expect(restored.Spec.Template.Spec.ManagedSecurityGroups).To(Equal(tt.managedSecurityGroups))
+		})
+	}
+}
+
 func TestOpenStackCluster_RoundTrip_APIServer(t *testing.T) {
 	floatingIP := optional.String(ptr.To("203.0.113.10"))
 	fixedIP := optional.String(ptr.To("10.0.0.5"))
