@@ -1277,3 +1277,99 @@ func Test_AdoptPortsServer(t *testing.T) {
 		})
 	}
 }
+
+func Test_EnsurePorts(t *testing.T) {
+	const (
+		networkID    = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		portName     = "test-server-0"
+		stalePortID  = "a838209b-389a-47a0-9161-3d6919891074"
+		recreatedID  = "bd22ea65-53de-4585-bb6f-b0a84d0085d1"
+		existingID   = "0a4ff38e-1e03-4b4e-994c-c8ae38a2915e"
+		reconcileCnt = 2
+	)
+
+	desiredPorts := []infrav1.ResolvedPortSpec{
+		{Name: portName, NetworkID: networkID},
+	}
+
+	tests := []struct {
+		testName  string
+		resources infrav1alpha1.ServerResources
+		expect    func(*mock.MockNetworkClientMockRecorder)
+		want      infrav1alpha1.ServerResources
+	}{
+		{
+			testName: "port in status exists: reused",
+			resources: infrav1alpha1.ServerResources{
+				Ports: []infrav1.PortStatus{{ID: existingID}},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(ports.ListOpts{ID: existingID}).
+					Return([]ports.Port{{ID: existingID, Name: portName}}, nil).
+					Times(reconcileCnt)
+			},
+			want: infrav1alpha1.ServerResources{
+				Ports: []infrav1.PortStatus{{ID: existingID}},
+			},
+		},
+		{
+			testName: "port in status is missing: replacement created once and recorded",
+			resources: infrav1alpha1.ServerResources{
+				Ports: []infrav1.PortStatus{{ID: stalePortID}},
+			},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				gomock.InOrder(
+					m.ListPort(ports.ListOpts{ID: stalePortID}).Return(nil, nil),
+					m.CreatePort(gomock.Any()).
+						Return(&ports.Port{ID: recreatedID, Name: portName}, nil),
+					m.ListPort(ports.ListOpts{ID: recreatedID}).
+						Return([]ports.Port{{ID: recreatedID, Name: portName}}, nil),
+				)
+			},
+			want: infrav1alpha1.ServerResources{
+				Ports: []infrav1.PortStatus{{ID: recreatedID}},
+			},
+		},
+		{
+			testName: "no port in status: created once and appended",
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				gomock.InOrder(
+					m.ListPort(ports.ListOpts{Name: portName, NetworkID: networkID}).Return(nil, nil),
+					m.CreatePort(gomock.Any()).
+						Return(&ports.Port{ID: recreatedID, Name: portName}, nil),
+					m.ListPort(ports.ListOpts{ID: recreatedID}).
+						Return([]ports.Port{{ID: recreatedID, Name: portName}}, nil),
+				)
+			},
+			want: infrav1alpha1.ServerResources{
+				Ports: []infrav1.PortStatus{{ID: recreatedID}},
+			},
+		},
+	}
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.testName, func(t *testing.T) {
+			g := NewWithT(t)
+			log := testr.New(t)
+
+			mockCtrl := gomock.NewController(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			tt.expect(mockClient.EXPECT())
+
+			s := Service{
+				client: mockClient,
+				scope:  scope.NewWithLogger(mockScopeFactory, log),
+			}
+
+			// Reconcile twice: the second pass must reuse what the first one
+			// recorded instead of creating another port.
+			for range reconcileCnt {
+				err := s.EnsurePorts(&infrav1alpha1.OpenStackServer{}, desiredPorts, &tt.resources)
+				g.Expect(err).NotTo(HaveOccurred())
+			}
+
+			g.Expect(tt.resources).To(Equal(tt.want), cmp.Diff(&tt.resources, tt.want))
+		})
+	}
+}
