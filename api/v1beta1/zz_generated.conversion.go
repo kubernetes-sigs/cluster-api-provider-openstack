@@ -1079,9 +1079,7 @@ func Convert_v1beta2_BlockDeviceStorage_To_v1beta1_BlockDeviceStorage(in *v1beta
 }
 
 func autoConvert_v1beta1_BlockDeviceVolume_To_v1beta2_BlockDeviceVolume(in *BlockDeviceVolume, out *v1beta2.BlockDeviceVolume, s conversion.Scope) error {
-	out.Type = in.Type
-	out.AvailabilityZone = (*v1beta2.VolumeAvailabilityZone)(unsafe.Pointer(in.AvailabilityZone))
-	out.Metadata = *(*[]v1beta2.VolumeMetadata)(unsafe.Pointer(&in.Metadata))
+	*out = *(*v1beta2.BlockDeviceVolume)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -1091,9 +1089,7 @@ func Convert_v1beta1_BlockDeviceVolume_To_v1beta2_BlockDeviceVolume(in *BlockDev
 }
 
 func autoConvert_v1beta2_BlockDeviceVolume_To_v1beta1_BlockDeviceVolume(in *v1beta2.BlockDeviceVolume, out *BlockDeviceVolume, s conversion.Scope) error {
-	out.Type = in.Type
-	out.AvailabilityZone = (*VolumeAvailabilityZone)(unsafe.Pointer(in.AvailabilityZone))
-	out.Metadata = *(*[]VolumeMetadata)(unsafe.Pointer(&in.Metadata))
+	*out = *(*BlockDeviceVolume)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3049,8 +3045,7 @@ func Convert_v1beta2_VolumeAvailabilityZone_To_v1beta1_VolumeAvailabilityZone(in
 }
 
 func autoConvert_v1beta1_VolumeMetadata_To_v1beta2_VolumeMetadata(in *VolumeMetadata, out *v1beta2.VolumeMetadata, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Value = in.Value
+	*out = *(*v1beta2.VolumeMetadata)(unsafe.Pointer(in))
 	return nil
 }
 
@@ -3060,8 +3055,7 @@ func Convert_v1beta1_VolumeMetadata_To_v1beta2_VolumeMetadata(in *VolumeMetadata
 }
 
 func autoConvert_v1beta2_VolumeMetadata_To_v1beta1_VolumeMetadata(in *v1beta2.VolumeMetadata, out *VolumeMetadata, s conversion.Scope) error {
-	out.Key = in.Key
-	out.Value = in.Value
+	*out = *(*VolumeMetadata)(unsafe.Pointer(in))
 	return nil
 }
 

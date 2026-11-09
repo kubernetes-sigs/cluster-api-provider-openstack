@@ -751,7 +751,7 @@ If `volumeType` is not specified, cinder will use the default volume type.
 
 If `availabilityZone` is not specified, the volume will be created in the cinder availability zone specified in the MachineSpec's `failureDomain`. This same value is also used as the nova availability zone when creating the server. Note that this will fail if cinder and nova do not have matching availability zones. In this case, cinder `availabilityZone` **must** be specified explicitly on `rootVolume`.
 
-`metadata` is an optional list of key/value pairs set as metadata on the cinder volume when it is created. Keys must be unique, between 1 and 255 characters long, and may only contain letters, digits, spaces and the characters `-_:./`. Values must be between 1 and 255 characters long. At most 128 entries are allowed. The same field is available on `volume` for `additionalBlockDevices` of type `Volume`. Metadata is only applied when the volume is created: changing it does not update an existing volume.
+`metadata` is an optional list of key/value pairs set as metadata on the cinder volume when it is created. The same field is available on `volume` for `additionalBlockDevices` of type `Volume`. Metadata is only applied when the volume is created: changing it does not update an existing volume.
 
 ## Timeout settings
 
