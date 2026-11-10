@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -33,7 +34,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
-func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, ip *string) (*floatingips.FloatingIP, error) {
+func (s *Service) GetOrCreateFloatingIP(ctx context.Context, eventObject runtime.Object, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, ip *string) (*floatingips.FloatingIP, error) {
 	var fp *floatingips.FloatingIP
 	var err error
 	var fpCreateOpts floatingips.CreateOpts
@@ -44,7 +45,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 	}
 
 	if ptr.Deref(ip, "") != "" {
-		fp, err = s.GetFloatingIP(*ip)
+		fp, err = s.GetFloatingIP(ctx, *ip)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +64,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 	// IP that CAPO never records or retries tagging for.
 	var tagsSupported bool
 	if len(openStackCluster.Spec.Tags) > 0 {
-		tagsSupported, err = s.hasStandardAttrTagExtension()
+		tagsSupported, err = s.hasStandardAttrTagExtension(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +72,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 
 	s.scope.Logger().Info("Creating floating IP", "ip", fpCreateOpts.FloatingIP, "floatingNetworkID", openStackCluster.Status.ExternalNetwork.ID, "description", fpCreateOpts.Description)
 
-	fp, err = s.client.CreateFloatingIP(fpCreateOpts)
+	fp, err = s.client.CreateFloatingIP(ctx, fpCreateOpts)
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreateFloatingIP", "Failed to create floating IP %s: %v", fpCreateOpts.FloatingIP, err)
 		return nil, err
@@ -80,7 +81,7 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 	if len(openStackCluster.Spec.Tags) > 0 {
 		if tagsSupported {
 			mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
-			_, err = s.client.ReplaceAllAttributesTags("floatingips", fp.ID, attributestags.ReplaceAllOpts{
+			_, err = s.client.ReplaceAllAttributesTags(ctx, "floatingips", fp.ID, attributestags.ReplaceAllOpts{
 				Tags: openStackCluster.Spec.Tags,
 			})
 			if mc.ObserveRequest(err) != nil {
@@ -95,13 +96,13 @@ func (s *Service) GetOrCreateFloatingIP(eventObject runtime.Object, openStackClu
 	return fp, nil
 }
 
-func (s *Service) CreateFloatingIPForPool(pool *infrav1alpha1.OpenStackFloatingIPPool) (*floatingips.FloatingIP, error) {
+func (s *Service) CreateFloatingIPForPool(ctx context.Context, pool *infrav1alpha1.OpenStackFloatingIPPool) (*floatingips.FloatingIP, error) {
 	var fpCreateOpts floatingips.CreateOpts
 
 	fpCreateOpts.FloatingNetworkID = pool.Status.FloatingIPNetwork.ID
 	fpCreateOpts.Description = fmt.Sprintf("Created by cluster-api-provider-openstack OpenStackFloatingIPPool %s", pool.Name)
 
-	fp, err := s.client.CreateFloatingIP(fpCreateOpts)
+	fp, err := s.client.CreateFloatingIP(ctx, fpCreateOpts)
 	if err != nil {
 		record.Warnf(pool, "FailedCreateFloatingIP", "%s failed to create floating IP: %v", pool.Name, err)
 		return nil, err
@@ -111,8 +112,8 @@ func (s *Service) CreateFloatingIPForPool(pool *infrav1alpha1.OpenStackFloatingI
 	return fp, nil
 }
 
-func (s *Service) TagFloatingIP(ip string, tag string) error {
-	fip, err := s.GetFloatingIP(ip)
+func (s *Service) TagFloatingIP(ctx context.Context, ip string, tag string) error {
+	fip, err := s.GetFloatingIP(ctx, ip)
 	if err != nil {
 		return err
 	}
@@ -121,7 +122,7 @@ func (s *Service) TagFloatingIP(ip string, tag string) error {
 	}
 
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
-	_, err = s.client.ReplaceAllAttributesTags("floatingips", fip.ID, attributestags.ReplaceAllOpts{
+	_, err = s.client.ReplaceAllAttributesTags(ctx, "floatingips", fip.ID, attributestags.ReplaceAllOpts{
 		Tags: []string{tag},
 	})
 	if mc.ObserveRequest(err) != nil {
@@ -130,16 +131,16 @@ func (s *Service) TagFloatingIP(ip string, tag string) error {
 	return nil
 }
 
-func (s *Service) GetFloatingIPsByTag(tag string) ([]floatingips.FloatingIP, error) {
-	fipList, err := s.client.ListFloatingIP(floatingips.ListOpts{Tags: tag})
+func (s *Service) GetFloatingIPsByTag(ctx context.Context, tag string) ([]floatingips.FloatingIP, error) {
+	fipList, err := s.client.ListFloatingIP(ctx, floatingips.ListOpts{Tags: tag})
 	if err != nil {
 		return nil, err
 	}
 	return fipList, nil
 }
 
-func (s *Service) GetFloatingIP(ip string) (*floatingips.FloatingIP, error) {
-	fpList, err := s.client.ListFloatingIP(floatingips.ListOpts{FloatingIP: ip})
+func (s *Service) GetFloatingIP(ctx context.Context, ip string) (*floatingips.FloatingIP, error) {
+	fpList, err := s.client.ListFloatingIP(ctx, floatingips.ListOpts{FloatingIP: ip})
 	if err != nil {
 		return nil, err
 	}
@@ -149,8 +150,8 @@ func (s *Service) GetFloatingIP(ip string) (*floatingips.FloatingIP, error) {
 	return &fpList[0], nil
 }
 
-func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP, error) {
-	fpList, err := s.client.ListFloatingIP(floatingips.ListOpts{PortID: portID})
+func (s *Service) GetFloatingIPByPortID(ctx context.Context, portID string) (*floatingips.FloatingIP, error) {
+	fpList, err := s.client.ListFloatingIP(ctx, floatingips.ListOpts{PortID: portID})
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +161,8 @@ func (s *Service) GetFloatingIPByPortID(portID string) (*floatingips.FloatingIP,
 	return &fpList[0], nil
 }
 
-func (s *Service) DeleteFloatingIP(eventObject runtime.Object, ip string) error {
-	fip, err := s.GetFloatingIP(ip)
+func (s *Service) DeleteFloatingIP(ctx context.Context, eventObject runtime.Object, ip string) error {
+	fip, err := s.GetFloatingIP(ctx, ip)
 	if err != nil {
 		return err
 	}
@@ -170,7 +171,7 @@ func (s *Service) DeleteFloatingIP(eventObject runtime.Object, ip string) error 
 		return nil
 	}
 
-	err = s.client.DeleteFloatingIP(fip.ID)
+	err = s.client.DeleteFloatingIP(ctx, fip.ID)
 	if err != nil {
 		record.Warnf(eventObject, "FailedDeleteFloatingIP", "Failed to delete floating IP %s: %v", ip, err)
 		return err
@@ -188,7 +189,7 @@ var backoff = wait.Backoff{
 	Cap:      30 * time.Second,
 }
 
-func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingips.FloatingIP, portID string) error {
+func (s *Service) AssociateFloatingIP(ctx context.Context, eventObject runtime.Object, fp *floatingips.FloatingIP, portID string) error {
 	s.scope.Logger().Info("Associating floating IP", "ID", fp.ID, "IP", fp.FloatingIP)
 
 	if fp.PortID == portID {
@@ -200,13 +201,13 @@ func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingip
 		PortID: &portID,
 	}
 
-	_, err := s.client.UpdateFloatingIP(fp.ID, fpUpdateOpts)
+	_, err := s.client.UpdateFloatingIP(ctx, fp.ID, fpUpdateOpts)
 	if err != nil {
 		record.Warnf(eventObject, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: %v", fp.FloatingIP, portID, err)
 		return err
 	}
 
-	if err = s.waitForFloatingIP(fp.ID, "ACTIVE"); err != nil {
+	if err = s.waitForFloatingIP(ctx, fp.ID, "ACTIVE"); err != nil {
 		record.Warnf(eventObject, "FailedAssociateFloatingIP", "Failed to associate floating IP %s with port %s: wait for floating IP ACTIVE: %v", fp.FloatingIP, portID, err)
 		return err
 	}
@@ -215,8 +216,8 @@ func (s *Service) AssociateFloatingIP(eventObject runtime.Object, fp *floatingip
 	return nil
 }
 
-func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) error {
-	fip, err := s.GetFloatingIP(ip)
+func (s *Service) DisassociateFloatingIP(ctx context.Context, eventObject runtime.Object, ip string) error {
+	fip, err := s.GetFloatingIP(ctx, ip)
 	if err != nil {
 		return err
 	}
@@ -231,13 +232,13 @@ func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) 
 		PortID: nil,
 	}
 
-	_, err = s.client.UpdateFloatingIP(fip.ID, fpUpdateOpts)
+	_, err = s.client.UpdateFloatingIP(ctx, fip.ID, fpUpdateOpts)
 	if err != nil {
 		record.Warnf(eventObject, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP %s: %v", fip.FloatingIP, err)
 		return err
 	}
 
-	if err = s.waitForFloatingIP(fip.ID, "DOWN"); err != nil {
+	if err = s.waitForFloatingIP(ctx, fip.ID, "DOWN"); err != nil {
 		record.Warnf(eventObject, "FailedDisassociateFloatingIP", "Failed to disassociate floating IP: wait for floating IP DOWN: %v", fip.FloatingIP, err)
 		return err
 	}
@@ -246,10 +247,10 @@ func (s *Service) DisassociateFloatingIP(eventObject runtime.Object, ip string) 
 	return nil
 }
 
-func (s *Service) waitForFloatingIP(id, target string) error {
+func (s *Service) waitForFloatingIP(ctx context.Context, id, target string) error {
 	s.scope.Logger().Info("Waiting for floating IP", "ID", id, "status", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		fip, err := s.client.GetFloatingIP(id)
+		fip, err := s.client.GetFloatingIP(ctx, id)
 		if err != nil {
 			return false, err
 		}

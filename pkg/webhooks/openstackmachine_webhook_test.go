@@ -17,7 +17,6 @@ limitations under the License.
 package webhooks
 
 import (
-	"context"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -124,7 +123,7 @@ func TestOpenStackMachine_ValidateCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			webhook := &openStackMachineWebhook{}
 			warn, err := webhook.ValidateCreate(ctx, tt.machine)
@@ -541,7 +540,7 @@ func TestOpenStackMachine_ValidateUpdate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			webhook := &openStackMachineWebhook{}
 			warn, err := webhook.ValidateUpdate(ctx, tt.oldMachine, tt.newMachine)

@@ -81,7 +81,7 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 			if spec.ServerGroup == nil || resolved.ServerGroupID != "" {
 				return true, false, nil
 			}
-			serverGroupID, err := computeService.GetServerGroupID(spec.ServerGroup)
+			serverGroupID, err := computeService.GetServerGroupID(ctx, spec.ServerGroup)
 			if err != nil {
 				return false, false, err
 			}
@@ -131,7 +131,7 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 				}
 			}
 
-			flavorID, err := computeService.GetFlavorID(flavorParam)
+			flavorID, err := computeService.GetFlavorID(ctx, flavorParam)
 			if err != nil {
 				return false, false, err
 			}
@@ -158,7 +158,7 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 			// - We run a safety check to ensure that the resolved.Ports has the same length as the spec.Ports.
 			//   This is to ensure that we don't accidentally add ports to the resolved.Ports that are not in the spec.
 			specTrunk := ptr.Deref(spec.Trunk, false)
-			portsOpts, err := networkingService.ConstructPorts(spec.Ports, spec.SecurityGroups, specTrunk, clusterName, openStackServer.Name, nil, nil, spec.Tags)
+			portsOpts, err := networkingService.ConstructPorts(ctx, spec.Ports, spec.SecurityGroups, specTrunk, clusterName, openStackServer.Name, nil, nil, spec.Tags)
 			if err != nil {
 				return false, false, err
 			}

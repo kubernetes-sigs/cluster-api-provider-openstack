@@ -56,23 +56,25 @@ const (
 )
 
 type ComputeClient interface {
-	ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error)
+	ListAvailabilityZones(ctx context.Context) ([]availabilityzones.AvailabilityZone, error)
 
-	ListFlavors() ([]flavors.Flavor, error)
-	GetFlavor(flavorID string) (*flavors.Flavor, error)
+	ListFlavors(ctx context.Context) ([]flavors.Flavor, error)
+	GetFlavor(ctx context.Context, flavorID string) (*flavors.Flavor, error)
 
-	CreateServer(createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error)
-	DeleteServer(serverID string) error
-	GetServer(serverID string) (*servers.Server, error)
-	ListServers(listOpts servers.ListOptsBuilder) ([]servers.Server, error)
+	CreateServer(ctx context.Context, createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error)
+	DeleteServer(ctx context.Context, serverID string) error
+	GetServer(ctx context.Context, serverID string) (*servers.Server, error)
+	ListServers(ctx context.Context, listOpts servers.ListOptsBuilder) ([]servers.Server, error)
 
-	ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error)
-	DeleteAttachedInterface(serverID, portID string) error
+	ListAttachedInterfaces(ctx context.Context, serverID string) ([]attachinterfaces.Interface, error)
+	DeleteAttachedInterface(ctx context.Context, serverID, portID string) error
 
-	ListServerGroups() ([]servergroups.ServerGroup, error)
-	GetConsoleOutput(serverID string) (string, error)
+	ListServerGroups(ctx context.Context) ([]servergroups.ServerGroup, error)
+	GetConsoleOutput(ctx context.Context, serverID string) (string, error)
 	WithMicroversion(required string) (ComputeClient, error)
 }
+
+var _ ComputeClient = &computeClient{}
 
 type computeClient struct {
 	client     *gophercloud.ServiceClient
@@ -110,62 +112,62 @@ func NewComputeClient(providerClient *gophercloud.ProviderClient, providerClient
 	return &computeClient{client: compute, minVersion: serviceMin, maxVersion: serviceMax}, nil
 }
 
-func (c computeClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
+func (c computeClient) ListAvailabilityZones(ctx context.Context) ([]availabilityzones.AvailabilityZone, error) {
 	mc := metrics.NewMetricPrometheusContext("availability_zone", "list")
-	allPages, err := availabilityzones.List(c.client).AllPages(context.TODO())
+	allPages, err := availabilityzones.List(c.client).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return availabilityzones.ExtractAvailabilityZones(allPages)
 }
 
-func (c computeClient) ListFlavors() ([]flavors.Flavor, error) {
+func (c computeClient) ListFlavors(ctx context.Context) ([]flavors.Flavor, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "list")
-	allPages, err := flavors.ListDetail(c.client, &flavors.ListOpts{}).AllPages(context.TODO())
+	allPages, err := flavors.ListDetail(c.client, &flavors.ListOpts{}).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return flavors.ExtractFlavors(allPages)
 }
 
-func (c computeClient) GetFlavor(flavorID string) (*flavors.Flavor, error) {
+func (c computeClient) GetFlavor(ctx context.Context, flavorID string) (*flavors.Flavor, error) {
 	mc := metrics.NewMetricPrometheusContext("flavor", "get")
-	flavor, err := flavors.Get(context.TODO(), c.client, flavorID).Extract()
+	flavor, err := flavors.Get(ctx, c.client, flavorID).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return flavor, nil
 }
 
-func (c computeClient) CreateServer(createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
+func (c computeClient) CreateServer(ctx context.Context, createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 	mc := metrics.NewMetricPrometheusContext("server", "create")
-	server, err := servers.Create(context.TODO(), c.client, createOpts, schedulerHints).Extract()
+	server, err := servers.Create(ctx, c.client, createOpts, schedulerHints).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return server, nil
 }
 
-func (c computeClient) DeleteServer(serverID string) error {
+func (c computeClient) DeleteServer(ctx context.Context, serverID string) error {
 	mc := metrics.NewMetricPrometheusContext("server", "delete")
-	err := servers.Delete(context.TODO(), c.client, serverID).ExtractErr()
+	err := servers.Delete(ctx, c.client, serverID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFound(err)
 }
 
-func (c computeClient) GetServer(serverID string) (*servers.Server, error) {
+func (c computeClient) GetServer(ctx context.Context, serverID string) (*servers.Server, error) {
 	var server servers.Server
 	mc := metrics.NewMetricPrometheusContext("server", "get")
-	err := servers.Get(context.TODO(), c.client, serverID).ExtractInto(&server)
+	err := servers.Get(ctx, c.client, serverID).ExtractInto(&server)
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return &server, nil
 }
 
-func (c computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]servers.Server, error) {
+func (c computeClient) ListServers(ctx context.Context, listOpts servers.ListOptsBuilder) ([]servers.Server, error) {
 	var serverList []servers.Server
 	mc := metrics.NewMetricPrometheusContext("server", "list")
-	allPages, err := servers.List(c.client, listOpts).AllPages(context.TODO())
+	allPages, err := servers.List(c.client, listOpts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
@@ -173,34 +175,34 @@ func (c computeClient) ListServers(listOpts servers.ListOptsBuilder) ([]servers.
 	return serverList, err
 }
 
-func (c computeClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
+func (c computeClient) ListAttachedInterfaces(ctx context.Context, serverID string) ([]attachinterfaces.Interface, error) {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "list")
-	interfaces, err := attachinterfaces.List(c.client, serverID).AllPages(context.TODO())
+	interfaces, err := attachinterfaces.List(c.client, serverID).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return attachinterfaces.ExtractInterfaces(interfaces)
 }
 
-func (c computeClient) DeleteAttachedInterface(serverID, portID string) error {
+func (c computeClient) DeleteAttachedInterface(ctx context.Context, serverID, portID string) error {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
-	err := attachinterfaces.Delete(context.TODO(), c.client, serverID, portID).ExtractErr()
+	err := attachinterfaces.Delete(ctx, c.client, serverID, portID).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFoundorConflict(err)
 }
 
-func (c computeClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
+func (c computeClient) ListServerGroups(ctx context.Context) ([]servergroups.ServerGroup, error) {
 	mc := metrics.NewMetricPrometheusContext("server_group", "list")
 	opts := servergroups.ListOpts{}
-	allPages, err := servergroups.List(c.client, opts).AllPages(context.TODO())
+	allPages, err := servergroups.List(c.client, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return servergroups.ExtractServerGroups(allPages)
 }
 
-func (c computeClient) GetConsoleOutput(serverID string) (string, error) {
+func (c computeClient) GetConsoleOutput(ctx context.Context, serverID string) (string, error) {
 	opts := servers.ShowConsoleOutputOpts{}
-	return servers.ShowConsoleOutput(context.TODO(), c.client, serverID, opts).Extract()
+	return servers.ShowConsoleOutput(ctx, c.client, serverID, opts).Extract()
 }
 
 // WithMicroversion checks that the required Nova microversion is supported and sets it for
@@ -220,52 +222,54 @@ func (c computeClient) WithMicroversion(required string) (ComputeClient, error) 
 
 type computeErrorClient struct{ error }
 
+var _ ComputeClient = &computeClient{}
+
 // NewComputeErrorClient returns a ComputeClient in which every method returns the given error.
 func NewComputeErrorClient(e error) ComputeClient {
 	return computeErrorClient{e}
 }
 
-func (e computeErrorClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
+func (e computeErrorClient) ListAvailabilityZones(_ context.Context) ([]availabilityzones.AvailabilityZone, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) ListFlavors() ([]flavors.Flavor, error) {
+func (e computeErrorClient) ListFlavors(_ context.Context) ([]flavors.Flavor, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) GetFlavor(_ string) (*flavors.Flavor, error) {
+func (e computeErrorClient) GetFlavor(_ context.Context, _ string) (*flavors.Flavor, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) CreateServer(_ servers.CreateOptsBuilder, _ servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
+func (e computeErrorClient) CreateServer(_ context.Context, _ servers.CreateOptsBuilder, _ servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) DeleteServer(_ string) error {
+func (e computeErrorClient) DeleteServer(_ context.Context, _ string) error {
 	return e.error
 }
 
-func (e computeErrorClient) GetServer(_ string) (*servers.Server, error) {
+func (e computeErrorClient) GetServer(_ context.Context, _ string) (*servers.Server, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) ListServers(_ servers.ListOptsBuilder) ([]servers.Server, error) {
+func (e computeErrorClient) ListServers(_ context.Context, _ servers.ListOptsBuilder) ([]servers.Server, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) ListAttachedInterfaces(_ string) ([]attachinterfaces.Interface, error) {
+func (e computeErrorClient) ListAttachedInterfaces(_ context.Context, _ string) ([]attachinterfaces.Interface, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) DeleteAttachedInterface(_, _ string) error {
+func (e computeErrorClient) DeleteAttachedInterface(_ context.Context, _, _ string) error {
 	return e.error
 }
 
-func (e computeErrorClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
+func (e computeErrorClient) ListServerGroups(_ context.Context) ([]servergroups.ServerGroup, error) {
 	return nil, e.error
 }
 
-func (e computeErrorClient) GetConsoleOutput(_ string) (string, error) {
+func (e computeErrorClient) GetConsoleOutput(_ context.Context, _ string) (string, error) {
 	return "", e.error
 }
 

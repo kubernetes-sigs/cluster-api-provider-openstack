@@ -17,13 +17,14 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/availabilityzones"
 )
 
-func (s *Service) GetAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
-	availabilityZoneList, err := s.getComputeClient().ListAvailabilityZones()
+func (s *Service) GetAvailabilityZones(ctx context.Context) ([]availabilityzones.AvailabilityZone, error) {
+	availabilityZoneList, err := s.getComputeClient().ListAvailabilityZones(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting availability zone list: %v", err)
 	}

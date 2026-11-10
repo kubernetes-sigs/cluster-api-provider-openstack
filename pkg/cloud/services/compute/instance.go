@@ -50,11 +50,11 @@ const (
 	timeoutInstanceDelete       = 5 * time.Minute
 )
 
-func (s *Service) CreateInstance(eventObject runtime.Object, instanceSpec *InstanceSpec, portIDs []string) (*InstanceStatus, error) {
-	return s.createInstanceImpl(eventObject, instanceSpec, retryIntervalInstanceStatus, portIDs)
+func (s *Service) CreateInstance(ctx context.Context, eventObject runtime.Object, instanceSpec *InstanceSpec, portIDs []string) (*InstanceStatus, error) {
+	return s.createInstanceImpl(ctx, eventObject, instanceSpec, retryIntervalInstanceStatus, portIDs)
 }
 
-func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *InstanceSpec, retryInterval time.Duration, portIDs []string) (*InstanceStatus, error) {
+func (s *Service) createInstanceImpl(ctx context.Context, eventObject runtime.Object, instanceSpec *InstanceSpec, retryInterval time.Duration, portIDs []string) (*InstanceStatus, error) {
 	portList := []servers.Network{}
 
 	if len(portIDs) == 0 {
@@ -75,7 +75,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		serverImageRef = instanceSpec.ImageID
 	}
 
-	blockDevices, err := s.getBlockDevices(eventObject, instanceSpec, instanceSpec.ImageID, instanceCreateTimeout, retryInterval)
+	blockDevices, err := s.getBlockDevices(ctx, eventObject, instanceSpec, instanceSpec.ImageID, instanceCreateTimeout, retryInterval)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		compute = computeWithTags
 	}
 
-	multiattachRequired, err := s.requiresMultiattach(blockDevices)
+	multiattachRequired, err := s.requiresMultiattach(ctx, blockDevices)
 	if err != nil {
 		return nil, fmt.Errorf("error checking if multiattach is required: %w", err)
 	}
@@ -129,6 +129,7 @@ func (s *Service) createInstanceImpl(eventObject runtime.Object, instanceSpec *I
 		compute = computeWithMultiattach
 	}
 	server, err := compute.CreateServer(
+		ctx,
 		keypairs.CreateOptsExt{
 			CreateOptsBuilder: serverCreateOpts,
 			KeyName:           instanceSpec.SSHKeyName,
@@ -155,13 +156,13 @@ func hasRootVolume(instanceSpec *InstanceSpec) bool {
 	return instanceSpec.RootVolume != nil && instanceSpec.RootVolume.SizeGiB > 0
 }
 
-func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
+func (s *Service) getVolumeByName(ctx context.Context, name string) (*volumes.Volume, error) {
 	listOpts := volumes.ListOpts{
 		AllTenants: false,
 		Name:       name,
 		TenantID:   s.scope.ProjectID(),
 	}
-	volumeList, err := s.getVolumeClient().ListVolumes(listOpts)
+	volumeList, err := s.getVolumeClient().ListVolumes(ctx, listOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error listing volumes: %w", err)
 	}
@@ -177,8 +178,8 @@ func (s *Service) getVolumeByName(name string) (*volumes.Volume, error) {
 // getOrCreateVolume gets or creates a volume with the given options. It returns the volume that already exists or the
 // newly created one. It returns an error if the volume creation failed or if the expected volume size is different from
 // the one that already exists.
-func (s *Service) getOrCreateVolume(eventObject runtime.Object, opts volumes.CreateOpts) (*volumes.Volume, error) {
-	existingVolume, err := s.getVolumeByName(opts.Name)
+func (s *Service) getOrCreateVolume(ctx context.Context, eventObject runtime.Object, opts volumes.CreateOpts) (*volumes.Volume, error) {
+	existingVolume, err := s.getVolumeByName(ctx, opts.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ func (s *Service) getOrCreateVolume(eventObject runtime.Object, opts volumes.Cre
 		return existingVolume, nil
 	}
 
-	createdVolume, err := s.getVolumeClient().CreateVolume(opts)
+	createdVolume, err := s.getVolumeClient().CreateVolume(ctx, opts)
 	if err != nil {
 		record.Eventf(eventObject, "FailedCreateVolume", "Failed to create volume; name=%s size=%d err=%v", opts.Name, opts.Size, err)
 		return nil, err
@@ -202,9 +203,9 @@ func (s *Service) getOrCreateVolume(eventObject runtime.Object, opts volumes.Cre
 	return createdVolume, err
 }
 
-func (s *Service) waitForVolume(volumeID string, timeout time.Duration, retryInterval time.Duration) error {
-	return wait.PollUntilContextTimeout(context.TODO(), retryInterval, timeout, true, func(_ context.Context) (bool, error) {
-		volume, err := s.getVolumeClient().GetVolume(volumeID)
+func (s *Service) waitForVolume(ctx context.Context, volumeID string, timeout time.Duration, retryInterval time.Duration) error {
+	return wait.PollUntilContextTimeout(ctx, retryInterval, timeout, true, func(_ context.Context) (bool, error) {
+		volume, err := s.getVolumeClient().GetVolume(ctx, volumeID)
 		if err != nil {
 			if capoerrors.IsRetryable(err) {
 				return false, nil
@@ -225,7 +226,7 @@ func (s *Service) waitForVolume(volumeID string, timeout time.Duration, retryInt
 
 // getOrCreateVolumeBuilder gets or creates a volume with the given options. It returns the volume that already exists or the newly created one.
 // It returns an error if the volume creation failed or if the expected volume is different from the one that already exists.
-func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceSpec *InstanceSpec, blockDeviceSpec *infrav1.AdditionalBlockDevice, imageID string, description string) (*volumes.Volume, error) {
+func (s *Service) getOrCreateVolumeBuilder(ctx context.Context, eventObject runtime.Object, instanceSpec *InstanceSpec, blockDeviceSpec *infrav1.AdditionalBlockDevice, imageID string, description string) (*volumes.Volume, error) {
 	availabilityZone, volType := resolveVolumeOpts(instanceSpec, blockDeviceSpec.Storage.Volume)
 
 	createOpts := volumes.CreateOpts{
@@ -237,7 +238,7 @@ func (s *Service) getOrCreateVolumeBuilder(eventObject runtime.Object, instanceS
 		VolumeType:       volType,
 	}
 
-	return s.getOrCreateVolume(eventObject, createOpts)
+	return s.getOrCreateVolume(ctx, eventObject, createOpts)
 }
 
 func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDeviceVolume) (az, volType string) {
@@ -266,7 +267,7 @@ func resolveVolumeOpts(instanceSpec *InstanceSpec, volumeOpts *infrav1.BlockDevi
 
 // getBlockDevices returns a list of block devices that were created and attached to the instance. It returns an error
 // if the root volume or any of the additional block devices could not be created.
-func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string, timeout time.Duration, retryInterval time.Duration) ([]servers.BlockDevice, error) {
+func (s *Service) getBlockDevices(ctx context.Context, eventObject runtime.Object, instanceSpec *InstanceSpec, imageID string, timeout time.Duration, retryInterval time.Duration) ([]servers.BlockDevice, error) {
 	blockDevices := make([]servers.BlockDevice, 0, 1+len(instanceSpec.AdditionalBlockDevices))
 
 	if hasRootVolume(instanceSpec) {
@@ -278,7 +279,7 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 				Volume: &instanceSpec.RootVolume.BlockDeviceVolume,
 			},
 		}
-		rootVolume, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, &rootVolumeToBlockDevice, imageID, fmt.Sprintf("Root volume for %s", instanceSpec.Name))
+		rootVolume, err := s.getOrCreateVolumeBuilder(ctx, eventObject, instanceSpec, &rootVolumeToBlockDevice, imageID, fmt.Sprintf("Root volume for %s", instanceSpec.Name))
 		if err != nil {
 			return nil, err
 		}
@@ -314,7 +315,7 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 
 		switch blockDeviceSpec.Storage.Type {
 		case infrav1.VolumeBlockDevice:
-			blockDevice, err := s.getOrCreateVolumeBuilder(eventObject, instanceSpec, &blockDeviceSpec, "", fmt.Sprintf("Additional block device for %s", instanceSpec.Name))
+			blockDevice, err := s.getOrCreateVolumeBuilder(ctx, eventObject, instanceSpec, &blockDeviceSpec, "", fmt.Sprintf("Additional block device for %s", instanceSpec.Name))
 			if err != nil {
 				return nil, err
 			}
@@ -344,7 +345,7 @@ func (s *Service) getBlockDevices(eventObject runtime.Object, instanceSpec *Inst
 	if len(blockDevices) > 0 {
 		for _, bd := range blockDevices {
 			if bd.SourceType == servers.SourceVolume {
-				if err := s.waitForVolume(bd.UUID, timeout, retryInterval); err != nil {
+				if err := s.waitForVolume(ctx, bd.UUID, timeout, retryInterval); err != nil {
 					return nil, fmt.Errorf("volume %s did not become available: %w", bd.UUID, err)
 				}
 			}
@@ -360,7 +361,7 @@ func (s *Service) GetImageID(ctx context.Context, k8sClient client.Client, names
 	case image.ID != nil:
 		return image.ID, nil
 	case image.Filter != nil:
-		return s.getImageIDByFilter(image.Filter)
+		return s.getImageIDByFilter(ctx, image.Filter)
 	case image.ImageRef != nil:
 		return s.getImageIDByReference(ctx, k8sClient, namespace, image.ImageRef)
 	default:
@@ -369,9 +370,9 @@ func (s *Service) GetImageID(ctx context.Context, k8sClient client.Client, names
 	}
 }
 
-func (s *Service) getImageIDByFilter(filter *infrav1.ImageFilter) (*string, error) {
+func (s *Service) getImageIDByFilter(ctx context.Context, filter *infrav1.ImageFilter) (*string, error) {
 	listOpts := filterconvert.ImageFilterToListOpts(filter)
-	allImages, err := s.getImageClient().ListImages(listOpts)
+	allImages, err := s.getImageClient().ListImages(ctx, listOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -426,7 +427,7 @@ func (s *Service) getImageIDByReference(ctx context.Context, k8sClient client.Cl
 	return nil, nil
 }
 
-func (s *Service) GetFlavorID(flavorParam infrav1.FlavorParam) (string, error) {
+func (s *Service) GetFlavorID(ctx context.Context, flavorParam infrav1.FlavorParam) (string, error) {
 	if flavorParam.ID != nil {
 		return *flavorParam.ID, nil
 	}
@@ -435,7 +436,7 @@ func (s *Service) GetFlavorID(flavorParam infrav1.FlavorParam) (string, error) {
 		return "", fmt.Errorf("no flavors were found: no name set")
 	}
 
-	allFlavors, err := s.getComputeClient().ListFlavors()
+	allFlavors, err := s.getComputeClient().ListFlavors(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -449,17 +450,17 @@ func (s *Service) GetFlavorID(flavorParam infrav1.FlavorParam) (string, error) {
 	return "", fmt.Errorf("no flavors were found: name=%v", *flavorParam.Filter.Name)
 }
 
-func (s *Service) GetFlavor(flavorID string) (*flavors.Flavor, error) {
-	return s.getComputeClient().GetFlavor(flavorID)
+func (s *Service) GetFlavor(ctx context.Context, flavorID string) (*flavors.Flavor, error) {
+	return s.getComputeClient().GetFlavor(ctx, flavorID)
 }
 
-func (s *Service) GetImageDetails(imageID string) (*images.Image, error) {
-	return s.getImageClient().GetImage(imageID)
+func (s *Service) GetImageDetails(ctx context.Context, imageID string) (*images.Image, error) {
+	return s.getImageClient().GetImage(ctx, imageID)
 }
 
 // GetManagementPort returns the port which is used for management and external
 // traffic. Cluster floating IPs must be associated with this port.
-func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, instanceStatus *InstanceStatus) (*ports.Port, error) {
+func (s *Service) GetManagementPort(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, instanceStatus *InstanceStatus) (*ports.Port, error) {
 	ns, err := instanceStatus.NetworkStatus()
 	if err != nil {
 		return nil, err
@@ -470,7 +471,7 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 		return nil, err
 	}
 
-	allPorts, err := networkingService.GetPortFromInstanceIP(instanceStatus.ID(), ns.IP(openStackCluster.Status.Network.Name))
+	allPorts, err := networkingService.GetPortFromInstanceIP(ctx, instanceStatus.ID(), ns.IP(openStackCluster.Status.Network.Name))
 	if err != nil {
 		return nil, fmt.Errorf("lookup management port for server %s: %w", instanceStatus.ID(), err)
 	}
@@ -480,10 +481,10 @@ func (s *Service) GetManagementPort(openStackCluster *infrav1.OpenStackCluster, 
 	return &allPorts[0], nil
 }
 
-func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *InstanceStatus) error {
+func (s *Service) DeleteInstance(ctx context.Context, eventObject runtime.Object, instanceStatus *InstanceStatus) error {
 	instance := instanceStatus.InstanceIdentifier()
 
-	err := s.getComputeClient().DeleteServer(instance.ID)
+	err := s.getComputeClient().DeleteServer(ctx, instance.ID)
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			record.Eventf(eventObject, "SuccessfulDeleteServer", "Server %s with id %s did not exist", instance.Name, instance.ID)
@@ -493,8 +494,8 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 		return err
 	}
 
-	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalInstanceStatus, timeoutInstanceDelete, true, func(_ context.Context) (bool, error) {
-		i, err := s.GetInstanceStatus(instance.ID)
+	err = wait.PollUntilContextTimeout(ctx, retryIntervalInstanceStatus, timeoutInstanceDelete, true, func(_ context.Context) (bool, error) {
+		i, err := s.GetInstanceStatus(ctx, instance.ID)
 		if err != nil {
 			return false, err
 		}
@@ -525,7 +526,7 @@ func (s *Service) DeleteInstance(eventObject runtime.Object, instanceStatus *Ins
 // We don't pass InstanceSpec here because we only require instance name,
 // rootVolume, and additionalBlockDevices, and resolving the whole InstanceSpec
 // introduces unnecessary failure modes.
-func (s *Service) DeleteVolumes(instanceName string, rootVolume *infrav1.RootVolume, additionalBlockDevices []infrav1.AdditionalBlockDevice) error {
+func (s *Service) DeleteVolumes(ctx context.Context, instanceName string, rootVolume *infrav1.RootVolume, additionalBlockDevices []infrav1.AdditionalBlockDevice) error {
 	/*
 		Attaching volumes to an instance is a two-step process:
 
@@ -546,21 +547,21 @@ func (s *Service) DeleteVolumes(instanceName string, rootVolume *infrav1.RootVol
 	*/
 
 	if rootVolume != nil && rootVolume.SizeGiB > 0 {
-		if err := s.deleteVolume(instanceName, "root"); err != nil {
+		if err := s.deleteVolume(ctx, instanceName, "root"); err != nil {
 			return err
 		}
 	}
 	for _, volumeSpec := range additionalBlockDevices {
-		if err := s.deleteVolume(instanceName, volumeSpec.Name); err != nil {
+		if err := s.deleteVolume(ctx, instanceName, volumeSpec.Name); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *Service) deleteVolume(instanceName string, nameSuffix string) error {
+func (s *Service) deleteVolume(ctx context.Context, instanceName string, nameSuffix string) error {
 	volumeName := volumeName(instanceName, nameSuffix)
-	volume, err := s.getVolumeByName(volumeName)
+	volume, err := s.getVolumeByName(ctx, volumeName)
 	if err != nil {
 		return err
 	}
@@ -569,15 +570,15 @@ func (s *Service) deleteVolume(instanceName string, nameSuffix string) error {
 	}
 
 	s.scope.Logger().V(2).Info("Deleting dangling volume", "name", volume.Name, "ID", volume.ID)
-	return s.getVolumeClient().DeleteVolume(volume.ID, volumes.DeleteOpts{})
+	return s.getVolumeClient().DeleteVolume(ctx, volume.ID, volumes.DeleteOpts{})
 }
 
-func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus, err error) {
+func (s *Service) GetInstanceStatus(ctx context.Context, resourceID string) (instance *InstanceStatus, err error) {
 	if resourceID == "" {
 		return nil, fmt.Errorf("resourceId should be specified to get detail")
 	}
 
-	server, err := s.getComputeClient().GetServer(resourceID)
+	server, err := s.getComputeClient().GetServer(ctx, resourceID)
 	if err != nil {
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
@@ -588,7 +589,7 @@ func (s *Service) GetInstanceStatus(resourceID string) (instance *InstanceStatus
 	return &InstanceStatus{server, s.scope.Logger()}, nil
 }
 
-func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name string) (instance *InstanceStatus, err error) {
+func (s *Service) GetInstanceStatusByName(ctx context.Context, eventObject runtime.Object, name string) (instance *InstanceStatus, err error) {
 	var listOpts servers.ListOpts
 	if name != "" {
 		listOpts = servers.ListOpts{
@@ -601,7 +602,7 @@ func (s *Service) GetInstanceStatusByName(eventObject runtime.Object, name strin
 		listOpts = servers.ListOpts{}
 	}
 
-	serverList, err := s.getComputeClient().ListServers(listOpts)
+	serverList, err := s.getComputeClient().ListServers(ctx, listOpts)
 	if err != nil {
 		return nil, fmt.Errorf("get server list: %v", err)
 	}
@@ -641,11 +642,11 @@ func requiresTagging(instanceSpec *InstanceSpec) bool {
 // requiresMultiattach checks if there is any volume in the blockDevices that requires multiattach.
 // Note that we are not checking the default volume type or the volume type configured in the
 // image metadata. We assume that these are NOT multiattach.
-func (s *Service) requiresMultiattach(blockDevices []servers.BlockDevice) (bool, error) {
+func (s *Service) requiresMultiattach(ctx context.Context, blockDevices []servers.BlockDevice) (bool, error) {
 	for _, blockDevice := range blockDevices {
 		// Only check volumes
 		if blockDevice.SourceType == servers.SourceVolume {
-			volume, err := s.getVolumeClient().GetVolume(blockDevice.UUID)
+			volume, err := s.getVolumeClient().GetVolume(ctx, blockDevice.UUID)
 			if err != nil {
 				return false, err
 			}

@@ -48,7 +48,7 @@ const (
 
 // GetPortFromInstanceIP returns at most one port attached to the instance with given ID
 // and with the IP address provided.
-func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.Port, error) {
+func (s *Service) GetPortFromInstanceIP(ctx context.Context, instanceID string, ip string) ([]ports.Port, error) {
 	portOpts := ports.ListOpts{
 		DeviceID: instanceID,
 		FixedIPs: []ports.FixedIPOpts{
@@ -58,7 +58,7 @@ func (s *Service) GetPortFromInstanceIP(instanceID string, ip string) ([]ports.P
 		},
 		Limit: 1,
 	}
-	return s.client.ListPort(portOpts)
+	return s.client.ListPort(ctx, portOpts)
 }
 
 type PortListOpts struct {
@@ -74,11 +74,11 @@ func (p *PortListOpts) ToPortListQuery() (string, error) {
 	return q.String(), nil
 }
 
-func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID string) (*ports.Port, error) {
+func (s *Service) GetPortForExternalNetwork(ctx context.Context, instanceID string, externalNetworkID string) (*ports.Port, error) {
 	instancePortsOpts := ports.ListOpts{
 		DeviceID: instanceID,
 	}
-	instancePorts, err := s.client.ListPort(instancePortsOpts)
+	instancePorts, err := s.client.ListPort(ctx, instancePortsOpts)
 	if err != nil {
 		return nil, fmt.Errorf("lookup ports for server %s: %w", instanceID, err)
 	}
@@ -89,7 +89,7 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 			DeviceOwner: []string{"network:router_interface", "network:router_interface_distributed", "network:ha_router_replicated_interface", "network:router_ha_interface"},
 		}
 
-		networkPorts, err := s.client.ListPort(networkPortsOpts)
+		networkPorts, err := s.client.ListPort(ctx, networkPortsOpts)
 		if err != nil {
 			return nil, fmt.Errorf("lookup ports for network %s: %w", instancePort.NetworkID, err)
 		}
@@ -112,7 +112,7 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 				continue
 			}
 
-			router, err := s.client.GetRouter(networkPort.DeviceID)
+			router, err := s.client.GetRouter(ctx, networkPort.DeviceID)
 			if err != nil {
 				return nil, fmt.Errorf("lookup router %s: %w", networkPort.DeviceID, err)
 			}
@@ -126,7 +126,7 @@ func (s *Service) GetPortForExternalNetwork(instanceID string, externalNetworkID
 }
 
 // ensurePortTagsAndTrunk ensures that the provided port has the tags and trunk defined in portSpec.
-func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
+func (s *Service) ensurePortTagsAndTrunk(ctx context.Context, port *ports.Port, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec) error {
 	wantedTags := uniqueSortedTags(portSpec.Tags)
 	actualTags := uniqueSortedTags(port.Tags)
 
@@ -136,7 +136,7 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 	var hasTagSupport *bool
 	tagSupportChecked := func() (bool, error) {
 		if hasTagSupport == nil {
-			supported, err := s.hasStandardAttrTagExtension()
+			supported, err := s.hasStandardAttrTagExtension(ctx)
 			if err != nil {
 				return false, err
 			}
@@ -152,7 +152,7 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 			return err
 		}
 		if supported {
-			if err := s.replaceAllAttributesTags(eventObject, portResource, port.ID, wantedTags); err != nil {
+			if err := s.replaceAllAttributesTags(ctx, eventObject, portResource, port.ID, wantedTags); err != nil {
 				record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace port tags %s: %v", port.Name, err)
 				return err
 			}
@@ -161,7 +161,7 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 		}
 	}
 	if ptr.Deref(portSpec.Trunk, false) {
-		trunk, err := s.getOrCreateTrunkForPort(eventObject, port)
+		trunk, err := s.getOrCreateTrunkForPort(ctx, eventObject, port)
 		if err != nil {
 			record.Warnf(eventObject, "FailedCreateTrunk", "Failed to create trunk for port %s: %v", port.Name, err)
 			return err
@@ -173,7 +173,7 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 				return err
 			}
 			if supported {
-				if err = s.replaceAllAttributesTags(eventObject, trunkResource, trunk.ID, wantedTags); err != nil {
+				if err = s.replaceAllAttributesTags(ctx, eventObject, trunkResource, trunk.ID, wantedTags); err != nil {
 					record.Warnf(eventObject, "FailedReplaceTags", "Failed to replace trunk tags %s: %v", port.Name, err)
 					return err
 				}
@@ -188,7 +188,7 @@ func (s *Service) ensurePortTagsAndTrunk(port *ports.Port, eventObject runtime.O
 // EnsurePort ensure that a port defined with portSpec Name and NetworkID exists,
 // and that the port has suitable tags and trunk. If the PortStatus is already known,
 // use the ID when filtering for existing ports.
-func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec, portStatus infrav1.PortStatus) (*ports.Port, error) {
+func (s *Service) EnsurePort(ctx context.Context, eventObject runtime.Object, portSpec *infrav1.ResolvedPortSpec, portStatus infrav1.PortStatus) (*ports.Port, error) {
 	opts := ports.ListOpts{}
 	if portStatus.ID != "" {
 		opts.ID = portStatus.ID
@@ -197,7 +197,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		opts.NetworkID = portSpec.NetworkID
 	}
 
-	existingPorts, err := s.client.ListPort(opts)
+	existingPorts, err := s.client.ListPort(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("searching for existing port for server: %v", err)
 	}
@@ -207,7 +207,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 
 	if len(existingPorts) == 1 {
 		port := &existingPorts[0]
-		if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+		if err = s.ensurePortTagsAndTrunk(ctx, port, eventObject, portSpec); err != nil {
 			return nil, err
 		}
 		return port, nil
@@ -276,7 +276,7 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 	// If available, we use the dedicated port attribute instead of binding:profile.
 	var usePortTrustedVIF bool
 	if portSpec.Profile != nil && ptr.Deref(portSpec.Profile.TrustedVF, false) {
-		usePortTrustedVIF, err = s.HasPortTrustedVIFExtension()
+		usePortTrustedVIF, err = s.HasPortTrustedVIFExtension(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -299,13 +299,13 @@ func (s *Service) EnsurePort(eventObject runtime.Object, portSpec *infrav1.Resol
 		}
 	}
 
-	port, err := s.client.CreatePort(builder)
+	port, err := s.client.CreatePort(ctx, builder)
 	if err != nil {
 		record.Warnf(eventObject, "FailedCreatePort", "Failed to create port %s: %v", portSpec.Name, err)
 		return nil, err
 	}
 
-	if err = s.ensurePortTagsAndTrunk(port, eventObject, portSpec); err != nil {
+	if err = s.ensurePortTagsAndTrunk(ctx, port, eventObject, portSpec); err != nil {
 		return nil, err
 	}
 	record.Eventf(eventObject, "SuccessfulCreatePort", "Created port %s with id %s", port.Name, port.ID)
@@ -343,10 +343,10 @@ func getPortProfile(p *infrav1.BindingProfile, usePortTrustedVIF bool) map[strin
 }
 
 // DeletePort deletes the Neutron port with the given ID.
-func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
+func (s *Service) DeletePort(ctx context.Context, eventObject runtime.Object, portID string) error {
 	var err error
-	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalPortDelete, timeoutPortDelete, true, func(_ context.Context) (bool, error) {
-		err = s.client.DeletePort(portID)
+	err = wait.PollUntilContextTimeout(ctx, retryIntervalPortDelete, timeoutPortDelete, true, func(_ context.Context) (bool, error) {
+		err = s.client.DeletePort(ctx, portID)
 		if err != nil {
 			if capoerrors.IsNotFound(err) {
 				record.Eventf(eventObject, "SuccessfulDeletePort", "Port with id %d did not exist", portID)
@@ -370,13 +370,13 @@ func (s *Service) DeletePort(eventObject runtime.Object, portID string) error {
 }
 
 // DeleteTrunk deletes the Neutron trunk and port with the given ID.
-func (s *Service) DeleteInstanceTrunkAndPort(eventObject runtime.Object, port infrav1.PortStatus, trunkSupported bool) error {
+func (s *Service) DeleteInstanceTrunkAndPort(ctx context.Context, eventObject runtime.Object, port infrav1.PortStatus, trunkSupported bool) error {
 	if trunkSupported {
-		if err := s.DeleteTrunk(eventObject, port.ID); err != nil {
+		if err := s.DeleteTrunk(ctx, eventObject, port.ID); err != nil {
 			return fmt.Errorf("error deleting trunk of port %s: %v", port.ID, err)
 		}
 	}
-	if err := s.DeletePort(eventObject, port.ID); err != nil {
+	if err := s.DeletePort(ctx, eventObject, port.ID); err != nil {
 		return fmt.Errorf("error deleting port %s: %v", port.ID, err)
 	}
 
@@ -384,14 +384,14 @@ func (s *Service) DeleteInstanceTrunkAndPort(eventObject runtime.Object, port in
 }
 
 // DeleteClusterPorts deletes all ports created for the cluster.
-func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) DeleteClusterPorts(ctx context.Context, openStackCluster *infrav1.OpenStackCluster) error {
 	// If the network is not ready, do nothing
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		return nil
 	}
 	networkID := openStackCluster.Status.Network.ID
 
-	portList, err := s.client.ListPort(ports.ListOpts{
+	portList, err := s.client.ListPort(ctx, ports.ListOpts{
 		NetworkID:   networkID,
 		DeviceOwner: "",
 	})
@@ -408,7 +408,7 @@ func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster)
 		// so in order to cleanup the old bastion port we need to check for the old format.
 		bastionLegacyPortPrefix := fmt.Sprintf("%s-%s", openStackCluster.Namespace, openStackCluster.Name)
 		if strings.HasPrefix(port.Name, openStackCluster.Name) || strings.HasPrefix(port.Name, bastionLegacyPortPrefix) {
-			if err := s.DeletePort(openStackCluster, port.ID); err != nil {
+			if err := s.DeletePort(ctx, openStackCluster, port.ID); err != nil {
 				return fmt.Errorf("error deleting port %s: %v", port.ID, err)
 			}
 		}
@@ -427,7 +427,7 @@ func getPortName(baseName string, portSpec *infrav1.PortOpts, netIndex int) stri
 
 // EnsurePorts ensures that every one of desiredPorts is created and has
 // expected trunk and tags.
-func (s *Service) EnsurePorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
+func (s *Service) EnsurePorts(ctx context.Context, eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
 	for i := range desiredPorts {
 		// If we already created the port, make use of the status
 		portStatus := infrav1.PortStatus{}
@@ -435,7 +435,7 @@ func (s *Service) EnsurePorts(eventObject runtime.Object, desiredPorts []infrav1
 			portStatus = resources.Ports[i]
 		}
 		// Events are recorded in EnsurePort
-		port, err := s.EnsurePort(eventObject, &desiredPorts[i], portStatus)
+		port, err := s.EnsurePort(ctx, eventObject, &desiredPorts[i], portStatus)
 		if err != nil {
 			return err
 		}
@@ -457,8 +457,8 @@ func (s *Service) EnsurePorts(eventObject runtime.Object, desiredPorts []infrav1
 // ConstructPorts builds an array of ports from given parameters.
 // If no ports are provided, returns a single port for a network connection to the default cluster network. We'll want to remove this default port in the future
 // to call this function without dependency on the default network.
-func (s *Service) ConstructPorts(instancePorts []infrav1.PortOpts, instanceSecurityGroups []infrav1.SecurityGroupParam, instanceTrunk bool, clusterResourceName, baseName string, defaultNetwork *infrav1.NetworkStatusWithSubnets, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
-	defaultSecurityGroupIDs, err := s.GetSecurityGroups(instanceSecurityGroups)
+func (s *Service) ConstructPorts(ctx context.Context, instancePorts []infrav1.PortOpts, instanceSecurityGroups []infrav1.SecurityGroupParam, instanceTrunk bool, clusterResourceName, baseName string, defaultNetwork *infrav1.NetworkStatusWithSubnets, managedSecurityGroup *string, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
+	defaultSecurityGroupIDs, err := s.GetSecurityGroups(ctx, instanceSecurityGroups)
 	if err != nil {
 		return nil, fmt.Errorf("error getting security groups: %v", err)
 	}
@@ -472,7 +472,7 @@ func (s *Service) ConstructPorts(instancePorts []infrav1.PortOpts, instanceSecur
 	}
 
 	// Ensure user-specified ports have all required fields
-	resolvedPorts, err := s.normalizePorts(instancePorts, clusterResourceName, baseName, instanceTrunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
+	resolvedPorts, err := s.normalizePorts(ctx, instancePorts, clusterResourceName, baseName, instanceTrunk, defaultSecurityGroupIDs, defaultNetwork, baseTags)
 	if err != nil {
 		return nil, err
 	}
@@ -487,7 +487,7 @@ func (s *Service) ConstructPorts(instancePorts []infrav1.PortOpts, instanceSecur
 		return false
 	}
 	if portUsesTrunk() {
-		trunkSupported, err := s.IsTrunkExtSupported()
+		trunkSupported, err := s.IsTrunkExtSupported(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -503,7 +503,7 @@ func (s *Service) ConstructPorts(instancePorts []infrav1.PortOpts, instanceSecur
 // normalizePorts ensures that a user-specified PortOpts has all required fields set. Specifically it:
 // - sets the Trunk field to the instance spec default if not specified
 // - sets the Network ID field if not specified.
-func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, baseName string, trunkEnabled bool, defaultSecurityGroupIDs []string, defaultNetwork *infrav1.NetworkStatusWithSubnets, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
+func (s *Service) normalizePorts(ctx context.Context, ports []infrav1.PortOpts, clusterResourceName, baseName string, trunkEnabled bool, defaultSecurityGroupIDs []string, defaultNetwork *infrav1.NetworkStatusWithSubnets, baseTags []string) ([]infrav1.ResolvedPortSpec, error) {
 	normalizedPorts := make([]infrav1.ResolvedPortSpec, len(ports))
 	for i := range ports {
 		port := &ports[i]
@@ -536,7 +536,7 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 
 		// Resolve network ID and fixed IPs
 		var err error
-		normalizedPort.NetworkID, normalizedPort.FixedIPs, err = s.normalizePortTarget(port, defaultNetwork, i)
+		normalizedPort.NetworkID, normalizedPort.FixedIPs, err = s.normalizePortTarget(ctx, port, defaultNetwork, i)
 		if err != nil {
 			return nil, err
 		}
@@ -546,7 +546,7 @@ func (s *Service) normalizePorts(ports []infrav1.PortOpts, clusterResourceName, 
 			if len(port.SecurityGroups) == 0 {
 				normalizedPort.SecurityGroups = defaultSecurityGroupIDs
 			} else {
-				normalizedPort.SecurityGroups, err = s.GetSecurityGroups(port.SecurityGroups)
+				normalizedPort.SecurityGroups, err = s.GetSecurityGroups(ctx, port.SecurityGroups)
 				if err != nil {
 					return nil, fmt.Errorf("error getting security groups: %v", err)
 				}
@@ -567,7 +567,7 @@ func defaultNetworkTarget(network *infrav1.NetworkStatusWithSubnets) (string, []
 }
 
 // normalizePortTarget ensures that the port has a network ID.
-func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *infrav1.NetworkStatusWithSubnets, portIdx int) (string, []infrav1.ResolvedFixedIP, error) {
+func (s *Service) normalizePortTarget(ctx context.Context, port *infrav1.PortOpts, defaultNetwork *infrav1.NetworkStatusWithSubnets, portIdx int) (string, []infrav1.ResolvedFixedIP, error) {
 	// No network or subnets defined: use cluster defaults
 	if port.Network == nil && len(port.FixedIPs) == 0 {
 		return defaultNetworkTarget(defaultNetwork)
@@ -582,7 +582,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 	switch {
 	case port.Network != nil:
 		var err error
-		networkID, err = s.GetNetworkIDByParam(port.Network)
+		networkID, err = s.GetNetworkIDByParam(ctx, port.Network)
 		if err != nil {
 			return "", nil, err
 		}
@@ -605,7 +605,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 					continue
 				}
 
-				subnet, err := s.GetSubnetByParam(fixedIP.Subnet)
+				subnet, err := s.GetSubnetByParam(ctx, fixedIP.Subnet)
 				if err != nil {
 					// Multiple matches might be ok later when we restrict matches to a single network
 					if errors.Is(err, capoerrors.ErrMultipleMatches) {
@@ -638,7 +638,7 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 		resolvedFixedIP := &resolvedFixedIPs[i]
 		resolvedFixedIP.IPAddress = fixedIP.IPAddress
 		if fixedIP.Subnet != nil && resolvedFixedIP.SubnetID == nil {
-			subnet, err := s.GetNetworkSubnetByParam(networkID, fixedIP.Subnet)
+			subnet, err := s.GetNetworkSubnetByParam(ctx, networkID, fixedIP.Subnet)
 			if err != nil {
 				return "", nil, err
 			}
@@ -650,8 +650,8 @@ func (s *Service) normalizePortTarget(port *infrav1.PortOpts, defaultNetwork *in
 }
 
 // IsTrunkExtSupported verifies trunk setup on the OpenStack deployment.
-func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
-	trunkSupport, err := s.GetTrunkSupport()
+func (s *Service) IsTrunkExtSupported(ctx context.Context) (trunknSupported bool, err error) {
+	trunkSupport, err := s.GetTrunkSupport(ctx)
 	if err != nil {
 		return false, fmt.Errorf("there was an issue verifying whether trunk support is available, Please try again later: %v", err)
 	}
@@ -665,8 +665,8 @@ func (s *Service) IsTrunkExtSupported() (trunknSupported bool, err error) {
 // extension is available. When this extension is present, trusted VF mode
 // should be set via the dedicated port attribute rather than through
 // binding:profile.
-func (s *Service) HasPortTrustedVIFExtension() (bool, error) {
-	allExts, err := s.client.ListExtensions()
+func (s *Service) HasPortTrustedVIFExtension(ctx context.Context) (bool, error) {
+	allExts, err := s.client.ListExtensions(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -682,7 +682,7 @@ func (s *Service) HasPortTrustedVIFExtension() (bool, error) {
 // AdoptPortsServer looks for ports in desiredPorts which were previously created, and adds them to resources.Ports.
 // A port matches if it has the same name and network ID as the desired port.
 // TODO(emilien): remove this function: https://github.com/kubernetes-sigs/cluster-api-provider-openstack/pull/2071
-func (s *Service) AdoptPortsServer(scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
+func (s *Service) AdoptPortsServer(ctx context.Context, scope *scope.WithLogger, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
 	// We can skip adoption if the ports are already in the status
 	if len(desiredPorts) == len(resources.Ports) {
 		return nil
@@ -701,7 +701,7 @@ func (s *Service) AdoptPortsServer(scope *scope.WithLogger, desiredPorts []infra
 		}
 
 		portSpec := &desiredPorts[i]
-		ports, err := s.client.ListPort(ports.ListOpts{
+		ports, err := s.client.ListPort(ctx, ports.ListOpts{
 			Name:      portSpec.Name,
 			NetworkID: portSpec.NetworkID,
 		})
@@ -744,7 +744,7 @@ func uniqueSortedTags(tags []string) []string {
 }
 
 // UpdateAllowedAddressPairs updates the allowedAddressPairs on an existing Neutron port.
-func (s *Service) UpdateAllowedAddressPairs(portID string, pairs []infrav1.AddressPair) error {
+func (s *Service) UpdateAllowedAddressPairs(ctx context.Context, portID string, pairs []infrav1.AddressPair) error {
 	addressPairs := make([]ports.AddressPair, len(pairs))
 	for i, ap := range pairs {
 		addressPairs[i] = ports.AddressPair{
@@ -752,7 +752,7 @@ func (s *Service) UpdateAllowedAddressPairs(portID string, pairs []infrav1.Addre
 			MACAddress: ptr.Deref(ap.MACAddress, ""),
 		}
 	}
-	_, err := s.client.UpdatePort(portID, ports.UpdateOpts{
+	_, err := s.client.UpdatePort(ctx, portID, ports.UpdateOpts{
 		AllowedAddressPairs: &addressPairs,
 	})
 	return err

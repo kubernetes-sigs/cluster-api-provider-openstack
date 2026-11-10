@@ -31,6 +31,8 @@ import (
 )
 
 func TestService_GetServerGroupID(t *testing.T) {
+	ctx := t.Context()
+
 	const serverGroupID1 = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
 	const serverGroupID2 = "8f536889-5198-42d7-8314-cb78f4f4755c"
 
@@ -59,7 +61,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			testName:         "Return server group ID from filter if only filter (with name) given",
 			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.ListServerGroups().Return(
+				m.ListServerGroups(ctx).Return(
 					[]servergroups.ServerGroup{{ID: serverGroupID1, Name: "test-server-group"}},
 					nil)
 			},
@@ -70,7 +72,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			testName:         "Return no results",
 			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.ListServerGroups().Return(
+				m.ListServerGroups(ctx).Return(
 					[]servergroups.ServerGroup{},
 					nil)
 			},
@@ -81,7 +83,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			testName:         "Return multiple results",
 			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.ListServerGroups().Return(
+				m.ListServerGroups(ctx).Return(
 					[]servergroups.ServerGroup{
 						{ID: serverGroupID1, Name: "test-server-group"},
 						{ID: serverGroupID2, Name: "test-server-group"},
@@ -95,7 +97,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			testName:         "OpenStack returns error",
 			serverGroupParam: &infrav1.ServerGroupParam{Filter: &infrav1.ServerGroupFilter{Name: ptr.To("test-server-group")}},
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.ListServerGroups().Return(
+				m.ListServerGroups(ctx).Return(
 					nil,
 					fmt.Errorf("test error"))
 			},
@@ -115,7 +117,7 @@ func TestService_GetServerGroupID(t *testing.T) {
 			}
 			tt.expect(mockScopeFactory.ComputeClient.EXPECT())
 
-			got, err := s.GetServerGroupID(tt.serverGroupParam)
+			got, err := s.GetServerGroupID(ctx, tt.serverGroupParam)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.getServerGroupID() error = %v, wantErr %v", err, tt.wantErr)
 				return
