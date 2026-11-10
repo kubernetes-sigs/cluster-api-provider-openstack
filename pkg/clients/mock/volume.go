@@ -25,6 +25,7 @@ limitations under the License.
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	volumes "github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
@@ -56,60 +57,60 @@ func (m *MockVolumeClient) EXPECT() *MockVolumeClientMockRecorder {
 }
 
 // CreateVolume mocks base method.
-func (m *MockVolumeClient) CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
+func (m *MockVolumeClient) CreateVolume(ctx context.Context, opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateVolume", opts)
+	ret := m.ctrl.Call(m, "CreateVolume", ctx, opts)
 	ret0, _ := ret[0].(*volumes.Volume)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateVolume indicates an expected call of CreateVolume.
-func (mr *MockVolumeClientMockRecorder) CreateVolume(opts any) *gomock.Call {
+func (mr *MockVolumeClientMockRecorder) CreateVolume(ctx, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVolume", reflect.TypeOf((*MockVolumeClient)(nil).CreateVolume), opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVolume", reflect.TypeOf((*MockVolumeClient)(nil).CreateVolume), ctx, opts)
 }
 
 // DeleteVolume mocks base method.
-func (m *MockVolumeClient) DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error {
+func (m *MockVolumeClient) DeleteVolume(ctx context.Context, volumeID string, opts volumes.DeleteOptsBuilder) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteVolume", volumeID, opts)
+	ret := m.ctrl.Call(m, "DeleteVolume", ctx, volumeID, opts)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteVolume indicates an expected call of DeleteVolume.
-func (mr *MockVolumeClientMockRecorder) DeleteVolume(volumeID, opts any) *gomock.Call {
+func (mr *MockVolumeClientMockRecorder) DeleteVolume(ctx, volumeID, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVolume", reflect.TypeOf((*MockVolumeClient)(nil).DeleteVolume), volumeID, opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVolume", reflect.TypeOf((*MockVolumeClient)(nil).DeleteVolume), ctx, volumeID, opts)
 }
 
 // GetVolume mocks base method.
-func (m *MockVolumeClient) GetVolume(volumeID string) (*volumes.Volume, error) {
+func (m *MockVolumeClient) GetVolume(ctx context.Context, volumeID string) (*volumes.Volume, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVolume", volumeID)
+	ret := m.ctrl.Call(m, "GetVolume", ctx, volumeID)
 	ret0, _ := ret[0].(*volumes.Volume)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetVolume indicates an expected call of GetVolume.
-func (mr *MockVolumeClientMockRecorder) GetVolume(volumeID any) *gomock.Call {
+func (mr *MockVolumeClientMockRecorder) GetVolume(ctx, volumeID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolume", reflect.TypeOf((*MockVolumeClient)(nil).GetVolume), volumeID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolume", reflect.TypeOf((*MockVolumeClient)(nil).GetVolume), ctx, volumeID)
 }
 
 // ListVolumes mocks base method.
-func (m *MockVolumeClient) ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
+func (m *MockVolumeClient) ListVolumes(ctx context.Context, opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListVolumes", opts)
+	ret := m.ctrl.Call(m, "ListVolumes", ctx, opts)
 	ret0, _ := ret[0].([]volumes.Volume)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListVolumes indicates an expected call of ListVolumes.
-func (mr *MockVolumeClientMockRecorder) ListVolumes(opts any) *gomock.Call {
+func (mr *MockVolumeClientMockRecorder) ListVolumes(ctx, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVolumes", reflect.TypeOf((*MockVolumeClient)(nil).ListVolumes), opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVolumes", reflect.TypeOf((*MockVolumeClient)(nil).ListVolumes), ctx, opts)
 }

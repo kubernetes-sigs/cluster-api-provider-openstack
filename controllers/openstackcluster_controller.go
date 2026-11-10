@@ -209,7 +209,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 			return reconcile.Result{}, err
 		}
 
-		result, err := loadBalancerService.DeleteLoadBalancer(openStackCluster, clusterResourceName)
+		result, err := loadBalancerService.DeleteLoadBalancer(ctx, openStackCluster, clusterResourceName)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete load balancer: %w", err))
 			return reconcile.Result{}, fmt.Errorf("failed to delete load balancer: %w", err)
@@ -221,23 +221,23 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 
 	// if ManagedSubnets was not set, no network was created.
 	if len(openStackCluster.Spec.ManagedSubnets) > 0 {
-		if err = networkingService.DeleteRouter(openStackCluster, clusterResourceName); err != nil {
+		if err = networkingService.DeleteRouter(ctx, openStackCluster, clusterResourceName); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete router: %w", err))
 			return ctrl.Result{}, fmt.Errorf("failed to delete router: %w", err)
 		}
 
-		if err = networkingService.DeleteClusterPorts(openStackCluster); err != nil {
+		if err = networkingService.DeleteClusterPorts(ctx, openStackCluster); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete ports: %w", err))
 			return reconcile.Result{}, fmt.Errorf("failed to delete ports: %w", err)
 		}
 
-		if err = networkingService.DeleteNetwork(openStackCluster, clusterResourceName); err != nil {
+		if err = networkingService.DeleteNetwork(ctx, openStackCluster, clusterResourceName); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete network: %w", err))
 			return ctrl.Result{}, fmt.Errorf("failed to delete network: %w", err)
 		}
 	}
 
-	if err = networkingService.DeleteSecurityGroups(openStackCluster, clusterResourceName); err != nil {
+	if err = networkingService.DeleteSecurityGroups(ctx, openStackCluster, clusterResourceName); err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete security groups: %w", err))
 		return reconcile.Result{}, fmt.Errorf("failed to delete security groups: %w", err)
 	}
@@ -286,7 +286,7 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 	// We only remove the bastion's floating IP if it exists and if it's not the same value defined both in the spec and in status.
 	// This decision was made so if a user specifies a pre-created floating IP that is intended to only be used for the bastion, the floating IP won't get removed once the bastion is destroyed.
 	if statusFloatingIP != nil && (specFloatingIP == nil || *statusFloatingIP != *specFloatingIP) {
-		if err = networkingService.DeleteFloatingIP(openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
+		if err = networkingService.DeleteFloatingIP(ctx, openStackCluster, openStackCluster.Status.Bastion.FloatingIP); err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err))
 			return fmt.Errorf("failed to delete floating IP: %w", err)
 		}
@@ -296,7 +296,7 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 
 	var instanceStatus *compute.InstanceStatus
 	if bastionStatus != nil && bastionServer != nil && bastionServer.Status.InstanceID != nil {
-		instanceStatus, err = computeService.GetInstanceStatus(*bastionServer.Status.InstanceID)
+		instanceStatus, err = computeService.GetInstanceStatus(ctx, *bastionServer.Status.InstanceID)
 		if err != nil {
 			return err
 		}
@@ -317,7 +317,7 @@ func (r *OpenStackClusterReconciler) deleteBastion(ctx context.Context, scope *s
 					continue
 				}
 				// Floating IP may not have properly saved in bastion status (thus not deleted above), delete any remaining floating IP
-				if err = networkingService.DeleteFloatingIP(openStackCluster, address.Address); err != nil {
+				if err = networkingService.DeleteFloatingIP(ctx, openStackCluster, address.Address); err != nil {
 					handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to delete floating IP: %w", err))
 					return fmt.Errorf("failed to delete floating IP: %w", err)
 				}
@@ -350,12 +350,12 @@ func (r *OpenStackClusterReconciler) reconcileNormal(ctx context.Context, scope 
 		return reconcile.Result{}, err
 	}
 
-	err = reconcileNetworkComponents(scope, cluster, openStackCluster)
+	err = reconcileNetworkComponents(ctx, scope, cluster, openStackCluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	availabilityZones, err := computeService.GetAvailabilityZones()
+	availabilityZones, err := computeService.GetAvailabilityZones(ctx)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -443,7 +443,7 @@ func (r *OpenStackClusterReconciler) reconcileBastion(ctx context.Context, scope
 
 	var instanceStatus *compute.InstanceStatus
 	if bastionServer != nil && bastionServer.Status.InstanceID != nil {
-		if instanceStatus, err = computeService.GetInstanceStatus(*bastionServer.Status.InstanceID); err != nil {
+		if instanceStatus, err = computeService.GetInstanceStatus(ctx, *bastionServer.Status.InstanceID); err != nil {
 			return nil, err
 		}
 	}
@@ -455,7 +455,7 @@ func (r *OpenStackClusterReconciler) reconcileBastion(ctx context.Context, scope
 	// Save hash & status as soon as we know we have an instance
 	instanceStatus.UpdateBastionStatus(openStackCluster)
 
-	port, err := computeService.GetManagementPort(openStackCluster, instanceStatus)
+	port, err := computeService.GetManagementPort(ctx, openStackCluster, instanceStatus)
 	if err != nil {
 		err = fmt.Errorf("getting management port for bastion: %w", err)
 		handleUpdateOSCError(openStackCluster, err)
@@ -463,14 +463,14 @@ func (r *OpenStackClusterReconciler) reconcileBastion(ctx context.Context, scope
 	}
 
 	if ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true) {
-		return bastionAddFloatingIP(openStackCluster, clusterResourceName, port, networkingService)
+		return bastionAddFloatingIP(ctx, openStackCluster, clusterResourceName, port, networkingService)
 	}
 
 	return nil, nil
 }
 
-func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, port *ports.Port, networkingService *networking.Service) (*reconcile.Result, error) {
-	fp, err := networkingService.GetFloatingIPByPortID(port.ID)
+func bastionAddFloatingIP(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, port *ports.Port, networkingService *networking.Service) (*reconcile.Result, error) {
+	fp, err := networkingService.GetFloatingIPByPortID(ctx, port.ID)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
 		return nil, fmt.Errorf("failed to get floating IP for bastion port: %w", err)
@@ -491,14 +491,14 @@ func bastionAddFloatingIP(openStackCluster *infrav1.OpenStackCluster, clusterRes
 		floatingIP = openStackCluster.Spec.Bastion.FloatingIP
 	}
 	// Check if there is an existing floating IP attached to bastion, in case where FloatingIP would not yet have been stored in cluster status
-	fp, err = networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, floatingIP)
+	fp, err = networkingService.GetOrCreateFloatingIP(ctx, openStackCluster, openStackCluster, clusterResourceName, floatingIP)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to get or create floating IP for bastion: %w", err))
 		return nil, fmt.Errorf("failed to get or create floating IP for bastion: %w", err)
 	}
 	openStackCluster.Status.Bastion.FloatingIP = fp.FloatingIP
 
-	err = networkingService.AssociateFloatingIP(openStackCluster, fp, port.ID)
+	err = networkingService.AssociateFloatingIP(ctx, openStackCluster, fp, port.ID)
 	if err != nil {
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to associate floating IP with bastion: %w", err))
 		return nil, fmt.Errorf("failed to associate floating IP with bastion: %w", err)
@@ -669,7 +669,7 @@ func getBastionSecurityGroupID(openStackCluster *infrav1.OpenStackCluster) *stri
 	return nil
 }
 
-func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
+func resolveLoadBalancerNetwork(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, networkingService *networking.Service) error {
 	lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer()
 
 	// if lb is not enabled, return early
@@ -691,7 +691,7 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 	}
 
 	if lbSpec.Network != nil {
-		lbNet, err := networkingService.GetNetworkByParam(lbSpec.Network)
+		lbNet, err := networkingService.GetNetworkByParam(ctx, lbSpec.Network)
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to find loadbalancer network: %w", err))
 			return fmt.Errorf("failed to find network: %w", err)
@@ -706,7 +706,7 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 		for _, s := range lbSpec.Subnets {
 			matchFound := false
 			for _, subnetID := range lbNet.Subnets {
-				subnet, err := networkingService.GetSubnetByParam(&s)
+				subnet, err := networkingService.GetSubnetByParam(ctx, &s)
 				if s.ID != nil && subnetID == *s.ID && err == nil {
 					matchFound = true
 					lbNetStatus.Subnets = append(
@@ -734,7 +734,7 @@ func resolveLoadBalancerNetwork(openStackCluster *infrav1.OpenStackCluster, netw
 	return nil
 }
 
-func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcileNetworkComponents(ctx context.Context, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) error {
 	clusterResourceName := names.ClusterResourceName(cluster)
 
 	networkingService, err := networking.NewService(scope)
@@ -744,7 +744,7 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 
 	scope.Logger().Info("Reconciling network components")
 
-	err = networkingService.ReconcileExternalNetwork(openStackCluster)
+	err = networkingService.ReconcileExternalNetwork(ctx, openStackCluster)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.NetworkReadyCondition,
@@ -757,11 +757,11 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 	}
 
 	if len(openStackCluster.Spec.ManagedSubnets) == 0 {
-		if err := reconcilePreExistingNetworkComponents(scope, networkingService, openStackCluster); err != nil {
+		if err := reconcilePreExistingNetworkComponents(ctx, scope, networkingService, openStackCluster); err != nil {
 			return err
 		}
 	} else if len(openStackCluster.Spec.ManagedSubnets) == 1 {
-		if err := reconcileProvisionedNetworkComponents(networkingService, openStackCluster, clusterResourceName); err != nil {
+		if err := reconcileProvisionedNetworkComponents(ctx, networkingService, openStackCluster, clusterResourceName); err != nil {
 			return err
 		}
 	} else {
@@ -776,7 +776,7 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 		return err
 	}
 
-	err = resolveLoadBalancerNetwork(openStackCluster, networkingService)
+	err = resolveLoadBalancerNetwork(ctx, openStackCluster, networkingService)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.NetworkReadyCondition,
@@ -788,7 +788,7 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 		return fmt.Errorf("failed to reconcile loadbalancer network: %w", err)
 	}
 
-	err = networkingService.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
+	err = networkingService.ReconcileSecurityGroups(ctx, openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.SecurityGroupsReadyCondition,
@@ -805,7 +805,7 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 		Reason: infrav1.ReadyConditionReason,
 	})
 
-	err = reconcileControlPlaneEndpoint(scope, networkingService, openStackCluster, clusterResourceName)
+	err = reconcileControlPlaneEndpoint(ctx, scope, networkingService, openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.APIEndpointReadyCondition,
@@ -827,7 +827,7 @@ func reconcileNetworkComponents(scope *scope.WithLogger, cluster *clusterv1.Clus
 // reconcilePreExistingNetworkComponents reconciles the cluster network status when the cluster is
 // using pre-existing networks, subnets and router which are not provisioned by the
 // cluster controller.
-func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) error {
+func reconcilePreExistingNetworkComponents(ctx context.Context, scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) error {
 	scope.Logger().V(4).Info("No need to reconcile network, searching network, subnet and router instead")
 
 	if openStackCluster.Status.Network == nil {
@@ -835,7 +835,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	}
 
 	if openStackCluster.Spec.Network != nil {
-		network, err := networkingService.GetNetworkByParam(openStackCluster.Spec.Network)
+		network, err := networkingService.GetNetworkByParam(ctx, openStackCluster.Spec.Network)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
 				Type:    infrav1.NetworkReadyCondition,
@@ -849,7 +849,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 		setClusterNetwork(openStackCluster, network)
 	}
 
-	subnets, err := getClusterSubnets(networkingService, openStackCluster)
+	subnets, err := getClusterSubnets(ctx, networkingService, openStackCluster)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.NetworkReadyCondition,
@@ -887,7 +887,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	// cluster subnet to get the Network. Cluster subnets are constrained to
 	// be in the same network.
 	if openStackCluster.Status.Network.ID == "" && len(subnets) > 0 {
-		network, err := networkingService.GetNetworkByID(subnets[0].NetworkID)
+		network, err := networkingService.GetNetworkByID(ctx, subnets[0].NetworkID)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
 				Type:    infrav1.NetworkReadyCondition,
@@ -907,7 +907,7 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 	})
 
 	if openStackCluster.Spec.Router != nil {
-		router, err := networkingService.GetRouterByParam(openStackCluster.Spec.Router)
+		router, err := networkingService.GetRouterByParam(ctx, openStackCluster.Spec.Router)
 		if err != nil {
 			conditions.Set(openStackCluster, metav1.Condition{
 				Type:    infrav1.RouterReadyCondition,
@@ -944,8 +944,8 @@ func reconcilePreExistingNetworkComponents(scope *scope.WithLogger, networkingSe
 
 // reconcileProvisionedNetworkComponents reconciles the cluster network status when the cluster is
 // using networks, subnets and router provisioned by the cluster controller.
-func reconcileProvisionedNetworkComponents(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
-	err := networkingService.ReconcileNetwork(openStackCluster, clusterResourceName)
+func reconcileProvisionedNetworkComponents(ctx context.Context, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+	err := networkingService.ReconcileNetwork(ctx, openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.NetworkReadyCondition,
@@ -956,7 +956,7 @@ func reconcileProvisionedNetworkComponents(networkingService *networking.Service
 		handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile network: %w", err))
 		return fmt.Errorf("failed to reconcile network: %w", err)
 	}
-	err = networkingService.ReconcileSubnet(openStackCluster, clusterResourceName)
+	err = networkingService.ReconcileSubnet(ctx, openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.NetworkReadyCondition,
@@ -973,7 +973,7 @@ func reconcileProvisionedNetworkComponents(networkingService *networking.Service
 		Reason: infrav1.ReadyConditionReason,
 	})
 
-	err = networkingService.ReconcileRouter(openStackCluster, clusterResourceName)
+	err = networkingService.ReconcileRouter(ctx, openStackCluster, clusterResourceName)
 	if err != nil {
 		conditions.Set(openStackCluster, metav1.Condition{
 			Type:    infrav1.RouterReadyCondition,
@@ -996,7 +996,7 @@ func reconcileProvisionedNetworkComponents(networkingService *networking.Service
 // reconcileControlPlaneEndpoint configures the control plane endpoint for the
 // cluster, creating it if necessary, and updates ControlPlaneEndpoint in the
 // cluster spec.
-func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+func reconcileControlPlaneEndpoint(ctx context.Context, scope *scope.WithLogger, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	// Calculate the port that we will use for the API server
 	apiServerPort := getAPIServerPort(openStackCluster)
 
@@ -1014,7 +1014,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 			return err
 		}
 
-		_, err = loadBalancerService.ReconcileLoadBalancer(openStackCluster, clusterResourceName, int(apiServerPort))
+		_, err = loadBalancerService.ReconcileLoadBalancer(ctx, openStackCluster, clusterResourceName, int(apiServerPort))
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("failed to reconcile load balancer: %w", err))
 			return fmt.Errorf("failed to reconcile load balancer: %w", err)
@@ -1036,7 +1036,7 @@ func reconcileControlPlaneEndpoint(scope *scope.WithLogger, networkingService *n
 	// API server load balancer is disabled, but external network and floating IP are not. Create
 	// a floating IP to be attached directly to a control plane host.
 	case ptr.Deref(openStackCluster.Spec.APIServer.GetEnableFloatingIP(), true) && ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true):
-		fp, err := networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServer.GetFloatingIP())
+		fp, err := networkingService.GetOrCreateFloatingIP(ctx, openStackCluster, openStackCluster, clusterResourceName, openStackCluster.Spec.APIServer.GetFloatingIP())
 		if err != nil {
 			handleUpdateOSCError(openStackCluster, fmt.Errorf("floating IP cannot be got or created: %w", err))
 			return fmt.Errorf("floating IP cannot be got or created: %w", err)
@@ -1138,7 +1138,7 @@ type resolvedClusterSubnet struct {
 // getClusterSubnets retrieves the subnets based on the subnet filters specified on OpenStackCluster.
 // Failure-domain subnets are resolved together with the legacy subnet configuration so that all
 // subnets used by machines and bastions are represented in the cluster status.
-func getClusterSubnets(networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]resolvedClusterSubnet, error) {
+func getClusterSubnets(ctx context.Context, networkingService *networking.Service, openStackCluster *infrav1.OpenStackCluster) ([]resolvedClusterSubnet, error) {
 	var clusterSubnets []resolvedClusterSubnet
 	openStackClusterSubnets := configuredClusterSubnetParams(openStackCluster)
 	networkID := ""
@@ -1155,7 +1155,7 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 		listOpts := subnets.ListOpts{
 			NetworkID: networkID,
 		}
-		resolvedSubnets, err := networkingService.GetSubnetsByFilter(listOpts)
+		resolvedSubnets, err := networkingService.GetSubnetsByFilter(ctx, listOpts)
 		if err != nil {
 			err = fmt.Errorf("failed to find subnets: %w", err)
 			if errors.Is(err, capoerrors.ErrFilterMatch) {
@@ -1173,7 +1173,7 @@ func getClusterSubnets(networkingService *networking.Service, openStackCluster *
 		seen := make(map[string]int, len(openStackClusterSubnets))
 		for i := range openStackClusterSubnets {
 			configuredSubnet := &openStackClusterSubnets[i]
-			filteredSubnet, err := networkingService.GetNetworkSubnetByParam(networkID, &configuredSubnet.param)
+			filteredSubnet, err := networkingService.GetNetworkSubnetByParam(ctx, networkID, &configuredSubnet.param)
 			if err != nil {
 				err = fmt.Errorf("failed to find subnet %d in network %s: %w", i, networkID, err)
 				if errors.Is(err, capoerrors.ErrFilterMatch) {

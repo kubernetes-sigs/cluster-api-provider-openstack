@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -53,7 +54,7 @@ func (c createOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 // OpenStackCluster.Status.ExternalNetwork will be set to nil if one of these conditions are met:
 // - no external network was given in the cluster spec and no external network was found
 // - the user has set OpenStackCluster.Spec.EnableExternalNetwork to false.
-func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCluster) error {
+func (s *Service) ReconcileExternalNetwork(ctx context.Context, openStackCluster *infrav1.OpenStackCluster) error {
 	if !ptr.Deref(openStackCluster.Spec.EnableExternalNetwork, true) {
 		s.scope.Logger().Info("External network is disabled - proceeding with internal network only")
 		openStackCluster.Status.ExternalNetwork = nil
@@ -69,7 +70,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 
 		// Empty NetworkFilter will query all networks
 		var err error
-		network, err = s.getNetworkByFilter(&infrav1.NetworkFilter{}, ExternalNetworksOnly)
+		network, err = s.getNetworkByFilter(ctx, &infrav1.NetworkFilter{}, ExternalNetworksOnly)
 		if errors.Is(err, capoerrors.ErrNoMatches) {
 			openStackCluster.Status.ExternalNetwork = nil
 			s.scope.Logger().Info("No external network found - proceeding with internal network only")
@@ -80,7 +81,7 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 		}
 	} else {
 		var err error
-		network, err = s.GetNetworkByParam(openStackCluster.Spec.ExternalNetwork, ExternalNetworksOnly)
+		network, err = s.GetNetworkByParam(ctx, openStackCluster.Spec.ExternalNetwork, ExternalNetworksOnly)
 		if err != nil {
 			return fmt.Errorf("failed to get external network: %w", err)
 		}
@@ -95,11 +96,11 @@ func (s *Service) ReconcileExternalNetwork(openStackCluster *infrav1.OpenStackCl
 	return nil
 }
 
-func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+func (s *Service) ReconcileNetwork(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	networkName := getNetworkName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling network", "name", networkName)
 
-	res, err := s.getNetworkByName(networkName)
+	res, err := s.getNetworkByName(ctx, networkName)
 	if err != nil {
 		return err
 	}
@@ -138,13 +139,13 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	var tagsSupported bool
 	if len(openStackCluster.Spec.Tags) > 0 {
 		var err error
-		tagsSupported, err = s.hasStandardAttrTagExtension()
+		tagsSupported, err = s.hasStandardAttrTagExtension(ctx)
 		if err != nil {
 			return err
 		}
 	}
 
-	network, err := s.client.CreateNetwork(opts)
+	network, err := s.client.CreateNetwork(ctx, opts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateNetwork", "Failed to create network %s: %v", networkName, err)
 		return err
@@ -156,7 +157,7 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	appliedTags := network.Tags
 	if len(openStackCluster.Spec.Tags) > 0 {
 		if tagsSupported {
-			appliedTags, err = s.client.ReplaceAllAttributesTags("networks", network.ID, attributestags.ReplaceAllOpts{
+			appliedTags, err = s.client.ReplaceAllAttributesTags(ctx, "networks", network.ID, attributestags.ReplaceAllOpts{
 				Tags: openStackCluster.Spec.Tags,
 			})
 			if err != nil {
@@ -174,9 +175,9 @@ func (s *Service) ReconcileNetwork(openStackCluster *infrav1.OpenStackCluster, c
 	return nil
 }
 
-func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+func (s *Service) DeleteNetwork(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	networkName := getNetworkName(clusterResourceName)
-	network, err := s.getNetworkByName(networkName)
+	network, err := s.getNetworkByName(ctx, networkName)
 	if err != nil {
 		return err
 	}
@@ -184,7 +185,7 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 		return nil
 	}
 
-	err = s.client.DeleteNetwork(network.ID)
+	err = s.client.DeleteNetwork(ctx, network.ID)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedDeleteNetwork", "Failed to delete network %s with id %s: %v", network.Name, network.ID, err)
 		return err
@@ -194,7 +195,7 @@ func (s *Service) DeleteNetwork(openStackCluster *infrav1.OpenStackCluster, clus
 	return nil
 }
 
-func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+func (s *Service) ReconcileSubnet(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		s.scope.Logger().V(4).Info("No need to reconcile network components since no network exists")
 		return nil
@@ -203,7 +204,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	subnetName := getSubnetName(clusterResourceName)
 	s.scope.Logger().Info("Reconciling subnet", "name", subnetName)
 
-	subnetList, err := s.client.ListSubnet(subnets.ListOpts{
+	subnetList, err := s.client.ListSubnet(ctx, subnets.ListOpts{
 		NetworkID: openStackCluster.Status.Network.ID,
 		// Currently we only support 1 SubnetSpec.
 		CIDR: openStackCluster.Spec.ManagedSubnets[0].CIDR,
@@ -220,7 +221,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	var subnet *subnets.Subnet
 	if len(subnetList) == 0 {
 		var err error
-		subnet, err = s.createSubnet(openStackCluster, clusterResourceName, subnetName)
+		subnet, err = s.createSubnet(ctx, openStackCluster, clusterResourceName, subnetName)
 		if err != nil {
 			return err
 		}
@@ -228,7 +229,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 		subnet = &subnetList[0]
 		s.scope.Logger().V(5).Info("Reusing existing subnet", "name", subnet.Name, "id", subnet.ID)
 
-		if err := s.updateSubnetDNSNameservers(openStackCluster, subnet); err != nil {
+		if err := s.updateSubnetDNSNameservers(ctx, openStackCluster, subnet); err != nil {
 			return err
 		}
 	}
@@ -244,7 +245,7 @@ func (s *Service) ReconcileSubnet(openStackCluster *infrav1.OpenStackCluster, cl
 	return nil
 }
 
-func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, name string) (*subnets.Subnet, error) {
+func (s *Service) createSubnet(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, name string) (*subnets.Subnet, error) {
 	cidr := openStackCluster.Spec.ManagedSubnets[0].CIDR
 	ipVersion := gophercloud.IPv4
 	if ip, _, err := net.ParseCIDR(cidr); err == nil && ip.To4() == nil {
@@ -270,13 +271,13 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 	var tagsSupported bool
 	if len(openStackCluster.Spec.Tags) > 0 {
 		var err error
-		tagsSupported, err = s.hasStandardAttrTagExtension()
+		tagsSupported, err = s.hasStandardAttrTagExtension(ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	subnet, err := s.client.CreateSubnet(opts)
+	subnet, err := s.client.CreateSubnet(ctx, opts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateSubnet", "Failed to create subnet %s: %v", name, err)
 		return nil, err
@@ -286,7 +287,7 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 	if len(openStackCluster.Spec.Tags) > 0 {
 		if tagsSupported {
 			mc := metrics.NewMetricPrometheusContext("subnet", "update")
-			_, err = s.client.ReplaceAllAttributesTags("subnets", subnet.ID, attributestags.ReplaceAllOpts{
+			_, err = s.client.ReplaceAllAttributesTags(ctx, "subnets", subnet.ID, attributestags.ReplaceAllOpts{
 				Tags: openStackCluster.Spec.Tags,
 			})
 			if mc.ObserveRequest(err) != nil {
@@ -301,7 +302,7 @@ func (s *Service) createSubnet(openStackCluster *infrav1.OpenStackCluster, clust
 }
 
 // updateSubnetDNSNameservers updates the DNS nameservers for an existing subnet if they differ from the desired configuration.
-func (s *Service) updateSubnetDNSNameservers(openStackCluster *infrav1.OpenStackCluster, subnet *subnets.Subnet) error {
+func (s *Service) updateSubnetDNSNameservers(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, subnet *subnets.Subnet) error {
 	// Picking the first managed subnet since we only support one for now
 	desiredNameservers := openStackCluster.Spec.ManagedSubnets[0].DNSNameservers
 	currentNameservers := subnet.DNSNameservers
@@ -320,7 +321,7 @@ func (s *Service) updateSubnetDNSNameservers(openStackCluster *infrav1.OpenStack
 			DNSNameservers: &desiredNameservers,
 		}
 
-		updatedSubnet, err := s.client.UpdateSubnet(subnet.ID, updateOpts)
+		updatedSubnet, err := s.client.UpdateSubnet(ctx, subnet.ID, updateOpts)
 		if err != nil {
 			record.Warnf(openStackCluster, "FailedUpdateSubnet", "Failed to update DNS nameservers for subnet %s: %v", subnet.ID, err)
 			return err
@@ -333,12 +334,12 @@ func (s *Service) updateSubnetDNSNameservers(openStackCluster *infrav1.OpenStack
 	return nil
 }
 
-func (s *Service) getNetworkByName(networkName string) (networks.Network, error) {
+func (s *Service) getNetworkByName(ctx context.Context, networkName string) (networks.Network, error) {
 	opts := networks.ListOpts{
 		Name: networkName,
 	}
 
-	networkList, err := s.client.ListNetwork(opts)
+	networkList, err := s.client.ListNetwork(ctx, opts)
 	if err != nil {
 		return networks.Network{}, err
 	}
@@ -362,14 +363,14 @@ func ExternalNetworksOnly(opts networks.ListOptsBuilder) networks.ListOptsBuilde
 }
 
 // getNetworksByFilter retrieves networks by querying openstack with filters.
-func (s *Service) getNetworkByFilter(filter *infrav1.NetworkFilter, opts ...GetNetworkOpts) (*networks.Network, error) {
+func (s *Service) getNetworkByFilter(ctx context.Context, filter *infrav1.NetworkFilter, opts ...GetNetworkOpts) (*networks.Network, error) {
 	var listOpts networks.ListOptsBuilder
 	listOpts = filterconvert.NetworkFilterToListOpts(filter)
 	for _, opt := range opts {
 		listOpts = opt(listOpts)
 	}
 
-	networks, err := s.client.ListNetwork(listOpts)
+	networks, err := s.client.ListNetwork(ctx, listOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -383,22 +384,22 @@ func (s *Service) getNetworkByFilter(filter *infrav1.NetworkFilter, opts ...GetN
 }
 
 // GetNetworkByParam gets the network specified by the given NetworkParam.
-func (s *Service) GetNetworkByParam(param *infrav1.NetworkParam, opts ...GetNetworkOpts) (*networks.Network, error) {
+func (s *Service) GetNetworkByParam(ctx context.Context, param *infrav1.NetworkParam, opts ...GetNetworkOpts) (*networks.Network, error) {
 	if param.ID != nil {
-		return s.GetNetworkByID(*param.ID)
+		return s.GetNetworkByID(ctx, *param.ID)
 	}
 
 	if param.Filter == nil {
 		return nil, errors.New("no filter or ID provided")
 	}
 
-	return s.getNetworkByFilter(param.Filter, opts...)
+	return s.getNetworkByFilter(ctx, param.Filter, opts...)
 }
 
 // GetNetworkIDByParam returns the ID of the network specified by the given
 // NetworkParam. It does not make an OpenStack call if the network is specified
 // by ID.
-func (s *Service) GetNetworkIDByParam(param *infrav1.NetworkParam, opts ...GetNetworkOpts) (string, error) {
+func (s *Service) GetNetworkIDByParam(ctx context.Context, param *infrav1.NetworkParam, opts ...GetNetworkOpts) (string, error) {
 	if param.ID != nil {
 		return *param.ID, nil
 	}
@@ -407,7 +408,7 @@ func (s *Service) GetNetworkIDByParam(param *infrav1.NetworkParam, opts ...GetNe
 		return "", errors.New("no filter or ID provided")
 	}
 
-	network, err := s.getNetworkByFilter(param.Filter, opts...)
+	network, err := s.getNetworkByFilter(ctx, param.Filter, opts...)
 	if err != nil {
 		return "", err
 	}
@@ -415,11 +416,11 @@ func (s *Service) GetNetworkIDByParam(param *infrav1.NetworkParam, opts ...GetNe
 }
 
 // GetSubnetsByFilter gets the id of a subnet by querying openstack with filters.
-func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
+func (s *Service) GetSubnetsByFilter(ctx context.Context, opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
 	if opts == nil {
 		return []subnets.Subnet{}, fmt.Errorf("no Filters were passed")
 	}
-	subnetList, err := s.client.ListSubnet(opts)
+	subnetList, err := s.client.ListSubnet(ctx, opts)
 	if err != nil {
 		return []subnets.Subnet{}, err
 	}
@@ -431,11 +432,11 @@ func (s *Service) GetSubnetsByFilter(opts subnets.ListOptsBuilder) ([]subnets.Su
 
 // GetSubnetIDByParam gets the id of a subnet from the given SubnetParam. It
 // does not make any OpenStack API calls if the subnet is specified by ID.
-func (s *Service) GetSubnetIDByParam(param *infrav1.SubnetParam) (string, error) {
+func (s *Service) GetSubnetIDByParam(ctx context.Context, param *infrav1.SubnetParam) (string, error) {
 	if param.ID != nil {
 		return *param.ID, nil
 	}
-	subnet, err := s.GetSubnetByParam(param)
+	subnet, err := s.GetSubnetByParam(ctx, param)
 	if err != nil {
 		return "", err
 	}
@@ -444,15 +445,15 @@ func (s *Service) GetSubnetIDByParam(param *infrav1.SubnetParam) (string, error)
 
 // GetSubnetByParam gets a single subnet specified by the given SubnetParam
 // It returns an ErrFilterMatch if no or multiple subnets are found.
-func (s *Service) GetSubnetByParam(param *infrav1.SubnetParam) (*subnets.Subnet, error) {
-	return s.GetNetworkSubnetByParam("", param)
+func (s *Service) GetSubnetByParam(ctx context.Context, param *infrav1.SubnetParam) (*subnets.Subnet, error) {
+	return s.GetNetworkSubnetByParam(ctx, "", param)
 }
 
 // GetNetworkSubnetByParam gets a single subnet of the given network, specified by the given SubnetParam.
 // It returns an ErrFilterMatch if no or multiple subnets are found.
-func (s *Service) GetNetworkSubnetByParam(networkID string, param *infrav1.SubnetParam) (*subnets.Subnet, error) {
+func (s *Service) GetNetworkSubnetByParam(ctx context.Context, networkID string, param *infrav1.SubnetParam) (*subnets.Subnet, error) {
 	if param.ID != nil {
-		subnet, err := s.client.GetSubnet(*param.ID)
+		subnet, err := s.client.GetSubnet(ctx, *param.ID)
 		if capoerrors.IsNotFound(err) {
 			return nil, capoerrors.ErrNoMatches
 		}
@@ -474,7 +475,7 @@ func (s *Service) GetNetworkSubnetByParam(networkID string, param *infrav1.Subne
 		listOpts.NetworkID = networkID
 	}
 
-	subnets, err := s.GetSubnetsByFilter(listOpts)
+	subnets, err := s.GetSubnetsByFilter(ctx, listOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -496,8 +497,8 @@ func getNetworkName(clusterResourceName string) string {
 }
 
 // GetNetworkByID retrieves network by the ID.
-func (s *Service) GetNetworkByID(networkID string) (*networks.Network, error) {
-	network, err := s.client.GetNetwork(networkID)
+func (s *Service) GetNetworkByID(ctx context.Context, networkID string) (*networks.Network, error) {
+	network, err := s.client.GetNetwork(ctx, networkID)
 	if err != nil {
 		return &networks.Network{}, err
 	}

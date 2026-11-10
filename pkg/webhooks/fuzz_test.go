@@ -17,7 +17,6 @@ limitations under the License.
 package webhooks
 
 import (
-	"context"
 	"runtime/debug"
 	"testing"
 
@@ -40,7 +39,7 @@ type pointerToObject[T any] interface {
 func fuzzValidator[O any, PO pointerToObject[O]](t *testing.T, name string, validator admission.Validator[PO]) {
 	t.Helper()
 	fuzz := utilconversion.GetFuzzer(scheme.Scheme)
-	ctx := context.TODO()
+	ctx := t.Context()
 
 	t.Run(name, func(t *testing.T) {
 		for i := 0; i < 1000; i++ {
