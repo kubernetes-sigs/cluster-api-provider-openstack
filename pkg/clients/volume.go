@@ -29,13 +29,15 @@ import (
 )
 
 type VolumeClient interface {
-	ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error)
-	CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error)
-	DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error
-	GetVolume(volumeID string) (*volumes.Volume, error)
+	ListVolumes(ctx context.Context, opts volumes.ListOptsBuilder) ([]volumes.Volume, error)
+	CreateVolume(ctx context.Context, opts volumes.CreateOptsBuilder) (*volumes.Volume, error)
+	DeleteVolume(ctx context.Context, volumeID string, opts volumes.DeleteOptsBuilder) error
+	GetVolume(ctx context.Context, volumeID string) (*volumes.Volume, error)
 }
 
 type volumeClient struct{ client *gophercloud.ServiceClient }
+
+var _ VolumeClient = &volumeClient{}
 
 // NewVolumeClient returns a new cinder client.
 func NewVolumeClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (VolumeClient, error) {
@@ -50,52 +52,54 @@ func NewVolumeClient(providerClient *gophercloud.ProviderClient, providerClientO
 	return &volumeClient{volume}, nil
 }
 
-func (c volumeClient) ListVolumes(opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
+func (c volumeClient) ListVolumes(ctx context.Context, opts volumes.ListOptsBuilder) ([]volumes.Volume, error) {
 	mc := metrics.NewMetricPrometheusContext("volume", "list")
-	pages, err := volumes.List(c.client, opts).AllPages(context.TODO())
+	pages, err := volumes.List(c.client, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return volumes.ExtractVolumes(pages)
 }
 
-func (c volumeClient) CreateVolume(opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
+func (c volumeClient) CreateVolume(ctx context.Context, opts volumes.CreateOptsBuilder) (*volumes.Volume, error) {
 	mc := metrics.NewMetricPrometheusContext("volume", "create")
-	volume, err := volumes.Create(context.TODO(), c.client, opts, nil).Extract()
+	volume, err := volumes.Create(ctx, c.client, opts, nil).Extract()
 	return volume, mc.ObserveRequest(err)
 }
 
-func (c volumeClient) DeleteVolume(volumeID string, opts volumes.DeleteOptsBuilder) error {
+func (c volumeClient) DeleteVolume(ctx context.Context, volumeID string, opts volumes.DeleteOptsBuilder) error {
 	mc := metrics.NewMetricPrometheusContext("volume", "delete")
-	err := volumes.Delete(context.TODO(), c.client, volumeID, opts).ExtractErr()
+	err := volumes.Delete(ctx, c.client, volumeID, opts).ExtractErr()
 	return mc.ObserveRequestIgnoreNotFound(err)
 }
 
-func (c volumeClient) GetVolume(volumeID string) (*volumes.Volume, error) {
+func (c volumeClient) GetVolume(ctx context.Context, volumeID string) (*volumes.Volume, error) {
 	mc := metrics.NewMetricPrometheusContext("volume", "get")
-	volume, err := volumes.Get(context.TODO(), c.client, volumeID).Extract()
+	volume, err := volumes.Get(ctx, c.client, volumeID).Extract()
 	return volume, mc.ObserveRequestIgnoreNotFound(err)
 }
 
 type volumeErrorClient struct{ error }
+
+var _ VolumeClient = &volumeErrorClient{}
 
 // NewVolumeErrorClient returns a VolumeClient in which every method returns the given error.
 func NewVolumeErrorClient(e error) VolumeClient {
 	return volumeErrorClient{e}
 }
 
-func (e volumeErrorClient) ListVolumes(_ volumes.ListOptsBuilder) ([]volumes.Volume, error) {
+func (e volumeErrorClient) ListVolumes(ctx context.Context, _ volumes.ListOptsBuilder) ([]volumes.Volume, error) {
 	return nil, e.error
 }
 
-func (e volumeErrorClient) CreateVolume(_ volumes.CreateOptsBuilder) (*volumes.Volume, error) {
+func (e volumeErrorClient) CreateVolume(ctx context.Context, _ volumes.CreateOptsBuilder) (*volumes.Volume, error) {
 	return nil, e.error
 }
 
-func (e volumeErrorClient) DeleteVolume(_ string, _ volumes.DeleteOptsBuilder) error {
+func (e volumeErrorClient) DeleteVolume(ctx context.Context, _ string, _ volumes.DeleteOptsBuilder) error {
 	return e.error
 }
 
-func (e volumeErrorClient) GetVolume(_ string) (*volumes.Volume, error) {
+func (e volumeErrorClient) GetVolume(ctx context.Context, _ string) (*volumes.Volume, error) {
 	return nil, e.error
 }

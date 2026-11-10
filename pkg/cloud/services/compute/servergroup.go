@@ -17,6 +17,7 @@ limitations under the License.
 package compute
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -27,7 +28,7 @@ import (
 
 // GetServerGroupID looks up a server group using the passed filter and returns
 // its ID. It'll return an error when server group is not found or there are multiple.
-func (s *Service) GetServerGroupID(serverGroupParam *infrav1.ServerGroupParam) (string, error) {
+func (s *Service) GetServerGroupID(ctx context.Context, serverGroupParam *infrav1.ServerGroupParam) (string, error) {
 	if serverGroupParam.ID != nil {
 		return *serverGroupParam.ID, nil
 	}
@@ -38,7 +39,7 @@ func (s *Service) GetServerGroupID(serverGroupParam *infrav1.ServerGroupParam) (
 	}
 
 	// otherwise fallback to looking up by name, which is slower
-	serverGroup, err := s.getServerGroupByName(*serverGroupParam.Filter.Name)
+	serverGroup, err := s.getServerGroupByName(ctx, *serverGroupParam.Filter.Name)
 	if err != nil {
 		return "", err
 	}
@@ -46,8 +47,8 @@ func (s *Service) GetServerGroupID(serverGroupParam *infrav1.ServerGroupParam) (
 	return serverGroup.ID, nil
 }
 
-func (s *Service) getServerGroupByName(serverGroupName string) (*servergroups.ServerGroup, error) {
-	allServerGroups, err := s.getComputeClient().ListServerGroups()
+func (s *Service) getServerGroupByName(ctx context.Context, serverGroupName string) (*servergroups.ServerGroup, error) {
+	allServerGroups, err := s.getComputeClient().ListServerGroups(ctx)
 	if err != nil {
 		return nil, err
 	}

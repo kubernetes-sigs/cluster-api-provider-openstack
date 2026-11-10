@@ -129,12 +129,12 @@ func (r *OpenStackFloatingIPPoolReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, r.reconcileDelete(ctx, scope, pool)
 	}
 
-	if err := r.reconcileFloatingIPNetwork(scope, pool); err != nil {
+	if err := r.reconcileFloatingIPNetwork(ctx, scope, pool); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	claims := &ipamv1.IPAddressClaimList{}
-	if err := r.Client.List(context.Background(), claims, client.InNamespace(req.Namespace), client.MatchingFields{infrav1alpha1.OpenStackFloatingIPPoolNameIndex: pool.Name}); err != nil {
+	if err := r.Client.List(ctx, claims, client.InNamespace(req.Namespace), client.MatchingFields{infrav1alpha1.OpenStackFloatingIPPoolNameIndex: pool.Name}); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -239,7 +239,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileDelete(ctx context.Context,
 	}
 
 	for _, ip := range diff(pool.Status.AvailableIPs, pool.Spec.PreAllocatedFloatingIPs) {
-		if err := networkingService.DeleteFloatingIP(pool, ip); err != nil {
+		if err := networkingService.DeleteFloatingIP(ctx, pool, ip); err != nil {
 			return fmt.Errorf("delete floating IP: %w", err)
 		}
 		// Remove the IP from the available IPs, so we don't try to delete it again if the reconcile loop runs again
@@ -307,7 +307,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileIPAddresses(ctx context.Con
 
 		if controllerutil.ContainsFinalizer(ipAddress, infrav1alpha1.DeleteFloatingIPFinalizer) {
 			if pool.Spec.ReclaimPolicy == infrav1alpha1.ReclaimDelete && !contains(pool.Spec.PreAllocatedFloatingIPs, ipAddress.Spec.Address) {
-				if err = networkingService.DeleteFloatingIP(pool, ipAddress.Spec.Address); err != nil {
+				if err = networkingService.DeleteFloatingIP(ctx, pool, ipAddress.Spec.Address); err != nil {
 					return fmt.Errorf("delete floating IP %q: %w", ipAddress.Spec.Address, err)
 				}
 			} else {
@@ -338,7 +338,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 	// Get tagged floating IPs and add them to the available IPs if they are not present in either the available IPs or the claimed IPs
 	// This is done to prevent leaking floating IPs if the floating IP was created but the IPAddress object was not
 	if len(pool.Status.AvailableIPs) == 0 {
-		taggedIPs, err := networkingService.GetFloatingIPsByTag(pool.GetFloatingIPTag())
+		taggedIPs, err := networkingService.GetFloatingIPsByTag(ctx, pool.GetFloatingIPTag())
 		if err != nil {
 			scope.Logger().Error(err, "Failed to get floating IPs by tag", "pool", pool.Name)
 			return "", err
@@ -359,7 +359,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 	}
 
 	if ip != "" {
-		fp, err := networkingService.GetFloatingIP(ip)
+		fp, err := networkingService.GetFloatingIP(ctx, ip)
 		if err != nil {
 			return "", fmt.Errorf("get floating IP: %w", err)
 		}
@@ -382,7 +382,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 		return "", errMaxIPsReached
 	}
 
-	fp, err := networkingService.CreateFloatingIPForPool(pool)
+	fp, err := networkingService.CreateFloatingIPForPool(ctx, pool)
 	if err != nil {
 		scope.Logger().Error(err, "Failed to create floating IP", "pool", pool.Name)
 		conditions.Set(pool, metav1.Condition{
@@ -397,7 +397,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 		tag := pool.GetFloatingIPTag()
 
 		err := wait.ExponentialBackoffWithContext(ctx, backoff, func(context.Context) (bool, error) {
-			if err := networkingService.TagFloatingIP(fp.FloatingIP, tag); err != nil {
+			if err := networkingService.TagFloatingIP(ctx, fp.FloatingIP, tag); err != nil {
 				scope.Logger().Error(err, "Failed to tag floating IP, retrying", "ip", fp.FloatingIP, "tag", tag)
 				return false, err
 			}
@@ -418,7 +418,7 @@ func (r *OpenStackFloatingIPPoolReconciler) getIP(ctx context.Context, scope *sc
 	return ip, nil
 }
 
-func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *scope.WithLogger, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
+func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(ctx context.Context, scope *scope.WithLogger, pool *infrav1alpha1.OpenStackFloatingIPPool) error {
 	// If the pool already has a network, we don't need to do anything
 	if pool.Status.FloatingIPNetwork != nil {
 		return nil
@@ -439,7 +439,7 @@ func (r *OpenStackFloatingIPPoolReconciler) reconcileFloatingIPNetwork(scope *sc
 		networkParam = pool.Spec.FloatingIPNetwork
 	}
 
-	network, err := networkingService.GetNetworkByParam(networkParam, networking.ExternalNetworksOnly)
+	network, err := networkingService.GetNetworkByParam(ctx, networkParam, networking.ExternalNetworksOnly)
 	if err != nil {
 		conditions.Set(pool, metav1.Condition{
 			Type:    infrav1alpha1.OpenstackFloatingIPPoolReadyCondition,

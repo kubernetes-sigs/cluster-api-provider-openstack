@@ -17,7 +17,6 @@ limitations under the License.
 package webhooks
 
 import (
-	"context"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -1552,7 +1551,7 @@ func TestOpenStackCluster_ValidateUpdate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			webhook := &openStackClusterWebhook{}
 			warn, err := webhook.ValidateUpdate(ctx, tt.oldCluster, tt.newCluster)
@@ -1760,7 +1759,7 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			webhook := &openStackClusterWebhook{}
 			warn, err := webhook.ValidateCreate(ctx, tt.cluster)
@@ -1776,6 +1775,7 @@ func TestOpenStackCluster_ValidateCreate(t *testing.T) {
 }
 
 func TestOpenStackCluster_ValidateCreateRejectsManagedFailureDomainSubnets(t *testing.T) {
+	ctx := t.Context()
 	cluster := &infrav1.OpenStackCluster{
 		Spec: infrav1.OpenStackClusterSpec{
 			ManagedSubnets: []infrav1.SubnetSpec{{CIDR: "192.168.0.0/24"}},
@@ -1787,12 +1787,12 @@ func TestOpenStackCluster_ValidateCreateRejectsManagedFailureDomainSubnets(t *te
 	}
 
 	webhook := &openStackClusterWebhook{}
-	_, err := webhook.ValidateCreate(context.TODO(), cluster)
+	_, err := webhook.ValidateCreate(ctx, cluster)
 	if err == nil {
 		t.Fatal("ValidateCreate() error = nil, want an incompatibility error")
 	}
 
-	_, err = webhook.ValidateUpdate(context.TODO(), &infrav1.OpenStackCluster{}, cluster.DeepCopy())
+	_, err = webhook.ValidateUpdate(ctx, &infrav1.OpenStackCluster{}, cluster.DeepCopy())
 	if err == nil {
 		t.Fatal("ValidateUpdate() error = nil, want an incompatibility error")
 	}

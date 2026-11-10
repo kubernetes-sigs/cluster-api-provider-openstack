@@ -16,6 +16,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -513,8 +514,8 @@ func TestReconcileGroupRules(t *testing.T) {
 				},
 			},
 			mockExpect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.DeleteSecGroupRule(sgLegacyRuleID).Return(nil)
-				m.CreateSecGroupRule(rules.CreateOpts{
+				m.DeleteSecGroupRule(ctxMatcher, sgLegacyRuleID).Return(nil)
+				m.CreateSecGroupRule(ctxMatcher, rules.CreateOpts{
 					SecGroupID:    sgID,
 					Description:   "Allow SSH",
 					Direction:     "ingress",
@@ -540,6 +541,7 @@ func TestReconcileGroupRules(t *testing.T) {
 	for i := range tests {
 		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -553,7 +555,7 @@ func TestReconcileGroupRules(t *testing.T) {
 			}
 			tt.mockExpect(mockScopeFactory.NetworkClient.EXPECT())
 
-			err = s.reconcileGroupRules(&tt.desiredSGSpec, &tt.observedSG)
+			err = s.reconcileGroupRules(ctx, &tt.desiredSGSpec, &tt.observedSG)
 			g.Expect(err).To(BeNil())
 		})
 	}
@@ -586,16 +588,16 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
 			},
 			expect: func(log logr.Logger, m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: controlPlaneSGName}).
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: controlPlaneSGName}).
 					Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: workerSGName}).
 					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
 
 				// We expect a total of 14 rules to be created.
 				// Nothing actually looks at the generated
 				// rules, but we give them unique IDs anyway
-				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
+				m.CreateSecGroupRule(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts rules.CreateOpts) (*rules.SecGroupRule, error) {
 					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
 					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
 				}).Times(14)
@@ -618,21 +620,21 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
 			},
 			expect: func(log logr.Logger, m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: controlPlaneSGName}).
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: controlPlaneSGName}).
 					Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: workerSGName}).
 					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: bastionSGName}).Return(nil, nil)
 
 				// standard-attr-tag support is checked once and reused for both the
 				// control plane and worker security groups, so ListExtensions is
 				// called exactly once and ReplaceAllAttributesTags is never called.
-				m.ListExtensions().Return([]extensions.Extension{}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{}, nil)
 
 				// We expect a total of 14 rules to be created.
 				// Nothing actually looks at the generated
 				// rules, but we give them unique IDs anyway
-				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
+				m.CreateSecGroupRule(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts rules.CreateOpts) (*rules.SecGroupRule, error) {
 					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
 					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
 				}).Times(14)
@@ -657,17 +659,17 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 				ManagedSecurityGroups: &infrav1.ManagedSecurityGroups{},
 			},
 			expect: func(log logr.Logger, m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: controlPlaneSGName}).
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: controlPlaneSGName}).
 					Return([]groups.SecGroup{{ID: "0", Name: controlPlaneSGName}}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: workerSGName}).
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: workerSGName}).
 					Return([]groups.SecGroup{{ID: "1", Name: workerSGName}}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: bastionSGName}).
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: bastionSGName}).
 					Return([]groups.SecGroup{{ID: "2", Name: bastionSGName}}, nil)
 
 				// We expect a total of 19 rules to be created.
 				// Nothing actually looks at the generated
 				// rules, but we give them unique IDs anyway
-				m.CreateSecGroupRule(gomock.Any()).DoAndReturn(func(opts rules.CreateOpts) (*rules.SecGroupRule, error) {
+				m.CreateSecGroupRule(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts rules.CreateOpts) (*rules.SecGroupRule, error) {
 					log.Info("Created rule", "securityGroup", opts.SecGroupID, "description", opts.Description)
 					return &rules.SecGroupRule{ID: uuid.NewString()}, nil
 				}).Times(19)
@@ -691,6 +693,7 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 	for i := range tests {
 		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -709,7 +712,7 @@ func TestService_ReconcileSecurityGroups(t *testing.T) {
 			openStackCluster := &infrav1.OpenStackCluster{
 				Spec: tt.openStackClusterSpec,
 			}
-			err := s.ReconcileSecurityGroups(openStackCluster, clusterResourceName)
+			err := s.ReconcileSecurityGroups(ctx, openStackCluster, clusterResourceName)
 			if tt.wantErr {
 				g.Expect(err).ToNot(BeNil(), "ReconcileSecurityGroups")
 			} else {

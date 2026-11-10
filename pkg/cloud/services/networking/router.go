@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -32,7 +33,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
-func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+func (s *Service) ReconcileRouter(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	if openStackCluster.Status.Network == nil || openStackCluster.Status.Network.ID == "" {
 		s.scope.Logger().V(3).Info("No need to reconcile router since no network exists")
 		return nil
@@ -48,7 +49,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 
 	s.scope.Logger().Info("Reconciling router", "cluster", clusterResourceName)
 
-	router, err := s.getExistingRouter(openStackCluster, clusterResourceName)
+	router, err := s.getExistingRouter(ctx, openStackCluster, clusterResourceName)
 	if err != nil {
 		return fmt.Errorf("fetching router: %w", err)
 	}
@@ -60,7 +61,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		}
 
 		var err error
-		router, err = s.createRouter(openStackCluster, clusterResourceName, getRouterName(clusterResourceName))
+		router, err = s.createRouter(ctx, openStackCluster, clusterResourceName, getRouterName(clusterResourceName))
 		if err != nil {
 			return err
 		}
@@ -79,12 +80,12 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	}
 
 	if openStackCluster.Spec.ManagedRouter != nil && len(openStackCluster.Spec.ManagedRouter.ExternalIPs) > 0 {
-		if err := s.setRouterExternalIPs(openStackCluster, router); err != nil {
+		if err := s.setRouterExternalIPs(ctx, openStackCluster, router); err != nil {
 			return err
 		}
 	}
 
-	routerInterfaces, err := s.getRouterInterfaces(router.ID)
+	routerInterfaces, err := s.getRouterInterfaces(ctx, router.ID)
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 		// ... and create a router interface for our subnet.
 		if createInterface {
 			s.scope.Logger().V(4).Info("Creating RouterInterface", "routerID", router.ID, "subnetID", subnet.ID)
-			routerInterface, err := s.client.AddRouterInterface(router.ID, routers.AddInterfaceOpts{
+			routerInterface, err := s.client.AddRouterInterface(ctx, router.ID, routers.AddInterfaceOpts{
 				SubnetID: subnet.ID,
 			})
 			if err != nil {
@@ -117,17 +118,17 @@ func (s *Service) ReconcileRouter(openStackCluster *infrav1.OpenStackCluster, cl
 	return nil
 }
 
-func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*routers.Router, error) {
+func (s *Service) getExistingRouter(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*routers.Router, error) {
 	// For an externally-managed router we always expect it to exist. We will return an error if it doesn't.
 	if openStackCluster.Spec.Router != nil {
-		return s.getExternallyManagedRouter(openStackCluster)
+		return s.getExternallyManagedRouter(ctx, openStackCluster)
 	}
 
 	// A managed router may not exist either because we haven't created it
 	// or because we deleted it. Swallow NotFound errors and return nil.
 
 	if openStackCluster.Status.Router != nil {
-		router, err := s.client.GetRouter(openStackCluster.Status.Router.ID)
+		router, err := s.client.GetRouter(ctx, openStackCluster.Status.Router.ID)
 		if capoerrors.IsNotFound(err) {
 			return nil, nil
 		}
@@ -140,7 +141,7 @@ func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, 
 		listOpts = filterconvert.RouterFilterToListOpts(openStackCluster.Spec.Router.Filter)
 	}
 
-	router, err := s.getRouterByFilter(listOpts)
+	router, err := s.getRouterByFilter(ctx, listOpts)
 	// It's ok if our managed router doesn't exist yet, just return nil
 	if errors.Is(err, capoerrors.ErrNoMatches) {
 		return nil, nil
@@ -148,21 +149,21 @@ func (s *Service) getExistingRouter(openStackCluster *infrav1.OpenStackCluster, 
 	return router, err
 }
 
-func (s *Service) getExternallyManagedRouter(openStackCluster *infrav1.OpenStackCluster) (*routers.Router, error) {
+func (s *Service) getExternallyManagedRouter(ctx context.Context, openStackCluster *infrav1.OpenStackCluster) (*routers.Router, error) {
 	if openStackCluster.Spec.Router == nil {
 		return nil, fmt.Errorf("getExternallyManagedRouter called with no external router specified")
 	}
 
 	// Fetch by ID if we previously resolved it
 	if openStackCluster.Status.Router != nil {
-		return s.client.GetRouter(openStackCluster.Status.Router.ID)
+		return s.client.GetRouter(ctx, openStackCluster.Status.Router.ID)
 	}
-	return s.GetRouterByParam(openStackCluster.Spec.Router)
+	return s.GetRouterByParam(ctx, openStackCluster.Spec.Router)
 }
 
-func (s *Service) GetRouterByParam(routerParam *infrav1.RouterParam) (*routers.Router, error) {
+func (s *Service) GetRouterByParam(ctx context.Context, routerParam *infrav1.RouterParam) (*routers.Router, error) {
 	if routerParam.ID != nil {
-		return s.client.GetRouter(*routerParam.ID)
+		return s.client.GetRouter(ctx, *routerParam.ID)
 	}
 
 	if routerParam.Filter == nil {
@@ -171,10 +172,10 @@ func (s *Service) GetRouterByParam(routerParam *infrav1.RouterParam) (*routers.R
 	}
 
 	listOpts := filterconvert.RouterFilterToListOpts(routerParam.Filter)
-	return s.getRouterByFilter(listOpts)
+	return s.getRouterByFilter(ctx, listOpts)
 }
 
-func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName, name string) (*routers.Router, error) {
+func (s *Service) createRouter(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName, name string) (*routers.Router, error) {
 	opts := routers.CreateOpts{
 		Description: names.GetDescription(clusterResourceName),
 		Name:        name,
@@ -195,13 +196,13 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	var tagsSupported bool
 	if len(openStackCluster.Spec.Tags) > 0 {
 		var err error
-		tagsSupported, err = s.hasStandardAttrTagExtension()
+		tagsSupported, err = s.hasStandardAttrTagExtension(ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	router, err := s.client.CreateRouter(opts)
+	router, err := s.client.CreateRouter(ctx, opts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateRouter", "Failed to create router %s: %v", name, err)
 		return nil, err
@@ -210,7 +211,7 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 
 	if len(openStackCluster.Spec.Tags) > 0 {
 		if tagsSupported {
-			_, err = s.client.ReplaceAllAttributesTags("routers", router.ID, attributestags.ReplaceAllOpts{
+			_, err = s.client.ReplaceAllAttributesTags(ctx, "routers", router.ID, attributestags.ReplaceAllOpts{
 				Tags: openStackCluster.Spec.Tags,
 			})
 			if err != nil {
@@ -224,7 +225,7 @@ func (s *Service) createRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	return router, nil
 }
 
-func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluster, router *routers.Router) error {
+func (s *Service) setRouterExternalIPs(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, router *routers.Router) error {
 	updateOpts := routers.UpdateOpts{
 		GatewayInfo: &routers.GatewayInfo{
 			NetworkID: openStackCluster.Status.ExternalNetwork.ID,
@@ -233,7 +234,7 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 
 	for i := range openStackCluster.Spec.ManagedRouter.ExternalIPs {
 		externalRouterIP := openStackCluster.Spec.ManagedRouter.ExternalIPs[i]
-		subnetID, err := s.GetSubnetIDByParam(&externalRouterIP.Subnet)
+		subnetID, err := s.GetSubnetIDByParam(ctx, &externalRouterIP.Subnet)
 		if err != nil {
 			return fmt.Errorf("failed to get subnet for external router: %w", err)
 		}
@@ -243,7 +244,7 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 		})
 	}
 
-	_, err := s.client.UpdateRouter(router.ID, updateOpts)
+	_, err := s.client.UpdateRouter(ctx, router.ID, updateOpts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedUpdateRouter", "Failed to update router %s with id %s: %v", router.Name, router.ID, err)
 		return err
@@ -253,8 +254,8 @@ func (s *Service) setRouterExternalIPs(openStackCluster *infrav1.OpenStackCluste
 	return nil
 }
 
-func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
-	router, err := s.getExistingRouter(openStackCluster, clusterResourceName)
+func (s *Service) DeleteRouter(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+	router, err := s.getExistingRouter(ctx, openStackCluster, clusterResourceName)
 	if err != nil {
 		return err
 	}
@@ -264,13 +265,13 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	}
 
 	subnetName := getSubnetName(clusterResourceName)
-	subnet, err := s.getSubnetByName(subnetName)
+	subnet, err := s.getSubnetByName(ctx, subnetName)
 	if err != nil {
 		return err
 	}
 
 	if subnet.ID != "" {
-		_, err = s.client.RemoveRouterInterface(router.ID, routers.RemoveInterfaceOpts{
+		_, err = s.client.RemoveRouterInterface(ctx, router.ID, routers.RemoveInterfaceOpts{
 			SubnetID: subnet.ID,
 		})
 		if err != nil {
@@ -288,7 +289,7 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 		return nil
 	}
 
-	err = s.client.DeleteRouter(router.ID)
+	err = s.client.DeleteRouter(ctx, router.ID)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedDeleteRouter", "Failed to delete router %s with id %s: %v", router.Name, router.ID, err)
 		return err
@@ -298,14 +299,14 @@ func (s *Service) DeleteRouter(openStackCluster *infrav1.OpenStackCluster, clust
 	return nil
 }
 
-func (s *Service) getRouterInterfaces(routerID string) ([]ports.Port, error) {
-	return s.client.ListPort(ports.ListOpts{
+func (s *Service) getRouterInterfaces(ctx context.Context, routerID string) ([]ports.Port, error) {
+	return s.client.ListPort(ctx, ports.ListOpts{
 		DeviceID: routerID,
 	})
 }
 
-func (s *Service) getRouterByFilter(opts routers.ListOpts) (*routers.Router, error) {
-	routerList, err := s.client.ListRouter(opts)
+func (s *Service) getRouterByFilter(ctx context.Context, opts routers.ListOpts) (*routers.Router, error) {
+	routerList, err := s.client.ListRouter(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -319,12 +320,12 @@ func (s *Service) getRouterByFilter(opts routers.ListOpts) (*routers.Router, err
 	return nil, capoerrors.ErrMultipleMatches
 }
 
-func (s *Service) getSubnetByName(subnetName string) (subnets.Subnet, error) {
+func (s *Service) getSubnetByName(ctx context.Context, subnetName string) (subnets.Subnet, error) {
 	opts := subnets.ListOpts{
 		Name: subnetName,
 	}
 
-	subnetList, err := s.client.ListSubnet(opts)
+	subnetList, err := s.client.ListSubnet(ctx, opts)
 	if err != nil {
 		return subnets.Subnet{}, err
 	}

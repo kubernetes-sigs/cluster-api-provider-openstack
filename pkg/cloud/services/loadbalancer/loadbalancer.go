@@ -61,7 +61,7 @@ const (
 // GetNetworkSubnetByParam scoped to the cluster network, which validates
 // membership and supports both id and filter forms of SubnetParam.
 // Otherwise the first subnet in the cluster status is used.
-func (s *Service) getPrimarySubnetID(openStackCluster *infrav1.OpenStackCluster) (string, error) {
+func (s *Service) getPrimarySubnetID(ctx context.Context, openStackCluster *infrav1.OpenStackCluster) (string, error) {
 	subnets := openStackCluster.Status.Network.Subnets
 	if len(subnets) == 0 {
 		return "", fmt.Errorf("no subnets available in cluster status")
@@ -71,7 +71,7 @@ func (s *Service) getPrimarySubnetID(openStackCluster *infrav1.OpenStackCluster)
 		return subnets[0].ID, nil
 	}
 
-	subnet, err := s.networkingService.GetNetworkSubnetByParam(openStackCluster.Status.Network.ID, openStackCluster.Spec.PrimarySubnet)
+	subnet, err := s.networkingService.GetNetworkSubnetByParam(ctx, openStackCluster.Status.Network.ID, openStackCluster.Spec.PrimarySubnet)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve primarySubnet: %w", err)
 	}
@@ -89,8 +89,8 @@ const (
 // We wrap the LookupHost function in a variable to allow overriding it in unit tests.
 //
 //nolint:gocritic
-var lookupHost = func(host string) (*string, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+var lookupHost = func(ctx context.Context, host string) (*string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	ips, err := net.DefaultResolver.LookupHost(ctx, host)
 	if err != nil {
@@ -103,7 +103,7 @@ var lookupHost = func(host string) (*string, error) {
 }
 
 // ReconcileLoadBalancer reconciles the load balancer for the given cluster.
-func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, apiServerPort int) (bool, error) {
+func (s *Service) ReconcileLoadBalancer(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, apiServerPort int) (bool, error) {
 	lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer()
 	if !lbSpec.IsEnabled() {
 		return false, nil
@@ -118,7 +118,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		openStackCluster.Status.APIServerManagedLoadBalancer = lbStatus
 	}
 
-	lb, err := s.getOrCreateAPILoadBalancer(openStackCluster, clusterResourceName)
+	lb, err := s.getOrCreateAPILoadBalancer(ctx, openStackCluster, clusterResourceName)
 	if err != nil {
 		if errors.Is(err, capoerrors.ErrFilterMatch) {
 			return true, err
@@ -134,19 +134,19 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 	if lb.ProvisioningStatus != loadBalancerProvisioningStatusActive {
 		var err error
 		lbID := lb.ID
-		lb, err = s.waitForLoadBalancerActive(lbID)
+		lb, err = s.waitForLoadBalancerActive(ctx, lbID)
 		if err != nil {
 			return false, fmt.Errorf("load balancer %q with id %s is not active after timeout: %v", loadBalancerName, lbID, err)
 		}
 	}
 
 	if ptr.Deref(openStackCluster.Spec.APIServer.GetEnableFloatingIP(), true) {
-		floatingIPAddress, err := getAPIServerFloatingIP(openStackCluster)
+		floatingIPAddress, err := getAPIServerFloatingIP(ctx, openStackCluster)
 		if err != nil {
 			return false, err
 		}
 
-		fp, err := s.networkingService.GetOrCreateFloatingIP(openStackCluster, openStackCluster, clusterResourceName, floatingIPAddress)
+		fp, err := s.networkingService.GetOrCreateFloatingIP(ctx, openStackCluster, openStackCluster, clusterResourceName, floatingIPAddress)
 		if err != nil {
 			if errors.Is(err, capoerrors.ErrFilterMatch) {
 				return true, err
@@ -159,12 +159,12 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		// fails below.
 		lbStatus.IP = fp.FloatingIP
 
-		if err = s.networkingService.AssociateFloatingIP(openStackCluster, fp, lb.VipPortID); err != nil {
+		if err = s.networkingService.AssociateFloatingIP(ctx, openStackCluster, fp, lb.VipPortID); err != nil {
 			return false, err
 		}
 	}
 
-	allowedCIDRsSupported, err := s.isAllowsCIDRSSupported(lb)
+	allowedCIDRsSupported, err := s.isAllowsCIDRSSupported(ctx, lb)
 	if err != nil {
 		return false, err
 	}
@@ -182,7 +182,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 		portList = append(portList, int(p))
 	}
 	for _, port := range portList {
-		if err := s.reconcileAPILoadBalancerListener(lb, openStackCluster, clusterResourceName, port); err != nil {
+		if err := s.reconcileAPILoadBalancerListener(ctx, lb, openStackCluster, clusterResourceName, port); err != nil {
 			return false, err
 		}
 	}
@@ -192,7 +192,7 @@ func (s *Service) ReconcileLoadBalancer(openStackCluster *infrav1.OpenStackClust
 
 // getAPIServerVIPAddress gets the VIP address for the API server from wherever it is specified.
 // Returns an empty string if the VIP address is not specified and it should be allocated automatically.
-func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string, error) {
+func getAPIServerVIPAddress(ctx context.Context, openStackCluster *infrav1.OpenStackCluster) (*string, error) {
 	switch {
 	// We only use call this function when creating the loadbalancer, so this case should never be used
 	case openStackCluster.Status.APIServerManagedLoadBalancer != nil && openStackCluster.Status.APIServerManagedLoadBalancer.InternalIP != "":
@@ -204,7 +204,7 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 
 		// If we are using the VIP as the control plane endpoint, use any value explicitly set on the control plane endpoint
 	case !ptr.Deref(openStackCluster.Spec.APIServer.GetEnableFloatingIP(), true) && openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
-		fixedIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
+		fixedIPAddress, err := lookupHost(ctx, openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)
 		}
@@ -216,7 +216,7 @@ func getAPIServerVIPAddress(openStackCluster *infrav1.OpenStackCluster) (*string
 
 // getAPIServerFloatingIP gets the floating IP from wherever it is specified.
 // Returns an empty string if the floating IP is not specified and it should be allocated automatically.
-func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (*string, error) {
+func getAPIServerFloatingIP(ctx context.Context, openStackCluster *infrav1.OpenStackCluster) (*string, error) {
 	switch {
 	// The floating IP was created previously
 	case openStackCluster.Status.APIServerManagedLoadBalancer != nil && openStackCluster.Status.APIServerManagedLoadBalancer.IP != "":
@@ -228,7 +228,7 @@ func getAPIServerFloatingIP(openStackCluster *infrav1.OpenStackCluster) (*string
 
 	// An IP address is specified explicitly in the control plane endpoint
 	case openStackCluster.Spec.ControlPlaneEndpoint != nil && openStackCluster.Spec.ControlPlaneEndpoint.IsValid():
-		floatingIPAddress, err := lookupHost(openStackCluster.Spec.ControlPlaneEndpoint.Host)
+		floatingIPAddress, err := lookupHost(ctx, openStackCluster.Spec.ControlPlaneEndpoint.Host)
 		if err != nil {
 			return nil, fmt.Errorf("lookup host: %w", err)
 		}
@@ -290,8 +290,8 @@ func getCanonicalAllowedCIDRs(openStackCluster *infrav1.OpenStackCluster) []stri
 }
 
 // isAllowsCIDRSSupported returns true if Octavia supports allowed CIDRs for the loadbalancer provider in use.
-func (s *Service) isAllowsCIDRSSupported(lb *loadbalancers.LoadBalancer) (bool, error) {
-	octaviaVersions, err := s.loadbalancerClient.ListOctaviaVersions()
+func (s *Service) isAllowsCIDRSSupported(ctx context.Context, lb *loadbalancers.LoadBalancer) (bool, error) {
+	octaviaVersions, err := s.loadbalancerClient.ListOctaviaVersions(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -302,9 +302,9 @@ func (s *Service) isAllowsCIDRSSupported(lb *loadbalancers.LoadBalancer) (bool, 
 }
 
 // getOrCreateAPILoadBalancer returns an existing API loadbalancer if it already exists, or creates a new one if it does not.
-func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*loadbalancers.LoadBalancer, error) {
+func (s *Service) getOrCreateAPILoadBalancer(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (*loadbalancers.LoadBalancer, error) {
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
-	lb, err := s.checkIfLbExists(loadBalancerName)
+	lb, err := s.checkIfLbExists(ctx, loadBalancerName)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +341,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 	if vipNetworkID == "" && vipSubnetID == "" {
 		// No explicit LB network specified — use the primary cluster subnet.
 		var err error
-		vipSubnetID, err = s.getPrimarySubnetID(openStackCluster)
+		vipSubnetID, err = s.getPrimarySubnetID(ctx, openStackCluster)
 		if err != nil {
 			return nil, err
 		}
@@ -350,7 +350,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		s.scope.Logger().V(2).Info("Creating load balancer in subnet", "subnetID", vipSubnetID, "name", loadBalancerName)
 	}
 
-	providers, err := s.loadbalancerClient.ListLoadBalancerProviders()
+	providers, err := s.loadbalancerClient.ListLoadBalancerProviders(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +376,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 			// Gophercloud does not support filtering loadbalancer flavors by name and status (enabled) so we have to get all available flavors
 			// and filter them localy. There is a feature request in Gophercloud to implement this functionality:
 			// https://github.com/gophercloud/gophercloud/v2/issues/3049
-			flavors, err := s.loadbalancerClient.ListLoadBalancerFlavors()
+			flavors, err := s.loadbalancerClient.ListLoadBalancerFlavors(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -395,7 +395,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		availabilityZone = lbSpec.AvailabilityZone
 	}
 
-	vipAddress, err := getAPIServerVIPAddress(openStackCluster)
+	vipAddress, err := getAPIServerVIPAddress(ctx, openStackCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +416,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 		lbCreateOpts.VipAddress = *vipAddress
 	}
 
-	lb, err = s.loadbalancerClient.CreateLoadBalancer(lbCreateOpts)
+	lb, err = s.loadbalancerClient.CreateLoadBalancer(ctx, lbCreateOpts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateLoadBalancer", "Failed to create load balancer %s: %v", loadBalancerName, err)
 		return nil, err
@@ -427,7 +427,7 @@ func (s *Service) getOrCreateAPILoadBalancer(openStackCluster *infrav1.OpenStack
 }
 
 // reconcileAPILoadBalancerListener ensures that the listener on the given port exists and is configured correctly.
-func (s *Service) reconcileAPILoadBalancerListener(lb *loadbalancers.LoadBalancer, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, port int) error {
+func (s *Service) reconcileAPILoadBalancerListener(ctx context.Context, lb *loadbalancers.LoadBalancer, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string, port int) error {
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
 	lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 
@@ -437,23 +437,23 @@ func (s *Service) reconcileAPILoadBalancerListener(lb *loadbalancers.LoadBalance
 
 	allowedCIDRs := openStackCluster.Status.APIServerManagedLoadBalancer.AllowedCIDRs
 
-	listener, err := s.getOrCreateListener(openStackCluster, lbPortObjectsName, lb.ID, allowedCIDRs, port)
+	listener, err := s.getOrCreateListener(ctx, openStackCluster, lbPortObjectsName, lb.ID, allowedCIDRs, port)
 	if err != nil {
 		return err
 	}
 
-	pool, err := s.getOrCreatePool(openStackCluster, lbPortObjectsName, listener.ID, lb.ID, lb.Provider)
+	pool, err := s.getOrCreatePool(ctx, openStackCluster, lbPortObjectsName, listener.ID, lb.ID, lb.Provider)
 	if err != nil {
 		return err
 	}
-	if err := s.ensureMonitor(openStackCluster, lbPortObjectsName, pool.ID, lb.ID); err != nil {
+	if err := s.ensureMonitor(ctx, openStackCluster, lbPortObjectsName, pool.ID, lb.ID); err != nil {
 		return err
 	}
 
 	// allowedCIDRs is nil if allowedCIDRs is not supported by the Octavia provider
 	// A non-nil empty slice is an explicitly empty list
 	if allowedCIDRs != nil {
-		if err := s.getOrUpdateAllowedCIDRs(openStackCluster, listener, allowedCIDRs); err != nil {
+		if err := s.getOrUpdateAllowedCIDRs(ctx, openStackCluster, listener, allowedCIDRs); err != nil {
 			return err
 		}
 	}
@@ -463,8 +463,8 @@ func (s *Service) reconcileAPILoadBalancerListener(lb *loadbalancers.LoadBalance
 
 // getOrCreateListener returns an existing listener for the given loadbalancer
 // and port if it already exists, or creates a new one if it does not.
-func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster, listenerName, lbID string, allowedCIDRs []string, port int) (*listeners.Listener, error) {
-	listener, err := s.checkIfListenerExists(listenerName)
+func (s *Service) getOrCreateListener(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, listenerName, lbID string, allowedCIDRs []string, port int) (*listeners.Listener, error) {
+	listener, err := s.checkIfListenerExists(ctx, listenerName)
 	if err != nil {
 		return nil, err
 	}
@@ -483,18 +483,18 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 		Tags:           openStackCluster.Spec.Tags,
 		AllowedCIDRs:   allowedCIDRs,
 	}
-	listener, err = s.loadbalancerClient.CreateListener(listenerCreateOpts)
+	listener, err = s.loadbalancerClient.CreateListener(ctx, listenerCreateOpts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateListener", "Failed to create listener %s: %v", listenerName, err)
 		return nil, err
 	}
 
-	if _, err := s.waitForLoadBalancerActive(lbID); err != nil {
+	if _, err := s.waitForLoadBalancerActive(ctx, lbID); err != nil {
 		record.Warnf(openStackCluster, "FailedCreateListener", "Failed to create listener %s with id %s: wait for load balancer active %s: %v", listenerName, listener.ID, lbID, err)
 		return nil, err
 	}
 
-	if err := s.waitForListener(listener.ID, "ACTIVE"); err != nil {
+	if err := s.waitForListener(ctx, listener.ID, "ACTIVE"); err != nil {
 		record.Warnf(openStackCluster, "FailedCreateListener", "Failed to create listener %s with id %s: wait for listener active: %v", listenerName, listener.ID, err)
 		return nil, err
 	}
@@ -504,7 +504,7 @@ func (s *Service) getOrCreateListener(openStackCluster *infrav1.OpenStackCluster
 }
 
 // getOrUpdateAllowedCIDRs ensures that the allowed CIDRs configured on a listener correspond to the expected list.
-func (s *Service) getOrUpdateAllowedCIDRs(openStackCluster *infrav1.OpenStackCluster, listener *listeners.Listener, allowedCIDRs []string) error {
+func (s *Service) getOrUpdateAllowedCIDRs(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, listener *listeners.Listener, allowedCIDRs []string) error {
 	// Sort and remove duplicates
 	listener.AllowedCIDRs = capostrings.Canonicalize(listener.AllowedCIDRs)
 
@@ -515,13 +515,13 @@ func (s *Service) getOrUpdateAllowedCIDRs(openStackCluster *infrav1.OpenStackClu
 		}
 
 		listenerID := listener.ID
-		listener, err := s.loadbalancerClient.UpdateListener(listener.ID, listenerUpdateOpts)
+		listener, err := s.loadbalancerClient.UpdateListener(ctx, listener.ID, listenerUpdateOpts)
 		if err != nil {
 			record.Warnf(openStackCluster, "FailedUpdateListener", "Failed to update listener %s: %v", listenerID, err)
 			return err
 		}
 
-		if err := s.waitForListener(listener.ID, "ACTIVE"); err != nil {
+		if err := s.waitForListener(ctx, listener.ID, "ACTIVE"); err != nil {
 			record.Warnf(openStackCluster, "FailedUpdateListener", "Failed to update listener %s with id %s: wait for listener active: %v", listener.Name, listener.ID, err)
 			return err
 		}
@@ -531,8 +531,8 @@ func (s *Service) getOrUpdateAllowedCIDRs(openStackCluster *infrav1.OpenStackClu
 	return nil
 }
 
-func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, poolName, listenerID, lbID string, lbProvider string) (*pools.Pool, error) {
-	pool, err := s.checkIfPoolExists(poolName)
+func (s *Service) getOrCreatePool(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, poolName, listenerID, lbID string, lbProvider string) (*pools.Pool, error) {
+	pool, err := s.checkIfPoolExists(ctx, poolName)
 	if err != nil {
 		return nil, err
 	}
@@ -556,13 +556,13 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 		ListenerID: listenerID,
 		Tags:       openStackCluster.Spec.Tags,
 	}
-	pool, err = s.loadbalancerClient.CreatePool(poolCreateOpts)
+	pool, err = s.loadbalancerClient.CreatePool(ctx, poolCreateOpts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreatePool", "Failed to create pool %s: %v", poolName, err)
 		return nil, err
 	}
 
-	if _, err := s.waitForLoadBalancerActive(lbID); err != nil {
+	if _, err := s.waitForLoadBalancerActive(ctx, lbID); err != nil {
 		record.Warnf(openStackCluster, "FailedCreatePool", "Failed to create pool %s with id %s: wait for load balancer active %s: %v", poolName, pool.ID, lbID, err)
 		return nil, err
 	}
@@ -571,7 +571,7 @@ func (s *Service) getOrCreatePool(openStackCluster *infrav1.OpenStackCluster, po
 	return pool, nil
 }
 
-func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, monitorName, poolID, lbID string) error {
+func (s *Service) ensureMonitor(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, monitorName, poolID, lbID string) error {
 	var cfg infrav1.APIServerLoadBalancerMonitor
 
 	if lbSpec := openStackCluster.Spec.APIServer.GetManagedLoadBalancer(); lbSpec != nil && lbSpec.Monitor != nil {
@@ -583,7 +583,7 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 	cfg.MaxRetries = cmp.Or(cfg.MaxRetries, defaultMonitorMaxRetries)
 	cfg.MaxRetriesDown = cmp.Or(cfg.MaxRetriesDown, defaultMonitorMaxRetriesDown)
 
-	monitor, err := s.checkIfMonitorExists(monitorName)
+	monitor, err := s.checkIfMonitorExists(ctx, monitorName)
 	if err != nil {
 		return err
 	}
@@ -619,13 +619,13 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 		if needsUpdate {
 			s.scope.Logger().V(2).Info("Updating load balancer monitor", "loadBalancerID", lbID, "name", monitorName, "monitorID", monitor.ID)
 
-			updatedMonitor, err := s.loadbalancerClient.UpdateMonitor(monitor.ID, monitorUpdateOpts)
+			updatedMonitor, err := s.loadbalancerClient.UpdateMonitor(ctx, monitor.ID, monitorUpdateOpts)
 			if err != nil {
 				record.Warnf(openStackCluster, "FailedUpdateMonitor", "Failed to update monitor %s with id %s: %v", monitorName, monitor.ID, err)
 				return err
 			}
 
-			if _, err = s.waitForLoadBalancerActive(lbID); err != nil {
+			if _, err = s.waitForLoadBalancerActive(ctx, lbID); err != nil {
 				record.Warnf(openStackCluster, "FailedUpdateMonitor", "Failed to update monitor %s with id %s: wait for load balancer active %s: %v", monitorName, monitor.ID, lbID, err)
 				return err
 			}
@@ -638,7 +638,7 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 
 	s.scope.Logger().V(2).Info("Creating load balancer monitor for pool", "loadBalancerID", lbID, "name", monitorName, "poolID", poolID)
 
-	monitor, err = s.loadbalancerClient.CreateMonitor(monitors.CreateOpts{
+	monitor, err = s.loadbalancerClient.CreateMonitor(ctx, monitors.CreateOpts{
 		Name:           monitorName,
 		PoolID:         poolID,
 		Type:           loadBalancerProtocolTCP,
@@ -657,7 +657,7 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 		return err
 	}
 
-	if _, err = s.waitForLoadBalancerActive(lbID); err != nil {
+	if _, err = s.waitForLoadBalancerActive(ctx, lbID); err != nil {
 		record.Warnf(openStackCluster, "FailedCreateMonitor", "Failed to create monitor %s with id %s: wait for load balancer active %s: %v", monitorName, monitor.ID, lbID, err)
 		return err
 	}
@@ -666,7 +666,7 @@ func (s *Service) ensureMonitor(openStackCluster *infrav1.OpenStackCluster, moni
 	return nil
 }
 
-func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName, ip string) error {
+func (s *Service) ReconcileLoadBalancerMember(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName, ip string) error {
 	if openStackCluster.Status.Network == nil {
 		return errors.New("network is not yet available in openStackCluster.Status")
 	}
@@ -700,7 +700,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name
 
-		pool, err := s.checkIfPoolExists(lbPortObjectsName)
+		pool, err := s.checkIfPoolExists(ctx, lbPortObjectsName)
 		if err != nil {
 			return err
 		}
@@ -708,7 +708,7 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			return errors.New("load balancer pool does not exist yet")
 		}
 
-		lbMember, err := s.checkIfLbMemberExists(pool.ID, name)
+		lbMember, err := s.checkIfLbMemberExists(ctx, pool.ID, name)
 		if err != nil {
 			return err
 		}
@@ -723,14 +723,14 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 			s.scope.Logger().V(2).Info("Deleting load balancer member because the IP of the machine changed", "name", name)
 
 			// lb member changed so let's delete it so we can create it again with the correct IP
-			_, err = s.waitForLoadBalancerActive(lbID)
+			_, err = s.waitForLoadBalancerActive(ctx, lbID)
 			if err != nil {
 				return err
 			}
-			if err := s.loadbalancerClient.DeletePoolMember(pool.ID, lbMember.ID); err != nil {
+			if err := s.loadbalancerClient.DeletePoolMember(ctx, pool.ID, lbMember.ID); err != nil {
 				return err
 			}
-			_, err = s.waitForLoadBalancerActive(lbID)
+			_, err = s.waitForLoadBalancerActive(ctx, lbID)
 			if err != nil {
 				return err
 			}
@@ -747,36 +747,36 @@ func (s *Service) ReconcileLoadBalancerMember(openStackCluster *infrav1.OpenStac
 		}
 
 		if openStackCluster.Status.Network.ID != openStackCluster.Status.APIServerManagedLoadBalancer.LoadBalancerNetwork.ID {
-			primarySubnetID, err := s.getPrimarySubnetID(openStackCluster)
+			primarySubnetID, err := s.getPrimarySubnetID(ctx, openStackCluster)
 			if err != nil {
 				return err
 			}
 			lbMemberOpts.SubnetID = primarySubnetID
 		}
 
-		if _, err := s.waitForLoadBalancerActive(lbID); err != nil {
+		if _, err := s.waitForLoadBalancerActive(ctx, lbID); err != nil {
 			return err
 		}
 
-		member, err := s.loadbalancerClient.CreatePoolMember(pool.ID, lbMemberOpts)
+		member, err := s.loadbalancerClient.CreatePoolMember(ctx, pool.ID, lbMemberOpts)
 		if err != nil {
 			return err
 		}
 
-		if _, err := s.waitForPoolMemberActive(pool.ID, member.ID); err != nil {
+		if _, err := s.waitForPoolMemberActive(ctx, pool.ID, member.ID); err != nil {
 			return err
 		}
 
-		if _, err := s.waitForLoadBalancerActive(lbID); err != nil {
+		if _, err := s.waitForLoadBalancerActive(ctx, lbID); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (result *ctrl.Result, reterr error) {
+func (s *Service) DeleteLoadBalancer(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) (result *ctrl.Result, reterr error) {
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
-	lb, err := s.checkIfLbExists(loadBalancerName)
+	lb, err := s.checkIfLbExists(ctx, loadBalancerName)
 	if err != nil {
 		return nil, err
 	}
@@ -794,19 +794,19 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	}
 
 	if lb.VipPortID != "" {
-		fip, err := s.networkingService.GetFloatingIPByPortID(lb.VipPortID)
+		fip, err := s.networkingService.GetFloatingIPByPortID(ctx, lb.VipPortID)
 		if err != nil {
 			return nil, err
 		}
 
 		if fip != nil && fip.FloatingIP != "" {
-			if err = s.networkingService.DisassociateFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
+			if err = s.networkingService.DisassociateFloatingIP(ctx, openStackCluster, fip.FloatingIP); err != nil {
 				return nil, err
 			}
 
 			// If the floating is user-provider (BYO floating IP), don't delete it.
 			if floatingIP := openStackCluster.Spec.APIServer.GetFloatingIP(); floatingIP == nil || *floatingIP != fip.FloatingIP {
-				if err = s.networkingService.DeleteFloatingIP(openStackCluster, fip.FloatingIP); err != nil {
+				if err = s.networkingService.DeleteFloatingIP(ctx, openStackCluster, fip.FloatingIP); err != nil {
 					return nil, err
 				}
 			} else {
@@ -819,7 +819,7 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 		Cascade: true,
 	}
 	s.scope.Logger().V(2).Info("Deleting load balancer", "name", loadBalancerName, "cascade", deleteOpts.Cascade)
-	err = s.loadbalancerClient.DeleteLoadBalancer(lb.ID, deleteOpts)
+	err = s.loadbalancerClient.DeleteLoadBalancer(ctx, lb.ID, deleteOpts)
 	if err != nil && !capoerrors.IsNotFound(err) {
 		record.Warnf(openStackCluster, "FailedDeleteLoadBalancer", "Failed to delete load balancer %s with id %s: %v", lb.Name, lb.ID, err)
 		return nil, err
@@ -832,13 +832,13 @@ func (s *Service) DeleteLoadBalancer(openStackCluster *infrav1.OpenStackCluster,
 	return &ctrl.Result{RequeueAfter: waitForOctaviaLBCleanup}, nil
 }
 
-func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName string) error {
+func (s *Service) DeleteLoadBalancerMember(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName string) error {
 	if openStackMachine == nil {
 		return errors.New("openStackMachine is nil")
 	}
 
 	loadBalancerName := getLoadBalancerName(clusterResourceName)
-	lb, err := s.checkIfLbExists(loadBalancerName)
+	lb, err := s.checkIfLbExists(ctx, loadBalancerName)
 	if err != nil {
 		return err
 	}
@@ -862,7 +862,7 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 		lbPortObjectsName := fmt.Sprintf("%s-%d", loadBalancerName, port)
 		name := lbPortObjectsName + "-" + openStackMachine.Name
 
-		pool, err := s.checkIfPoolExists(lbPortObjectsName)
+		pool, err := s.checkIfPoolExists(ctx, lbPortObjectsName)
 		if err != nil {
 			return err
 		}
@@ -871,21 +871,21 @@ func (s *Service) DeleteLoadBalancerMember(openStackCluster *infrav1.OpenStackCl
 			continue
 		}
 
-		lbMember, err := s.checkIfLbMemberExists(pool.ID, name)
+		lbMember, err := s.checkIfLbMemberExists(ctx, pool.ID, name)
 		if err != nil {
 			return err
 		}
 
 		if lbMember != nil {
 			// lb member changed so let's delete it so we can create it again with the correct IP
-			_, err = s.waitForLoadBalancerActive(lbID)
+			_, err = s.waitForLoadBalancerActive(ctx, lbID)
 			if err != nil {
 				return err
 			}
-			if err := s.loadbalancerClient.DeletePoolMember(pool.ID, lbMember.ID); err != nil {
+			if err := s.loadbalancerClient.DeletePoolMember(ctx, pool.ID, lbMember.ID); err != nil {
 				return err
 			}
-			_, err = s.waitForLoadBalancerActive(lbID)
+			_, err = s.waitForLoadBalancerActive(ctx, lbID)
 			if err != nil {
 				return err
 			}
@@ -898,8 +898,8 @@ func getLoadBalancerName(clusterResourceName string) string {
 	return fmt.Sprintf("%s-cluster-%s-%s", networkPrefix, clusterResourceName, kubeapiLBSuffix)
 }
 
-func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, error) {
-	lbList, err := s.loadbalancerClient.ListLoadBalancers(loadbalancers.ListOpts{Name: name})
+func (s *Service) checkIfLbExists(ctx context.Context, name string) (*loadbalancers.LoadBalancer, error) {
+	lbList, err := s.loadbalancerClient.ListLoadBalancers(ctx, loadbalancers.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -909,8 +909,8 @@ func (s *Service) checkIfLbExists(name string) (*loadbalancers.LoadBalancer, err
 	return &lbList[0], nil
 }
 
-func (s *Service) checkIfListenerExists(name string) (*listeners.Listener, error) {
-	listenerList, err := s.loadbalancerClient.ListListeners(listeners.ListOpts{Name: name})
+func (s *Service) checkIfListenerExists(ctx context.Context, name string) (*listeners.Listener, error) {
+	listenerList, err := s.loadbalancerClient.ListListeners(ctx, listeners.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -920,8 +920,8 @@ func (s *Service) checkIfListenerExists(name string) (*listeners.Listener, error
 	return &listenerList[0], nil
 }
 
-func (s *Service) checkIfPoolExists(name string) (*pools.Pool, error) {
-	poolList, err := s.loadbalancerClient.ListPools(pools.ListOpts{Name: name})
+func (s *Service) checkIfPoolExists(ctx context.Context, name string) (*pools.Pool, error) {
+	poolList, err := s.loadbalancerClient.ListPools(ctx, pools.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -931,8 +931,8 @@ func (s *Service) checkIfPoolExists(name string) (*pools.Pool, error) {
 	return &poolList[0], nil
 }
 
-func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
-	monitorList, err := s.loadbalancerClient.ListMonitors(monitors.ListOpts{Name: name})
+func (s *Service) checkIfMonitorExists(ctx context.Context, name string) (*monitors.Monitor, error) {
+	monitorList, err := s.loadbalancerClient.ListMonitors(ctx, monitors.ListOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -942,8 +942,8 @@ func (s *Service) checkIfMonitorExists(name string) (*monitors.Monitor, error) {
 	return &monitorList[0], nil
 }
 
-func (s *Service) checkIfLbMemberExists(poolID, name string) (*pools.Member, error) {
-	lbMemberList, err := s.loadbalancerClient.ListPoolMember(poolID, pools.ListMembersOpts{Name: name})
+func (s *Service) checkIfLbMemberExists(ctx context.Context, poolID, name string) (*pools.Member, error) {
+	lbMemberList, err := s.loadbalancerClient.ListPoolMember(ctx, poolID, pools.ListMembersOpts{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -961,13 +961,13 @@ var backoff = wait.Backoff{
 }
 
 // Possible LoadBalancer states are documented here: https://docs.openstack.org/api-ref/load-balancer/v2/index.html#prov-status
-func (s *Service) waitForLoadBalancerActive(id string) (*loadbalancers.LoadBalancer, error) {
+func (s *Service) waitForLoadBalancerActive(ctx context.Context, id string) (*loadbalancers.LoadBalancer, error) {
 	var lb *loadbalancers.LoadBalancer
 
 	s.scope.Logger().V(3).Info("Waiting for load balancer", "id", id, "targetStatus", "ACTIVE")
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		var err error
-		lb, err = s.loadbalancerClient.GetLoadBalancer(id)
+		lb, err = s.loadbalancerClient.GetLoadBalancer(ctx, id)
 		if err != nil {
 			return false, err
 		}
@@ -980,13 +980,13 @@ func (s *Service) waitForLoadBalancerActive(id string) (*loadbalancers.LoadBalan
 }
 
 // Possible Pool Member states are documented here: https://docs.openstack.org/api-ref/load-balancer/v2/#prov-status
-func (s *Service) waitForPoolMemberActive(poolID, memberID string) (*pools.Member, error) {
+func (s *Service) waitForPoolMemberActive(ctx context.Context, poolID, memberID string) (*pools.Member, error) {
 	var member *pools.Member
 
 	s.scope.Logger().V(3).Info("Waiting for pool member", "poolID", poolID, "memberID", memberID, "targetStatus", "ACTIVE")
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		var err error
-		member, err = s.loadbalancerClient.GetPoolMember(poolID, memberID)
+		member, err = s.loadbalancerClient.GetPoolMember(ctx, poolID, memberID)
 		if err != nil {
 			return false, err
 		}
@@ -998,10 +998,10 @@ func (s *Service) waitForPoolMemberActive(poolID, memberID string) (*pools.Membe
 	return member, nil
 }
 
-func (s *Service) waitForListener(id, target string) error {
+func (s *Service) waitForListener(ctx context.Context, id, target string) error {
 	s.scope.Logger().V(3).Info("Waiting for load balancer listener", "id", id, "targetStatus", target)
 	return wait.ExponentialBackoff(backoff, func() (bool, error) {
-		_, err := s.loadbalancerClient.GetListener(id)
+		_, err := s.loadbalancerClient.GetListener(ctx, id)
 		if err != nil {
 			return false, err
 		}
