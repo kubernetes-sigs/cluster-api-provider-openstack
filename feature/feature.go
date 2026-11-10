@@ -42,6 +42,13 @@ const (
 	//
 	// alpha: v0.14
 	AutoScaleFromZero featuregate.Feature = "AutoScaleFromZero"
+
+	// PortGarbageCollection is a feature gate that makes the OpenStackServer controller delete ports
+	// which CAPO created for a server but did not record in its status. It only deletes ports matching
+	// a desired port by name, network and description which are not attached to any device.
+	//
+	// alpha: v0.16
+	PortGarbageCollection featuregate.Feature = "PortGarbageCollection"
 )
 
 func init() {
@@ -52,6 +59,7 @@ func init() {
 // To add a new feature, define a key for it above and add it here.
 var defaultCAPOFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
 	// Every feature should be initiated here:
-	PriorityQueue:     {Default: true, PreRelease: featuregate.Beta},
-	AutoScaleFromZero: {Default: false, PreRelease: featuregate.Alpha},
+	PriorityQueue:         {Default: true, PreRelease: featuregate.Beta},
+	AutoScaleFromZero:     {Default: false, PreRelease: featuregate.Alpha},
+	PortGarbageCollection: {Default: false, PreRelease: featuregate.Alpha},
 }

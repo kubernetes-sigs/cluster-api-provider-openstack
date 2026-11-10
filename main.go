@@ -391,12 +391,13 @@ func setupReconcilers(ctx context.Context, mgr ctrl.Manager, caCerts []byte) {
 		os.Exit(1)
 	}
 	if err := (&controllers.OpenStackServerReconciler{
-		Client:           mgr.GetClient(),
-		Recorder:         mgr.GetEventRecorder("openstackserver-controller"),
-		WatchFilterValue: watchFilterValue,
-		ScopeFactory:     scopeFactory,
-		CaCertificates:   caCerts,
-		Scheme:           mgr.GetScheme(),
+		Client:                mgr.GetClient(),
+		Recorder:              mgr.GetEventRecorder("openstackserver-controller"),
+		WatchFilterValue:      watchFilterValue,
+		ScopeFactory:          scopeFactory,
+		CaCertificates:        caCerts,
+		PortGarbageCollection: feature.Gates.Enabled(feature.PortGarbageCollection),
+		Scheme:                mgr.GetScheme(),
 	}).SetupWithManager(ctx, mgr, concurrency(openStackMachineConcurrency)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "OpenStackServer")
 		os.Exit(1)

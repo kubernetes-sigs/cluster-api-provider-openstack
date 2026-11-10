@@ -220,6 +220,7 @@ variables:
   CCM: "../../data/ccm/cloud-controller-manager.yaml"
   EXP_CAPO_PRIORITY_QUEUE: "true"
   EXP_CAPO_AUTOSCALE_FROM_ZERO: "true"
+  EXP_CAPO_PORT_GARBAGE_COLLECTION: "true"
   IP_FAMILY: "ipv4"
   OPENSTACK_BASTION_IMAGE_NAME: "cirros-0.6.1-x86_64-disk"
   OPENSTACK_BASTION_IMAGE_URL: https://storage.googleapis.com/artifacts.k8s-staging-capi-openstack.appspot.com/test/cirros/2022-12-05/cirros-0.6.1-x86_64-disk.img
