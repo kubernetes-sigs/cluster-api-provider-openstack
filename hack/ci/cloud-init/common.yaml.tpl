@@ -3,6 +3,21 @@ runcmd:
 - sysctl -p /etc/sysctl.d/devstack.conf
 - /root/devstack.sh
 bootcmd:
+# EXPERIMENT: stop cloud-final from writing to the serial console.
+# cloud-final.service is believed to use StandardOutput=journal+console. On GCE
+# the console is a slow serial port (ttyS0 at 115200) and every line that
+# devstack prints during stack.sh is written to it. If the console blocks, so
+# can the journal and everything else that logs, which would explain the
+# multi-minute stalls we see during bootstrap. The output is still kept in
+# /var/log/cloud-init-output.log, which cloud-init writes itself.
+- |
+  mkdir -p /etc/systemd/system/cloud-final.service.d
+  cat > /etc/systemd/system/cloud-final.service.d/10-capo-no-console.conf <<'EOF'
+  [Service]
+  StandardOutput=journal
+  StandardError=journal
+  EOF
+  systemctl daemon-reload
 # Start a lightweight resource sampler as early as possible, as a separate
 # systemd unit so that it keeps running after cloud-init finishes. It records
 # load, CPU steal, pressure stall information and memory every 10s, and the
