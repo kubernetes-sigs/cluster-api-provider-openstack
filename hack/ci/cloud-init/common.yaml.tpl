@@ -30,7 +30,6 @@ packages:
 - python3
 - git
 - jq
-package_upgrade: true
 write_files:
 - path: /etc/sysctl.d/devstack.conf
   permissions: "0644"
