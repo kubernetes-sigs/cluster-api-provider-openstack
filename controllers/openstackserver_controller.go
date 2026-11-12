@@ -167,7 +167,7 @@ func (r *OpenStackServerReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return ctrl.Result{}, err
 			}
 		}
-		return reconcile.Result{}, r.reconcileDelete(scope, openStackServer)
+		return reconcile.Result{}, r.reconcileDelete(ctx, scope, openStackServer)
 	}
 
 	// Handle non-deleted servers
@@ -246,7 +246,7 @@ func (r *OpenStackServerReconciler) SetupWithManager(ctx context.Context, mgr ct
 		Complete(r)
 }
 
-func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
+func (r *OpenStackServerReconciler) reconcileDelete(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
 	log := scope.Logger().WithValues("OpenStackServer", klog.KObj(openStackServer))
 	log.Info("Reconciling OpenStackServer delete")
 
@@ -262,22 +262,22 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 
 	// Check for any orphaned resources
 	// N.B. Unlike resolveServerResources, we must always look for orphaned resources in the delete path.
-	if err := adoptServerResources(scope, openStackServer); err != nil {
+	if err := adoptServerResources(ctx, scope, openStackServer); err != nil {
 		return fmt.Errorf("adopting server resources: %w", err)
 	}
 
-	instanceStatus, err := getServerStatus(openStackServer, computeService)
+	instanceStatus, err := getServerStatus(ctx, openStackServer, computeService)
 	if err != nil {
 		return err
 	}
 
 	// If no instance was created we currently need to check for orphaned volumes.
 	if instanceStatus == nil {
-		if err := computeService.DeleteVolumes(openStackServer.Name, openStackServer.Spec.RootVolume, openStackServer.Spec.AdditionalBlockDevices); err != nil {
+		if err := computeService.DeleteVolumes(ctx, openStackServer.Name, openStackServer.Spec.RootVolume, openStackServer.Spec.AdditionalBlockDevices); err != nil {
 			return fmt.Errorf("delete volumes: %w", err)
 		}
 	} else {
-		if err := computeService.DeleteInstance(openStackServer, instanceStatus); err != nil {
+		if err := computeService.DeleteInstance(ctx, openStackServer, instanceStatus); err != nil {
 			conditions.Set(openStackServer, metav1.Condition{
 				Type:    infrav1.InstanceReadyCondition,
 				Status:  metav1.ConditionFalse,
@@ -288,7 +288,7 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 		}
 	}
 
-	trunkSupported, err := networkingService.IsTrunkExtSupported()
+	trunkSupported, err := networkingService.IsTrunkExtSupported(ctx)
 	if err != nil {
 		return err
 	}
@@ -296,13 +296,13 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 	if openStackServer.Status.Resources != nil {
 		portsStatus := openStackServer.Status.Resources.Ports
 		for _, port := range portsStatus {
-			if err := networkingService.DeleteInstanceTrunkAndPort(openStackServer, port, trunkSupported); err != nil {
+			if err := networkingService.DeleteInstanceTrunkAndPort(ctx, openStackServer, port, trunkSupported); err != nil {
 				return fmt.Errorf("failed to delete port %q: %w", port.ID, err)
 			}
 		}
 	}
 
-	if err := r.reconcileDeleteFloatingAddressFromPool(scope, openStackServer); err != nil {
+	if err := r.reconcileDeleteFloatingAddressFromPool(ctx, scope, openStackServer); err != nil {
 		return err
 	}
 
@@ -363,7 +363,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	}
 
 	// Check for orphaned resources previously created but not written to the status
-	if err := adoptServerResources(scope, openStackServer); err != nil {
+	if err := adoptServerResources(ctx, scope, openStackServer); err != nil {
 		return ctrl.Result{}, fmt.Errorf("adopting server resources: %w", err)
 	}
 	computeService, err := compute.NewService(scope)
@@ -380,7 +380,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 		return ctrl.Result{}, err
 	}
 
-	err = getOrCreateServerPorts(openStackServer, networkingService)
+	err = getOrCreateServerPorts(ctx, openStackServer, networkingService)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -476,7 +476,7 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 }
 
 // adoptServerResources adopts the OpenStack resources for the server.
-func adoptServerResources(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
+func adoptServerResources(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
 	resources := openStackServer.Status.Resources
 	if resources == nil {
 		resources = &infrav1alpha1.ServerResources{}
@@ -484,10 +484,10 @@ func adoptServerResources(scope *scope.WithLogger, openStackServer *infrav1alpha
 	}
 
 	// Adopt any existing resources
-	return compute.AdoptServerResources(scope, openStackServer.Status.Resolved, resources)
+	return compute.AdoptServerResources(ctx, scope, openStackServer.Status.Resolved, resources)
 }
 
-func getOrCreateServerPorts(openStackServer *infrav1alpha1.OpenStackServer, networkingService *networking.Service) error {
+func getOrCreateServerPorts(ctx context.Context, openStackServer *infrav1alpha1.OpenStackServer, networkingService *networking.Service) error {
 	resolved := openStackServer.Status.Resolved
 	if resolved == nil {
 		return errors.New("server status resolved is nil")
@@ -498,7 +498,7 @@ func getOrCreateServerPorts(openStackServer *infrav1alpha1.OpenStackServer, netw
 	}
 	desiredPorts := resolved.Ports
 
-	if err := networkingService.EnsurePorts(openStackServer, desiredPorts, resources); err != nil {
+	if err := networkingService.EnsurePorts(ctx, openStackServer, desiredPorts, resources); err != nil {
 		conditions.Set(openStackServer, metav1.Condition{
 			Type:    infrav1.InstanceReadyCondition,
 			Status:  metav1.ConditionFalse,
@@ -517,7 +517,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 	var err error
 
 	if openStackServer.Status.InstanceID != nil {
-		instanceStatus, err = computeService.GetInstanceStatus(*openStackServer.Status.InstanceID)
+		instanceStatus, err = computeService.GetInstanceStatus(ctx, *openStackServer.Status.InstanceID)
 		if err != nil || instanceStatus == nil {
 			logger.Info("Unable to get OpenStack instance", "name", openStackServer.Name, "id", *openStackServer.Status.InstanceID)
 			var msg string
@@ -540,7 +540,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 	}
 	if instanceStatus == nil {
 		// Check if there is an existing instance with machine name, in case where instance ID would not have been stored in machine status
-		instanceStatus, err := computeService.GetInstanceStatusByName(openStackServer, openStackServer.Name)
+		instanceStatus, err := computeService.GetInstanceStatusByName(ctx, openStackServer, openStackServer.Name)
 		if err != nil {
 			logger.Error(err, "Failed to get instance by name", "name", openStackServer.Name)
 			return nil, err
@@ -556,7 +556,7 @@ func (r *OpenStackServerReconciler) getOrCreateServer(ctx context.Context, logge
 			return nil, err
 		}
 		instanceSpec.Name = openStackServer.Name
-		instanceStatus, err = computeService.CreateInstance(openStackServer, instanceSpec, portIDs)
+		instanceStatus, err = computeService.CreateInstance(ctx, openStackServer, instanceSpec, portIDs)
 		if err != nil {
 			conditions.Set(openStackServer, metav1.Condition{
 				Type:    infrav1.InstanceReadyCondition,
@@ -632,11 +632,11 @@ func (r *OpenStackServerReconciler) serverToInstanceSpec(ctx context.Context, op
 	return instanceSpec, nil
 }
 
-func getServerStatus(openStackServer *infrav1alpha1.OpenStackServer, computeService *compute.Service) (*compute.InstanceStatus, error) {
+func getServerStatus(ctx context.Context, openStackServer *infrav1alpha1.OpenStackServer, computeService *compute.Service) (*compute.InstanceStatus, error) {
 	if openStackServer.Status.InstanceID != nil {
-		return computeService.GetInstanceStatus(*openStackServer.Status.InstanceID)
+		return computeService.GetInstanceStatus(ctx, *openStackServer.Status.InstanceID)
 	}
-	return computeService.GetInstanceStatusByName(openStackServer, openStackServer.Name)
+	return computeService.GetInstanceStatusByName(ctx, openStackServer, openStackServer.Name)
 }
 
 // getClusterFromMetadata returns the Cluster object (if present) using the object metadata.
@@ -755,7 +755,7 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 		}
 	}
 
-	fip, err := networkingService.GetFloatingIP(address.Spec.Address)
+	fip, err := networkingService.GetFloatingIP(ctx, address.Spec.Address)
 	if err != nil {
 		return err
 	}
@@ -770,7 +770,7 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 		return fmt.Errorf("floating IP %q does not exist", address.Spec.Address)
 	}
 
-	port, err := networkingService.GetPortForExternalNetwork(instanceStatus.ID(), fip.FloatingNetworkID)
+	port, err := networkingService.GetPortForExternalNetwork(ctx, instanceStatus.ID(), fip.FloatingNetworkID)
 	if err != nil {
 		return fmt.Errorf("get port for floating IP %q: %w", fip.FloatingIP, err)
 	}
@@ -785,7 +785,7 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 		return fmt.Errorf("port for floating IP %q on network %s does not exist", fip.FloatingIP, fip.FloatingNetworkID)
 	}
 
-	if err = networkingService.AssociateFloatingIP(openStackServer, fip, port.ID); err != nil {
+	if err = networkingService.AssociateFloatingIP(ctx, openStackServer, fip, port.ID); err != nil {
 		return err
 	}
 	conditions.Set(openStackServer, metav1.Condition{
@@ -796,7 +796,7 @@ func (r *OpenStackServerReconciler) associateIPAddressFromIPAddressClaim(ctx con
 	return nil
 }
 
-func (r *OpenStackServerReconciler) reconcileDeleteFloatingAddressFromPool(scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
+func (r *OpenStackServerReconciler) reconcileDeleteFloatingAddressFromPool(ctx context.Context, scope *scope.WithLogger, openStackServer *infrav1alpha1.OpenStackServer) error {
 	log := scope.Logger().WithValues("openStackMachine", openStackServer.Name)
 	log.Info("Reconciling Machine delete floating address from pool")
 	if openStackServer.Spec.FloatingIPPoolRef == nil {
@@ -804,12 +804,12 @@ func (r *OpenStackServerReconciler) reconcileDeleteFloatingAddressFromPool(scope
 	}
 	claimName := names.GetFloatingAddressClaimName(openStackServer.Name)
 	claim := &ipamv1.IPAddressClaim{}
-	if err := r.Client.Get(context.Background(), client.ObjectKey{Namespace: openStackServer.Namespace, Name: claimName}, claim); err != nil {
+	if err := r.Client.Get(ctx, client.ObjectKey{Namespace: openStackServer.Namespace, Name: claimName}, claim); err != nil {
 		return client.IgnoreNotFound(err)
 	}
 
 	controllerutil.RemoveFinalizer(claim, infrav1.IPClaimMachineFinalizer)
-	return r.Client.Update(context.Background(), claim)
+	return r.Client.Update(ctx, claim)
 }
 
 // instanceStateReportable returns true when InstanceState is one that dependent

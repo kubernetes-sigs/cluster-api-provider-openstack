@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -49,7 +48,6 @@ import (
 
 var (
 	reconciler       *OpenStackClusterReconciler
-	ctx              context.Context
 	testCluster      *infrav1.OpenStackCluster
 	capiCluster      *clusterv1.Cluster
 	testNamespace    string
@@ -73,8 +71,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		},
 	}
 
-	BeforeEach(func() {
-		ctx = context.TODO()
+	BeforeEach(func(ctx SpecContext) {
 		testNum++
 		testNamespace = fmt.Sprintf("test-%d", testNum)
 
@@ -130,7 +127,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}()
 	})
 
-	AfterEach(func() {
+	AfterEach(func(ctx SpecContext) {
 		orphan := metav1.DeletePropagationOrphan
 		deleteOptions := client.DeleteOptions{
 			PropagationPolicy: &orphan,
@@ -159,7 +156,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		framework.DeleteNamespace(ctx, input)
 	})
 
-	It("should create OpenStackClusterIdentity (CRD present)", func() {
+	It("should create OpenStackClusterIdentity (CRD present)", func(ctx SpecContext) {
 		err := k8sClient.Create(ctx, testCluster)
 		Expect(err).To(BeNil())
 		err = k8sClient.Create(ctx, capiCluster)
@@ -179,12 +176,12 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(k8sClient.Create(ctx, id)).To(Succeed())
 
 		// Cleanup cluster-scoped resource since it won't be deleted with namespace
-		DeferCleanup(func() {
+		DeferCleanup(func(ctx SpecContext) {
 			Expect(k8sClient.Delete(ctx, id)).To(Succeed())
 		})
 	})
 
-	It("should successfully create OpenStackCluster with valid identityRef", func() {
+	It("should successfully create OpenStackCluster with valid identityRef", func(ctx SpecContext) {
 		testCluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Name:      "creds",
 			CloudName: "openstack",
@@ -204,7 +201,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(created.Spec.IdentityRef.CloudName).To(Equal("openstack"))
 	})
 
-	It("should successfully create OpenStackCluster with ClusterIdentity type", func() {
+	It("should successfully create OpenStackCluster with ClusterIdentity type", func(ctx SpecContext) {
 		testCluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Type:      "ClusterIdentity",
 			Name:      "global-creds",
@@ -226,7 +223,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(created.Spec.IdentityRef.Region).To(Equal("RegionOne"))
 	})
 
-	It("should fail when namespace is denied access to ClusterIdentity and set OpenStackAuthenticationSucceededCondition to False", func() {
+	It("should fail when namespace is denied access to ClusterIdentity and set OpenStackAuthenticationSucceededCondition to False", func(ctx SpecContext) {
 		testCluster.SetName("identity-access-denied")
 		testCluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Type:      "ClusterIdentity",
@@ -263,7 +260,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
-	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
+	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func(ctx SpecContext) {
 		testCluster.SetName("missing-credentials")
 		testCluster.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Type:      "Secret",
@@ -297,7 +294,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
-	It("should be able to patch conditions written without a reason by CAPO < 0.15", func() {
+	It("should be able to patch conditions written without a reason by CAPO < 0.15", func(ctx SpecContext) {
 		testCluster.SetName("legacy-conditions")
 		Expect(k8sClient.Create(ctx, testCluster)).To(Succeed())
 		Expect(k8sClient.Create(ctx, capiCluster)).To(Succeed())
@@ -336,7 +333,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}
 	})
 
-	It("should reject updates that modify identityRef.region (immutable)", func() {
+	It("should reject updates that modify identityRef.region (immutable)", func(ctx SpecContext) {
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			IdentityRef: infrav1.OpenStackIdentityReference{
 				Type:      "Secret",
@@ -357,7 +354,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(k8sClient.Update(ctx, fetched)).ToNot(Succeed())
 	})
 
-	It("should do nothing when owner is missing", func() {
+	It("should do nothing when owner is missing", func(ctx SpecContext) {
 		testCluster.SetName("missing-owner")
 		testCluster.SetOwnerReferences([]metav1.OwnerReference{})
 
@@ -372,7 +369,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		Expect(result).To(Equal(reconcile.Result{}))
 	})
-	It("should do nothing when paused", func() {
+	It("should do nothing when paused", func(ctx SpecContext) {
 		testCluster.SetName("paused")
 		annotations.AddAnnotations(testCluster, map[string]string{clusterv1.PausedAnnotation: "true"})
 
@@ -387,7 +384,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		Expect(result).To(Equal(reconcile.Result{}))
 	})
-	It("should do nothing when unable to get OS client", func() {
+	It("should do nothing when unable to get OS client", func(ctx SpecContext) {
 		testCluster.SetName("no-openstack-client")
 		err := k8sClient.Create(ctx, testCluster)
 		Expect(err).To(BeNil())
@@ -403,7 +400,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(MatchError(clientCreateErr))
 		Expect(result).To(Equal(reconcile.Result{}))
 	})
-	It("should be able to reconcile when bastion is explicitly disabled and does not exist", func() {
+	It("should be able to reconcile when bastion is explicitly disabled and does not exist", func(ctx SpecContext) {
 		testCluster.SetName("no-bastion-explicit")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			IdentityRef: infrav1.OpenStackIdentityReference{
@@ -432,7 +429,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Bastion).To(BeNil())
 	})
-	It("should delete an existing bastion even if its uuid is not stored in status", func() {
+	It("should delete an existing bastion even if its uuid is not stored in status", func(ctx SpecContext) {
 		testCluster.SetName("delete-existing-bastion")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			IdentityRef: infrav1.OpenStackIdentityReference{
@@ -464,7 +461,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 	})
 
-	It("should implicitly filter cluster subnets by cluster network", func() {
+	It("should implicitly filter cluster subnets by cluster network", func(ctx SpecContext) {
 		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
@@ -514,19 +511,19 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, externalNetworkID).Return(&networks.Network{
 			ID:   externalNetworkID,
 			Name: "external-network",
 		}, nil)
 
 		// Fetch cluster network
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Fetching cluster subnets should be filtered by cluster network id
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
 			{
@@ -536,7 +533,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}, nil)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 
 		// Verify conditions are set correctly
@@ -545,7 +542,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
-	It("should allow two subnets for the cluster network", func() {
+	It("should allow two subnets for the cluster network", func(ctx SpecContext) {
 		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		clusterSubnets := []string{"cad5a91a-36de-4388-823b-b0cc82cadfdc", "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"}
@@ -599,32 +596,32 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, externalNetworkID).Return(&networks.Network{
 			ID:   externalNetworkID,
 			Name: "external-network",
 		}, nil)
 
 		// Fetch cluster network
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
-		networkClientRecorder.GetSubnet(clusterSubnets[0]).Return(&subnets.Subnet{
+		networkClientRecorder.GetSubnet(ctx, clusterSubnets[0]).Return(&subnets.Subnet{
 			ID:        clusterSubnets[0],
 			NetworkID: clusterNetworkID,
 			Name:      "cluster-subnet",
 			CIDR:      "192.168.0.0/24",
 		}, nil)
 
-		networkClientRecorder.GetSubnet(clusterSubnets[1]).Return(&subnets.Subnet{
+		networkClientRecorder.GetSubnet(ctx, clusterSubnets[1]).Return(&subnets.Subnet{
 			ID:        clusterSubnets[1],
 			NetworkID: clusterNetworkID,
 			Name:      "cluster-subnet-v6",
 			CIDR:      "2001:db8:2222:5555::/64",
 		}, nil)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 		Expect(len(testCluster.Status.Network.Subnets)).To(Equal(2))
 
@@ -634,7 +631,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
-	It("should allow fetch network by subnet", func() {
+	It("should allow fetch network by subnet", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
 
@@ -666,18 +663,18 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetching cluster subnets should be filtered by cluster network id
-		networkClientRecorder.GetSubnet(clusterSubnetID).Return(&subnets.Subnet{
+		networkClientRecorder.GetSubnet(ctx, clusterSubnetID).Return(&subnets.Subnet{
 			ID:        clusterSubnetID,
 			CIDR:      "192.168.0.0/24",
 			NetworkID: clusterNetworkID,
 		}, nil)
 
 		// Fetch cluster network using the NetworkID from the filtered Subnets
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID: clusterNetworkID,
 		}, nil)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
 
@@ -687,7 +684,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
-	It("reconcile pre-existing network components by id", func() {
+	It("reconcile pre-existing network components by id", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
 		const clusterRouterID = "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"
@@ -723,24 +720,24 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
-		networkClientRecorder.GetSubnet(clusterSubnetID).Return(&subnets.Subnet{
+		networkClientRecorder.GetSubnet(ctx, clusterSubnetID).Return(&subnets.Subnet{
 			ID:        clusterSubnetID,
 			CIDR:      "192.168.0.0/24",
 			NetworkID: clusterNetworkID,
 		}, nil)
 
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID: clusterNetworkID,
 		}, nil)
 
-		networkClientRecorder.GetRouter(clusterRouterID).Return(&routers.Router{
+		networkClientRecorder.GetRouter(ctx, clusterRouterID).Return(&routers.Router{
 			ID: clusterRouterID,
 		}, nil)
 
 		networkingService, err := networking.NewService(scope)
 		Expect(err).To(BeNil())
 
-		err = reconcilePreExistingNetworkComponents(scope, networkingService, testCluster)
+		err = reconcilePreExistingNetworkComponents(ctx, scope, networkingService, testCluster)
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
 		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(clusterSubnetID))
@@ -754,7 +751,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(k8sClient.Status().Update(ctx, testCluster)).To(Succeed())
 	})
 
-	It("includes failure-domain subnets and legacy fallback subnets in status", func() {
+	It("includes failure-domain subnets and legacy fallback subnets in status", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const mappedSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
 		const fallbackSubnetID = "e2407c18-c4e7-4d3d-befa-8eec5d8756f2"
@@ -787,24 +784,24 @@ var _ = Describe("OpenStackCluster controller", func() {
 		scope := scope.NewWithLogger(clientScope, log)
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
-		networkClientRecorder.GetSubnet(mappedSubnetID).Return(&subnets.Subnet{
+		networkClientRecorder.GetSubnet(ctx, mappedSubnetID).Return(&subnets.Subnet{
 			ID:        mappedSubnetID,
 			CIDR:      "192.168.0.0/24",
 			NetworkID: clusterNetworkID,
 		}, nil)
-		networkClientRecorder.GetSubnet(fallbackSubnetID).Return(&subnets.Subnet{
+		networkClientRecorder.GetSubnet(ctx, fallbackSubnetID).Return(&subnets.Subnet{
 			ID:        fallbackSubnetID,
 			CIDR:      "192.168.1.0/24",
 			NetworkID: clusterNetworkID,
 		}, nil)
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID: clusterNetworkID,
 		}, nil)
 
 		networkingService, err := networking.NewService(scope)
 		Expect(err).To(BeNil())
 
-		err = reconcilePreExistingNetworkComponents(scope, networkingService, testCluster)
+		err = reconcilePreExistingNetworkComponents(ctx, scope, networkingService, testCluster)
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Network.Subnets).To(HaveLen(2))
 		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(mappedSubnetID))
@@ -813,7 +810,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(testCluster.Status.Network.Subnets[1].FailureDomain).To(BeEmpty())
 	})
 
-	It("reconcile pre-existing network components by name", func() {
+	It("reconcile pre-existing network components by name", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterNetworkName = "capo"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
@@ -858,7 +855,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
-		networkClientRecorder.ListNetwork(networks.ListOpts{
+		networkClientRecorder.ListNetwork(ctx, networks.ListOpts{
 			Name: clusterNetworkName,
 		}).Return([]networks.Network{
 			{
@@ -866,7 +863,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}, nil)
 
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			Name:      clusterSubnetName,
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
@@ -877,7 +874,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}, nil)
 
-		networkClientRecorder.ListRouter(routers.ListOpts{
+		networkClientRecorder.ListRouter(ctx, routers.ListOpts{
 			Name: clusterRouterName,
 		}).Return([]routers.Router{
 			{
@@ -888,7 +885,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkingService, err := networking.NewService(scope)
 		Expect(err).To(BeNil())
 
-		err = reconcilePreExistingNetworkComponents(scope, networkingService, testCluster)
+		err = reconcilePreExistingNetworkComponents(ctx, scope, networkingService, testCluster)
 		Expect(err).To(BeNil())
 		Expect(testCluster.Status.Network.ID).To(Equal(clusterNetworkID))
 		Expect(testCluster.Status.Network.Subnets[0].ID).To(Equal(clusterSubnetID))
@@ -899,7 +896,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.RouterReadyCondition)).To(BeTrue())
 	})
 
-	It("should reconcile API endpoint with floating IP and set condition", func() {
+	It("should reconcile API endpoint with floating IP and set condition", func(ctx SpecContext) {
 		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
@@ -933,19 +930,19 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, externalNetworkID).Return(&networks.Network{
 			ID:   externalNetworkID,
 			Name: "external-network",
 		}, nil)
 
 		// Fetch cluster network
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Fetching cluster subnets
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
 			{
@@ -957,12 +954,12 @@ var _ = Describe("OpenStackCluster controller", func() {
 
 		// Mock floating IP creation for API server
 		// When no specific IP is requested, it will just create a new floating IP
-		networkClientRecorder.CreateFloatingIP(gomock.Any()).Return(&floatingips.FloatingIP{
+		networkClientRecorder.CreateFloatingIP(ctx, gomock.Any()).Return(&floatingips.FloatingIP{
 			FloatingIP: floatingIP,
 			ID:         "floating-ip-id",
 		}, nil)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 
 		// Verify API endpoint was set
@@ -976,7 +973,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
-	It("should reconcile API endpoint with fixed IP and set condition", func() {
+	It("should reconcile API endpoint with fixed IP and set condition", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
 		const fixedIP = "192.168.0.10"
@@ -1009,13 +1006,13 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch cluster network
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Fetching cluster subnets
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
 			{
@@ -1025,7 +1022,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 			},
 		}, nil)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).To(BeNil())
 
 		// Verify API endpoint was set with fixed IP
@@ -1039,7 +1036,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.APIEndpointReadyCondition)).To(BeTrue())
 	})
 
-	It("should set NetworkReadyCondition to False when ManagedSubnets has more than one element", func() {
+	It("should set NetworkReadyCondition to False when ManagedSubnets has more than one element", func(ctx SpecContext) {
 		testCluster.SetName("managed-subnets-too-many")
 		testCluster.Spec = infrav1.OpenStackClusterSpec{
 			IdentityRef: infrav1.OpenStackIdentityReference{
@@ -1071,7 +1068,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(err).To(BeNil())
 		scope := scope.NewWithLogger(clientScope, log)
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 		Expect(err.Error()).To(ContainSubstring("ManagedSubnets only supports one element"))
 
@@ -1085,7 +1082,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsFalse(testCluster, clusterv1.ReadyCondition)).To(BeTrue())
 	})
 
-	It("should set NetworkReadyCondition to False when external network reconciliation fails", func() {
+	It("should set NetworkReadyCondition to False when external network reconciliation fails", func(ctx SpecContext) {
 		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
 
 		testCluster.SetName("external-network-failure")
@@ -1115,9 +1112,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// External network lookup fails
-		networkClientRecorder.GetNetwork(externalNetworkID).Return(nil, fmt.Errorf("external network not found"))
+		networkClientRecorder.GetNetwork(ctx, externalNetworkID).Return(nil, fmt.Errorf("external network not found"))
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 		Expect(err.Error()).To(ContainSubstring("failed to reconcile external network"))
 
@@ -1132,7 +1129,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsFalse(testCluster, clusterv1.ReadyCondition)).To(BeTrue())
 	})
 
-	It("should set NetworkReadyCondition to False when network lookup fails", func() {
+	It("should set NetworkReadyCondition to False when network lookup fails", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 
 		testCluster.SetName("network-lookup-failure")
@@ -1163,9 +1160,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Simulate network lookup failure
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(nil, fmt.Errorf("unable to get network"))
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(nil, fmt.Errorf("unable to get network"))
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 		Expect(err.Error()).To(ContainSubstring("error fetching cluster network"))
 
@@ -1177,7 +1174,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(condition.Message).To(ContainSubstring("Failed to find network"))
 	})
 
-	It("should set NetworkReadyCondition to False when subnet lookup fails", func() {
+	It("should set NetworkReadyCondition to False when subnet lookup fails", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 
 		testCluster.SetName("subnet-lookup-failure")
@@ -1208,17 +1205,17 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Network lookup succeeds
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Subnet list lookup fails
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return(nil, fmt.Errorf("failed to list subnets"))
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 
 		// Verify NetworkReadyCondition is set to False
@@ -1228,7 +1225,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(condition.Reason).To(Equal(infrav1.OpenStackErrorReason))
 	})
 
-	It("should set RouterReadyCondition to False when router lookup fails", func() {
+	It("should set RouterReadyCondition to False when router lookup fails", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
 		const clusterRouterID = "a0e2b0a5-4d2f-4e8d-9a1c-6b3e7f8c9d0e"
@@ -1264,13 +1261,13 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Network lookup succeeds
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Subnet lookup succeeds
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
 			{
@@ -1281,9 +1278,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}, nil)
 
 		// Router lookup fails
-		networkClientRecorder.GetRouter(clusterRouterID).Return(nil, fmt.Errorf("unable to get router"))
+		networkClientRecorder.GetRouter(ctx, clusterRouterID).Return(nil, fmt.Errorf("unable to get router"))
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 		Expect(err.Error()).To(ContainSubstring("error fetching cluster router"))
 
@@ -1298,7 +1295,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
 	})
 
-	It("should set SecurityGroupsReadyCondition to False when security group reconciliation fails", func() {
+	It("should set SecurityGroupsReadyCondition to False when security group reconciliation fails", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
 
@@ -1342,13 +1339,13 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Network lookup succeeds
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Subnet lookup succeeds
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
 			{
@@ -1359,10 +1356,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}, nil)
 
 		// Security group creation fails - this will trigger an error in getOrCreateSecurityGroup
-		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil).AnyTimes()
-		networkClientRecorder.CreateSecGroup(gomock.Any()).Return(nil, fmt.Errorf("quota exceeded")).AnyTimes()
+		networkClientRecorder.ListSecGroup(ctx, gomock.Any()).Return([]groups.SecGroup{}, nil).AnyTimes()
+		networkClientRecorder.CreateSecGroup(ctx, gomock.Any()).Return(nil, fmt.Errorf("quota exceeded")).AnyTimes()
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 		Expect(err.Error()).To(ContainSubstring("failed to reconcile security groups"))
 
@@ -1377,7 +1374,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
 	})
 
-	It("should clear ReadyCondition when security group reconciliation fails on a previously ready cluster", func() {
+	It("should clear ReadyCondition when security group reconciliation fails on a previously ready cluster", func(ctx SpecContext) {
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
 
@@ -1444,13 +1441,13 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Network lookup succeeds
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Subnet lookup succeeds
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
 			{
@@ -1461,10 +1458,10 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}, nil)
 
 		// Security group reconciliation fails (e.g. rule conflict as reported in #2993)
-		networkClientRecorder.ListSecGroup(gomock.Any()).Return([]groups.SecGroup{}, nil).AnyTimes()
-		networkClientRecorder.CreateSecGroup(gomock.Any()).Return(nil, fmt.Errorf("SecurityGroupRuleExists")).AnyTimes()
+		networkClientRecorder.ListSecGroup(ctx, gomock.Any()).Return([]groups.SecGroup{}, nil).AnyTimes()
+		networkClientRecorder.CreateSecGroup(ctx, gomock.Any()).Return(nil, fmt.Errorf("SecurityGroupRuleExists")).AnyTimes()
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 		Expect(err.Error()).To(ContainSubstring("failed to reconcile security groups"))
 
@@ -1484,7 +1481,7 @@ var _ = Describe("OpenStackCluster controller", func() {
 		Expect(conditions.IsTrue(testCluster, infrav1.NetworkReadyCondition)).To(BeTrue())
 	})
 
-	It("should set APIEndpointReadyCondition to False when floating IP creation fails", func() {
+	It("should set APIEndpointReadyCondition to False when floating IP creation fails", func(ctx SpecContext) {
 		const externalNetworkID = "a42211a2-4d2c-426f-9413-830e4b4abbbc"
 		const clusterNetworkID = "6c90b532-7ba0-418a-a276-5ae55060b5b0"
 		const clusterSubnetID = "cad5a91a-36de-4388-823b-b0cc82cadfdc"
@@ -1517,19 +1514,19 @@ var _ = Describe("OpenStackCluster controller", func() {
 		networkClientRecorder := mockScopeFactory.NetworkClient.EXPECT()
 
 		// Fetch external network
-		networkClientRecorder.GetNetwork(externalNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, externalNetworkID).Return(&networks.Network{
 			ID:   externalNetworkID,
 			Name: "external-network",
 		}, nil)
 
 		// Fetch cluster network
-		networkClientRecorder.GetNetwork(clusterNetworkID).Return(&networks.Network{
+		networkClientRecorder.GetNetwork(ctx, clusterNetworkID).Return(&networks.Network{
 			ID:   clusterNetworkID,
 			Name: "cluster-network",
 		}, nil)
 
 		// Fetching cluster subnets
-		networkClientRecorder.ListSubnet(subnets.ListOpts{
+		networkClientRecorder.ListSubnet(ctx, subnets.ListOpts{
 			NetworkID: clusterNetworkID,
 		}).Return([]subnets.Subnet{
 			{
@@ -1540,9 +1537,9 @@ var _ = Describe("OpenStackCluster controller", func() {
 		}, nil)
 
 		// Mock floating IP creation failure
-		networkClientRecorder.CreateFloatingIP(gomock.Any()).Return(nil, fmt.Errorf("quota exceeded"))
+		networkClientRecorder.CreateFloatingIP(ctx, gomock.Any()).Return(nil, fmt.Errorf("quota exceeded"))
 
-		err = reconcileNetworkComponents(scope, capiCluster, testCluster)
+		err = reconcileNetworkComponents(ctx, scope, capiCluster, testCluster)
 		Expect(err).ToNot(BeNil())
 
 		// Verify APIEndpointReadyCondition is set to False

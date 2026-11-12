@@ -85,7 +85,7 @@ func TestOpenStackMachineTemplate_ValidateCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			webhook := &openStackMachineTemplateWebhook{}
 			warn, err := webhook.ValidateCreate(ctx, tt.template)

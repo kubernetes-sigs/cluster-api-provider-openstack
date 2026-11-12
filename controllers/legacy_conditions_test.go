@@ -77,7 +77,7 @@ func writeLegacyV1beta1Conditions(ctx context.Context, c client.Client, kind str
 // openstackcluster_controller_test.go.
 func TestOpenStackMachineReconcile_FillsMissingConditionReasons(t *testing.T) {
 	g := NewWithT(t)
-	ctx := context.TODO()
+	ctx := t.Context()
 
 	const (
 		ns          = "legacy-conditions"

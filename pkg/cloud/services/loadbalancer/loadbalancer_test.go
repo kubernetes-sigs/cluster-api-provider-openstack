@@ -17,9 +17,11 @@ limitations under the License.
 package loadbalancer
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"testing"
 
 	"github.com/go-logr/logr/testr"
@@ -44,7 +46,10 @@ import (
 
 const apiHostname = "api.test-cluster.test"
 
+var ctxMatcher = gomock.AssignableToTypeOf(reflect.TypeFor[context.Context]())
+
 func Test_ReconcileLoadBalancer(t *testing.T) {
+	ctx := t.Context()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -56,7 +61,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 	}()
 
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs *string, err error) {
+	lookupHost = func(ctx context.Context, host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
 			return &host, nil
 		} else if host == apiHostname {
@@ -114,10 +119,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 				// return existing loadbalancer in non-active state
 				lbList := []loadbalancers.LoadBalancer{pendingLB}
-				m.ListLoadBalancers(loadbalancers.ListOpts{Name: pendingLB.Name}).Return(lbList, nil)
+				m.ListLoadBalancers(ctxMatcher, loadbalancers.ListOpts{Name: pendingLB.Name}).Return(lbList, nil)
 
 				// wait for active loadbalancer by returning active loadbalancer on second call
-				m.GetLoadBalancer("aaaaaaaa-bbbb-cccc-dddd-333333333333").Return(&pendingLB, nil).Return(&activeLB, nil)
+				m.GetLoadBalancer(ctxMatcher, "aaaaaaaa-bbbb-cccc-dddd-333333333333").Return(&pendingLB, nil).Return(&activeLB, nil)
 
 				// return octavia versions
 				versions := []apiversions.APIVersion{
@@ -125,7 +130,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}
-				m.ListOctaviaVersions().Return(versions, nil)
+				m.ListOctaviaVersions(ctxMatcher).Return(versions, nil)
 
 				listenerList := []listeners.Listener{
 					{
@@ -133,7 +138,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+				m.ListListeners(ctxMatcher, listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
 
 				poolList := []pools.Pool{
 					{
@@ -141,7 +146,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
 
 				// create a monitor with values that match defaults to prevent update
 				monitorList := []monitors.Monitor{
@@ -154,7 +159,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						MaxRetriesDown: 3,
 					},
 				}
-				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
+				m.ListMonitors(ctxMatcher, monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
 			},
 			wantError: nil,
 		},
@@ -173,10 +178,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 				// return existing loadbalancer in non-active state
 				lbList := []loadbalancers.LoadBalancer{pendingLB}
-				m.ListLoadBalancers(loadbalancers.ListOpts{Name: pendingLB.Name}).Return(lbList, nil)
+				m.ListLoadBalancers(ctxMatcher, loadbalancers.ListOpts{Name: pendingLB.Name}).Return(lbList, nil)
 
 				// wait for loadbalancer until it times out
-				m.GetLoadBalancer("aaaaaaaa-bbbb-cccc-dddd-333333333333").Return(&pendingLB, nil).Return(&pendingLB, nil).AnyTimes()
+				m.GetLoadBalancer(ctxMatcher, "aaaaaaaa-bbbb-cccc-dddd-333333333333").Return(&pendingLB, nil).Return(&pendingLB, nil).AnyTimes()
 			},
 			wantError: fmt.Errorf("load balancer \"k8s-clusterapi-cluster-AAAAA-kubeapi\" with id aaaaaaaa-bbbb-cccc-dddd-333333333333 is not active after timeout: timed out waiting for the condition"),
 		},
@@ -224,7 +229,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 				// return existing loadbalancer in active state
 				lbList := []loadbalancers.LoadBalancer{activeLB}
-				m.ListLoadBalancers(loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
+				m.ListLoadBalancers(ctxMatcher, loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
 
 				// return octavia versions
 				versions := []apiversions.APIVersion{
@@ -232,7 +237,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}
-				m.ListOctaviaVersions().Return(versions, nil)
+				m.ListOctaviaVersions(ctxMatcher).Return(versions, nil)
 
 				listenerList := []listeners.Listener{
 					{
@@ -240,7 +245,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+				m.ListListeners(ctxMatcher, listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
 
 				poolList := []pools.Pool{
 					{
@@ -248,7 +253,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
 
 				// existing monitor has default values that need updating
 				existingMonitor := monitors.Monitor{
@@ -260,7 +265,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					MaxRetriesDown: 3,
 				}
 				monitorList := []monitors.Monitor{existingMonitor}
-				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
+				m.ListMonitors(ctxMatcher, monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
 
 				// Expect update call with the new values
 				updateOpts := monitors.UpdateOpts{
@@ -276,10 +281,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				updatedMonitor.MaxRetries = 6
 				updatedMonitor.MaxRetriesDown = 4
 
-				m.UpdateMonitor(existingMonitor.ID, updateOpts).Return(&updatedMonitor, nil)
+				m.UpdateMonitor(ctxMatcher, existingMonitor.ID, updateOpts).Return(&updatedMonitor, nil)
 
 				// Expect wait for loadbalancer to be active after monitor update
-				m.GetLoadBalancer(activeLB.ID).Return(&activeLB, nil)
+				m.GetLoadBalancer(ctxMatcher, activeLB.ID).Return(&activeLB, nil)
 			},
 			wantError: nil,
 		},
@@ -327,7 +332,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 				// return existing loadbalancer in active state
 				lbList := []loadbalancers.LoadBalancer{activeLB}
-				m.ListLoadBalancers(loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
+				m.ListLoadBalancers(ctxMatcher, loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
 
 				// return octavia versions
 				versions := []apiversions.APIVersion{
@@ -335,7 +340,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}
-				m.ListOctaviaVersions().Return(versions, nil)
+				m.ListOctaviaVersions(ctxMatcher).Return(versions, nil)
 
 				listenerList := []listeners.Listener{
 					{
@@ -343,7 +348,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+				m.ListListeners(ctxMatcher, listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
 
 				poolList := []pools.Pool{
 					{
@@ -351,7 +356,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
 
 				// existing monitor has default values that need updating
 				existingMonitor := monitors.Monitor{
@@ -363,7 +368,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					MaxRetriesDown: 3,
 				}
 				monitorList := []monitors.Monitor{existingMonitor}
-				m.ListMonitors(monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
+				m.ListMonitors(ctxMatcher, monitors.ListOpts{Name: monitorList[0].Name}).Return(monitorList, nil)
 
 				// Expect update call with the new values but return an error
 				updateOpts := monitors.UpdateOpts{
@@ -374,7 +379,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 				}
 
 				updateError := fmt.Errorf("failed to update monitor")
-				m.UpdateMonitor(existingMonitor.ID, updateOpts).Return(nil, updateError)
+				m.UpdateMonitor(ctxMatcher, existingMonitor.ID, updateOpts).Return(nil, updateError)
 			},
 			wantError: fmt.Errorf("failed to update monitor"),
 		},
@@ -422,7 +427,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 				// return existing loadbalancer in active state
 				lbList := []loadbalancers.LoadBalancer{activeLB}
-				m.ListLoadBalancers(loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
+				m.ListLoadBalancers(ctxMatcher, loadbalancers.ListOpts{Name: activeLB.Name}).Return(lbList, nil)
 
 				// return octavia versions
 				versions := []apiversions.APIVersion{
@@ -430,7 +435,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					{ID: "2.23"},
 					{ID: "2.22"},
 				}
-				m.ListOctaviaVersions().Return(versions, nil)
+				m.ListOctaviaVersions(ctxMatcher).Return(versions, nil)
 
 				listenerList := []listeners.Listener{
 					{
@@ -438,7 +443,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListListeners(listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
+				m.ListListeners(ctxMatcher, listeners.ListOpts{Name: listenerList[0].Name}).Return(listenerList, nil)
 
 				poolList := []pools.Pool{
 					{
@@ -446,11 +451,11 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 						Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0",
 					},
 				}
-				m.ListPools(pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: poolList[0].Name}).Return(poolList, nil)
 
 				// No monitor exists yet
 				var emptyMonitorList []monitors.Monitor
-				m.ListMonitors(monitors.ListOpts{Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0"}).Return(emptyMonitorList, nil)
+				m.ListMonitors(ctxMatcher, monitors.ListOpts{Name: "k8s-clusterapi-cluster-AAAAA-kubeapi-0"}).Return(emptyMonitorList, nil)
 
 				// Expect create call with custom values
 				createOpts := monitors.CreateOpts{
@@ -472,10 +477,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 					MaxRetriesDown: 4,
 				}
 
-				m.CreateMonitor(createOpts).Return(&createdMonitor, nil)
+				m.CreateMonitor(ctxMatcher, createOpts).Return(&createdMonitor, nil)
 
 				// Expect wait for loadbalancer to be active after monitor creation
-				m.GetLoadBalancer(activeLB.ID).Return(&activeLB, nil)
+				m.GetLoadBalancer(ctxMatcher, activeLB.ID).Return(&activeLB, nil)
 			},
 			wantError: nil,
 		},
@@ -491,7 +496,7 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
-			_, err = lbs.ReconcileLoadBalancer(tt.clusterSpec, "AAAAA", 0)
+			_, err = lbs.ReconcileLoadBalancer(ctx, tt.clusterSpec, "AAAAA", 0)
 			if tt.wantError != nil {
 				g.Expect(err).To(MatchError(tt.wantError))
 			} else {
@@ -502,8 +507,10 @@ func Test_ReconcileLoadBalancer(t *testing.T) {
 }
 
 func Test_getAPIServerVIPAddress(t *testing.T) {
+	ctx := t.Context()
+
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs *string, err error) {
+	lookupHost = func(ctx context.Context, host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
 			return &host, nil
 		} else if host == apiHostname {
@@ -584,7 +591,7 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
 
-			got, err := getAPIServerVIPAddress(tt.openStackCluster)
+			got, err := getAPIServerVIPAddress(ctx, tt.openStackCluster)
 			if tt.wantError {
 				g.Expect(err).To(HaveOccurred())
 				g.Expect(got).To(BeNil())
@@ -597,8 +604,10 @@ func Test_getAPIServerVIPAddress(t *testing.T) {
 }
 
 func Test_getAPIServerFloatingIP(t *testing.T) {
+	ctx := t.Context()
+
 	// Stub the call to net.LookupHost
-	lookupHost = func(host string) (addrs *string, err error) {
+	lookupHost = func(_ context.Context, host string) (addrs *string, err error) {
 		if net.ParseIP(host) != nil {
 			return &host, nil
 		} else if host == apiHostname {
@@ -673,7 +682,7 @@ func Test_getAPIServerFloatingIP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
 
-			got, err := getAPIServerFloatingIP(tt.openStackCluster)
+			got, err := getAPIServerFloatingIP(ctx, tt.openStackCluster)
 			if tt.wantError {
 				g.Expect(err).To(HaveOccurred())
 				g.Expect(got).To(BeNil())
@@ -787,6 +796,8 @@ func Test_getCanonicalAllowedCIDRs(t *testing.T) {
 }
 
 func Test_getOrCreateAPILoadBalancer(t *testing.T) {
+	ctx := t.Context()
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -815,7 +826,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{},
 			expectNetwork:    func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
-				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancers(ctxMatcher, gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
 			},
 			want:      &loadbalancers.LoadBalancer{},
 			wantError: fmt.Errorf("network is not yet available in OpenStackCluster.Status"),
@@ -825,7 +836,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			openStackCluster: &infrav1.OpenStackCluster{},
 			expectNetwork:    func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
-				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{{ID: "AAAAA"}}, nil)
+				m.ListLoadBalancers(ctxMatcher, gomock.Any()).Return([]loadbalancers.LoadBalancer{{ID: "AAAAA"}}, nil)
 			},
 			want: &loadbalancers.LoadBalancer{
 				ID: "AAAAA",
@@ -848,9 +859,9 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			},
 			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
-				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
-				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
-				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
+				m.ListLoadBalancers(ctxMatcher, gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancerProviders(ctxMatcher).Return(octaviaProviders, nil)
+				m.CreateLoadBalancer(ctxMatcher, gomock.Any()).Return(&loadbalancers.LoadBalancer{
 					ID:          "AAAAA",
 					VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
 				}, nil)
@@ -888,9 +899,9 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			},
 			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
-				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
-				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
-				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
+				m.ListLoadBalancers(ctxMatcher, gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancerProviders(ctxMatcher).Return(octaviaProviders, nil)
+				m.CreateLoadBalancer(ctxMatcher, gomock.Any()).Return(&loadbalancers.LoadBalancer{
 					ID:           "AAAAA",
 					VipSubnetID:  "VIPSUBNET",
 					VipNetworkID: "VIPNET",
@@ -926,10 +937,10 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 			},
 			expectNetwork: func(*mock.MockNetworkClientMockRecorder) {},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
-				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
-				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
-				m.ListLoadBalancerFlavors().Return(octaviaFlavors, nil)
-				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
+				m.ListLoadBalancers(ctxMatcher, gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancerProviders(ctxMatcher).Return(octaviaProviders, nil)
+				m.ListLoadBalancerFlavors(ctxMatcher).Return(octaviaFlavors, nil)
+				m.CreateLoadBalancer(ctxMatcher, gomock.Any()).Return(&loadbalancers.LoadBalancer{
 					ID:          "AAAAA",
 					VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-222222222222",
 				}, nil)
@@ -964,15 +975,15 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.GetSubnet("aaaaaaaa-bbbb-cccc-dddd-444444444444").Return(&subnets.Subnet{
+				m.GetSubnet(ctxMatcher, "aaaaaaaa-bbbb-cccc-dddd-444444444444").Return(&subnets.Subnet{
 					ID:        "aaaaaaaa-bbbb-cccc-dddd-444444444444",
 					NetworkID: "aaaaaaaa-bbbb-cccc-dddd-111111111111",
 				}, nil)
 			},
 			expectLoadBalancer: func(m *mock.MockLbClientMockRecorder) {
-				m.ListLoadBalancers(gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
-				m.ListLoadBalancerProviders().Return(octaviaProviders, nil)
-				m.CreateLoadBalancer(gomock.Any()).Return(&loadbalancers.LoadBalancer{
+				m.ListLoadBalancers(ctxMatcher, gomock.Any()).Return([]loadbalancers.LoadBalancer{}, nil)
+				m.ListLoadBalancerProviders(ctxMatcher).Return(octaviaProviders, nil)
+				m.CreateLoadBalancer(ctxMatcher, gomock.Any()).Return(&loadbalancers.LoadBalancer{
 					ID:          "AAAAA",
 					VipSubnetID: "aaaaaaaa-bbbb-cccc-dddd-444444444444",
 				}, nil)
@@ -994,7 +1005,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
-			lb, err := lbs.getOrCreateAPILoadBalancer(tt.openStackCluster, "AAAAA")
+			lb, err := lbs.getOrCreateAPILoadBalancer(ctx, tt.openStackCluster, "AAAAA")
 			if tt.wantError != nil {
 				g.Expect(err).To(MatchError(tt.wantError))
 			} else {
@@ -1006,6 +1017,7 @@ func Test_getOrCreateAPILoadBalancer(t *testing.T) {
 }
 
 func Test_ReconcileLoadBalancerMember(t *testing.T) {
+	ctx := t.Context()
 	g := NewWithT(t)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1088,19 +1100,19 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               clusterResourceName + "-kubeapi",
 					ProvisioningStatus: "ACTIVE",
 				}
-				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+				m.GetLoadBalancer(ctxMatcher, lbID).Return(&activeLB, nil).AnyTimes()
 
 				pool := pools.Pool{
 					ID:   poolID,
 					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
 				}
-				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
 
 				member := pools.Member{
 					Name:    fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName),
 					Address: memberIP,
 				}
-				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: member.Name}).Return([]pools.Member{member}, nil)
+				m.ListPoolMember(ctxMatcher, poolID, pools.ListMembersOpts{Name: member.Name}).Return([]pools.Member{member}, nil)
 			},
 			wantError: nil,
 		},
@@ -1114,21 +1126,22 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               clusterResourceName + "-kubeapi",
 					ProvisioningStatus: "ACTIVE",
 				}
-				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+				m.GetLoadBalancer(ctxMatcher, lbID).Return(&activeLB, nil).AnyTimes()
 
 				pool := pools.Pool{
 					ID:   poolID,
 					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
 				}
-				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
 
 				poolMemberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
-				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: poolMemberName}).Return([]pools.Member{}, nil)
+				m.ListPoolMember(ctxMatcher, poolID, pools.ListMembersOpts{Name: poolMemberName}).Return([]pools.Member{}, nil)
 
 				m.CreatePoolMember(
+					ctxMatcher,
 					poolID,
 					gomock.AssignableToTypeOf(pools.CreateMemberOpts{}),
-				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
+				).DoAndReturn(func(_ context.Context, _ string, got pools.CreateMemberOpts) (*pools.Member, error) {
 					// SubnetID must be empty here
 					g.Expect(got.SubnetID).To(Equal(""))
 					return &pools.Member{ID: memberID}, nil
@@ -1139,11 +1152,11 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               poolMemberName,
 					ProvisioningStatus: "PENDING_CREATE",
 				}
-				m.GetPoolMember(poolID, memberID).Return(&pendingMember, nil)
+				m.GetPoolMember(ctxMatcher, poolID, memberID).Return(&pendingMember, nil)
 
 				activeMember := pendingMember
 				activeMember.ProvisioningStatus = "ACTIVE"
-				m.GetPoolMember(poolID, memberID).Return(&activeMember, nil)
+				m.GetPoolMember(ctxMatcher, poolID, memberID).Return(&activeMember, nil)
 			},
 			wantError: nil,
 		},
@@ -1157,10 +1170,10 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               clusterResourceName + "-kubeapi",
 					ProvisioningStatus: "ACTIVE",
 				}
-				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+				m.GetLoadBalancer(ctxMatcher, lbID).Return(&activeLB, nil).AnyTimes()
 
 				poolName := fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port)
-				m.ListPools(pools.ListOpts{Name: poolName}).Return([]pools.Pool{}, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: poolName}).Return([]pools.Pool{}, nil)
 			},
 			wantError: errors.New("load balancer pool does not exist yet"),
 		},
@@ -1174,13 +1187,13 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               clusterResourceName + "-kubeapi",
 					ProvisioningStatus: "ACTIVE",
 				}
-				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+				m.GetLoadBalancer(ctxMatcher, lbID).Return(&activeLB, nil).AnyTimes()
 
 				pool := pools.Pool{
 					ID:   poolID,
 					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
 				}
-				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
 
 				poolMemberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
 
@@ -1189,14 +1202,15 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Address: wrongMemberIP,
 					ID:      memberID,
 				}
-				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: member.Name}).Return([]pools.Member{member}, nil)
+				m.ListPoolMember(ctxMatcher, poolID, pools.ListMembersOpts{Name: member.Name}).Return([]pools.Member{member}, nil)
 
-				m.DeletePoolMember(poolID, memberID).Return(nil)
+				m.DeletePoolMember(ctxMatcher, poolID, memberID).Return(nil)
 
 				m.CreatePoolMember(
+					ctxMatcher,
 					poolID,
 					gomock.AssignableToTypeOf(pools.CreateMemberOpts{}),
-				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
+				).DoAndReturn(func(_ context.Context, _ string, got pools.CreateMemberOpts) (*pools.Member, error) {
 					// SubnetID must be empty here
 					g.Expect(got.SubnetID).To(Equal(""))
 					return &pools.Member{ID: memberID}, nil
@@ -1207,7 +1221,7 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               poolMemberName,
 					ProvisioningStatus: "ACTIVE",
 				}
-				m.GetPoolMember(poolID, memberID).Return(&activeMember, nil).AnyTimes()
+				m.GetPoolMember(ctxMatcher, poolID, memberID).Return(&activeMember, nil).AnyTimes()
 			},
 			wantError: nil,
 		},
@@ -1224,22 +1238,23 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               clusterResourceName + "-kubeapi",
 					ProvisioningStatus: "ACTIVE",
 				}
-				m.GetLoadBalancer(lbID).Return(&activeLB, nil).AnyTimes()
+				m.GetLoadBalancer(ctxMatcher, lbID).Return(&activeLB, nil).AnyTimes()
 
 				pool := pools.Pool{
 					ID:   poolID,
 					Name: fmt.Sprintf("%s-kubeapi-%d", clusterResourceName, port),
 				}
-				m.ListPools(pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
+				m.ListPools(ctxMatcher, pools.ListOpts{Name: pool.Name}).Return([]pools.Pool{pool}, nil)
 
 				poolMemberName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
-				m.ListPoolMember(poolID, pools.ListMembersOpts{Name: poolMemberName}).Return([]pools.Member{}, nil)
+				m.ListPoolMember(ctxMatcher, poolID, pools.ListMembersOpts{Name: poolMemberName}).Return([]pools.Member{}, nil)
 
 				// Expect CreatePoolMember; capture opts to assert SubnetID is set
 				m.CreatePoolMember(
+					ctxMatcher,
 					poolID,
 					gomock.AssignableToTypeOf(pools.CreateMemberOpts{}),
-				).DoAndReturn(func(_ string, got pools.CreateMemberOpts) (*pools.Member, error) {
+				).DoAndReturn(func(_ context.Context, _ string, got pools.CreateMemberOpts) (*pools.Member, error) {
 					g.Expect(got.Address).To(Equal(memberIP))
 					g.Expect(got.ProtocolPort).To(Equal(port))
 					expName := fmt.Sprintf("%s-kubeapi-%d-%s", clusterResourceName, port, machineName)
@@ -1255,7 +1270,7 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 					Name:               poolMemberName,
 					ProvisioningStatus: "ACTIVE",
 				}
-				m.GetPoolMember(poolID, memberID).Return(&activeMember, nil).AnyTimes()
+				m.GetPoolMember(ctxMatcher, poolID, memberID).Return(&activeMember, nil).AnyTimes()
 			},
 			wantError: nil,
 		},
@@ -1287,7 +1302,7 @@ func Test_ReconcileLoadBalancerMember(t *testing.T) {
 			tt.expectNetwork(mockScopeFactory.NetworkClient.EXPECT())
 			tt.expectLoadBalancer(mockScopeFactory.LbClient.EXPECT())
 
-			err = lbs.ReconcileLoadBalancerMember(tt.clusterSpec, openStackMachine, clusterName, memberIP)
+			err = lbs.ReconcileLoadBalancerMember(ctx, tt.clusterSpec, openStackMachine, clusterName, memberIP)
 			if tt.wantError != nil {
 				g.Expect(err).To(MatchError(tt.wantError))
 			} else {

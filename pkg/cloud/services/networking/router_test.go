@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -62,15 +63,15 @@ func TestService_DeleteRouter(t *testing.T) {
 				// Get by ID in status
 				// Remove subnet interfaces
 				// Delete router
-				m.GetRouter(routerID).Return(&routers.Router{ID: routerID}, nil)
-				m.ListSubnet(gomock.Any()).DoAndReturn(func(opts subnets.ListOpts) ([]subnets.Subnet, error) {
+				m.GetRouter(ctxMatcher, routerID).Return(&routers.Router{ID: routerID}, nil)
+				m.ListSubnet(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts subnets.ListOpts) ([]subnets.Subnet, error) {
 					g.Expect(opts.Name).To(Equal(resourceName))
 					return []subnets.Subnet{
 						{ID: subnetID, Name: resourceName},
 					}, nil
 				})
-				m.RemoveRouterInterface(routerID, routers.RemoveInterfaceOpts{SubnetID: subnetID}).Return(&routers.InterfaceInfo{}, nil)
-				m.DeleteRouter(routerID).Return(nil)
+				m.RemoveRouterInterface(ctxMatcher, routerID, routers.RemoveInterfaceOpts{SubnetID: subnetID}).Return(&routers.InterfaceInfo{}, nil)
+				m.DeleteRouter(ctxMatcher, routerID).Return(nil)
 			},
 		},
 		{
@@ -85,7 +86,7 @@ func TestService_DeleteRouter(t *testing.T) {
 			expect: func(_ Gomega, m *mock.MockNetworkClientMockRecorder) {
 				// Get by ID in status returns 404
 				// No further action
-				m.GetRouter(routerID).Return(&routers.Router{ID: routerID}, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+				m.GetRouter(ctxMatcher, routerID).Return(&routers.Router{ID: routerID}, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 			},
 		},
 		{
@@ -95,20 +96,20 @@ func TestService_DeleteRouter(t *testing.T) {
 				// Lookup by cluster resource name
 				// Remove subnet interfaces
 				// Delete router
-				m.ListRouter(gomock.Any()).DoAndReturn(func(opts routers.ListOpts) ([]routers.Router, error) {
+				m.ListRouter(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts routers.ListOpts) ([]routers.Router, error) {
 					g.Expect(opts.Name).To(Equal(resourceName))
 					return []routers.Router{
 						{ID: routerID, Name: resourceName},
 					}, nil
 				})
-				m.ListSubnet(gomock.Any()).DoAndReturn(func(opts subnets.ListOpts) ([]subnets.Subnet, error) {
+				m.ListSubnet(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts subnets.ListOpts) ([]subnets.Subnet, error) {
 					g.Expect(opts.Name).To(Equal(resourceName))
 					return []subnets.Subnet{
 						{ID: subnetID, Name: resourceName},
 					}, nil
 				})
-				m.RemoveRouterInterface(routerID, routers.RemoveInterfaceOpts{SubnetID: subnetID}).Return(&routers.InterfaceInfo{}, nil)
-				m.DeleteRouter(routerID).Return(nil)
+				m.RemoveRouterInterface(ctxMatcher, routerID, routers.RemoveInterfaceOpts{SubnetID: subnetID}).Return(&routers.InterfaceInfo{}, nil)
+				m.DeleteRouter(ctxMatcher, routerID).Return(nil)
 			},
 		},
 		{
@@ -117,7 +118,7 @@ func TestService_DeleteRouter(t *testing.T) {
 			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
 				// Lookup by cluster resource name returns 404
 				// No further action
-				m.ListRouter(gomock.Any()).DoAndReturn(func(opts routers.ListOpts) ([]routers.Router, error) {
+				m.ListRouter(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts routers.ListOpts) ([]routers.Router, error) {
 					g.Expect(opts.Name).To(Equal(resourceName))
 					return []routers.Router{}, nil
 				})
@@ -143,14 +144,14 @@ func TestService_DeleteRouter(t *testing.T) {
 				// Get by ID in status
 				// Remove subnet interfaces
 				// Don't delete unmanaged router
-				m.GetRouter(routerID).Return(&routers.Router{ID: routerID}, nil)
-				m.ListSubnet(gomock.Any()).DoAndReturn(func(opts subnets.ListOpts) ([]subnets.Subnet, error) {
+				m.GetRouter(ctxMatcher, routerID).Return(&routers.Router{ID: routerID}, nil)
+				m.ListSubnet(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts subnets.ListOpts) ([]subnets.Subnet, error) {
 					g.Expect(opts.Name).To(Equal(resourceName))
 					return []subnets.Subnet{
 						{ID: subnetID, Name: resourceName},
 					}, nil
 				})
-				m.RemoveRouterInterface(routerID, routers.RemoveInterfaceOpts{SubnetID: subnetID}).Return(&routers.InterfaceInfo{}, nil)
+				m.RemoveRouterInterface(ctxMatcher, routerID, routers.RemoveInterfaceOpts{SubnetID: subnetID}).Return(&routers.InterfaceInfo{}, nil)
 			},
 		},
 		{
@@ -172,7 +173,7 @@ func TestService_DeleteRouter(t *testing.T) {
 			expect: func(_ Gomega, m *mock.MockNetworkClientMockRecorder) {
 				// Get by ID in status returns 404
 				// Error
-				m.GetRouter(routerID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+				m.GetRouter(ctxMatcher, routerID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 			},
 			wantErr: true,
 		},
@@ -190,7 +191,7 @@ func TestService_DeleteRouter(t *testing.T) {
 			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
 				// Lookup by name returns no results
 				// Error
-				m.ListRouter(gomock.Any()).DoAndReturn(func(opts routers.ListOpts) ([]routers.Router, error) {
+				m.ListRouter(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, opts routers.ListOpts) ([]routers.Router, error) {
 					g.Expect(opts.Name).To(Equal("my-router"))
 					return []routers.Router{}, nil
 				})
@@ -201,6 +202,7 @@ func TestService_DeleteRouter(t *testing.T) {
 	for i := range tests {
 		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -213,7 +215,7 @@ func TestService_DeleteRouter(t *testing.T) {
 
 			tt.expect(g, mockScopeFactory.NetworkClient.EXPECT())
 
-			if err := s.DeleteRouter(&tt.openStackCluster, clusterResourceName); (err != nil) != tt.wantErr {
+			if err := s.DeleteRouter(ctx, &tt.openStackCluster, clusterResourceName); (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteRouter() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -237,7 +239,7 @@ func TestService_createRouter(t *testing.T) {
 		{
 			name: "no tags requested, no extension lookup needed",
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.CreateRouter(routers.CreateOpts{
+				m.CreateRouter(ctxMatcher, routers.CreateOpts{
 					Name:        routerName,
 					Description: names.GetDescription(clusterResourceName),
 					GatewayInfo: &routers.GatewayInfo{NetworkID: externalNetworkID},
@@ -251,9 +253,9 @@ func TestService_createRouter(t *testing.T) {
 				// standard-attr-tag support must be checked before the router
 				// is created, and ReplaceAllAttributesTags must not be called
 				// since the extension is not advertised.
-				m.ListExtensions().Return([]extensions.Extension{}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{}, nil)
 
-				m.CreateRouter(routers.CreateOpts{
+				m.CreateRouter(ctxMatcher, routers.CreateOpts{
 					Name:        routerName,
 					Description: names.GetDescription(clusterResourceName),
 					GatewayInfo: &routers.GatewayInfo{NetworkID: externalNetworkID},
@@ -266,15 +268,15 @@ func TestService_createRouter(t *testing.T) {
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				standardAttrTagExt := extensions.Extension{}
 				standardAttrTagExt.Alias = "standard-attr-tag"
-				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{standardAttrTagExt}, nil)
 
-				m.CreateRouter(routers.CreateOpts{
+				m.CreateRouter(ctxMatcher, routers.CreateOpts{
 					Name:        routerName,
 					Description: names.GetDescription(clusterResourceName),
 					GatewayInfo: &routers.GatewayInfo{NetworkID: externalNetworkID},
 				}).Return(&routers.Router{ID: routerID}, nil)
 
-				m.ReplaceAllAttributesTags("routers", routerID, attributestags.ReplaceAllOpts{
+				m.ReplaceAllAttributesTags(ctxMatcher, "routers", routerID, attributestags.ReplaceAllOpts{
 					Tags: []string{"cluster-tag"},
 				}).Return([]string{"cluster-tag"}, nil)
 			},
@@ -284,7 +286,7 @@ func TestService_createRouter(t *testing.T) {
 			tags: []string{"cluster-tag"},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				// ListExtensions fails before CreateRouter is ever called.
-				m.ListExtensions().Return(nil, errors.New("boom"))
+				m.ListExtensions(ctxMatcher).Return(nil, errors.New("boom"))
 			},
 			wantErr: true,
 		},
@@ -292,6 +294,7 @@ func TestService_createRouter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -313,7 +316,7 @@ func TestService_createRouter(t *testing.T) {
 
 			tt.expect(mockScopeFactory.NetworkClient.EXPECT())
 
-			router, err := s.createRouter(openStackCluster, clusterResourceName, routerName)
+			router, err := s.createRouter(ctx, openStackCluster, clusterResourceName, routerName)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return

@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"context"
 	"path/filepath"
 	"testing"
 
@@ -101,8 +100,7 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("EnvTest sanity check", func() {
-	ctx = context.TODO()
-	It("should be able to create a namespace", func() {
+	It("should be able to create a namespace", func(ctx SpecContext) {
 		testNamespace := "capo-test"
 		namespacedName := types.NamespacedName{
 			Name: testNamespace,

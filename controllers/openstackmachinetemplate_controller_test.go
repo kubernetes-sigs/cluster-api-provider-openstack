@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -54,7 +53,7 @@ var (
 )
 
 func TestOpenStackMachineTemplateReconciler_Reconcile_UnhappyPaths(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	scheme := runtime.NewScheme()
 	_ = corev1.AddToScheme(scheme)
@@ -181,7 +180,7 @@ func TestOpenStackMachineTemplateReconciler_Reconcile_UnhappyPaths(t *testing.T)
 
 func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 	g := NewWithT(t)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// --- Scheme setup ---
 	scheme := runtime.NewScheme()
@@ -203,7 +202,7 @@ func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 			expect: func(mf *scope.MockScopeFactory) {
 				mf.ComputeClient.
 					EXPECT().
-					GetFlavor(flavorID).
+					GetFlavor(ctxMatcher, flavorID).
 					Return(nil, fmt.Errorf("flavor-details-error"))
 			},
 			wantErr: "flavor-details-error",
@@ -214,14 +213,14 @@ func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 			expect: func(mf *scope.MockScopeFactory) {
 				mf.ComputeClient.
 					EXPECT().
-					GetFlavor(flavorID).
+					GetFlavor(ctxMatcher, flavorID).
 					Return(&flavors.Flavor{
 						VCPUs: 2, RAM: 1024, Disk: 5, Ephemeral: 1,
 					}, nil)
 
 				mf.ImageClient.
 					EXPECT().
-					GetImage(imageID).
+					GetImage(ctxMatcher, imageID).
 					Return(nil, fmt.Errorf("image-details-error"))
 			},
 			wantErr: "image-details-error",
@@ -232,7 +231,7 @@ func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 			expect: func(mf *scope.MockScopeFactory) {
 				mf.ComputeClient.
 					EXPECT().
-					GetFlavor(flavorID).
+					GetFlavor(ctxMatcher, flavorID).
 					Return(&flavors.Flavor{
 						VCPUs:     4,
 						RAM:       8192,
@@ -242,7 +241,7 @@ func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 
 				mf.ImageClient.
 					EXPECT().
-					GetImage(imageID).
+					GetImage(ctxMatcher, imageID).
 					Return(&images.Image{
 						ID: imageID,
 						Properties: map[string]any{
@@ -281,7 +280,7 @@ func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 			expect: func(mf *scope.MockScopeFactory) {
 				mf.ComputeClient.
 					EXPECT().
-					GetFlavor(flavorID).
+					GetFlavor(ctxMatcher, flavorID).
 					Return(&flavors.Flavor{
 						VCPUs:     4,
 						RAM:       8192,
@@ -291,7 +290,7 @@ func TestOpenStackMachineTemplateReconciler_reconcileNormal(t *testing.T) {
 
 				mf.ImageClient.
 					EXPECT().
-					GetImage(imageID).
+					GetImage(ctxMatcher, imageID).
 					Return(&images.Image{
 						ID: imageID,
 						Properties: map[string]any{
@@ -448,7 +447,7 @@ func newOSCluster(name string) *infrav1.OpenStackCluster {
 }
 
 func TestReconcileAllowedAddressPairs(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	scheme := runtime.NewScheme()
 	_ = corev1.AddToScheme(scheme)
@@ -605,7 +604,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 			objects:     []client.Object{makeMS(), makeMachine(), makeOSM(""), makeOSS()},
 			setupMock: func(nc *mockclient.MockNetworkClient) {
 				nc.EXPECT().
-					UpdatePort(portID, gomock.Any()).
+					UpdatePort(ctxMatcher, portID, gomock.Any()).
 					Return(nil, nil)
 			},
 			verify: func(g Gomega, cl client.Client) {
@@ -622,7 +621,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 			objects:     []client.Object{makeMS(), makeMachine(), makeOSM(""), makeOSS()},
 			setupMock: func(nc *mockclient.MockNetworkClient) {
 				nc.EXPECT().
-					UpdatePort(portID, gomock.Any()).
+					UpdatePort(ctxMatcher, portID, gomock.Any()).
 					Return(nil, fmt.Errorf("neutron error"))
 			},
 			wantErr: "neutron error",
@@ -655,7 +654,7 @@ func TestReconcileAllowedAddressPairs(t *testing.T) {
 			},
 			setupMock: func(nc *mockclient.MockNetworkClient) {
 				nc.EXPECT().
-					UpdatePort(portID, gomock.Any()).
+					UpdatePort(ctxMatcher, portID, gomock.Any()).
 					Return(nil, nil)
 			},
 			verify: func(g Gomega, cl client.Client) {
@@ -719,7 +718,7 @@ var _ = Describe("OpenStackMachineTemplate controller", func() {
 
 	testOSClusterName := "test-oscluster"
 
-	BeforeEach(func() {
+	BeforeEach(func(ctx SpecContext) {
 		testNum++
 		testNamespace = fmt.Sprintf("osmt-test-%d", testNum)
 
@@ -806,7 +805,7 @@ var _ = Describe("OpenStackMachineTemplate controller", func() {
 		}
 	})
 
-	AfterEach(func() {
+	AfterEach(func(ctx SpecContext) {
 		orphan := metav1.DeletePropagationOrphan
 		deleteOptions := client.DeleteOptions{
 			PropagationPolicy: &orphan,
@@ -827,7 +826,7 @@ var _ = Describe("OpenStackMachineTemplate controller", func() {
 		Expect(client.IgnoreNotFound(err)).To(BeNil())
 	})
 
-	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
+	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func(ctx SpecContext) {
 		testOSMT.SetName("missing-osmt-credentials")
 
 		// Create cluster first to get the UID
@@ -879,7 +878,7 @@ var _ = Describe("OpenStackMachineTemplate controller", func() {
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
-	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func() {
+	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func(ctx SpecContext) {
 		testOSMT.SetName("identity-access-denied-osmt")
 
 		// Create cluster first to get the UID

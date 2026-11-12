@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -40,7 +41,7 @@ const (
 )
 
 // ReconcileSecurityGroups reconcile the security groups.
-func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+func (s *Service) ReconcileSecurityGroups(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	s.scope.Logger().Info("Reconciling security groups")
 	if openStackCluster.Spec.ManagedSecurityGroups == nil {
 		s.scope.Logger().V(4).Info("No need to reconcile security groups")
@@ -70,7 +71,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 		// Therefore we try to delete the bastion security group as a best effort here
 		// and also when the cluster is deleted so we're sure it will be deleted at some point.
 		// https://github.com/kubernetes-sigs/cluster-api-provider-openstack/issues/2113
-		if err := s.deleteSecurityGroup(openStackCluster, secBastionGroupName); err != nil {
+		if err := s.deleteSecurityGroup(ctx, openStackCluster, secBastionGroupName); err != nil {
 			s.scope.Logger().Info("Non-fatal error when deleting the bastion security group", "name", secBastionGroupName, "error", err)
 			return nil
 		}
@@ -85,7 +86,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	var hasTagSupport *bool
 	tagSupportChecked := func() (bool, error) {
 		if hasTagSupport == nil {
-			supported, err := s.hasStandardAttrTagExtension()
+			supported, err := s.hasStandardAttrTagExtension(ctx)
 			if err != nil {
 				return false, err
 			}
@@ -95,7 +96,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 	}
 
 	for suffix, secGroupName := range suffixToNameMap {
-		group, err := s.getOrCreateSecurityGroup(openStackCluster, secGroupName)
+		group, err := s.getOrCreateSecurityGroup(ctx, openStackCluster, secGroupName)
 		if err != nil {
 			return err
 		}
@@ -113,7 +114,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 				return err
 			}
 			if supported {
-				_, err = s.client.ReplaceAllAttributesTags("security-groups", group.ID, attributestags.ReplaceAllOpts{
+				_, err = s.client.ReplaceAllAttributesTags(ctx, "security-groups", group.ID, attributestags.ReplaceAllOpts{
 					Tags: openStackCluster.Spec.Tags,
 				})
 				if err != nil {
@@ -140,7 +141,7 @@ func (s *Service) ReconcileSecurityGroups(openStackCluster *infrav1.OpenStackClu
 			return fmt.Errorf("unable to reconcile security groups: security group %s not found", suffix)
 		}
 
-		err := s.reconcileGroupRules(&desiredSecGroup, observedSecGroup)
+		err := s.reconcileGroupRules(ctx, &desiredSecGroup, observedSecGroup)
 		if err != nil {
 			return err
 		}
@@ -367,7 +368,7 @@ func validateRemoteManagedGroups(remoteManagedGroups map[string]string, ruleRemo
 	return nil
 }
 
-func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
+func (s *Service) GetSecurityGroups(ctx context.Context, securityGroupParams []infrav1.SecurityGroupParam) ([]string, error) {
 	var sgIDs []string
 	for i := range securityGroupParams {
 		sg := &securityGroupParams[i]
@@ -390,7 +391,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupP
 		if listOpts.ProjectID == "" {
 			listOpts.ProjectID = s.scope.ProjectID()
 		}
-		SGList, err := s.client.ListSecGroup(listOpts)
+		SGList, err := s.client.ListSecGroup(ctx, listOpts)
 		if err != nil {
 			return nil, err
 		}
@@ -409,7 +410,7 @@ func (s *Service) GetSecurityGroups(securityGroupParams []infrav1.SecurityGroupP
 	return sgIDs, nil
 }
 
-func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
+func (s *Service) DeleteSecurityGroups(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, clusterResourceName string) error {
 	secGroupNames := []string{
 		getSecControlPlaneGroupName(clusterResourceName),
 		getSecWorkerGroupName(clusterResourceName),
@@ -420,7 +421,7 @@ func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluste
 	}
 
 	for _, secGroupName := range secGroupNames {
-		if err := s.deleteSecurityGroup(openStackCluster, secGroupName); err != nil {
+		if err := s.deleteSecurityGroup(ctx, openStackCluster, secGroupName); err != nil {
 			return err
 		}
 	}
@@ -428,8 +429,8 @@ func (s *Service) DeleteSecurityGroups(openStackCluster *infrav1.OpenStackCluste
 	return nil
 }
 
-func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster, name string) error {
-	group, err := s.getSecurityGroupByName(name)
+func (s *Service) deleteSecurityGroup(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, name string) error {
+	group, err := s.getSecurityGroupByName(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -437,7 +438,7 @@ func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster
 		// nothing to do
 		return nil
 	}
-	err = s.client.DeleteSecGroup(group.ID)
+	err = s.client.DeleteSecGroup(ctx, group.ID)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedDeleteSecurityGroup", "Failed to delete security group %s with id %s: %v", group.Name, group.ID, err)
 		return err
@@ -449,7 +450,7 @@ func (s *Service) deleteSecurityGroup(openStackCluster *infrav1.OpenStackCluster
 
 // reconcileGroupRules reconciles an already existing observed group by deleting rules not needed anymore and
 // creating rules that are missing.
-func (s *Service) reconcileGroupRules(desired *securityGroupSpec, observed *groups.SecGroup) error {
+func (s *Service) reconcileGroupRules(ctx context.Context, desired *securityGroupSpec, observed *groups.SecGroup) error {
 	var rulesToDelete []string
 	// fills rulesToDelete by calculating observed - desired
 	for _, observedRule := range observed.Rules {
@@ -494,7 +495,7 @@ func (s *Service) reconcileGroupRules(desired *securityGroupSpec, observed *grou
 		s.scope.Logger().V(4).Info("Deleting rules not needed anymore for group", "name", observed.Name, "amount", len(rulesToDelete))
 		for _, rule := range rulesToDelete {
 			s.scope.Logger().V(5).Info("Deleting rule", "ID", rule, "name", observed.Name)
-			err := s.client.DeleteSecGroupRule(rule)
+			err := s.client.DeleteSecGroupRule(ctx, rule)
 			if err != nil {
 				return err
 			}
@@ -508,7 +509,7 @@ func (s *Service) reconcileGroupRules(desired *securityGroupSpec, observed *grou
 			if r.RemoteGroupID == remoteGroupIDSelf {
 				r.RemoteGroupID = observed.ID
 			}
-			err := s.createRule(observed.ID, r)
+			err := s.createRule(ctx, observed.ID, r)
 			if err != nil {
 				return err
 			}
@@ -518,8 +519,8 @@ func (s *Service) reconcileGroupRules(desired *securityGroupSpec, observed *grou
 	return nil
 }
 
-func (s *Service) getOrCreateSecurityGroup(openStackCluster *infrav1.OpenStackCluster, groupName string) (*groups.SecGroup, error) {
-	secGroup, err := s.getSecurityGroupByName(groupName)
+func (s *Service) getOrCreateSecurityGroup(ctx context.Context, openStackCluster *infrav1.OpenStackCluster, groupName string) (*groups.SecGroup, error) {
+	secGroup, err := s.getSecurityGroupByName(ctx, groupName)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +537,7 @@ func (s *Service) getOrCreateSecurityGroup(openStackCluster *infrav1.OpenStackCl
 	}
 	s.scope.Logger().V(5).Info("Creating group", "name", groupName)
 
-	group, err := s.client.CreateSecGroup(createOpts)
+	group, err := s.client.CreateSecGroup(ctx, createOpts)
 	if err != nil {
 		record.Warnf(openStackCluster, "FailedCreateSecurityGroup", "Failed to create security group %s: %v", groupName, err)
 		return nil, err
@@ -546,13 +547,13 @@ func (s *Service) getOrCreateSecurityGroup(openStackCluster *infrav1.OpenStackCl
 	return group, nil
 }
 
-func (s *Service) getSecurityGroupByName(name string) (*groups.SecGroup, error) {
+func (s *Service) getSecurityGroupByName(ctx context.Context, name string) (*groups.SecGroup, error) {
 	opts := groups.ListOpts{
 		Name: name,
 	}
 
 	s.scope.Logger().V(5).Info("Attempting to fetch security group with", "name", name)
-	allGroups, err := s.client.ListSecGroup(opts)
+	allGroups, err := s.client.ListSecGroup(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -567,7 +568,7 @@ func (s *Service) getSecurityGroupByName(name string) (*groups.SecGroup, error) 
 	return nil, fmt.Errorf("more than one security group found named: %s", name)
 }
 
-func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRuleSpec) error {
+func (s *Service) createRule(ctx context.Context, securityGroupID string, r resolvedSecurityGroupRuleSpec) error {
 	dir := rules.RuleDirection(r.Direction)
 	proto := rules.RuleProtocol(r.Protocol)
 	etherType := rules.RuleEtherType(r.EtherType)
@@ -584,7 +585,7 @@ func (s *Service) createRule(securityGroupID string, r resolvedSecurityGroupRule
 		SecGroupID:     securityGroupID,
 	}
 	s.scope.Logger().V(5).Info("Creating rule", "description", r.Description, "direction", dir, "portRangeMin", r.PortRangeMin, "portRangeMax", r.PortRangeMax, "proto", proto, "etherType", etherType, "remoteGroupID", r.RemoteGroupID, "remoteIPPrefix", r.RemoteIPPrefix, "securityGroupID", securityGroupID)
-	_, err := s.client.CreateSecGroupRule(createOpts)
+	_, err := s.client.CreateSecGroupRule(ctx, createOpts)
 	if err != nil {
 		return err
 	}

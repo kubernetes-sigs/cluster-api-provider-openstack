@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/attributestags"
@@ -55,7 +56,7 @@ func NewService(scope *scope.WithLogger) (*Service, error) {
 
 // replaceAllAttributesTags replaces all tags on a neworking resource.
 // the value of resourceType must match one of the allowed constants: trunkResource or portResource.
-func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceType string, resourceID string, tags []string) error {
+func (s *Service) replaceAllAttributesTags(ctx context.Context, eventObject runtime.Object, resourceType string, resourceID string, tags []string) error {
 	if len(tags) == 0 {
 		s.scope.Logger().Info("No tags provided to replaceAllAttributesTags", "resource", resourceType, "ID", resourceID)
 		return nil
@@ -65,7 +66,7 @@ func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceT
 		panic(fmt.Errorf("invalid argument: resourceType, %s, does not match allowed arguments: %s or %s", resourceType, trunkResource, portResource))
 	}
 
-	_, err := s.client.ReplaceAllAttributesTags(resourceType, resourceID, attributestags.ReplaceAllOpts{
+	_, err := s.client.ReplaceAllAttributesTags(ctx, resourceType, resourceID, attributestags.ReplaceAllOpts{
 		Tags: tags,
 	})
 	if err != nil {
@@ -83,8 +84,8 @@ func (s *Service) replaceAllAttributesTags(eventObject runtime.Object, resourceT
 // skip tag replacement rather than call it when this returns false, so that
 // CAPO remains usable against OpenStack deployments that don't advertise
 // this optional extension.
-func (s *Service) hasStandardAttrTagExtension() (bool, error) {
-	allExts, err := s.client.ListExtensions()
+func (s *Service) hasStandardAttrTagExtension(ctx context.Context) (bool, error) {
+	allExts, err := s.client.ListExtensions(ctx)
 	if err != nil {
 		return false, err
 	}

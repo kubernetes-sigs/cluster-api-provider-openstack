@@ -176,12 +176,12 @@ func (r *OpenStackMachineTemplateReconciler) reconcileNormal(ctx context.Context
 		return err
 	}
 
-	flavorID, err := computeService.GetFlavorID(openStackMachineTemplate.Spec.Template.Spec.Flavor)
+	flavorID, err := computeService.GetFlavorID(ctx, openStackMachineTemplate.Spec.Template.Spec.Flavor)
 	if err != nil {
 		return err
 	}
 
-	flavor, err := computeService.GetFlavor(flavorID)
+	flavor, err := computeService.GetFlavor(ctx, flavorID)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (r *OpenStackMachineTemplateReconciler) reconcileNormal(ctx context.Context
 		return nil
 	}
 
-	image, err := computeService.GetImageDetails(*imageID)
+	image, err := computeService.GetImageDetails(ctx, *imageID)
 	if err != nil {
 		return err
 	}
@@ -374,7 +374,7 @@ func (r *OpenStackMachineTemplateReconciler) reconcileAllowedAddressPairs(ctx co
 
 				log.Info("Updating spec.template.spec.ports[*].allowedAddressPairs on Neutron port",
 					"OpenStackMachine", klog.KObj(osm), "portID", portStatus.ID, "portIndex", portIdx)
-				if err := networkingService.UpdateAllowedAddressPairs(portStatus.ID, pairs); err != nil {
+				if err := networkingService.UpdateAllowedAddressPairs(ctx, portStatus.ID, pairs); err != nil {
 					log.Error(err, "Failed to update spec.template.spec.ports[*].allowedAddressPairs",
 						"OpenStackMachine", klog.KObj(osm), "portID", portStatus.ID)
 					return err

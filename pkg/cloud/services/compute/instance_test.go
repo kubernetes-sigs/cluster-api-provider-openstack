@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -46,6 +47,8 @@ import (
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
+
+var ctxMatcher = gomock.AssignableToTypeOf(reflect.TypeFor[context.Context]())
 
 func TestService_getImageID(t *testing.T) {
 	const (
@@ -85,7 +88,7 @@ func TestService_getImageID(t *testing.T) {
 			},
 			want: ptr.To(imageID),
 			expect: func(m *mock.MockImageClientMockRecorder) {
-				m.ListImages(images.ListOpts{Name: imageName}).Return(
+				m.ListImages(ctxMatcher, images.ListOpts{Name: imageName}).Return(
 					[]images.Image{{ID: imageID, Name: imageName}},
 					nil)
 			},
@@ -100,7 +103,7 @@ func TestService_getImageID(t *testing.T) {
 			},
 			want: ptr.To(imageID),
 			expect: func(m *mock.MockImageClientMockRecorder) {
-				m.ListImages(images.ListOpts{Tags: imageTags}).Return(
+				m.ListImages(ctxMatcher, images.ListOpts{Tags: imageTags}).Return(
 					[]images.Image{{ID: imageID, Name: imageName, Tags: imageTags}},
 					nil)
 			},
@@ -114,7 +117,7 @@ func TestService_getImageID(t *testing.T) {
 				},
 			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
-				m.ListImages(images.ListOpts{Name: imageName}).Return(
+				m.ListImages(ctxMatcher, images.ListOpts{Name: imageName}).Return(
 					[]images.Image{},
 					nil)
 			},
@@ -129,7 +132,7 @@ func TestService_getImageID(t *testing.T) {
 				},
 			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
-				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
+				m.ListImages(ctxMatcher, images.ListOpts{Name: "test-image"}).Return(
 					[]images.Image{
 						{ID: imageID, Name: "test-image"},
 						{ID: "123", Name: "test-image"},
@@ -146,7 +149,7 @@ func TestService_getImageID(t *testing.T) {
 				},
 			},
 			expect: func(m *mock.MockImageClientMockRecorder) {
-				m.ListImages(images.ListOpts{Name: "test-image"}).Return(
+				m.ListImages(ctxMatcher, images.ListOpts{Name: "test-image"}).Return(
 					nil,
 					fmt.Errorf("test error"))
 			},
@@ -255,6 +258,7 @@ func TestService_getImageID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			log := testr.New(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
@@ -269,7 +273,7 @@ func TestService_getImageID(t *testing.T) {
 
 			fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(tt.fakeObjects...).Build()
 
-			got, err := s.GetImageID(context.TODO(), fakeClient, namespace, tt.image)
+			got, err := s.GetImageID(ctx, fakeClient, namespace, tt.image)
 
 			if tt.wantTerminalError {
 				tt.wantErr = true
@@ -335,6 +339,8 @@ func getDefaultInstanceSpec() *InstanceSpec {
 }
 
 func TestService_ReconcileInstance(t *testing.T) {
+	ctx := t.Context()
+
 	getDefaultServerCreateOpts := func() servers.CreateOpts {
 		return servers.CreateOpts{
 			Name:             openStackMachineName,
@@ -384,7 +390,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 	// Expected calls and custom match function for creating a server
 	expectCreateServer := func(g Gomega, computeRecorder *mock.MockComputeClientMockRecorder, expectedCreateOpts servers.CreateOptsBuilder, expectedSchedulerHintOpts servers.SchedulerHintOptsBuilder, computeClient clients.ComputeClient, wantError bool) {
 		computeRecorder.WithMicroversion(clients.NovaTagging).Return(computeClient, nil)
-		computeRecorder.CreateServer(gomock.Any(), gomock.Any()).DoAndReturn(func(createOpts servers.CreateOptsBuilder, schedulerHintOpts servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
+		computeRecorder.CreateServer(ctx, gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, createOpts servers.CreateOptsBuilder, schedulerHintOpts servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 			createOptsMap, _ := createOpts.ToServerCreateMap()
 			expectedCreateOptsMap, _ := expectedCreateOpts.ToServerCreateMap()
 			g.Expect(createOptsMap).To(Equal(expectedCreateOptsMap), cmp.Diff(createOptsMap, expectedCreateOptsMap))
@@ -414,7 +420,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 	// Expected calls when polling for server creation
 	expectVolumePoll := func(volumeRecorder *mock.MockVolumeClientMockRecorder, uuid string, states []string) {
 		for _, state := range states {
-			volumeRecorder.GetVolume(uuid).Return(returnedVolume(uuid, state), nil)
+			volumeRecorder.GetVolume(ctx, uuid).Return(returnedVolume(uuid, state), nil)
 		}
 	}
 
@@ -425,7 +431,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 	expectVolumeRequiresMultiattachCheck := func(volumeRecorder *mock.MockVolumeClientMockRecorder, uuid string, requiresMultiattach bool) {
 		vol := returnedVolume(uuid, "available")
 		vol.Multiattach = requiresMultiattach
-		volumeRecorder.GetVolume(uuid).Return(returnedVolume(uuid, "available"), nil)
+		volumeRecorder.GetVolume(ctx, uuid).Return(returnedVolume(uuid, "available"), nil)
 	}
 
 	// *******************
@@ -463,9 +469,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:        50,
 					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-root", openStackMachineName),
@@ -506,9 +512,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:             50,
 					AvailabilityZone: "test-alternate-az",
 					VolumeType:       "test-volume-type",
@@ -550,9 +556,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:             50,
 					AvailabilityZone: failureDomain,
 					VolumeType:       "test-volume-type",
@@ -590,9 +596,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(_ Gomega, r *recorders, _ *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:        50,
 					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-root", openStackMachineName),
@@ -631,9 +637,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:        50,
 					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-root", openStackMachineName),
@@ -641,9 +647,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:        50,
 					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-etcd", openStackMachineName),
@@ -709,9 +715,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:        50,
 					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-root", openStackMachineName),
@@ -719,9 +725,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
 				expectVolumePollSuccess(r.volume, rootVolumeUUID)
 
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-data", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-data", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:        50,
 					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-data", openStackMachineName),
@@ -783,9 +789,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:        50,
 					Description: fmt.Sprintf("Additional block device for %s", openStackMachineName),
 					Name:        fmt.Sprintf("%s-etcd", openStackMachineName),
@@ -849,9 +855,9 @@ func TestService_ReconcileInstance(t *testing.T) {
 				return s
 			},
 			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
-				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
+				r.volume.ListVolumes(ctx, volumes.ListOpts{Name: fmt.Sprintf("%s-etcd", openStackMachineName)}).
 					Return([]volumes.Volume{}, nil)
-				r.volume.CreateVolume(volumes.CreateOpts{
+				r.volume.CreateVolume(ctx, volumes.CreateOpts{
 					Size:             50,
 					AvailabilityZone: "test-alternate-az",
 					Description:      fmt.Sprintf("Additional block device for %s", openStackMachineName),
@@ -1014,7 +1020,7 @@ func TestService_ReconcileInstance(t *testing.T) {
 			}
 
 			// Call CreateInstance with a reduced retry interval to speed up the test
-			_, err = s.createInstanceImpl(&infrav1.OpenStackMachine{}, tt.getInstanceSpec(), time.Nanosecond, portUUIDs)
+			_, err = s.createInstanceImpl(ctx, &infrav1.OpenStackMachine{}, tt.getInstanceSpec(), time.Nanosecond, portUUIDs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.CreateInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1024,6 +1030,8 @@ func TestService_ReconcileInstance(t *testing.T) {
 }
 
 func TestService_DeleteInstance(t *testing.T) {
+	ctx := t.Context()
+
 	const (
 		serverID   = "ce96e584-7ebc-46d6-9e55-987d72e3806c"
 		serverName = "test-server"
@@ -1037,16 +1045,16 @@ func TestService_DeleteInstance(t *testing.T) {
 		{
 			name: "Server not found after delete",
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.DeleteServer(serverID).Return(nil)
-				m.GetServer(serverID).Return(nil, &gophercloud.ErrResourceNotFound{})
+				m.DeleteServer(ctx, serverID).Return(nil)
+				m.GetServer(ctx, serverID).Return(nil, &gophercloud.ErrResourceNotFound{})
 			},
 			wantErr: false,
 		},
 		{
 			name: "Server in SOFT_DELETED state",
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.DeleteServer(serverID).Return(nil)
-				m.GetServer(serverID).Return(&servers.Server{
+				m.DeleteServer(ctx, serverID).Return(nil)
+				m.GetServer(ctx, serverID).Return(&servers.Server{
 					ID:     serverID,
 					Name:   serverName,
 					Status: "SOFT_DELETED",
@@ -1057,8 +1065,8 @@ func TestService_DeleteInstance(t *testing.T) {
 		{
 			name: "Server in DELETED state",
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.DeleteServer(serverID).Return(nil)
-				m.GetServer(serverID).Return(&servers.Server{
+				m.DeleteServer(ctx, serverID).Return(nil)
+				m.GetServer(ctx, serverID).Return(&servers.Server{
 					ID:     serverID,
 					Name:   serverName,
 					Status: "DELETED",
@@ -1069,22 +1077,22 @@ func TestService_DeleteInstance(t *testing.T) {
 		{
 			name: "Delete API returns not found",
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.DeleteServer(serverID).Return(&gophercloud.ErrResourceNotFound{})
+				m.DeleteServer(ctx, serverID).Return(&gophercloud.ErrResourceNotFound{})
 			},
 			wantErr: false,
 		},
 		{
 			name: "Delete API returns error",
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.DeleteServer(serverID).Return(errors.New("API error"))
+				m.DeleteServer(ctx, serverID).Return(errors.New("API error"))
 			},
 			wantErr: true,
 		},
 		{
 			name: "GetServer returns error",
 			expect: func(m *mock.MockComputeClientMockRecorder) {
-				m.DeleteServer(serverID).Return(nil)
-				m.GetServer(serverID).Return(nil, errors.New("API error"))
+				m.DeleteServer(ctx, serverID).Return(nil)
+				m.GetServer(ctx, serverID).Return(nil, errors.New("API error"))
 			},
 			wantErr: true,
 		},
@@ -1112,7 +1120,7 @@ func TestService_DeleteInstance(t *testing.T) {
 			}
 
 			eventObject := &infrav1.OpenStackMachine{}
-			err = s.DeleteInstance(eventObject, instanceStatus)
+			err = s.DeleteInstance(ctx, eventObject, instanceStatus)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.DeleteInstance() error = %v, wantErr %v", err, tt.wantErr)
 				return

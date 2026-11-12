@@ -63,6 +63,8 @@ const (
 	defaultFlavor       = "m1.small"
 )
 
+var ctxMatcher = gomock.AssignableToTypeOf(reflect.TypeFor[context.Context]())
+
 type recorders struct {
 	compute *mock.MockComputeClientMockRecorder
 	image   *mock.MockImageClientMockRecorder
@@ -105,7 +107,7 @@ var createDefaultPort = func(r *recorders) {
 	portsBuilder := portsbinding.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
 	}
-	r.network.CreatePort(portsBuilder).Return(&ports.Port{
+	r.network.CreatePort(ctxMatcher, portsBuilder).Return(&ports.Port{
 		ID: portUUID,
 	}, nil)
 }
@@ -118,16 +120,16 @@ var createDefaultPortFails = func(r *recorders) {
 	portsBuilder := portsbinding.CreateOptsExt{
 		CreateOptsBuilder: createOpts,
 	}
-	r.network.CreatePort(portsBuilder).Return(nil, fmt.Errorf("Error creating port"))
+	r.network.CreatePort(ctxMatcher, portsBuilder).Return(nil, fmt.Errorf("Error creating port"))
 }
 
 var createDefaultServer = func(r *recorders) {
 	// Mock any server creation
-	r.compute.CreateServer(gomock.Any(), gomock.Any()).Return(&servers.Server{ID: instanceUUID}, nil)
+	r.compute.CreateServer(ctxMatcher, gomock.Any(), gomock.Any()).Return(&servers.Server{ID: instanceUUID}, nil)
 }
 
 var listDefaultPorts = func(r *recorders) {
-	r.network.ListPort(ports.ListOpts{
+	r.network.ListPort(ctxMatcher, ports.ListOpts{
 		Name:      openStackServerName + "-0",
 		NetworkID: networkUUID,
 	}).Return([]ports.Port{
@@ -138,7 +140,7 @@ var listDefaultPorts = func(r *recorders) {
 }
 
 var listDefaultPortsWithID = func(r *recorders) {
-	r.network.ListPort(ports.ListOpts{
+	r.network.ListPort(ctxMatcher, ports.ListOpts{
 		ID: portUUID,
 	}).Return([]ports.Port{
 		{
@@ -148,20 +150,20 @@ var listDefaultPortsWithID = func(r *recorders) {
 }
 
 var listDefaultPortsNotFound = func(r *recorders) {
-	r.network.ListPort(ports.ListOpts{
+	r.network.ListPort(ctxMatcher, ports.ListOpts{
 		Name:      openStackServerName + "-0",
 		NetworkID: networkUUID,
 	}).Return(nil, nil)
 }
 
 var listDefaultServerNotFound = func(r *recorders) {
-	r.compute.ListServers(servers.ListOpts{
+	r.compute.ListServers(ctxMatcher, servers.ListOpts{
 		Name: "^" + openStackServerName + "$",
 	}).Return([]servers.Server{}, nil)
 }
 
 var listDefaultServerFound = func(r *recorders) {
-	r.compute.ListServers(servers.ListOpts{
+	r.compute.ListServers(ctxMatcher, servers.ListOpts{
 		Name: "^" + openStackServerName + "$",
 	}).Return([]servers.Server{{ID: instanceUUID}}, nil)
 }
@@ -169,31 +171,31 @@ var listDefaultServerFound = func(r *recorders) {
 var deleteDefaultPorts = func(r *recorders) {
 	trunkExtension := extensions.Extension{}
 	trunkExtension.Alias = "trunk"
-	r.network.ListExtensions().Return([]extensions.Extension{trunkExtension}, nil)
-	r.network.ListTrunk(trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{{ID: trunkUUID}}, nil)
-	r.network.ListTrunkSubports(trunkUUID).Return([]trunks.Subport{}, nil)
-	r.network.DeleteTrunk(trunkUUID).Return(nil)
-	r.network.DeletePort(portUUID).Return(nil)
+	r.network.ListExtensions(ctxMatcher).Return([]extensions.Extension{trunkExtension}, nil)
+	r.network.ListTrunk(ctxMatcher, trunks.ListOpts{PortID: portUUID}).Return([]trunks.Trunk{{ID: trunkUUID}}, nil)
+	r.network.ListTrunkSubports(ctxMatcher, trunkUUID).Return([]trunks.Subport{}, nil)
+	r.network.DeleteTrunk(ctxMatcher, trunkUUID).Return(nil)
+	r.network.DeletePort(ctxMatcher, portUUID).Return(nil)
 }
 
 var deleteServerByID = func(r *recorders) {
-	r.compute.GetServer(instanceUUID).Return(&servers.Server{ID: instanceUUID, Name: openStackServerName}, nil)
-	r.compute.DeleteServer(instanceUUID).Return(nil)
-	r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+	r.compute.GetServer(ctxMatcher, instanceUUID).Return(&servers.Server{ID: instanceUUID, Name: openStackServerName}, nil)
+	r.compute.DeleteServer(ctxMatcher, instanceUUID).Return(nil)
+	r.compute.GetServer(ctxMatcher, instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 }
 
 var deleteServerByName = func(r *recorders) {
-	r.compute.ListServers(servers.ListOpts{
+	r.compute.ListServers(ctxMatcher, servers.ListOpts{
 		Name: "^" + openStackServerName + "$",
 	}).Return([]servers.Server{{ID: instanceUUID, Name: openStackServerName}}, nil)
-	r.compute.DeleteServer(instanceUUID).Return(nil)
-	r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+	r.compute.DeleteServer(ctxMatcher, instanceUUID).Return(nil)
+	r.compute.GetServer(ctxMatcher, instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 }
 
 var deleteMissingServerByName = func(r *recorders) {
 	// Lookup server by name because it is not in status.
 	// Don't find it.
-	r.compute.ListServers(servers.ListOpts{
+	r.compute.ListServers(ctxMatcher, servers.ListOpts{
 		Name: "^" + openStackServerName + "$",
 	}).Return(nil, nil)
 }
@@ -201,7 +203,7 @@ var deleteMissingServerByName = func(r *recorders) {
 var deleteRootVolume = func(r *recorders) {
 	// Fetch volume by name
 	volumeName := fmt.Sprintf("%s-root", openStackServerName)
-	r.volume.ListVolumes(volumes.ListOpts{
+	r.volume.ListVolumes(ctxMatcher, volumes.ListOpts{
 		AllTenants: false,
 		Name:       volumeName,
 		TenantID:   "",
@@ -211,7 +213,7 @@ var deleteRootVolume = func(r *recorders) {
 	}}, nil)
 
 	// Delete volume
-	r.volume.DeleteVolume(rootVolumeUUID, volumes.DeleteOpts{}).Return(nil)
+	r.volume.DeleteVolume(ctxMatcher, rootVolumeUUID, volumes.DeleteOpts{}).Return(nil)
 }
 
 func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.T) {
@@ -354,7 +356,7 @@ func TestOpenStackServerReconciler_requeueOpenStackServersForCluster(t *testing.
 		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGomegaWithT(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			// Set deletion timestamp and finalizers if needed
 			if tt.clusterDeleting {
@@ -483,6 +485,7 @@ func TestOpenStackServer_serverToInstanceSpec(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			reconciler := OpenStackServerReconciler{}
 			spec, err := reconciler.serverToInstanceSpec(ctx, tt.openStackServer)
 			if (err != nil) != tt.wantErr {
@@ -621,7 +624,7 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 				},
 			},
 			expect: func(r *recorders) {
-				r.network.ListPort(ports.ListOpts{
+				r.network.ListPort(ctxMatcher, ports.ListOpts{
 					NetworkID: networkUUID,
 					Name:      openStackServerName + "-0",
 				}).Return(nil, fmt.Errorf("error adopting ports"))
@@ -633,6 +636,7 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 	for i := range tests {
 		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewGomegaWithT(t)
 			log := testr.New(t)
 
@@ -655,7 +659,7 @@ func Test_OpenStackServerReconcileDelete(t *testing.T) {
 			osServer.Name = openStackServerName
 			osServer.Finalizers = []string{infrav1alpha1.OpenStackServerFinalizer}
 
-			err := reconciler.reconcileDelete(scopeWithLogger, &tt.osServer)
+			err := reconciler.reconcileDelete(ctx, scopeWithLogger, &tt.osServer)
 
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
@@ -781,7 +785,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				listDefaultPortsWithID(r)
-				r.compute.GetServer(instanceUUID).Return(&servers.Server{
+				r.compute.GetServer(ctxMatcher, instanceUUID).Return(&servers.Server{
 					ID:     instanceUUID,
 					Name:   openStackServerName,
 					Status: "ACTIVE",
@@ -818,7 +822,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 			},
 			expect: func(r *recorders) {
 				listDefaultPortsWithID(r)
-				r.compute.GetServer(instanceUUID).Return(&servers.Server{
+				r.compute.GetServer(ctxMatcher, instanceUUID).Return(&servers.Server{
 					ID:     instanceUUID,
 					Name:   openStackServerName,
 					Status: "ERROR",
@@ -836,6 +840,7 @@ func Test_OpenStackServerReconcileCreate(t *testing.T) {
 	for i := range tests {
 		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewGomegaWithT(t)
 			log := testr.New(t)
 
@@ -911,7 +916,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				},
 			},
 			setupMocks: func(r *recorders) {
-				r.compute.GetServer(instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+				r.compute.GetServer(ctxMatcher, instanceUUID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 			},
 			wantErr: false,
 			wantCondition: &metav1.Condition{
@@ -929,7 +934,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				},
 			},
 			setupMocks: func(r *recorders) {
-				r.compute.GetServer(instanceUUID).Return(nil, fmt.Errorf("error"))
+				r.compute.GetServer(ctxMatcher, instanceUUID).Return(nil, fmt.Errorf("error"))
 			},
 			wantErr: true,
 			wantCondition: &metav1.Condition{
@@ -948,7 +953,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				Status: infrav1alpha1.OpenStackServerStatus{},
 			},
 			setupMocks: func(r *recorders) {
-				r.compute.ListServers(servers.ListOpts{
+				r.compute.ListServers(ctxMatcher, servers.ListOpts{
 					Name: "^" + openStackServerName + "$",
 				}).Return([]servers.Server{{ID: instanceUUID}}, nil)
 			},
@@ -972,10 +977,10 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				},
 			},
 			setupMocks: func(r *recorders) {
-				r.compute.ListServers(servers.ListOpts{
+				r.compute.ListServers(ctxMatcher, servers.ListOpts{
 					Name: "^" + openStackServerName + "$",
 				}).Return([]servers.Server{}, nil)
-				r.compute.CreateServer(gomock.Any(), gomock.Any()).Return(&servers.Server{ID: instanceUUID}, nil)
+				r.compute.CreateServer(ctxMatcher, gomock.Any(), gomock.Any()).Return(&servers.Server{ID: instanceUUID}, nil)
 			},
 			wantErr: false,
 			wantServer: &servers.Server{
@@ -999,10 +1004,10 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 				},
 			},
 			setupMocks: func(r *recorders) {
-				r.compute.ListServers(servers.ListOpts{
+				r.compute.ListServers(ctxMatcher, servers.ListOpts{
 					Name: "^" + openStackServerName + "$",
 				}).Return([]servers.Server{}, nil)
-				r.compute.CreateServer(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
+				r.compute.CreateServer(ctxMatcher, gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 			},
 			wantErr: true,
 			wantCondition: &metav1.Condition{
@@ -1016,6 +1021,7 @@ func TestOpenStackServerReconciler_getOrCreateServer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewGomegaWithT(t)
 			log := testr.New(t)
 
@@ -1152,7 +1158,7 @@ var _ = Describe("OpenStackServer controller", func() {
 		testNum           int
 	)
 
-	BeforeEach(func() {
+	BeforeEach(func(ctx SpecContext) {
 		testNum++
 		testNamespace = fmt.Sprintf("server-test-%d", testNum)
 
@@ -1197,7 +1203,7 @@ var _ = Describe("OpenStackServer controller", func() {
 		}
 	})
 
-	AfterEach(func() {
+	AfterEach(func(ctx SpecContext) {
 		orphan := metav1.DeletePropagationOrphan
 		deleteOptions := client.DeleteOptions{
 			PropagationPolicy: &orphan,
@@ -1213,7 +1219,7 @@ var _ = Describe("OpenStackServer controller", func() {
 		Expect(err).To(BeNil())
 	})
 
-	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
+	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func(ctx SpecContext) {
 		testServer.SetName("missing-server-credentials")
 		testServer.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Type:      "Secret",
@@ -1250,7 +1256,7 @@ var _ = Describe("OpenStackServer controller", func() {
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
-	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func() {
+	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func(ctx SpecContext) {
 		testServer.SetName("identity-access-denied-server")
 		testServer.Spec.IdentityRef = infrav1.OpenStackIdentityReference{
 			Type:      "ClusterIdentity",
@@ -1316,7 +1322,7 @@ func TestOpenStackServerReconcileInstanceStateError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGomegaWithT(t)
 			log := testr.New(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			mockCtrl := gomock.NewController(t)
 			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
@@ -1339,7 +1345,7 @@ func TestOpenStackServerReconcileInstanceStateError(t *testing.T) {
 			}
 
 			listDefaultPortsWithID(recorders)
-			recorders.compute.GetServer(instanceUUID).Return(server, nil)
+			recorders.compute.GetServer(ctxMatcher, instanceUUID).Return(server, nil)
 
 			scopeWithLogger := scope.NewWithLogger(mockScopeFactory, log)
 
