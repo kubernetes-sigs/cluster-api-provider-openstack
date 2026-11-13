@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
@@ -45,6 +46,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 var (
@@ -56,6 +58,34 @@ var (
 	mockCtrl         *gomock.Controller
 	mockScopeFactory *scope.MockScopeFactory
 )
+
+func TestDeleteAPIServerEndpointDeletesCAPOCreatedFloatingIP(t *testing.T) {
+	g := NewWithT(t)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	const (
+		clusterResourceName = "test-cluster"
+		floatingIP          = "192.168.111.0"
+		floatingIPID        = "floating-ip-id"
+	)
+	mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+	mockScopeFactory.NetworkClient.EXPECT().ListFloatingIP(floatingips.ListOpts{FloatingIP: floatingIP}).Return([]floatingips.FloatingIP{{
+		ID:          floatingIPID,
+		FloatingIP:  floatingIP,
+		Description: names.GetDescription(clusterResourceName),
+	}}, nil)
+	mockScopeFactory.NetworkClient.EXPECT().DeleteFloatingIP(floatingIPID).Return(nil)
+
+	openStackCluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ControlPlaneEndpoint: &clusterv1.APIEndpoint{Host: floatingIP, Port: 6443},
+		},
+	}
+	err := deleteAPIServerEndpoint(scope.NewWithLogger(mockScopeFactory, logr.Discard()), openStackCluster, clusterResourceName)
+
+	g.Expect(err).NotTo(HaveOccurred())
+}
 
 var _ = Describe("OpenStackCluster controller", func() {
 	testClusterName := "test-cluster"

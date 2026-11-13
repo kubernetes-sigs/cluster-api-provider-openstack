@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
@@ -41,6 +42,7 @@ import (
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 const (
@@ -62,6 +64,41 @@ const (
 	failureDomain        = "test-failure-domain"
 	testInstanceID       = "test-instance-id-12345"
 )
+
+func TestRemoveAPIServerEndpointDisassociatesCAPOCreatedFloatingIP(t *testing.T) {
+	g := NewWithT(t)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	const (
+		clusterResourceName = "test-cluster"
+		floatingIP          = "192.168.111.0"
+		floatingIPID        = "floating-ip-id"
+	)
+	mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+	mockScopeFactory.NetworkClient.EXPECT().ListFloatingIP(floatingips.ListOpts{FloatingIP: floatingIP}).Return([]floatingips.FloatingIP{{
+		ID:          floatingIPID,
+		FloatingIP:  floatingIP,
+		Description: names.GetDescription(clusterResourceName),
+		PortID:      "port-id",
+	}}, nil)
+	mockScopeFactory.NetworkClient.EXPECT().UpdateFloatingIP(floatingIPID, &floatingips.UpdateOpts{PortID: nil}).Return(nil, nil)
+	mockScopeFactory.NetworkClient.EXPECT().GetFloatingIP(floatingIPID).Return(&floatingips.FloatingIP{Status: "DOWN"}, nil)
+
+	openStackCluster := &infrav1.OpenStackCluster{
+		Spec: infrav1.OpenStackClusterSpec{
+			ControlPlaneEndpoint: &clusterv1.APIEndpoint{Host: floatingIP, Port: 6443},
+		},
+	}
+	err := removeAPIServerEndpoint(
+		scope.NewWithLogger(mockScopeFactory, logr.Discard()),
+		openStackCluster,
+		&infrav1.OpenStackMachine{},
+		clusterResourceName,
+	)
+
+	g.Expect(err).NotTo(HaveOccurred())
+}
 
 func TestOpenStackMachineSpecToOpenStackServerSpec(t *testing.T) {
 	identityRef := infrav1.OpenStackIdentityReference{
