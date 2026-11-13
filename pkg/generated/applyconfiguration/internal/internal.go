@@ -2149,6 +2149,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: allowAllInClusterTraffic
       type:
         scalar: boolean
+    - name: allowAllOutboundTraffic
+      type:
+        scalar: boolean
     - name: clusterNodesSecurityGroupRules
       type:
         list:

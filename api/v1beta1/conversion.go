@@ -45,6 +45,17 @@ func (src *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	for i := range dst.Status.Conditions {
 		dst.Status.Conditions[i].ObservedGeneration = src.Generation
 	}
+
+	// Restore hub-only fields stashed on the spoke by ConvertFrom.
+	restored := &infrav1.OpenStackCluster{}
+	ok, err := utilconversion.UnmarshalData(src, restored)
+	if err != nil {
+		return err
+	}
+	if ok {
+		restoreOpenStackClusterSpec(&restored.Spec, &dst.Spec)
+	}
+
 	return utilconversion.MarshalData(src, dst)
 }
 
@@ -56,8 +67,23 @@ func (dst *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	if err := Convert_v1beta2_OpenStackCluster_To_v1beta1_OpenStackCluster(src, dst, nil); err != nil {
 		return err
 	}
-	_, err := utilconversion.UnmarshalData(src, dst)
-	return err
+
+	// Restore spoke-only fields stashed on the hub by ConvertTo.
+	if _, err := utilconversion.UnmarshalData(src, dst); err != nil {
+		return err
+	}
+
+	// Stash the hub object on the spoke so hub-only fields
+	// (e.g. managedSecurityGroups.allowAllOutboundTraffic) survive the round trip.
+	return utilconversion.MarshalData(src, dst)
+}
+
+// restoreOpenStackClusterSpec restores the hub-only fields of an OpenStackClusterSpec
+// which have no equivalent in v1beta1.
+func restoreOpenStackClusterSpec(previous *infrav1.OpenStackClusterSpec, dst *infrav1.OpenStackClusterSpec) {
+	if previous.ManagedSecurityGroups != nil && dst.ManagedSecurityGroups != nil {
+		dst.ManagedSecurityGroups.AllowAllOutboundTraffic = previous.ManagedSecurityGroups.AllowAllOutboundTraffic
+	}
 }
 
 // ConvertTo converts this OpenStackMachine to the Hub version (v1beta2).
@@ -91,7 +117,7 @@ func (src *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error 
 		return err
 	}
 
-	// Restore hub-only fields (spec.template.metadata) stashed on the
+	// Restore hub-only fields (e.g. spec.template.metadata) stashed on the
 	// spoke by ConvertFrom. UnmarshalData also deletes the annotation,
 	// so it can't leak into the stash below.
 	restored := &infrav1.OpenStackClusterTemplate{}
@@ -101,6 +127,7 @@ func (src *OpenStackClusterTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error 
 	}
 	if ok {
 		dst.Spec.Template.ObjectMeta = restored.Spec.Template.ObjectMeta
+		restoreOpenStackClusterSpec(&restored.Spec.Template.Spec, &dst.Spec.Template.Spec)
 	}
 
 	// Stash the v1beta1 object on the hub to preserve spoke-only fields

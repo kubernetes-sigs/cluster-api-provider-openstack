@@ -360,6 +360,22 @@ type ManagedSecurityGroups struct {
 	// +kubebuilder:default=false
 	// +optional
 	AllowAllInClusterTraffic bool `json:"allowAllInClusterTraffic,omitempty"`
+
+	// allowAllOutboundTraffic controls whether the default allow-all IPv4 and
+	// IPv6 egress rules are added to the managed security groups.
+	//
+	// When unset or true, the managed security groups allow all outbound traffic.
+	//
+	// When false, the default allow-all egress rules are not created. Instead,
+	// the control plane and worker security groups allow all egress to the
+	// managed control plane and worker security groups, and TCP egress to the
+	// API server endpoint when it is an IP address. The bastion security group
+	// allows SSH egress to the control plane and worker security groups. Any
+	// other required egress, e.g. DNS, image registries or the metadata service,
+	// must be added with the security group rules above.
+	// +kubebuilder:default=true
+	// +optional
+	AllowAllOutboundTraffic *bool `json:"allowAllOutboundTraffic,omitempty"`
 }
 
 var _ IdentityRefProvider = &OpenStackCluster{}

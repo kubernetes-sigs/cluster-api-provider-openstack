@@ -29,6 +29,7 @@ import (
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 	"k8s.io/utils/ptr"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
@@ -412,6 +413,209 @@ func TestGenerateDesiredSecGroups(t *testing.T) {
 				gotNumberSecurityGroupRules += len(secGroup.Rules)
 			}
 			g.Expect(gotNumberSecurityGroupRules).To(Equal(tt.expectedNumberSecurityGroupRules))
+		})
+	}
+}
+
+func TestGenerateDesiredSecGroupsAllowAllOutboundTraffic(t *testing.T) {
+	const (
+		controlPlaneID = "controlplane-id"
+		workerID       = "worker-id"
+		bastionID      = "bastion-id"
+	)
+
+	secGroupNames := map[string]string{
+		controlPlaneSuffix: "k8s-cluster-mycluster-secgroup-controlplane",
+		workerSuffix:       "k8s-cluster-mycluster-secgroup-worker",
+		bastionSuffix:      "k8s-cluster-mycluster-secgroup-bastion",
+	}
+
+	observedSecGroupsBySuffix := map[string]*groups.SecGroup{
+		controlPlaneSuffix: {ID: controlPlaneID, Name: secGroupNames[controlPlaneSuffix]},
+		workerSuffix:       {ID: workerID, Name: secGroupNames[workerSuffix]},
+		bastionSuffix:      {ID: bastionID, Name: secGroupNames[bastionSuffix]},
+	}
+
+	fullOpenEgress := []resolvedSecurityGroupRuleSpec{
+		{Description: "Full open", Direction: "egress", EtherType: "IPv4"},
+		{Description: "Full open", Direction: "egress", EtherType: "IPv6"},
+	}
+
+	inClusterEgress := func(remoteGroupIDs ...string) []resolvedSecurityGroupRuleSpec {
+		r := make([]resolvedSecurityGroupRuleSpec, 0, 2*len(remoteGroupIDs))
+		for _, id := range remoteGroupIDs {
+			r = append(r,
+				resolvedSecurityGroupRuleSpec{Description: "In-cluster Egress", Direction: "egress", EtherType: "IPv4", RemoteGroupID: id},
+				resolvedSecurityGroupRuleSpec{Description: "In-cluster Egress", Direction: "egress", EtherType: "IPv6", RemoteGroupID: id},
+			)
+		}
+		return r
+	}
+
+	apiServerEgress := func(etherType, remoteIPPrefix string, port int) resolvedSecurityGroupRuleSpec {
+		return resolvedSecurityGroupRuleSpec{
+			Description:    "Kubernetes API",
+			Direction:      "egress",
+			EtherType:      etherType,
+			PortRangeMin:   port,
+			PortRangeMax:   port,
+			Protocol:       "tcp",
+			RemoteIPPrefix: remoteIPPrefix,
+		}
+	}
+
+	bastionSSHEgress := []resolvedSecurityGroupRuleSpec{
+		{Description: "SSH", Direction: "egress", EtherType: "IPv4", PortRangeMin: 22, PortRangeMax: 22, Protocol: "tcp", RemoteGroupID: controlPlaneID},
+		{Description: "SSH", Direction: "egress", EtherType: "IPv4", PortRangeMin: 22, PortRangeMax: 22, Protocol: "tcp", RemoteGroupID: workerID},
+	}
+
+	userEgressRule := infrav1.SecurityGroupRuleSpec{
+		Name:           "allow-dns",
+		Description:    ptr.To("allow-dns"),
+		Direction:      "egress",
+		EtherType:      ptr.To("IPv4"),
+		Protocol:       ptr.To("udp"),
+		PortRangeMin:   ptr.To[int32](53),
+		PortRangeMax:   ptr.To[int32](53),
+		RemoteIPPrefix: ptr.To("10.0.0.53/32"),
+	}
+	resolvedUserEgressRule := resolvedSecurityGroupRuleSpec{
+		Description:    "allow-dns",
+		Direction:      "egress",
+		EtherType:      "IPv4",
+		Protocol:       "udp",
+		PortRangeMin:   53,
+		PortRangeMax:   53,
+		RemoteIPPrefix: "10.0.0.53/32",
+	}
+
+	tests := []struct {
+		name                  string
+		managedSecurityGroups *infrav1.ManagedSecurityGroups
+		controlPlaneEndpoint  *clusterv1.APIEndpoint
+		// Expected egress rules for each security group.
+		wantControlPlaneEgress []resolvedSecurityGroupRuleSpec
+		wantWorkerEgress       []resolvedSecurityGroupRuleSpec
+		wantBastionEgress      []resolvedSecurityGroupRuleSpec
+	}{
+		{
+			name:                   "allowAllOutboundTraffic unset keeps the default allow-all egress rules",
+			managedSecurityGroups:  &infrav1.ManagedSecurityGroups{},
+			wantControlPlaneEgress: fullOpenEgress,
+			wantWorkerEgress:       fullOpenEgress,
+			wantBastionEgress:      fullOpenEgress,
+		},
+		{
+			name: "allowAllOutboundTraffic true keeps the default allow-all egress rules",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic: ptr.To(true),
+			},
+			controlPlaneEndpoint:   &clusterv1.APIEndpoint{Host: "192.168.0.10", Port: 6443},
+			wantControlPlaneEgress: fullOpenEgress,
+			wantWorkerEgress:       fullOpenEgress,
+			wantBastionEgress:      fullOpenEgress,
+		},
+		{
+			name: "allowAllOutboundTraffic false replaces the default egress rules with in-cluster egress rules",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic: ptr.To(false),
+			},
+			wantControlPlaneEgress: inClusterEgress(remoteGroupIDSelf, workerID),
+			wantWorkerEgress:       inClusterEgress(remoteGroupIDSelf, controlPlaneID),
+			wantBastionEgress:      bastionSSHEgress,
+		},
+		{
+			name: "allowAllOutboundTraffic false adds IPv4 egress to the API server endpoint",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic: ptr.To(false),
+			},
+			controlPlaneEndpoint: &clusterv1.APIEndpoint{Host: "192.168.0.10", Port: 6443},
+			wantControlPlaneEgress: append(inClusterEgress(remoteGroupIDSelf, workerID),
+				apiServerEgress("IPv4", "192.168.0.10/32", 6443)),
+			wantWorkerEgress: append(inClusterEgress(remoteGroupIDSelf, controlPlaneID),
+				apiServerEgress("IPv4", "192.168.0.10/32", 6443)),
+			wantBastionEgress: bastionSSHEgress,
+		},
+		{
+			name: "allowAllOutboundTraffic false adds IPv6 egress to the API server endpoint",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic: ptr.To(false),
+			},
+			controlPlaneEndpoint: &clusterv1.APIEndpoint{Host: "2001:db8::10", Port: 8443},
+			wantControlPlaneEgress: append(inClusterEgress(remoteGroupIDSelf, workerID),
+				apiServerEgress("IPv6", "2001:db8::10/128", 8443)),
+			wantWorkerEgress: append(inClusterEgress(remoteGroupIDSelf, controlPlaneID),
+				apiServerEgress("IPv6", "2001:db8::10/128", 8443)),
+			wantBastionEgress: bastionSSHEgress,
+		},
+		{
+			name: "allowAllOutboundTraffic false does not add API server egress for a hostname endpoint",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic: ptr.To(false),
+			},
+			controlPlaneEndpoint:   &clusterv1.APIEndpoint{Host: "api.example.com", Port: 6443},
+			wantControlPlaneEgress: inClusterEgress(remoteGroupIDSelf, workerID),
+			wantWorkerEgress:       inClusterEgress(remoteGroupIDSelf, controlPlaneID),
+			wantBastionEgress:      bastionSSHEgress,
+		},
+		{
+			name: "allowAllOutboundTraffic false keeps user-defined egress rules",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic:        ptr.To(false),
+				ClusterNodesSecurityGroupRules: []infrav1.SecurityGroupRuleSpec{userEgressRule},
+			},
+			wantControlPlaneEgress: append(inClusterEgress(remoteGroupIDSelf, workerID), resolvedUserEgressRule),
+			wantWorkerEgress:       append(inClusterEgress(remoteGroupIDSelf, controlPlaneID), resolvedUserEgressRule),
+			wantBastionEgress:      bastionSSHEgress,
+		},
+		{
+			name: "allowAllOutboundTraffic false with allowAllInClusterTraffic true",
+			managedSecurityGroups: &infrav1.ManagedSecurityGroups{
+				AllowAllOutboundTraffic:  ptr.To(false),
+				AllowAllInClusterTraffic: true,
+			},
+			wantControlPlaneEgress: inClusterEgress(remoteGroupIDSelf, workerID),
+			wantWorkerEgress:       inClusterEgress(remoteGroupIDSelf, controlPlaneID),
+			wantBastionEgress:      bastionSSHEgress,
+		},
+	}
+
+	egressRules := func(rules []resolvedSecurityGroupRuleSpec) []resolvedSecurityGroupRuleSpec {
+		var r []resolvedSecurityGroupRuleSpec
+		for _, rule := range rules {
+			if rule.Direction == "egress" {
+				r = append(r, rule)
+			}
+		}
+		return r
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			g := NewWithT(t)
+			log := testr.New(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+
+			s, err := NewService(scope.NewWithLogger(mockScopeFactory, log))
+			g.Expect(err).NotTo(HaveOccurred())
+
+			openStackCluster := &infrav1.OpenStackCluster{
+				Spec: infrav1.OpenStackClusterSpec{
+					ManagedSecurityGroups: tt.managedSecurityGroups,
+					ControlPlaneEndpoint:  tt.controlPlaneEndpoint,
+					Bastion:               &infrav1.Bastion{Enabled: ptr.To(true)},
+				},
+			}
+
+			got, err := s.generateDesiredSecGroups(openStackCluster, secGroupNames, observedSecGroupsBySuffix)
+			g.Expect(err).NotTo(HaveOccurred())
+
+			g.Expect(egressRules(got[controlPlaneSuffix].Rules)).To(ConsistOf(tt.wantControlPlaneEgress), "control plane egress rules")
+			g.Expect(egressRules(got[workerSuffix].Rules)).To(ConsistOf(tt.wantWorkerEgress), "worker egress rules")
+			g.Expect(egressRules(got[bastionSuffix].Rules)).To(ConsistOf(tt.wantBastionEgress), "bastion egress rules")
 		})
 	}
 }
