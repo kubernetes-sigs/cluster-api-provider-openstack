@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"encoding/json"
 	"sort"
 	"strings"
 	"unsafe"
@@ -24,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiconversion "k8s.io/apimachinery/pkg/conversion"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
@@ -45,7 +47,7 @@ func (src *OpenStackCluster) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	for i := range dst.Status.Conditions {
 		dst.Status.Conditions[i].ObservedGeneration = src.Generation
 	}
-	return utilconversion.MarshalData(src, dst)
+	return marshalSpokeData(src, dst)
 }
 
 // ConvertFrom converts from the Hub version (v1beta2) to this version.
@@ -56,8 +58,18 @@ func (dst *OpenStackCluster) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	if err := Convert_v1beta2_OpenStackCluster_To_v1beta1_OpenStackCluster(src, dst, nil); err != nil {
 		return err
 	}
-	_, err := utilconversion.UnmarshalData(src, dst)
-	return err
+
+	// Restore spoke-only fields stashed on the hub by ConvertTo. The
+	// annotation is ordinary metadata that anyone with update permission on
+	// the object can write, so only restore fields which cannot round-trip
+	// and never anything the hub is authoritative for, such as status.
+	restored := &OpenStackCluster{}
+	ok, err := utilconversion.UnmarshalData(src, restored)
+	if err != nil || !ok {
+		return err
+	}
+	restoreOpenStackClusterSpec(&restored.Spec, &dst.Spec)
+	return nil
 }
 
 // ConvertTo converts this OpenStackMachine to the Hub version (v1beta2).
@@ -69,7 +81,7 @@ func (src *OpenStackMachine) ConvertTo(dstRaw ctrlconversion.Hub) error {
 	for i := range dst.Status.Conditions {
 		dst.Status.Conditions[i].ObservedGeneration = src.Generation
 	}
-	return utilconversion.MarshalData(src, dst)
+	return marshalSpokeData(src, dst)
 }
 
 // ConvertFrom converts from the Hub version (v1beta2) to this version.
@@ -80,8 +92,16 @@ func (dst *OpenStackMachine) ConvertFrom(srcRaw ctrlconversion.Hub) error {
 	if err := Convert_v1beta2_OpenStackMachine_To_v1beta1_OpenStackMachine(src, dst, nil); err != nil {
 		return err
 	}
-	_, err := utilconversion.UnmarshalData(src, dst)
-	return err
+
+	// Restore spoke-only fields stashed on the hub by ConvertTo. See
+	// OpenStackCluster.ConvertFrom for why this is limited to specific fields.
+	restored := &OpenStackMachine{}
+	ok, err := utilconversion.UnmarshalData(src, restored)
+	if err != nil || !ok {
+		return err
+	}
+	restoreMachineSpecFlavor(&restored.Spec, &dst.Spec)
+	return nil
 }
 
 // ConvertTo converts this OpenStackClusterTemplate to the Hub version (v1beta2).
@@ -117,9 +137,15 @@ func (dst *OpenStackClusterTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) erro
 		return err
 	}
 
-	// Restore spoke-only fields stashed on the hub by ConvertTo.
-	if _, err := utilconversion.UnmarshalData(src, dst); err != nil {
+	// Restore spoke-only fields stashed on the hub by ConvertTo. See
+	// OpenStackCluster.ConvertFrom for why this is limited to specific fields.
+	restored := &OpenStackClusterTemplate{}
+	ok, err := utilconversion.UnmarshalData(src, restored)
+	if err != nil {
 		return err
+	}
+	if ok {
+		restoreOpenStackClusterSpec(&restored.Spec.Template.Spec, &dst.Spec.Template.Spec)
 	}
 
 	// Stash the hub object on the spoke so hub-only fields
@@ -133,7 +159,7 @@ func (src *OpenStackMachineTemplate) ConvertTo(dstRaw ctrlconversion.Hub) error 
 	if err := Convert_v1beta1_OpenStackMachineTemplate_To_v1beta2_OpenStackMachineTemplate(src, dst, nil); err != nil {
 		return err
 	}
-	return utilconversion.MarshalData(src, dst)
+	return marshalSpokeData(src, dst)
 }
 
 // ConvertFrom converts from the Hub version (v1beta2) to this version.
@@ -144,8 +170,62 @@ func (dst *OpenStackMachineTemplate) ConvertFrom(srcRaw ctrlconversion.Hub) erro
 	if err := Convert_v1beta2_OpenStackMachineTemplate_To_v1beta1_OpenStackMachineTemplate(src, dst, nil); err != nil {
 		return err
 	}
-	_, err := utilconversion.UnmarshalData(src, dst)
-	return err
+
+	// Restore spoke-only fields stashed on the hub by ConvertTo. See
+	// OpenStackCluster.ConvertFrom for why this is limited to specific fields.
+	restored := &OpenStackMachineTemplate{}
+	ok, err := utilconversion.UnmarshalData(src, restored)
+	if err != nil || !ok {
+		return err
+	}
+	restoreMachineSpecFlavor(&restored.Spec.Template.Spec, &dst.Spec.Template.Spec)
+	return nil
+}
+
+// marshalSpokeData stashes src on dst like utilconversion.MarshalData, but
+// without status. ConvertFrom never restores status from the annotation, so
+// persisting a copy of it would only keep stale or client-supplied data.
+func marshalSpokeData(src, dst metav1.Object) error {
+	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(src)
+	if err != nil {
+		return err
+	}
+	delete(u, "metadata")
+	delete(u, "status")
+
+	data, err := json.Marshal(u)
+	if err != nil {
+		return err
+	}
+	annotations := dst.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+	annotations[utilconversion.DataAnnotation] = string(data)
+	dst.SetAnnotations(annotations)
+	return nil
+}
+
+// restoreOpenStackClusterSpec restores the spoke-only fields of an
+// OpenStackClusterSpec.
+func restoreOpenStackClusterSpec(previous, dst *OpenStackClusterSpec) {
+	if previous.Bastion != nil && dst.Bastion != nil {
+		restoreMachineSpecFlavor(previous.Bastion.Spec, dst.Bastion.Spec)
+	}
+}
+
+// restoreMachineSpecFlavor restores the v1beta1 flavor name when both Flavor
+// and FlavorID were set. v1beta2 keeps only the ID in that case. The name is
+// restored only alongside the same ID, where ConvertTo ignores it again, so
+// it can't change the hub.
+func restoreMachineSpecFlavor(previous, dst *OpenStackMachineSpec) {
+	if previous == nil || dst == nil {
+		return
+	}
+	if previous.Flavor != nil && *previous.Flavor != "" && dst.Flavor == nil &&
+		previous.FlavorID != nil && dst.FlavorID != nil && *previous.FlavorID == *dst.FlavorID {
+		dst.Flavor = ptr.To(*previous.Flavor)
+	}
 }
 
 // ConvertTo converts this OpenStackClusterList to the Hub version (v1beta2).
