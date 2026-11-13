@@ -272,6 +272,7 @@ func main() {
 					&corev1.Secret{},
 				},
 			},
+			FieldOwner: "capi-provider-openstack",
 		},
 		WebhookServer: webhook.NewServer(
 			webhook.Options{
