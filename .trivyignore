@@ -104,3 +104,26 @@ CVE-2026-78660
 # itself is not even imported by CAPO or its dependencies.
 # https://avd.aquasec.com/nvd/cve-2026-56851
 CVE-2026-56851
+
+# golang.org/x/net/html vulnerabilities: fixed in x/net v0.62.0, which
+# requires go 1.26.0 (this branch is on go 1.24.0). Confirmed via
+# `govulncheck -show verbose` as "Package Results" only (imported but not
+# called). CAPO does not parse untrusted HTML, x/net/html is only imported
+# transitively.
+# Quadratic complexity when coalescing text nodes (GO-2026-6860).
+# https://avd.aquasec.com/nvd/cve-2026-78661
+CVE-2026-78661
+# Incomplete namespace transition checks when rendering raw text
+# (GO-2026-6866).
+# https://avd.aquasec.com/nvd/cve-2026-97045
+CVE-2026-97045
+
+# OpenTelemetry-Go: AttributeValueLengthLimit can be bypassed with attribute
+# values composed of U+FFFD runes (sdk, sdk/log, trace; GHSA-q7gw-24fr-5p69).
+# Fixed in otel v1.47.0, which requires go 1.26.0 (this branch is on go
+# 1.24.0). Not reported by govulncheck (no Go vulnerability database entry).
+# Only reachable when OTLP tracing is explicitly configured and an attribute
+# value length limit is set; impact is limited to extra memory use (CVSS 5.3,
+# availability only).
+# https://avd.aquasec.com/nvd/cve-2026-128085
+CVE-2026-128085
