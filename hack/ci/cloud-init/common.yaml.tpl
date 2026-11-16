@@ -2,6 +2,19 @@
 runcmd:
 - sysctl -p /etc/sysctl.d/devstack.conf
 - /root/devstack.sh
+bootcmd:
+# Stop cloud-final from writing to the serial console. cloud-final.service
+# uses StandardOutput=journal+console and every line that devstack prints
+# during stack.sh is written to ttyS0, which is a slow serial port on GCE. The
+# output is still kept in the journal and in /var/log/cloud-init-output.log.
+- |
+  mkdir -p /etc/systemd/system/cloud-final.service.d
+  cat > /etc/systemd/system/cloud-final.service.d/10-capo-no-console.conf <<'EOF'
+  [Service]
+  StandardOutput=journal
+  StandardError=journal
+  EOF
+  systemctl daemon-reload
 final_message: "The system is finally up, after $UPTIME seconds"
 users:
 - name: cloud
@@ -17,7 +30,6 @@ packages:
 - python3
 - git
 - jq
-package_upgrade: true
 write_files:
 - path: /etc/sysctl.d/devstack.conf
   permissions: "0644"
