@@ -1459,3 +1459,30 @@ func Test_ReconcileSubnet(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetNetworkSubnetByParam_SubnetByIDClientError(t *testing.T) {
+	// Regression test: when a subnet is specified by ID and the client
+	// returns a non-NotFound error (for example a transient 500), GetSubnet
+	// returns a nil subnet. The error must be propagated instead of
+	// dereferencing the nil subnet, which previously caused a panic when a
+	// network ID was supplied.
+	g := NewWithT(t)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	const subnetID = "d2d8d98d-b234-4e82-b6a3-3c7e4b1a9c11"
+	clientErr := errors.New("transient failure")
+
+	mockClient := mock.NewMockNetworkClient(mockCtrl)
+	mockClient.EXPECT().GetSubnet(subnetID).Return(nil, clientErr)
+
+	scopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+	s := Service{
+		client: mockClient,
+		scope:  scope.NewWithLogger(scopeFactory, testr.New(t)),
+	}
+
+	subnet, err := s.GetNetworkSubnetByParam("some-network-id", &infrav1.SubnetParam{ID: ptr.To(subnetID)})
+	g.Expect(err).To(MatchError(clientErr))
+	g.Expect(subnet).To(BeNil())
+}

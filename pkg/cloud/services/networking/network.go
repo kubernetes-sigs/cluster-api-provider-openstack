@@ -453,15 +453,18 @@ func (s *Service) GetSubnetByParam(param *infrav1.SubnetParam) (*subnets.Subnet,
 func (s *Service) GetNetworkSubnetByParam(networkID string, param *infrav1.SubnetParam) (*subnets.Subnet, error) {
 	if param.ID != nil {
 		subnet, err := s.client.GetSubnet(*param.ID)
-		if capoerrors.IsNotFound(err) {
-			return nil, capoerrors.ErrNoMatches
+		if err != nil {
+			if capoerrors.IsNotFound(err) {
+				return nil, capoerrors.ErrNoMatches
+			}
+			return nil, err
 		}
 
 		if networkID != "" && subnet.NetworkID != networkID {
 			s.scope.Logger().V(4).Info("Subnet specified by ID does not belong to the given network", "subnetID", subnet.ID, "networkID", networkID)
 			return nil, capoerrors.ErrNoMatches
 		}
-		return subnet, err
+		return subnet, nil
 	}
 
 	if param.Filter == nil {
