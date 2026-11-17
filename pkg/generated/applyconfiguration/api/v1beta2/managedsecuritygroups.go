@@ -31,6 +31,19 @@ type ManagedSecurityGroupsApplyConfiguration struct {
 	WorkerNodesSecurityGroupRules []SecurityGroupRuleSpecApplyConfiguration `json:"workerNodesSecurityGroupRules,omitempty"`
 	// allowAllInClusterTraffic allows all ingress and egress traffic between cluster nodes when set to true.
 	AllowAllInClusterTraffic *bool `json:"allowAllInClusterTraffic,omitempty"`
+	// allowAllOutboundTraffic controls whether the default allow-all IPv4 and
+	// IPv6 egress rules are added to the managed security groups.
+	//
+	// When unset or true, the managed security groups allow all outbound traffic.
+	//
+	// When false, the default allow-all egress rules are not created. Instead,
+	// the control plane and worker security groups allow all egress to the
+	// managed control plane and worker security groups, and TCP egress to the
+	// API server endpoint when it is an IP address. The bastion security group
+	// allows SSH egress to the control plane and worker security groups. Any
+	// other required egress, e.g. DNS, image registries or the metadata service,
+	// must be added with the security group rules above.
+	AllowAllOutboundTraffic *bool `json:"allowAllOutboundTraffic,omitempty"`
 }
 
 // ManagedSecurityGroupsApplyConfiguration constructs a declarative configuration of the ManagedSecurityGroups type for use with
@@ -83,5 +96,13 @@ func (b *ManagedSecurityGroupsApplyConfiguration) WithWorkerNodesSecurityGroupRu
 // If called multiple times, the AllowAllInClusterTraffic field is set to the value of the last call.
 func (b *ManagedSecurityGroupsApplyConfiguration) WithAllowAllInClusterTraffic(value bool) *ManagedSecurityGroupsApplyConfiguration {
 	b.AllowAllInClusterTraffic = &value
+	return b
+}
+
+// WithAllowAllOutboundTraffic sets the AllowAllOutboundTraffic field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AllowAllOutboundTraffic field is set to the value of the last call.
+func (b *ManagedSecurityGroupsApplyConfiguration) WithAllowAllOutboundTraffic(value bool) *ManagedSecurityGroupsApplyConfiguration {
+	b.AllowAllOutboundTraffic = &value
 	return b
 }

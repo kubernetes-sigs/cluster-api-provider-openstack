@@ -658,6 +658,52 @@ managedSecurityGroups:
     protocol: udp
 ```
 
+### Restricting outbound traffic
+
+By default, the managed security groups for the control plane, worker and bastion nodes
+include rules that allow all outbound IPv4 and IPv6 traffic.
+
+When the flag `OpenStackCluster.spec.managedSecurityGroups.allowAllOutboundTraffic` is
+set to `false`, these allow-all egress rules are not created. CAPO still manages the
+other rules described above, and adds the following egress rules instead:
+
+- Control plane and worker nodes
+  - All traffic (IPv4 and IPv6, all protocols and ports) to the control plane and worker security groups
+  - TCP traffic to the API server endpoint on the API server port, when the endpoint is an IP address
+- Bastion
+  - SSH traffic to the control plane and worker security groups
+
+You must add any other outbound traffic that your environment needs, for example DNS,
+NTP, the image registry, a package mirror, a proxy, the metadata service or the OpenStack
+API endpoints. If the control plane endpoint is a hostname, you must also add the egress
+rule to the API server yourself. Use `clusterNodesSecurityGroupRules`,
+`controlPlaneNodesSecurityGroupRules` and `workerNodesSecurityGroupRules` for the cluster
+nodes, and `spec.bastion.spec.securityGroups` for additional bastion egress.
+
+```yaml
+managedSecurityGroups:
+  allowAllOutboundTraffic: false
+  clusterNodesSecurityGroupRules:
+  - name: allow-dns
+    direction: egress
+    etherType: IPv4
+    protocol: udp
+    portRangeMin: 53
+    portRangeMax: 53
+    remoteIPPrefix: 10.0.0.53/32
+  - name: allow-https-to-proxy
+    direction: egress
+    etherType: IPv4
+    protocol: tcp
+    portRangeMin: 443
+    portRangeMax: 443
+    remoteIPPrefix: 10.0.10.0/24
+```
+
+`allowAllOutboundTraffic` is only available in the `v1beta2` API.
+
+### Pre-existing security groups
+
 If this is not flexible enough, pre-existing security groups can be added to the
 spec of an `OpenStackMachineTemplate`, e.g.:
 
