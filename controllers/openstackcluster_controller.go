@@ -160,6 +160,11 @@ func (r *OpenStackClusterReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	return r.reconcileNormal(ctx, scope, cluster, openStackCluster)
 }
 
+func hasOpenStackInfrastructure(machine *clusterv1.Machine) bool {
+	infraRef := machine.Spec.InfrastructureRef
+	return infraRef.APIGroup == infrav1.SchemeGroupVersion.Group && infraRef.Kind == "OpenStackMachine"
+}
+
 func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope *scope.WithLogger, cluster *clusterv1.Cluster, openStackCluster *infrav1.OpenStackCluster) (ctrl.Result, error) {
 	scope.Logger().Info("Reconciling Cluster delete")
 
@@ -167,7 +172,7 @@ func (r *OpenStackClusterReconciler) reconcileDelete(ctx context.Context, scope 
 	// depend on this resource to deprovision.  Additionally it appears that
 	// allowing the Kubernetes API to vanish too quickly will upset the capi
 	// kubeadm control plane controller.
-	machines, err := collections.GetFilteredMachinesForCluster(ctx, r.Client, cluster)
+	machines, err := collections.GetFilteredMachinesForCluster(ctx, r.Client, cluster, hasOpenStackInfrastructure)
 	if err != nil {
 		return ctrl.Result{}, err
 	}

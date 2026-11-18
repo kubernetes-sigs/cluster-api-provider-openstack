@@ -1710,3 +1710,53 @@ func TestConfiguredClusterSubnetParamsUsesPrimarySubnetAsLegacyFallback(t *testi
 		t.Fatalf("configuredClusterSubnetParams() second subnet = %#v, want primary subnet fallback", got[1])
 	}
 }
+
+func Test_hasOpenStackInfrastructure(t *testing.T) {
+	testCases := []struct {
+		name       string
+		infraGroup string
+		infraKind  string
+		expected   bool
+	}{
+		{
+			name:       "OpenStack machines gate the cluster deletion",
+			infraGroup: infrav1.SchemeGroupVersion.Group,
+			infraKind:  "OpenStackMachine",
+			expected:   true,
+		},
+		{
+			name:       "machines from other infrastructure providers do not gate the cluster deletion",
+			infraGroup: "other.infrastructure.cluster.x-k8s.io",
+			infraKind:  "ForeignMachine",
+			expected:   false,
+		},
+		{
+			name:       "machines without infrastructure do not gate the cluster deletion",
+			infraGroup: "",
+			infraKind:  "",
+			expected:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			machine := &clusterv1.Machine{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:   "machine",
+					Labels: map[string]string{clusterv1.ClusterNameLabel: "cluster"},
+				},
+				Spec: clusterv1.MachineSpec{
+					InfrastructureRef: clusterv1.ContractVersionedObjectReference{
+						APIGroup: tc.infraGroup,
+						Kind:     tc.infraKind,
+						Name:     "machine-infra",
+					},
+				},
+			}
+
+			if actual := hasOpenStackInfrastructure(machine); actual != tc.expected {
+				t.Errorf("hasOpenStackInfrastructure() = %v, expected %v", actual, tc.expected)
+			}
+		})
+	}
+}
