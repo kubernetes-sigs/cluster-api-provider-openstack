@@ -440,14 +440,15 @@ func (s *Service) EnsurePorts(eventObject runtime.Object, desiredPorts []infrav1
 			return err
 		}
 
-		// If we already have the status, replace it,
-		// otherwise append it.
+		// EnsurePort creates a replacement when the port in the status no
+		// longer exists, so always record the ID of the port it returned.
+		// Otherwise the next reconcile looks up the stale ID and creates
+		// yet another port.
+		portStatus = infrav1.PortStatus{ID: port.ID}
 		if i < len(resources.Ports) {
 			resources.Ports[i] = portStatus
 		} else {
-			resources.Ports = append(resources.Ports, infrav1.PortStatus{
-				ID: port.ID,
-			})
+			resources.Ports = append(resources.Ports, portStatus)
 		}
 	}
 
