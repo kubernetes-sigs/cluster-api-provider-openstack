@@ -581,6 +581,46 @@ func TestService_ReconcileInstance(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Root volume with metadata",
+			getInstanceSpec: func() *InstanceSpec {
+				s := getDefaultInstanceSpec()
+				s.RootVolume = &infrav1.RootVolume{
+					SizeGiB: 50,
+					BlockDeviceVolume: infrav1.BlockDeviceVolume{
+						Metadata: []infrav1.VolumeMetadata{{Key: "key1", Value: "value1"}, {Key: "key2", Value: "value2"}},
+					},
+				}
+				return s
+			},
+			expect: func(g Gomega, r *recorders, factory *scope.MockScopeFactory) {
+				r.volume.ListVolumes(volumes.ListOpts{Name: fmt.Sprintf("%s-root", openStackMachineName)}).
+					Return([]volumes.Volume{}, nil)
+				r.volume.CreateVolume(volumes.CreateOpts{
+					Size:        50,
+					Description: fmt.Sprintf("Root volume for %s", openStackMachineName),
+					Name:        fmt.Sprintf("%s-root", openStackMachineName),
+					ImageID:     imageUUID,
+					Metadata:    map[string]string{"key1": "value1", "key2": "value2"},
+				}).Return(&volumes.Volume{ID: rootVolumeUUID}, nil)
+				expectVolumePollSuccess(r.volume, rootVolumeUUID)
+				expectVolumeRequiresMultiattachCheck(r.volume, rootVolumeUUID, false)
+
+				createOpts := getDefaultServerCreateOpts()
+				createOpts.ImageRef = ""
+				createOpts.BlockDevice = []servers.BlockDevice{
+					{
+						SourceType:          "volume",
+						UUID:                rootVolumeUUID,
+						BootIndex:           0,
+						DeleteOnTermination: true,
+						DestinationType:     "volume",
+					},
+				}
+				expectCreateServer(g, r.compute, withSSHKey(createOpts), getDefaultSchedulerHintOpts(), factory.ComputeClient, false)
+			},
+			wantErr: false,
+		},
+		{
 			name: "Boot from volume failure cleans up ports",
 			getInstanceSpec: func() *InstanceSpec {
 				s := getDefaultInstanceSpec()

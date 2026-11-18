@@ -1575,6 +1575,22 @@ in. If not specified, the volume will be created without an explicit
 availability zone.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.VolumeMetadata">
+[]VolumeMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metadata is a list of key/value pairs that will be set as metadata on
+the Cinder volume when it is created. Keys must be unique.
+At most 128 entries are allowed.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="infrastructure.cluster.x-k8s.io/v1beta1.ClusterInitialization">ClusterInitialization
@@ -5978,6 +5994,50 @@ VolumeAZName
 <p>Name is the name of a volume availability zone to use. It is required
 if From is &ldquo;Name&rdquo;. The volume availability zone name may not contain
 spaces.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure.cluster.x-k8s.io/v1beta1.VolumeMetadata">VolumeMetadata
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1beta1.BlockDeviceVolume">BlockDeviceVolume</a>)
+</p>
+<p>
+<p>VolumeMetadata is a key/value pair set as metadata on a Cinder volume.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key is the metadata key.
+It must be between 1 and 255 characters long and may only contain
+letters, digits, spaces and the characters &ldquo;-_:./&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value is the metadata value.
+It must be between 1 and 255 characters long.</p>
 </td>
 </tr>
 </tbody>
