@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,6 +31,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/optional"
 )
 
@@ -135,6 +137,19 @@ func ResolveServerSpec(ctx context.Context, scope *scope.WithLogger, k8sClient c
 			if err != nil {
 				return false, false, err
 			}
+			// Validate local block devices here, before any ports or volumes are created.
+			// The flavor is only fetched when local block devices are requested.
+			if slices.ContainsFunc(spec.AdditionalBlockDevices, func(bd infrav1.AdditionalBlockDevice) bool {
+				return bd.Storage.Type == infrav1.LocalBlockDevice
+			}) {
+				flavor, err := computeService.GetFlavor(flavorID)
+				if err != nil {
+					return false, false, err
+				}
+				if err := validateLocalBlockDevices(flavor, spec.AdditionalBlockDevices); err != nil {
+					return false, false, capoerrors.Terminal(infrav1.InvalidMachineSpecReason, err.Error())
+				}
+			}
 
 			resolved.FlavorID = flavorID
 			return true, true, nil
@@ -205,4 +220,22 @@ func InstanceTags(spec *infrav1.OpenStackMachineSpec, openStackCluster *infrav1.
 		}
 	}
 	return slices.Clip(unique)
+}
+
+// validateLocalBlockDevices checks that the total size of local block devices does not exceed
+// the flavor's ephemeral disk capacity. Nova rejects local block devices larger than the flavor's
+// ephemeral size, so we validate this before creating any resources.
+func validateLocalBlockDevices(flavor *flavors.Flavor, blockDevices []infrav1.AdditionalBlockDevice) error {
+	var total int
+	for _, bd := range blockDevices {
+		if bd.Storage.Type == infrav1.LocalBlockDevice {
+			total += int(bd.SizeGiB)
+		}
+	}
+
+	if total > flavor.Ephemeral {
+		return fmt.Errorf("local block devices require %d GiB of ephemeral storage, but flavor %q provides %d GiB; reduce local block device sizes or choose a flavor with larger ephemeral storage", total, flavor.Name, flavor.Ephemeral)
+	}
+
+	return nil
 }
