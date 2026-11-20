@@ -38,64 +38,66 @@ import (
 )
 
 type NetworkClient interface {
-	ListFloatingIP(opts floatingips.ListOptsBuilder) ([]floatingips.FloatingIP, error)
-	CreateFloatingIP(opts floatingips.CreateOptsBuilder) (*floatingips.FloatingIP, error)
-	DeleteFloatingIP(id string) error
-	GetFloatingIP(id string) (*floatingips.FloatingIP, error)
-	UpdateFloatingIP(id string, opts floatingips.UpdateOptsBuilder) (*floatingips.FloatingIP, error)
+	ListFloatingIP(ctx context.Context, opts floatingips.ListOptsBuilder) ([]floatingips.FloatingIP, error)
+	CreateFloatingIP(ctx context.Context, opts floatingips.CreateOptsBuilder) (*floatingips.FloatingIP, error)
+	DeleteFloatingIP(ctx context.Context, id string) error
+	GetFloatingIP(ctx context.Context, id string) (*floatingips.FloatingIP, error)
+	UpdateFloatingIP(ctx context.Context, id string, opts floatingips.UpdateOptsBuilder) (*floatingips.FloatingIP, error)
 
-	ListPort(opts ports.ListOptsBuilder) ([]ports.Port, error)
-	CreatePort(opts ports.CreateOptsBuilder) (*ports.Port, error)
-	DeletePort(id string) error
-	GetPort(id string) (*ports.Port, error)
-	UpdatePort(id string, opts ports.UpdateOptsBuilder) (*ports.Port, error)
+	ListPort(ctx context.Context, opts ports.ListOptsBuilder) ([]ports.Port, error)
+	CreatePort(ctx context.Context, opts ports.CreateOptsBuilder) (*ports.Port, error)
+	DeletePort(ctx context.Context, id string) error
+	GetPort(ctx context.Context, id string) (*ports.Port, error)
+	UpdatePort(ctx context.Context, id string, opts ports.UpdateOptsBuilder) (*ports.Port, error)
 
-	ListTrunk(opts trunks.ListOptsBuilder) ([]trunks.Trunk, error)
-	CreateTrunk(opts trunks.CreateOptsBuilder) (*trunks.Trunk, error)
-	DeleteTrunk(id string) error
+	ListTrunk(ctx context.Context, opts trunks.ListOptsBuilder) ([]trunks.Trunk, error)
+	CreateTrunk(ctx context.Context, opts trunks.CreateOptsBuilder) (*trunks.Trunk, error)
+	DeleteTrunk(ctx context.Context, id string) error
 
-	ListTrunkSubports(trunkID string) ([]trunks.Subport, error)
-	RemoveSubports(id string, opts trunks.RemoveSubportsOpts) error
+	ListTrunkSubports(ctx context.Context, trunkID string) ([]trunks.Subport, error)
+	RemoveSubports(ctx context.Context, id string, opts trunks.RemoveSubportsOpts) error
 
-	ListRouter(opts routers.ListOpts) ([]routers.Router, error)
-	CreateRouter(opts routers.CreateOptsBuilder) (*routers.Router, error)
-	DeleteRouter(id string) error
-	GetRouter(id string) (*routers.Router, error)
-	UpdateRouter(id string, opts routers.UpdateOptsBuilder) (*routers.Router, error)
-	AddRouterInterface(id string, opts routers.AddInterfaceOptsBuilder) (*routers.InterfaceInfo, error)
-	RemoveRouterInterface(id string, opts routers.RemoveInterfaceOptsBuilder) (*routers.InterfaceInfo, error)
+	ListRouter(ctx context.Context, opts routers.ListOpts) ([]routers.Router, error)
+	CreateRouter(ctx context.Context, opts routers.CreateOptsBuilder) (*routers.Router, error)
+	DeleteRouter(ctx context.Context, id string) error
+	GetRouter(ctx context.Context, id string) (*routers.Router, error)
+	UpdateRouter(ctx context.Context, id string, opts routers.UpdateOptsBuilder) (*routers.Router, error)
+	AddRouterInterface(ctx context.Context, id string, opts routers.AddInterfaceOptsBuilder) (*routers.InterfaceInfo, error)
+	RemoveRouterInterface(ctx context.Context, id string, opts routers.RemoveInterfaceOptsBuilder) (*routers.InterfaceInfo, error)
 
-	ListSecGroup(opts groups.ListOpts) ([]groups.SecGroup, error)
-	CreateSecGroup(opts groups.CreateOptsBuilder) (*groups.SecGroup, error)
-	DeleteSecGroup(id string) error
-	GetSecGroup(id string) (*groups.SecGroup, error)
-	UpdateSecGroup(id string, opts groups.UpdateOptsBuilder) (*groups.SecGroup, error)
+	ListSecGroup(ctx context.Context, opts groups.ListOpts) ([]groups.SecGroup, error)
+	CreateSecGroup(ctx context.Context, opts groups.CreateOptsBuilder) (*groups.SecGroup, error)
+	DeleteSecGroup(ctx context.Context, id string) error
+	GetSecGroup(ctx context.Context, id string) (*groups.SecGroup, error)
+	UpdateSecGroup(ctx context.Context, id string, opts groups.UpdateOptsBuilder) (*groups.SecGroup, error)
 
-	ListSecGroupRule(opts rules.ListOpts) ([]rules.SecGroupRule, error)
-	CreateSecGroupRule(opts rules.CreateOptsBuilder) (*rules.SecGroupRule, error)
-	DeleteSecGroupRule(id string) error
-	GetSecGroupRule(id string) (*rules.SecGroupRule, error)
+	ListSecGroupRule(ctx context.Context, opts rules.ListOpts) ([]rules.SecGroupRule, error)
+	CreateSecGroupRule(ctx context.Context, opts rules.CreateOptsBuilder) (*rules.SecGroupRule, error)
+	DeleteSecGroupRule(ctx context.Context, id string) error
+	GetSecGroupRule(ctx context.Context, id string) (*rules.SecGroupRule, error)
 
-	ListNetwork(opts networks.ListOptsBuilder) ([]networks.Network, error)
-	CreateNetwork(opts networks.CreateOptsBuilder) (*networks.Network, error)
-	DeleteNetwork(id string) error
-	GetNetwork(id string) (*networks.Network, error)
-	UpdateNetwork(id string, opts networks.UpdateOptsBuilder) (*networks.Network, error)
+	ListNetwork(ctx context.Context, opts networks.ListOptsBuilder) ([]networks.Network, error)
+	CreateNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error)
+	DeleteNetwork(ctx context.Context, id string) error
+	GetNetwork(ctx context.Context, id string) (*networks.Network, error)
+	UpdateNetwork(ctx context.Context, id string, opts networks.UpdateOptsBuilder) (*networks.Network, error)
 
-	ListSubnet(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error)
-	CreateSubnet(opts subnets.CreateOptsBuilder) (*subnets.Subnet, error)
-	DeleteSubnet(id string) error
-	GetSubnet(id string) (*subnets.Subnet, error)
-	UpdateSubnet(id string, opts subnets.UpdateOptsBuilder) (*subnets.Subnet, error)
+	ListSubnet(ctx context.Context, opts subnets.ListOptsBuilder) ([]subnets.Subnet, error)
+	CreateSubnet(ctx context.Context, opts subnets.CreateOptsBuilder) (*subnets.Subnet, error)
+	DeleteSubnet(ctx context.Context, id string) error
+	GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error)
+	UpdateSubnet(ctx context.Context, id string, opts subnets.UpdateOptsBuilder) (*subnets.Subnet, error)
 
-	ListExtensions() ([]extensions.Extension, error)
+	ListExtensions(ctx context.Context) ([]extensions.Extension, error)
 
-	ReplaceAllAttributesTags(resourceType string, resourceID string, opts attributestags.ReplaceAllOptsBuilder) ([]string, error)
+	ReplaceAllAttributesTags(ctx context.Context, resourceType string, resourceID string, opts attributestags.ReplaceAllOptsBuilder) ([]string, error)
 }
 
 type networkClient struct {
 	serviceClient *gophercloud.ServiceClient
 }
+
+var _ NetworkClient = &networkClient{}
 
 // NewNetworkClient returns an instance of the networking service.
 func NewNetworkClient(providerClient *gophercloud.ProviderClient, providerClientOpts *clientconfig.ClientOpts) (NetworkClient, error) {
@@ -110,355 +112,355 @@ func NewNetworkClient(providerClient *gophercloud.ProviderClient, providerClient
 	return networkClient{serviceClient}, nil
 }
 
-func (c networkClient) AddRouterInterface(id string, opts routers.AddInterfaceOptsBuilder) (*routers.InterfaceInfo, error) {
+func (c networkClient) AddRouterInterface(ctx context.Context, id string, opts routers.AddInterfaceOptsBuilder) (*routers.InterfaceInfo, error) {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "create")
-	interfaceInfo, err := routers.AddInterface(context.TODO(), c.serviceClient, id, opts).Extract()
+	interfaceInfo, err := routers.AddInterface(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return interfaceInfo, nil
 }
 
-func (c networkClient) RemoveRouterInterface(id string, opts routers.RemoveInterfaceOptsBuilder) (*routers.InterfaceInfo, error) {
+func (c networkClient) RemoveRouterInterface(ctx context.Context, id string, opts routers.RemoveInterfaceOptsBuilder) (*routers.InterfaceInfo, error) {
 	mc := metrics.NewMetricPrometheusContext("server_os_interface", "delete")
-	interfaceInfo, err := routers.RemoveInterface(context.TODO(), c.serviceClient, id, opts).Extract()
+	interfaceInfo, err := routers.RemoveInterface(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return interfaceInfo, nil
 }
 
-func (c networkClient) ReplaceAllAttributesTags(resourceType string, resourceID string, opts attributestags.ReplaceAllOptsBuilder) ([]string, error) {
+func (c networkClient) ReplaceAllAttributesTags(ctx context.Context, resourceType string, resourceID string, opts attributestags.ReplaceAllOptsBuilder) ([]string, error) {
 	mc := metrics.NewMetricPrometheusContext("attributes_tags", "replace_all")
-	tags, err := attributestags.ReplaceAll(context.TODO(), c.serviceClient, resourceType, resourceID, opts).Extract()
+	tags, err := attributestags.ReplaceAll(ctx, c.serviceClient, resourceType, resourceID, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return tags, nil
 }
 
-func (c networkClient) ListRouter(opts routers.ListOpts) ([]routers.Router, error) {
+func (c networkClient) ListRouter(ctx context.Context, opts routers.ListOpts) ([]routers.Router, error) {
 	mc := metrics.NewMetricPrometheusContext("router", "list")
-	allPages, err := routers.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := routers.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return routers.ExtractRouters(allPages)
 }
 
-func (c networkClient) ListFloatingIP(opts floatingips.ListOptsBuilder) ([]floatingips.FloatingIP, error) {
+func (c networkClient) ListFloatingIP(ctx context.Context, opts floatingips.ListOptsBuilder) ([]floatingips.FloatingIP, error) {
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "list")
-	allPages, err := floatingips.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := floatingips.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return floatingips.ExtractFloatingIPs(allPages)
 }
 
-func (c networkClient) CreateFloatingIP(opts floatingips.CreateOptsBuilder) (*floatingips.FloatingIP, error) {
+func (c networkClient) CreateFloatingIP(ctx context.Context, opts floatingips.CreateOptsBuilder) (*floatingips.FloatingIP, error) {
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "create")
-	fip, err := floatingips.Create(context.TODO(), c.serviceClient, opts).Extract()
+	fip, err := floatingips.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return fip, nil
 }
 
-func (c networkClient) DeleteFloatingIP(id string) error {
+func (c networkClient) DeleteFloatingIP(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "delete")
-	return mc.ObserveRequestIgnoreNotFound(floatingips.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(floatingips.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) GetFloatingIP(id string) (*floatingips.FloatingIP, error) {
+func (c networkClient) GetFloatingIP(ctx context.Context, id string) (*floatingips.FloatingIP, error) {
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "list")
-	fip, err := floatingips.Get(context.TODO(), c.serviceClient, id).Extract()
+	fip, err := floatingips.Get(ctx, c.serviceClient, id).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return fip, nil
 }
 
-func (c networkClient) UpdateFloatingIP(id string, opts floatingips.UpdateOptsBuilder) (*floatingips.FloatingIP, error) {
+func (c networkClient) UpdateFloatingIP(ctx context.Context, id string, opts floatingips.UpdateOptsBuilder) (*floatingips.FloatingIP, error) {
 	mc := metrics.NewMetricPrometheusContext("floating_ip", "update")
-	fip, err := floatingips.Update(context.TODO(), c.serviceClient, id, opts).Extract()
+	fip, err := floatingips.Update(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return fip, nil
 }
 
-func (c networkClient) ListPort(opts ports.ListOptsBuilder) ([]ports.Port, error) {
+func (c networkClient) ListPort(ctx context.Context, opts ports.ListOptsBuilder) ([]ports.Port, error) {
 	mc := metrics.NewMetricPrometheusContext("port", "list")
-	allPages, err := ports.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := ports.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return ports.ExtractPorts(allPages)
 }
 
-func (c networkClient) CreatePort(opts ports.CreateOptsBuilder) (*ports.Port, error) {
+func (c networkClient) CreatePort(ctx context.Context, opts ports.CreateOptsBuilder) (*ports.Port, error) {
 	mc := metrics.NewMetricPrometheusContext("port", "create")
-	port, err := ports.Create(context.TODO(), c.serviceClient, opts).Extract()
+	port, err := ports.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return port, nil
 }
 
-func (c networkClient) DeletePort(id string) error {
+func (c networkClient) DeletePort(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("port", "delete")
-	return mc.ObserveRequestIgnoreNotFound(ports.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(ports.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) GetPort(id string) (*ports.Port, error) {
+func (c networkClient) GetPort(ctx context.Context, id string) (*ports.Port, error) {
 	mc := metrics.NewMetricPrometheusContext("port", "get")
-	port, err := ports.Get(context.TODO(), c.serviceClient, id).Extract()
+	port, err := ports.Get(ctx, c.serviceClient, id).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return port, nil
 }
 
-func (c networkClient) UpdatePort(id string, opts ports.UpdateOptsBuilder) (*ports.Port, error) {
+func (c networkClient) UpdatePort(ctx context.Context, id string, opts ports.UpdateOptsBuilder) (*ports.Port, error) {
 	mc := metrics.NewMetricPrometheusContext("port", "update")
-	port, err := ports.Update(context.TODO(), c.serviceClient, id, opts).Extract()
+	port, err := ports.Update(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return port, nil
 }
 
-func (c networkClient) CreateTrunk(opts trunks.CreateOptsBuilder) (*trunks.Trunk, error) {
+func (c networkClient) CreateTrunk(ctx context.Context, opts trunks.CreateOptsBuilder) (*trunks.Trunk, error) {
 	mc := metrics.NewMetricPrometheusContext("trunk", "create")
-	trunk, err := trunks.Create(context.TODO(), c.serviceClient, opts).Extract()
+	trunk, err := trunks.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return trunk, nil
 }
 
-func (c networkClient) DeleteTrunk(id string) error {
+func (c networkClient) DeleteTrunk(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("trunk", "delete")
-	return mc.ObserveRequestIgnoreNotFound(trunks.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(trunks.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) ListTrunkSubports(trunkID string) ([]trunks.Subport, error) {
+func (c networkClient) ListTrunkSubports(ctx context.Context, trunkID string) ([]trunks.Subport, error) {
 	mc := metrics.NewMetricPrometheusContext("trunk", "listsubports")
-	subports, err := trunks.GetSubports(context.TODO(), c.serviceClient, trunkID).Extract()
+	subports, err := trunks.GetSubports(ctx, c.serviceClient, trunkID).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return subports, nil
 }
 
-func (c networkClient) RemoveSubports(id string, opts trunks.RemoveSubportsOpts) error {
+func (c networkClient) RemoveSubports(ctx context.Context, id string, opts trunks.RemoveSubportsOpts) error {
 	mc := metrics.NewMetricPrometheusContext("trunk", "deletesubports")
-	_, err := trunks.RemoveSubports(context.TODO(), c.serviceClient, id, opts).Extract()
+	_, err := trunks.RemoveSubports(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return err
 	}
 	return nil
 }
 
-func (c networkClient) ListTrunk(opts trunks.ListOptsBuilder) ([]trunks.Trunk, error) {
+func (c networkClient) ListTrunk(ctx context.Context, opts trunks.ListOptsBuilder) ([]trunks.Trunk, error) {
 	mc := metrics.NewMetricPrometheusContext("trunk", "list")
-	allPages, err := trunks.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := trunks.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return trunks.ExtractTrunks(allPages)
 }
 
-func (c networkClient) CreateRouter(opts routers.CreateOptsBuilder) (*routers.Router, error) {
+func (c networkClient) CreateRouter(ctx context.Context, opts routers.CreateOptsBuilder) (*routers.Router, error) {
 	mc := metrics.NewMetricPrometheusContext("router", "create")
-	router, err := routers.Create(context.TODO(), c.serviceClient, opts).Extract()
+	router, err := routers.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return router, nil
 }
 
-func (c networkClient) DeleteRouter(id string) error {
+func (c networkClient) DeleteRouter(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("router", "delete")
-	return mc.ObserveRequestIgnoreNotFound(routers.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(routers.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) GetRouter(id string) (*routers.Router, error) {
+func (c networkClient) GetRouter(ctx context.Context, id string) (*routers.Router, error) {
 	mc := metrics.NewMetricPrometheusContext("router", "get")
-	router, err := routers.Get(context.TODO(), c.serviceClient, id).Extract()
+	router, err := routers.Get(ctx, c.serviceClient, id).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return router, nil
 }
 
-func (c networkClient) UpdateRouter(id string, opts routers.UpdateOptsBuilder) (*routers.Router, error) {
+func (c networkClient) UpdateRouter(ctx context.Context, id string, opts routers.UpdateOptsBuilder) (*routers.Router, error) {
 	mc := metrics.NewMetricPrometheusContext("router", "update")
-	router, err := routers.Update(context.TODO(), c.serviceClient, id, opts).Extract()
+	router, err := routers.Update(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return router, nil
 }
 
-func (c networkClient) ListSecGroup(opts groups.ListOpts) ([]groups.SecGroup, error) {
+func (c networkClient) ListSecGroup(ctx context.Context, opts groups.ListOpts) ([]groups.SecGroup, error) {
 	mc := metrics.NewMetricPrometheusContext("group", "list")
-	allPages, err := groups.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := groups.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return groups.ExtractGroups(allPages)
 }
 
-func (c networkClient) CreateSecGroup(opts groups.CreateOptsBuilder) (*groups.SecGroup, error) {
+func (c networkClient) CreateSecGroup(ctx context.Context, opts groups.CreateOptsBuilder) (*groups.SecGroup, error) {
 	mc := metrics.NewMetricPrometheusContext("security_group", "create")
-	group, err := groups.Create(context.TODO(), c.serviceClient, opts).Extract()
+	group, err := groups.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return group, nil
 }
 
-func (c networkClient) DeleteSecGroup(id string) error {
+func (c networkClient) DeleteSecGroup(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("security_group", "delete")
-	return mc.ObserveRequestIgnoreNotFound(groups.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(groups.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) GetSecGroup(id string) (*groups.SecGroup, error) {
+func (c networkClient) GetSecGroup(ctx context.Context, id string) (*groups.SecGroup, error) {
 	mc := metrics.NewMetricPrometheusContext("security_group", "get")
-	group, err := groups.Get(context.TODO(), c.serviceClient, id).Extract()
+	group, err := groups.Get(ctx, c.serviceClient, id).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return group, nil
 }
 
-func (c networkClient) UpdateSecGroup(id string, opts groups.UpdateOptsBuilder) (*groups.SecGroup, error) {
+func (c networkClient) UpdateSecGroup(ctx context.Context, id string, opts groups.UpdateOptsBuilder) (*groups.SecGroup, error) {
 	mc := metrics.NewMetricPrometheusContext("security_group", "update")
-	group, err := groups.Update(context.TODO(), c.serviceClient, id, opts).Extract()
+	group, err := groups.Update(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return group, nil
 }
 
-func (c networkClient) ListSecGroupRule(opts rules.ListOpts) ([]rules.SecGroupRule, error) {
+func (c networkClient) ListSecGroupRule(ctx context.Context, opts rules.ListOpts) ([]rules.SecGroupRule, error) {
 	mc := metrics.NewMetricPrometheusContext("security_group_rule", "list")
-	allPages, err := rules.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := rules.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return rules.ExtractRules(allPages)
 }
 
-func (c networkClient) CreateSecGroupRule(opts rules.CreateOptsBuilder) (*rules.SecGroupRule, error) {
+func (c networkClient) CreateSecGroupRule(ctx context.Context, opts rules.CreateOptsBuilder) (*rules.SecGroupRule, error) {
 	mc := metrics.NewMetricPrometheusContext("security_group_rule", "create")
-	rule, err := rules.Create(context.TODO(), c.serviceClient, opts).Extract()
+	rule, err := rules.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return rule, nil
 }
 
-func (c networkClient) DeleteSecGroupRule(id string) error {
+func (c networkClient) DeleteSecGroupRule(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("security_group_rule", "delete")
-	return mc.ObserveRequestIgnoreNotFound(rules.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(rules.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) GetSecGroupRule(id string) (*rules.SecGroupRule, error) {
+func (c networkClient) GetSecGroupRule(ctx context.Context, id string) (*rules.SecGroupRule, error) {
 	mc := metrics.NewMetricPrometheusContext("security_group_rule", "get")
-	rule, err := rules.Get(context.TODO(), c.serviceClient, id).Extract()
+	rule, err := rules.Get(ctx, c.serviceClient, id).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return rule, nil
 }
 
-func (c networkClient) ListNetwork(opts networks.ListOptsBuilder) ([]networks.Network, error) {
+func (c networkClient) ListNetwork(ctx context.Context, opts networks.ListOptsBuilder) ([]networks.Network, error) {
 	mc := metrics.NewMetricPrometheusContext("network", "list")
-	allPages, err := networks.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := networks.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return networks.ExtractNetworks(allPages)
 }
 
-func (c networkClient) CreateNetwork(opts networks.CreateOptsBuilder) (*networks.Network, error) {
+func (c networkClient) CreateNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error) {
 	mc := metrics.NewMetricPrometheusContext("network", "create")
-	net, err := networks.Create(context.TODO(), c.serviceClient, opts).Extract()
+	net, err := networks.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return net, nil
 }
 
-func (c networkClient) DeleteNetwork(id string) error {
+func (c networkClient) DeleteNetwork(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("network", "delete")
-	return mc.ObserveRequestIgnoreNotFound(networks.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(networks.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) GetNetwork(id string) (*networks.Network, error) {
+func (c networkClient) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
 	mc := metrics.NewMetricPrometheusContext("network", "get")
-	net, err := networks.Get(context.TODO(), c.serviceClient, id).Extract()
+	net, err := networks.Get(ctx, c.serviceClient, id).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return net, nil
 }
 
-func (c networkClient) UpdateNetwork(id string, opts networks.UpdateOptsBuilder) (*networks.Network, error) {
+func (c networkClient) UpdateNetwork(ctx context.Context, id string, opts networks.UpdateOptsBuilder) (*networks.Network, error) {
 	mc := metrics.NewMetricPrometheusContext("network", "update")
-	net, err := networks.Update(context.TODO(), c.serviceClient, id, opts).Extract()
+	net, err := networks.Update(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return net, nil
 }
 
-func (c networkClient) ListSubnet(opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
+func (c networkClient) ListSubnet(ctx context.Context, opts subnets.ListOptsBuilder) ([]subnets.Subnet, error) {
 	mc := metrics.NewMetricPrometheusContext("subnet", "list")
-	allPages, err := subnets.List(c.serviceClient, opts).AllPages(context.TODO())
+	allPages, err := subnets.List(c.serviceClient, opts).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return subnets.ExtractSubnets(allPages)
 }
 
-func (c networkClient) CreateSubnet(opts subnets.CreateOptsBuilder) (*subnets.Subnet, error) {
+func (c networkClient) CreateSubnet(ctx context.Context, opts subnets.CreateOptsBuilder) (*subnets.Subnet, error) {
 	mc := metrics.NewMetricPrometheusContext("subnet", "create")
-	subnet, err := subnets.Create(context.TODO(), c.serviceClient, opts).Extract()
+	subnet, err := subnets.Create(ctx, c.serviceClient, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return subnet, nil
 }
 
-func (c networkClient) DeleteSubnet(id string) error {
+func (c networkClient) DeleteSubnet(ctx context.Context, id string) error {
 	mc := metrics.NewMetricPrometheusContext("subnet", "delete")
-	return mc.ObserveRequestIgnoreNotFound(subnets.Delete(context.TODO(), c.serviceClient, id).ExtractErr())
+	return mc.ObserveRequestIgnoreNotFound(subnets.Delete(ctx, c.serviceClient, id).ExtractErr())
 }
 
-func (c networkClient) GetSubnet(id string) (*subnets.Subnet, error) {
+func (c networkClient) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error) {
 	mc := metrics.NewMetricPrometheusContext("subnet", "get")
-	subnet, err := subnets.Get(context.TODO(), c.serviceClient, id).Extract()
+	subnet, err := subnets.Get(ctx, c.serviceClient, id).Extract()
 	if mc.ObserveRequestIgnoreNotFound(err) != nil {
 		return nil, err
 	}
 	return subnet, nil
 }
 
-func (c networkClient) UpdateSubnet(id string, opts subnets.UpdateOptsBuilder) (*subnets.Subnet, error) {
+func (c networkClient) UpdateSubnet(ctx context.Context, id string, opts subnets.UpdateOptsBuilder) (*subnets.Subnet, error) {
 	mc := metrics.NewMetricPrometheusContext("subnet", "update")
-	subnet, err := subnets.Update(context.TODO(), c.serviceClient, id, opts).Extract()
+	subnet, err := subnets.Update(ctx, c.serviceClient, id, opts).Extract()
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}
 	return subnet, nil
 }
 
-func (c networkClient) ListExtensions() ([]extensions.Extension, error) {
+func (c networkClient) ListExtensions(ctx context.Context) ([]extensions.Extension, error) {
 	mc := metrics.NewMetricPrometheusContext("network_extension", "list")
-	allPages, err := extensions.List(c.serviceClient).AllPages(context.TODO())
+	allPages, err := extensions.List(c.serviceClient).AllPages(ctx)
 	if mc.ObserveRequest(err) != nil {
 		return nil, err
 	}

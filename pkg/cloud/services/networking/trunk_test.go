@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/trunks"
@@ -37,7 +38,7 @@ func Test_GetOrCreateTrunk(t *testing.T) {
 	tests := []struct {
 		name   string
 		port   *ports.Port
-		expect func(m *mock.MockNetworkClientMockRecorder)
+		expect func(ctx context.Context, m *mock.MockNetworkClientMockRecorder)
 		// Note the 'wanted' port isn't so important, since it will be whatever we tell ListPort or CreatePort to return.
 		// Mostly in this test suite, we're checking that ListPort/CreatePort is called with the expected port opts.
 		want    *trunks.Trunk
@@ -49,9 +50,9 @@ func Test_GetOrCreateTrunk(t *testing.T) {
 				ID:   portID,
 				Name: "trunk-1",
 			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
+			expect: func(ctx context.Context, m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListTrunk(trunks.ListOpts{
+					ListTrunk(ctx, trunks.ListOpts{
 						Name:   "trunk-1",
 						PortID: portID,
 					}).Return([]trunks.Trunk{{
@@ -72,15 +73,15 @@ func Test_GetOrCreateTrunk(t *testing.T) {
 				Name:        "trunk-1",
 				Description: "Created by cluster-api-provider-openstack cluster test-cluster",
 			},
-			expect: func(m *mock.MockNetworkClientMockRecorder) {
+			expect: func(ctx context.Context, m *mock.MockNetworkClientMockRecorder) {
 				// No ports found
 				m.
-					ListTrunk(trunks.ListOpts{
+					ListTrunk(ctx, trunks.ListOpts{
 						Name:   "trunk-1",
 						PortID: portID,
 					}).Return([]trunks.Trunk{}, nil)
 				m.
-					CreateTrunk(trunks.CreateOpts{
+					CreateTrunk(ctx, trunks.CreateOpts{
 						Name:        "trunk-1",
 						PortID:      portID,
 						Description: "Created by cluster-api-provider-openstack cluster test-cluster",
@@ -95,13 +96,14 @@ func Test_GetOrCreateTrunk(t *testing.T) {
 	eventObject := &infrav1.OpenStackMachine{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
-			tt.expect(mockClient.EXPECT())
+			tt.expect(ctx, mockClient.EXPECT())
 			s := Service{
 				client: mockClient,
 			}
-			got, err := s.getOrCreateTrunkForPort(eventObject, tt.port)
+			got, err := s.getOrCreateTrunkForPort(ctx, eventObject, tt.port)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 			} else {

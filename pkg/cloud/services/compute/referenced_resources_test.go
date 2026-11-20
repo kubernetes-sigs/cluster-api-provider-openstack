@@ -17,7 +17,6 @@ limitations under the License.
 package compute
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"slices"
@@ -103,7 +102,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 			},
 			want: &infrav1alpha1.ResolvedServerSpec{},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
-				m.ListServerGroups().Return(
+				m.ListServerGroups(ctxMatcher).Return(
 					[]servergroups.ServerGroup{},
 					nil)
 			},
@@ -121,7 +120,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 				Ports:    defaultPortOpts,
 			},
 			expectImageMock: func(m *mock.MockImageClientMockRecorder) {
-				m.ListImages(images.ListOpts{Name: "test-image"}).Return([]images.Image{}, nil)
+				m.ListImages(ctxMatcher, images.ListOpts{Name: "test-image"}).Return([]images.Image{}, nil)
 			},
 			want:    &infrav1alpha1.ResolvedServerSpec{},
 			wantErr: true,
@@ -144,7 +143,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 				Ports:  defaultPortOpts,
 			},
 			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
-				m.ListFlavors().Return([]flavors.Flavor{}, nil)
+				m.ListFlavors(ctxMatcher).Return([]flavors.Flavor{}, nil)
 			},
 			wantErr: true,
 		},
@@ -187,7 +186,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 			fakeClient := fake.NewFakeClient()
 
 			scope := scope.NewWithLogger(mockScopeFactory, log)
-			_, _, _, err := ResolveServerSpec(context.TODO(), scope, fakeClient, openStackServer)
+			_, _, _, err := ResolveServerSpec(t.Context(), scope, fakeClient, openStackServer)
 			if tt.wantErr {
 				g.Expect(err).Error()
 				return
@@ -304,6 +303,7 @@ func newFlavorTestService(t *testing.T, mockCtrl *gomock.Controller) (*Service, 
 // --- ID path ---
 
 func TestGetFlavorID_ByID_NoLookup(t *testing.T) {
+	ctx := t.Context()
 	g := NewWithT(t)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -311,9 +311,9 @@ func TestGetFlavorID_ByID_NoLookup(t *testing.T) {
 	svc, mockScopeFactory := newFlavorTestService(t, mockCtrl)
 
 	// ListFlavors must NOT be called when an ID is provided directly.
-	mockScopeFactory.ComputeClient.EXPECT().ListFlavors().Times(0)
+	mockScopeFactory.ComputeClient.EXPECT().ListFlavors(ctxMatcher).Times(0)
 
-	id, err := svc.GetFlavorID(infrav1.FlavorParam{
+	id, err := svc.GetFlavorID(ctx, infrav1.FlavorParam{
 		ID: ptr.To("flavor-uuid-direct"),
 	})
 
@@ -325,16 +325,17 @@ func TestGetFlavorID_ByID_NoLookup(t *testing.T) {
 // --- Filter path: success ---
 
 func TestGetFlavorID_ByFilter_Name_ExactlyOne(t *testing.T) {
+	ctx := t.Context()
 	g := NewWithT(t)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
 	svc, mockScopeFactory := newFlavorTestService(t, mockCtrl)
-	mockScopeFactory.ComputeClient.EXPECT().ListFlavors().Return([]flavors.Flavor{
+	mockScopeFactory.ComputeClient.EXPECT().ListFlavors(ctxMatcher).Return([]flavors.Flavor{
 		{ID: "aaa-111", Name: "m1.small"},
 	}, nil)
 
-	id, err := svc.GetFlavorID(infrav1.FlavorParam{
+	id, err := svc.GetFlavorID(ctx, infrav1.FlavorParam{
 		Filter: &infrav1.FlavorFilter{
 			Name: ptr.To("m1.small"),
 		},
@@ -347,14 +348,15 @@ func TestGetFlavorID_ByFilter_Name_ExactlyOne(t *testing.T) {
 // --- Filter path: error cases ---
 
 func TestGetFlavorID_ByFilter_NoResults(t *testing.T) {
+	ctx := t.Context()
 	g := NewWithT(t)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
 	svc, mockScopeFactory := newFlavorTestService(t, mockCtrl)
-	mockScopeFactory.ComputeClient.EXPECT().ListFlavors().Return([]flavors.Flavor{}, nil)
+	mockScopeFactory.ComputeClient.EXPECT().ListFlavors(ctxMatcher).Return([]flavors.Flavor{}, nil)
 
-	_, err := svc.GetFlavorID(infrav1.FlavorParam{
+	_, err := svc.GetFlavorID(ctx, infrav1.FlavorParam{
 		Filter: &infrav1.FlavorFilter{
 			Name: ptr.To("nonexistent-flavor"),
 		},
@@ -365,16 +367,17 @@ func TestGetFlavorID_ByFilter_NoResults(t *testing.T) {
 }
 
 func TestGetFlavorID_ByFilter_ListError(t *testing.T) {
+	ctx := t.Context()
 	g := NewWithT(t)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
 	svc, mockScopeFactory := newFlavorTestService(t, mockCtrl)
-	mockScopeFactory.ComputeClient.EXPECT().ListFlavors().Return(
+	mockScopeFactory.ComputeClient.EXPECT().ListFlavors(ctxMatcher).Return(
 		nil, fmt.Errorf("nova unavailable"),
 	)
 
-	_, err := svc.GetFlavorID(infrav1.FlavorParam{
+	_, err := svc.GetFlavorID(ctx, infrav1.FlavorParam{
 		Filter: &infrav1.FlavorFilter{
 			Name: ptr.To("m1.small"),
 		},

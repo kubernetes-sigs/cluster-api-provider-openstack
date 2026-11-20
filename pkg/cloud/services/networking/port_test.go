@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -159,17 +160,17 @@ func Test_EnsurePort(t *testing.T) {
 					},
 				}
 
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "foo-port-1",
 					NetworkID: netID,
 				}).Return(nil, nil)
 				// Extension not available, so trusted goes into binding:profile
-				m.ListExtensions().Return([]extensions.Extension{}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{}, nil)
 				// The following allows us to use gomega to
 				// compare the argument instead of gomock.
 				// Gomock's output in the case of a mismatch is
 				// not usable for this struct.
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID}, nil
@@ -205,15 +206,15 @@ func Test_EnsurePort(t *testing.T) {
 					PortTrustedVIF:    ptr.To(true),
 				}
 
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
 				// Extension is available
 				trustedVIFExt := extensions.Extension{}
 				trustedVIFExt.Alias = "port-trusted-vif"
-				m.ListExtensions().Return([]extensions.Extension{trustedVIFExt}, nil)
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{trustedVIFExt}, nil)
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portstrustedvif.PortCreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID}, nil
@@ -236,11 +237,11 @@ func Test_EnsurePort(t *testing.T) {
 				expectedCreateOpts = portsbinding.CreateOptsExt{
 					CreateOptsBuilder: expectedCreateOpts,
 				}
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID}, nil
@@ -259,11 +260,11 @@ func Test_EnsurePort(t *testing.T) {
 				SecurityGroups: []string{portSecurityGroupID},
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder, _ Gomega) {
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
-				m.CreatePort(gomock.Any()).Times(0)
+				m.CreatePort(ctxMatcher, gomock.Any()).Times(0)
 			},
 			wantErr: true,
 		},
@@ -295,11 +296,11 @@ func Test_EnsurePort(t *testing.T) {
 				expectedCreateOpts = portsbinding.CreateOptsExt{
 					CreateOptsBuilder: expectedCreateOpts,
 				}
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID}, nil
@@ -341,11 +342,11 @@ func Test_EnsurePort(t *testing.T) {
 				expectedCreateOpts = portsbinding.CreateOptsExt{
 					CreateOptsBuilder: expectedCreateOpts,
 				}
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID}, nil
@@ -371,12 +372,12 @@ func Test_EnsurePort(t *testing.T) {
 					CreateOptsBuilder: expectedCreateOpts,
 				}
 
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
 				// Create the port
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID, Name: "test-port"}, nil
@@ -385,27 +386,27 @@ func Test_EnsurePort(t *testing.T) {
 				// Check standard-attr-tag support once, reused for both the port and trunk tag calls below.
 				standardAttrTagExt := extensions.Extension{}
 				standardAttrTagExt.Alias = "standard-attr-tag"
-				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{standardAttrTagExt}, nil)
 
 				// Tag the port
-				m.ReplaceAllAttributesTags("ports", portID, attributestags.ReplaceAllOpts{
+				m.ReplaceAllAttributesTags(ctxMatcher, "ports", portID, attributestags.ReplaceAllOpts{
 					Tags: []string{"tag1", "tag2"},
 				})
 
 				// Look for existing trunk
-				m.ListTrunk(trunks.ListOpts{
+				m.ListTrunk(ctxMatcher, trunks.ListOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return([]trunks.Trunk{}, nil)
 
 				// Create the trunk
-				m.CreateTrunk(trunks.CreateOpts{
+				m.CreateTrunk(ctxMatcher, trunks.CreateOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return(&trunks.Trunk{ID: trunkID}, nil)
 
 				// Tag the trunk
-				m.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{
+				m.ReplaceAllAttributesTags(ctxMatcher, "trunks", trunkID, attributestags.ReplaceAllOpts{
 					Tags: []string{"tag1", "tag2"},
 				})
 			},
@@ -420,7 +421,7 @@ func Test_EnsurePort(t *testing.T) {
 				Trunk:     ptr.To(true),
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return([]ports.Port{{
@@ -431,7 +432,7 @@ func Test_EnsurePort(t *testing.T) {
 				}}, nil)
 
 				// Look for existing trunk
-				m.ListTrunk(trunks.ListOpts{
+				m.ListTrunk(ctxMatcher, trunks.ListOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return([]trunks.Trunk{{
@@ -455,7 +456,7 @@ func Test_EnsurePort(t *testing.T) {
 				Trunk:     ptr.To(true),
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return([]ports.Port{{
@@ -467,27 +468,27 @@ func Test_EnsurePort(t *testing.T) {
 				// Check standard-attr-tag support once, reused for both the port and trunk tag calls below.
 				standardAttrTagExt := extensions.Extension{}
 				standardAttrTagExt.Alias = "standard-attr-tag"
-				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{standardAttrTagExt}, nil)
 
 				// Tag the port
-				m.ReplaceAllAttributesTags("ports", portID, attributestags.ReplaceAllOpts{
+				m.ReplaceAllAttributesTags(ctxMatcher, "ports", portID, attributestags.ReplaceAllOpts{
 					Tags: []string{"tag1", "tag2"},
 				})
 
 				// Look for existing trunk
-				m.ListTrunk(trunks.ListOpts{
+				m.ListTrunk(ctxMatcher, trunks.ListOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return([]trunks.Trunk{}, nil)
 
 				// Create the trunk
-				m.CreateTrunk(trunks.CreateOpts{
+				m.CreateTrunk(ctxMatcher, trunks.CreateOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return(&trunks.Trunk{ID: trunkID}, nil)
 
 				// Tag the trunk
-				m.ReplaceAllAttributesTags("trunks", trunkID, attributestags.ReplaceAllOpts{
+				m.ReplaceAllAttributesTags(ctxMatcher, "trunks", trunkID, attributestags.ReplaceAllOpts{
 					Tags: []string{"tag1", "tag2"},
 				})
 			},
@@ -515,12 +516,12 @@ func Test_EnsurePort(t *testing.T) {
 					CreateOptsBuilder: expectedCreateOpts,
 				}
 
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
 				// Create the port
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID, Name: "test-port"}, nil
@@ -528,16 +529,16 @@ func Test_EnsurePort(t *testing.T) {
 
 				// standard-attr-tag is not advertised: checked once and reused,
 				// so neither the port nor the trunk tag call is attempted.
-				m.ListExtensions().Return([]extensions.Extension{}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{}, nil)
 
 				// Look for existing trunk
-				m.ListTrunk(trunks.ListOpts{
+				m.ListTrunk(ctxMatcher, trunks.ListOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return([]trunks.Trunk{}, nil)
 
 				// Create the trunk
-				m.CreateTrunk(trunks.CreateOpts{
+				m.CreateTrunk(ctxMatcher, trunks.CreateOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return(&trunks.Trunk{ID: trunkID}, nil)
@@ -561,17 +562,17 @@ func Test_EnsurePort(t *testing.T) {
 					CreateOptsBuilder: expectedCreateOpts,
 				}
 
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return(nil, nil)
-				m.CreatePort(gomock.Any()).DoAndReturn(func(builder ports.CreateOptsBuilder) (*ports.Port, error) {
+				m.CreatePort(ctxMatcher, gomock.Any()).DoAndReturn(func(_ context.Context, builder ports.CreateOptsBuilder) (*ports.Port, error) {
 					gotCreateOpts := builder.(portsbinding.CreateOptsExt)
 					g.Expect(gotCreateOpts).To(Equal(expectedCreateOpts), cmp.Diff(gotCreateOpts, expectedCreateOpts))
 					return &ports.Port{ID: portID, Name: "test-port"}, nil
 				})
 
-				m.ListExtensions().Return(nil, errors.New("boom"))
+				m.ListExtensions(ctxMatcher).Return(nil, errors.New("boom"))
 			},
 			want:    nil,
 			wantErr: true,
@@ -584,7 +585,7 @@ func Test_EnsurePort(t *testing.T) {
 				Trunk:     ptr.To(true),
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder, _ types.Gomega) {
-				m.ListPort(ports.ListOpts{
+				m.ListPort(ctxMatcher, ports.ListOpts{
 					Name:      "test-port",
 					NetworkID: netID,
 				}).Return([]ports.Port{{
@@ -594,7 +595,7 @@ func Test_EnsurePort(t *testing.T) {
 				}}, nil)
 
 				// Look for existing trunk, which has stale, non-empty tags.
-				m.ListTrunk(trunks.ListOpts{
+				m.ListTrunk(ctxMatcher, trunks.ListOpts{
 					PortID: portID,
 					Name:   "test-port",
 				}).Return([]trunks.Trunk{{
@@ -618,6 +619,7 @@ func Test_EnsurePort(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -631,6 +633,7 @@ func Test_EnsurePort(t *testing.T) {
 				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
 			got, err := s.EnsurePort(
+				ctx,
 				eventObject,
 				&tt.port,
 				infrav1.PortStatus{},
@@ -662,7 +665,7 @@ func TestService_ConstructPorts(t *testing.T) {
 	expectListExtensions := func(m *mock.MockNetworkClientMockRecorder) {
 		trunkExtension := extensions.Extension{}
 		trunkExtension.Alias = "trunk"
-		m.ListExtensions().Return([]extensions.Extension{trunkExtension}, nil)
+		m.ListExtensions(ctxMatcher).Return([]extensions.Extension{trunkExtension}, nil)
 	}
 
 	tests := []struct {
@@ -802,7 +805,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListNetwork(networks.ListOpts{Name: "test-network"}).Return([]networks.Network{
+				m.ListNetwork(ctxMatcher, networks.ListOpts{Name: "test-network"}).Return([]networks.Network{
 					{ID: networkID},
 				}, nil)
 			},
@@ -833,7 +836,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.GetSubnet(subnetID1).Return(&subnets.Subnet{ID: subnetID1, NetworkID: networkID}, nil)
+				m.GetSubnet(ctxMatcher, subnetID1).Return(&subnets.Subnet{ID: subnetID1, NetworkID: networkID}, nil)
 			},
 			want: []infrav1.ResolvedPortSpec{
 				{
@@ -865,7 +868,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSubnet(subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{
+				m.ListSubnet(ctxMatcher, subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{
 					{ID: subnetID1, NetworkID: networkID},
 				}, nil)
 			},
@@ -901,7 +904,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSubnet(subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{}, nil)
+				m.ListSubnet(ctxMatcher, subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{}, nil)
 			},
 			wantErr: true,
 		},
@@ -921,7 +924,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSubnet(subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{
+				m.ListSubnet(ctxMatcher, subnets.ListOpts{Name: "test-subnet"}).Return([]subnets.Subnet{
 					{ID: subnetID1, NetworkID: networkID},
 					{ID: "8008494c-301e-4e5c-951b-a8ab568447fd", NetworkID: "5d48bfda-db28-42ee-8374-50e13d1fe5ea"},
 				}, nil)
@@ -949,15 +952,15 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSubnet(subnets.ListOpts{Name: "test-subnet1"}).Return([]subnets.Subnet{
+				m.ListSubnet(ctxMatcher, subnets.ListOpts{Name: "test-subnet1"}).Return([]subnets.Subnet{
 					{ID: subnetID1, NetworkID: networkID},
 					{ID: "8008494c-301e-4e5c-951b-a8ab568447fd", NetworkID: "5d48bfda-db28-42ee-8374-50e13d1fe5ea"},
 				}, nil)
-				m.ListSubnet(subnets.ListOpts{Name: "test-subnet2"}).Return([]subnets.Subnet{
+				m.ListSubnet(ctxMatcher, subnets.ListOpts{Name: "test-subnet2"}).Return([]subnets.Subnet{
 					{ID: subnetID2, NetworkID: networkID},
 				}, nil)
 				// Fetch the first subnet again, this time with network ID from the second subnet
-				m.ListSubnet(subnets.ListOpts{NetworkID: networkID, Name: "test-subnet1"}).Return([]subnets.Subnet{
+				m.ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: networkID, Name: "test-subnet1"}).Return([]subnets.Subnet{
 					{ID: subnetID1, NetworkID: networkID},
 				}, nil)
 			},
@@ -988,7 +991,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: "test-security-group"}).Return([]groups.SecGroup{
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: "test-security-group"}).Return([]groups.SecGroup{
 					{ID: securityGroupID1},
 				}, nil)
 			},
@@ -1016,10 +1019,10 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
 					{ID: securityGroupID1},
 				}, nil)
-				m.ListSecGroup(groups.ListOpts{Name: "port-security-group"}).Return([]groups.SecGroup{
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: "port-security-group"}).Return([]groups.SecGroup{
 					{ID: securityGroupID2},
 				}, nil)
 			},
@@ -1060,7 +1063,7 @@ func TestService_ConstructPorts(t *testing.T) {
 			},
 			managedSecurityGroup: ptr.To(securityGroupID1),
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
 					{ID: securityGroupID2},
 				}, nil)
 			},
@@ -1092,7 +1095,7 @@ func TestService_ConstructPorts(t *testing.T) {
 				},
 			},
 			expectNetwork: func(m *mock.MockNetworkClientMockRecorder) {
-				m.ListSecGroup(groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
+				m.ListSecGroup(ctxMatcher, groups.ListOpts{Name: "machine-security-group"}).Return([]groups.SecGroup{
 					{ID: securityGroupID1},
 				}, nil)
 			},
@@ -1115,6 +1118,7 @@ func TestService_ConstructPorts(t *testing.T) {
 	for i := range tests {
 		tt := &tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -1143,7 +1147,7 @@ func TestService_ConstructPorts(t *testing.T) {
 			clusterResourceName := "test-cluster"
 			baseName := "test-instance"
 			baseTags := []string{"test-tag"}
-			got, err := s.ConstructPorts(tt.spec.Ports, tt.spec.SecurityGroups, tt.spec.Trunk, clusterResourceName, baseName, defaultNetwork, tt.managedSecurityGroup, baseTags)
+			got, err := s.ConstructPorts(ctx, tt.spec.Ports, tt.spec.SecurityGroups, tt.spec.Trunk, clusterResourceName, baseName, defaultNetwork, tt.managedSecurityGroup, baseTags)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return
@@ -1252,6 +1256,7 @@ func Test_AdoptPortsServer(t *testing.T) {
 	for i := range tests {
 		tt := &tests[i]
 		t.Run(tt.testName, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewWithT(t)
 			log := testr.New(t)
 
@@ -1266,7 +1271,7 @@ func Test_AdoptPortsServer(t *testing.T) {
 				client: mockClient,
 			}
 
-			err := s.AdoptPortsServer(scope.NewWithLogger(mockScopeFactory, log),
+			err := s.AdoptPortsServer(ctx, scope.NewWithLogger(mockScopeFactory, log),
 				tt.desiredPorts, &tt.resources)
 			if tt.wantErr {
 				g.Expect(err).Error()

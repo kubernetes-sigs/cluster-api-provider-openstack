@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -1252,8 +1251,7 @@ var _ = Describe("OpenStackMachine controller", func() {
 	testMachineName := "test-machine"
 	capiMachineName := "capi-machine"
 
-	BeforeEach(func() {
-		ctx = context.TODO()
+	BeforeEach(func(ctx SpecContext) {
 		testNum++
 		testNamespace = fmt.Sprintf("machine-test-%d", testNum)
 
@@ -1360,7 +1358,7 @@ var _ = Describe("OpenStackMachine controller", func() {
 		}
 	})
 
-	AfterEach(func() {
+	AfterEach(func(ctx SpecContext) {
 		orphan := metav1.DeletePropagationOrphan
 		deleteOptions := client.DeleteOptions{
 			PropagationPolicy: &orphan,
@@ -1403,7 +1401,7 @@ var _ = Describe("OpenStackMachine controller", func() {
 		Expect(err).To(BeNil())
 	})
 
-	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func() {
+	It("should set OpenStackAuthenticationSucceededCondition to False when credentials secret is missing", func(ctx SpecContext) {
 		testMachine.SetName("missing-machine-credentials")
 		testMachine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
 			Type:      "Secret",
@@ -1446,7 +1444,7 @@ var _ = Describe("OpenStackMachine controller", func() {
 		Expect(condition.Message).To(ContainSubstring("Failed to create OpenStack client scope"))
 	})
 
-	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func() {
+	It("should set OpenStackAuthenticationSucceededCondition to False when namespace is denied access to ClusterIdentity", func(ctx SpecContext) {
 		testMachine.SetName("identity-access-denied-machine")
 		testMachine.Spec.IdentityRef = &infrav1.OpenStackIdentityReference{
 			Type:      "ClusterIdentity",
