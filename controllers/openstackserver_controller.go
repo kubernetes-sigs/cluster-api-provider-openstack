@@ -74,6 +74,10 @@ type OpenStackServerReconciler struct {
 	ScopeFactory     scope.Factory
 	CaCertificates   []byte // PEM encoded ca certificates.
 
+	// PortGarbageCollection enables deletion of ports which CAPO created for
+	// a server but did not record in its status.
+	PortGarbageCollection bool
+
 	Scheme *runtime.Scheme
 }
 
@@ -302,6 +306,12 @@ func (r *OpenStackServerReconciler) reconcileDelete(scope *scope.WithLogger, ope
 		}
 	}
 
+	if r.PortGarbageCollection && openStackServer.Status.Resolved != nil {
+		if err := networkingService.DeleteOrphanedPorts(openStackServer, openStackServer.Status.Resolved.Ports, openStackServer.Status.Resources); err != nil {
+			return fmt.Errorf("deleting orphaned ports: %w", err)
+		}
+	}
+
 	if err := r.reconcileDeleteFloatingAddressFromPool(scope, openStackServer); err != nil {
 		return err
 	}
@@ -383,6 +393,11 @@ func (r *OpenStackServerReconciler) reconcileNormal(ctx context.Context, scope *
 	err = getOrCreateServerPorts(openStackServer, networkingService)
 	if err != nil {
 		return ctrl.Result{}, err
+	}
+	if r.PortGarbageCollection {
+		if err := networkingService.DeleteOrphanedPorts(openStackServer, openStackServer.Status.Resolved.Ports, openStackServer.Status.Resources); err != nil {
+			return ctrl.Result{}, fmt.Errorf("deleting orphaned ports: %w", err)
+		}
 	}
 	portIDs := GetPortIDs(openStackServer.Status.Resources.Ports)
 

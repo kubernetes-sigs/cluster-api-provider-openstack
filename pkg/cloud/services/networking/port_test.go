@@ -1277,3 +1277,163 @@ func Test_AdoptPortsServer(t *testing.T) {
 		})
 	}
 }
+
+func Test_DeleteOrphanedPorts(t *testing.T) {
+	const (
+		networkID   = "5e8e0d3b-7f3d-4f3e-8b3f-3e3e3e3e3e3e"
+		portName    = "test-server-0"
+		description = "Created by cluster-api-provider-openstack cluster test-cluster"
+		recordedID  = "a838209b-389a-47a0-9161-3d6919891074"
+		orphanID    = "bd22ea65-53de-4585-bb6f-b0a84d0085d1"
+		instanceID  = "0a4ff38e-1e03-4b4e-994c-c8ae38a2915e"
+		trunkID     = "eb7541fa-5e2a-4cca-b2c3-dfa409b917ce"
+	)
+
+	desiredPort := infrav1.ResolvedPortSpec{
+		Name:        portName,
+		NetworkID:   networkID,
+		Description: description,
+	}
+	desiredTrunkPort := desiredPort
+	desiredTrunkPort.Trunk = ptr.To(true)
+
+	listOpts := ports.ListOpts{
+		Name:        portName,
+		NetworkID:   networkID,
+		Description: description,
+	}
+	recordedPort := ports.Port{
+		ID:          recordedID,
+		Name:        portName,
+		NetworkID:   networkID,
+		Description: description,
+		DeviceID:    instanceID,
+		DeviceOwner: "compute:nova",
+	}
+	orphanPort := ports.Port{
+		ID:          orphanID,
+		Name:        portName,
+		NetworkID:   networkID,
+		Description: description,
+	}
+	recordedResources := &infrav1alpha1.ServerResources{
+		Ports: []infrav1.PortStatus{{ID: recordedID}},
+	}
+
+	tests := []struct {
+		testName     string
+		desiredPorts []infrav1.ResolvedPortSpec
+		resources    *infrav1alpha1.ServerResources
+		expect       func(*mock.MockNetworkClientMockRecorder)
+		wantErr      bool
+	}{
+		{
+			testName:     "only the recorded port exists: nothing deleted",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredPort},
+			resources:    recordedResources,
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(listOpts).Return([]ports.Port{recordedPort}, nil)
+			},
+		},
+		{
+			testName:     "unrecorded unattached port: deleted",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredPort},
+			resources:    recordedResources,
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(listOpts).Return([]ports.Port{recordedPort, orphanPort}, nil)
+				m.DeletePort(orphanID).Return(nil)
+			},
+		},
+		{
+			testName:     "no resources in status: unattached port deleted",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredPort},
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(listOpts).Return([]ports.Port{orphanPort}, nil)
+				m.DeletePort(orphanID).Return(nil)
+			},
+		},
+		{
+			testName:     "unrecorded port attached to a device: kept",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredPort},
+			resources:    recordedResources,
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				attached := orphanPort
+				attached.DeviceID = instanceID
+				attached.DeviceOwner = "compute:nova"
+				m.ListPort(listOpts).Return([]ports.Port{recordedPort, attached}, nil)
+			},
+		},
+		{
+			testName:     "unrecorded port with only a device owner: kept",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredPort},
+			resources:    recordedResources,
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				owned := orphanPort
+				owned.DeviceOwner = "network:dhcp"
+				m.ListPort(listOpts).Return([]ports.Port{recordedPort, owned}, nil)
+			},
+		},
+		{
+			testName:     "port not matching the filters returned by Neutron: kept",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredPort},
+			resources:    recordedResources,
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				otherDescription := orphanPort
+				otherDescription.Description = "created by someone else"
+				otherName := orphanPort
+				otherName.Name = portName + "1"
+				otherNetwork := orphanPort
+				otherNetwork.NetworkID = "7fd24ceb-788a-441f-ad0a-d8e2f5d31a1d"
+				m.ListPort(listOpts).Return([]ports.Port{recordedPort, otherDescription, otherName, otherNetwork}, nil)
+			},
+		},
+		{
+			testName:     "unrecorded trunk port: trunk and port deleted",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredTrunkPort},
+			resources:    recordedResources,
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(listOpts).Return([]ports.Port{recordedPort, orphanPort}, nil)
+				trunkExtension := extensions.Extension{}
+				trunkExtension.Alias = "trunk"
+				m.ListExtensions().Return([]extensions.Extension{trunkExtension}, nil)
+				m.ListTrunk(trunks.ListOpts{PortID: orphanID}).Return([]trunks.Trunk{{ID: trunkID}}, nil)
+				m.ListTrunkSubports(trunkID).Return([]trunks.Subport{}, nil)
+				m.DeleteTrunk(trunkID).Return(nil)
+				m.DeletePort(orphanID).Return(nil)
+			},
+		},
+		{
+			testName:     "listing ports fails: error returned",
+			desiredPorts: []infrav1.ResolvedPortSpec{desiredPort},
+			resources:    recordedResources,
+			expect: func(m *mock.MockNetworkClientMockRecorder) {
+				m.ListPort(listOpts).Return(nil, errors.New("boom"))
+			},
+			wantErr: true,
+		},
+	}
+	for i := range tests {
+		tt := &tests[i]
+		t.Run(tt.testName, func(t *testing.T) {
+			g := NewWithT(t)
+			log := testr.New(t)
+
+			mockCtrl := gomock.NewController(t)
+			mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+			mockClient := mock.NewMockNetworkClient(mockCtrl)
+			tt.expect(mockClient.EXPECT())
+
+			s := Service{
+				client: mockClient,
+				scope:  scope.NewWithLogger(mockScopeFactory, log),
+			}
+
+			err := s.DeleteOrphanedPorts(&infrav1alpha1.OpenStackServer{}, tt.desiredPorts, tt.resources)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+				return
+			}
+			g.Expect(err).NotTo(HaveOccurred())
+		})
+	}
+}
