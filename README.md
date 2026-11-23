@@ -23,9 +23,7 @@ management.
 
 The API itself is shared across multiple cloud providers allowing for true OpenStack
 hybrid deployments of Kubernetes. It is built atop the lessons learned from
-previous cluster managers such as [kops][kops] and
-[kubicorn][kubicorn].
-
+previous cluster managers such as [kops][kops] and [kubicorn][kubicorn].
 
 ## Launching a Kubernetes cluster on OpenStack
 
@@ -164,8 +162,8 @@ We also use the issue tracker to track features. If you have an idea for a featu
 
 [cluster_api]: https://github.com/kubernetes-sigs/cluster-api
 [kops]: https://github.com/kubernetes/kops
-[kubicorn]: http://kubicorn.io/
-[slack]: https://kubernetes.slack.com/messages/cluster-api-openstack
+[kubicorn]: https://github.com/kubicorn/kubicorn
+[slack]: https://www.kubernetes.dev/docs/comms/slack/
 [office-hours-notes]: https://cluster-api-openstack.sigs.k8s.io/agenda
 [office-hours-notes-2023]: https://cluster-api-openstack.sigs.k8s.io/agenda/2023.html
 [office-hours-notes-2022]: https://cluster-api-openstack.sigs.k8s.io/agenda/2022.html
