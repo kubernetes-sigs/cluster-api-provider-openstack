@@ -44,17 +44,20 @@ Cluster API Provider OpenStack maintains the most recent release/releases for al
 - We will maintain test coverage for all supported minor releases and for one additional release for the current stable API version in case we have to do an emergency patch release.
   For example, if v0.11 and v0.12 are currently supported, we will also maintain test coverage for v0.10 for one additional release cycle. When v0.13 is released, tests for v0.10 will be removed.
 
-| Minor Release | API Version  | Supported Until                                |
-|---------------|--------------|------------------------------------------------|
-| v0.14.x       | **v1beta1**  | when v0.16.0 will be released                  |
-| v0.13.x       | **v1beta1**  | when v0.15.0 will be released                  |
-| v0.12.x       | **v1beta1**  | when v0.14.0 will be released                  |
-| v0.11.x       | **v1beta1**  | EOL since 2025-09-11 - v0.13.0 release date    |
-| v0.10.x       | **v1beta1**  | EOL since 2025-02-06 - v0.12.0 release date    |
-| v0.9.x        | **v1alpha7** | EOL since 2024-10-24 - v0.11.0 release date    |
-| v0.8.x        | **v1alpha7** | EOL since 2024-04-17 - v0.10.0 release date    |
+| Minor Release | API Version  | Supported?                                      |
+|---------------|--------------|-------------------------------------------------|
+| v0.15.x       | **v1beta2**  | ✓ (until v0.17.0 is released)                   |
+| v0.14.x       | **v1beta1**  | ✓ (until v0.16.0 is released)                   |
+| v0.13.x       | **v1beta1**  | ✗ (EOL since v0.15.0 release (2026-09-17)) [^1] |
+| v0.12.x       | **v1beta1**  | ✗ (EOL since v0.14.0 release (2026-01-19))      |
+| v0.11.x       | **v1beta1**  | ✗ (EOL since v0.13.0 release (2025-09-11))      |
+| v0.10.x       | **v1beta1**  | ✗ (EOL since v0.13.0 release (2025-02-06))      |
+| v0.9.x        | **v1alpha7** | ✗ (EOL since v0.12.0 release (2024-10-24))      |
+| v0.8.x        | **v1alpha7** | ✗ (EOL since v0.11.0 release (2024-04-17))      |
 
 - Exceptions can be filed with maintainers and taken into consideration on a case-by-case basis.
+
+[^1]: Still tested in CI.
 
 ### Removal of v1alpha apiVersions
 
