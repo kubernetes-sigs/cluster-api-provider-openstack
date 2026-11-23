@@ -63,11 +63,11 @@ Cluster API Provider OpenStack maintains the most recent release/releases for al
 | v0.15.x       | **supported** | **supported** |            |            |            |
 | v0.14.x       |               | **supported** |            |            |            |
 | v0.13.x       |               | **supported** |            |            |            |
-| v0.12.x       | **supported** | not served |            |            |
-| v0.11.x       | **supported** | deprecated | not served |            |
-| v0.10.x       | **supported** | supported  | deprecated | not served |
-| v0.9.x        |               | supported  | supported  | deprecated |
-| v0.8.x        |               | supported  | supported  | deprecated |
+| v0.12.x       |               | **supported** | not served |            |            |
+| v0.11.x       |               | **supported** | deprecated | not served |            |
+| v0.10.x       |               | **supported** | supported  | deprecated | not served |
+| v0.9.x        |               |               | supported  | supported  | deprecated |
+| v0.8.x        |               |               | supported  | supported  | deprecated |
 
 Note: Removal of a deprecated APIVersion in Kubernetes [can cause issues with garbage collection by the kube-controller-manager](https://github.com/kubernetes/kubernetes/issues/102641)
 This means that some objects which rely on garbage collection for cleanup - e.g. MachineSets and their descendent objects, like Machines and InfrastructureMachines, may not be cleaned up properly if those
