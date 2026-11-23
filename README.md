@@ -40,6 +40,25 @@ previous cluster managers such as [kops][kops] and [kubicorn][kubicorn].
 
 ------
 
+## Supported versions
+
+Cluster API Provider OpenStack maintains the most recent release/releases for all supported API and contract versions. Support for this section refers to the ability to backport and release patch versions.
+
+| Minor Release | API Version(s)                                                       | Supported?                                      |
+|---------------|----------------------------------------------------------------------|-------------------------------------------------|
+| v0.15.x       | **v1beta2**, v1beta1                                                 | ✓ (until v0.17.0 is released)                   |
+| v0.14.x       | **v1beta1**                                                          | ✓ (until v0.16.0 is released)                   |
+| v0.13.x       | **v1beta1**                                                          | ✗ (EOL since v0.15.0 release (2026-09-17)) [^1] |
+| v0.12.x       | **v1beta1**, v1alpha7 (not served)                                   | ✗ (EOL since v0.14.0 release (2026-01-19))      |
+| v0.11.x       | **v1beta1**, v1alpha7 (deprecated), v1alpha6 (not served)            | ✗ (EOL since v0.13.0 release (2025-09-11))      |
+| v0.10.x       | **v1beta1**, v1alpha7, v1alpha6 (deprecated), v1alpha5 (not served)  | ✗ (EOL since v0.13.0 release (2025-02-06))      |
+| v0.9.x        | **v1alpha7**, v1alpha6, v1alpha5 (deprecated)                        | ✗ (EOL since v0.12.0 release (2024-10-24))      |
+| v0.8.x        | **v1alpha7**, v1alpha6, v1alpha5 (deprecated)                        | ✗ (EOL since v0.11.0 release (2024-04-17))      |
+
+[^1]: Still tested in CI in case we have to do an emergency patch release.
+
+------
+
 ## Compatibility with Cluster API
 
 This provider's versions are compatible with the following versions of Cluster API:
