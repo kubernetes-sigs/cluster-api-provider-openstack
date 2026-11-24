@@ -443,6 +443,41 @@ spec:
                                           or default
                                         rule: '!has(self.from) || self.from == ''Name''
                                           ? has(self.name) : !has(self.name)'
+                                    metadata:
+                                      description: |-
+                                        Metadata is a list of key/value pairs that will be set as metadata on
+                                        the Cinder volume when it is created. Keys must be unique.
+                                        At most 128 entries are allowed.
+                                      items:
+                                        description: VolumeMetadata is a key/value
+                                          pair set as metadata on a Cinder volume.
+                                        properties:
+                                          key:
+                                            description: |-
+                                              Key is the metadata key.
+                                              It must be between 1 and 255 characters long and may only contain
+                                              letters, digits, spaces and the characters "-_:./".
+                                            maxLength: 255
+                                            minLength: 1
+                                            pattern: ^[a-zA-Z0-9_:. /-]+$
+                                            type: string
+                                          value:
+                                            description: |-
+                                              Value is the metadata value.
+                                              It must be between 1 and 255 characters long.
+                                            maxLength: 255
+                                            minLength: 1
+                                            type: string
+                                        required:
+                                        - key
+                                        - value
+                                        type: object
+                                      maxItems: 128
+                                      minItems: 1
+                                      type: array
+                                      x-kubernetes-list-map-keys:
+                                      - key
+                                      x-kubernetes-list-type: map
                                     type:
                                       description: |-
                                         Type is the Cinder volume type of the volume.
@@ -1035,6 +1070,41 @@ spec:
                             - message: name is required when from is 'Name' or default
                               rule: '!has(self.from) || self.from == ''Name'' ? has(self.name)
                                 : !has(self.name)'
+                          metadata:
+                            description: |-
+                              Metadata is a list of key/value pairs that will be set as metadata on
+                              the Cinder volume when it is created. Keys must be unique.
+                              At most 128 entries are allowed.
+                            items:
+                              description: VolumeMetadata is a key/value pair set
+                                as metadata on a Cinder volume.
+                              properties:
+                                key:
+                                  description: |-
+                                    Key is the metadata key.
+                                    It must be between 1 and 255 characters long and may only contain
+                                    letters, digits, spaces and the characters "-_:./".
+                                  maxLength: 255
+                                  minLength: 1
+                                  pattern: ^[a-zA-Z0-9_:. /-]+$
+                                  type: string
+                                value:
+                                  description: |-
+                                    Value is the metadata value.
+                                    It must be between 1 and 255 characters long.
+                                  maxLength: 255
+                                  minLength: 1
+                                  type: string
+                              required:
+                              - key
+                              - value
+                              type: object
+                            maxItems: 128
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-map-keys:
+                            - key
+                            x-kubernetes-list-type: map
                           sizeGiB:
                             description: SizeGiB is the size of the block device in
                               gibibytes (GiB).
