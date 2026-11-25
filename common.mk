@@ -38,9 +38,10 @@ endif
 
 .DEFAULT_GOAL:=help
 
-# Use GOPROXY environment variable if set
-GOPROXY = $(shell go env GOPROXY)
-export GOPROXY
+# Resolve GOPROXY only when needed by Docker build arguments. Go commands
+# already honor the environment and go env configuration; exporting this lazy
+# lookup would evaluate it for every shell invocation during Makefile parsing.
+GOPROXY ?= $(shell go env GOPROXY)
 
 $(TOOLS_BIN_DIR)/%: $(TOOLS_DIR_DEPS)
 	$(MAKE) -C $(TOOLS_DIR) $(subst $(TOOLS_DIR)/,,$@)

@@ -58,7 +58,8 @@ GO_APIDIFF_PKG := github.com/joelanford/go-apidiff
 
 # golangci-lint
 GOLANGCI_LINT_BIN := golangci-lint
-GOLANGCI_LINT_VER = $(shell cd hack/tools && go list -m -f '{{.Version}}' github.com/golangci/golangci-lint/v2)
+# Read the pinned version without invoking Go while parsing targets for completion.
+GOLANGCI_LINT_VER := $(shell awk '$$1 == "github.com/golangci/golangci-lint/v2" { print $$2; exit }' $(TOOLS_DIR)/go.mod)
 GOLANGCI_LINT_PKG := github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
 # govulncheck
