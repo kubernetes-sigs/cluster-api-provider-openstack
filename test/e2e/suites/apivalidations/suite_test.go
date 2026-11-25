@@ -81,6 +81,8 @@ var _ = BeforeSuite(func() {
 		CRDDirectoryPaths:     []string{testCRDs},
 		ErrorIfCRDPathMissing: true,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
+			// Note: Ensure conversion is configured even if the types do not implement ConvertTo/ConvertFrom/Hub.
+			IgnoreSchemeConvertible: true,
 			Paths: []string{
 				filepath.Join("..", "..", "..", "..", "config", "webhook"),
 			},
@@ -145,7 +147,8 @@ var _ = BeforeSuite(func() {
 	DeferCleanup(func() {
 		By("Tearing down manager")
 		mgrCancel()
-		Eventually(mgrDone).WithTimeout(time.Second*5).Should(BeClosed(), "Manager should stop")
+		// Allow the manager's default 30-second graceful shutdown period plus some margin.
+		Eventually(mgrDone).WithTimeout(60*time.Second).Should(BeClosed(), "Manager should stop")
 	})
 })
 
