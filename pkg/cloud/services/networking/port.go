@@ -417,6 +417,70 @@ func (s *Service) DeleteClusterPorts(openStackCluster *infrav1.OpenStackCluster)
 	return nil
 }
 
+// DeleteOrphanedPorts deletes Neutron ports which CAPO created for
+// desiredPorts but which are not recorded in resources, for example because
+// the controller created them and then failed to persist their IDs.
+//
+// A port is only deleted when it matches a desired port by name, network and
+// description, is not recorded in resources, and is not attached to any
+// device. Ports created by Nova are always attached to their server, so they
+// are never deleted here.
+func (s *Service) DeleteOrphanedPorts(eventObject runtime.Object, desiredPorts []infrav1.ResolvedPortSpec, resources *infrav1alpha1.ServerResources) error {
+	recorded := make(map[string]struct{})
+	if resources != nil {
+		for _, port := range resources.Ports {
+			recorded[port.ID] = struct{}{}
+		}
+	}
+
+	var trunkSupported *bool
+	for i := range desiredPorts {
+		portSpec := &desiredPorts[i]
+		candidates, err := s.client.ListPort(ports.ListOpts{
+			Name:        portSpec.Name,
+			NetworkID:   portSpec.NetworkID,
+			Description: portSpec.Description,
+		})
+		if err != nil {
+			return fmt.Errorf("searching for orphaned port %s in network %s: %w", portSpec.Name, portSpec.NetworkID, err)
+		}
+
+		for j := range candidates {
+			port := &candidates[j]
+			if _, ok := recorded[port.ID]; ok {
+				continue
+			}
+			// Deleting the wrong port is not recoverable, so do not rely on
+			// Neutron honouring every filter.
+			if port.Name != portSpec.Name || port.NetworkID != portSpec.NetworkID || port.Description != portSpec.Description {
+				continue
+			}
+			if port.DeviceID != "" || port.DeviceOwner != "" {
+				continue
+			}
+
+			deleteTrunk := false
+			if ptr.Deref(portSpec.Trunk, false) {
+				if trunkSupported == nil {
+					supported, err := s.IsTrunkExtSupported()
+					if err != nil {
+						return err
+					}
+					trunkSupported = &supported
+				}
+				deleteTrunk = *trunkSupported
+			}
+
+			s.scope.Logger().Info("Deleting orphaned port", "name", port.Name, "id", port.ID)
+			if err := s.DeleteInstanceTrunkAndPort(eventObject, infrav1.PortStatus{ID: port.ID}, deleteTrunk); err != nil {
+				return fmt.Errorf("deleting orphaned port %s: %w", port.ID, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // getPortName appends a suffix to an instance name in order to try and get a unique name per port.
 func getPortName(baseName string, portSpec *infrav1.PortOpts, netIndex int) string {
 	if portSpec != nil && portSpec.NameSuffix != nil {
