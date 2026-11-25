@@ -18,7 +18,6 @@
 
 ## Migration
 
-
 All users are encouraged to migrate their usage of the CAPO CRDs from older versions to `v1alpha5`. This includes yaml files and source code. As CAPO implements automatic conversions between the CRD versions, this migration can happen after installing the new CAPO release.
 
 ## API Changes
@@ -93,7 +92,7 @@ The following fields are removed from network and subnet filters without replace
 
 #### Rename of `status.error{Reason,Message}` to `status.failure{Reason,Message}`
 
-The actual fields were previously already renamed, but we still used the `error` prefix in JSON. This was done to align with CAPI, where these fields were [renamed in v1alpha3](https://cluster-api.sigs.k8s.io/developer/providers/v1alpha2-to-v1alpha3.html#external-objects-will-need-to-rename-statuserrorreason-and-statuserrormessage).
+The actual fields were previously already renamed, but we still used the `error` prefix in JSON. This was done to align with CAPI, where these fields were renamed in v1alpha3.
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha4
