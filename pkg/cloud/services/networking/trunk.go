@@ -36,8 +36,8 @@ const (
 	retryIntervalSubportDelete = 30 * time.Second
 )
 
-func (s *Service) GetTrunkSupport() (bool, error) {
-	allExts, err := s.client.ListExtensions()
+func (s *Service) GetTrunkSupport(ctx context.Context) (bool, error) {
+	allExts, err := s.client.ListExtensions(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -50,8 +50,8 @@ func (s *Service) GetTrunkSupport() (bool, error) {
 	return false, nil
 }
 
-func (s *Service) getOrCreateTrunkForPort(eventObject runtime.Object, port *ports.Port) (*trunks.Trunk, error) {
-	trunkList, err := s.client.ListTrunk(trunks.ListOpts{
+func (s *Service) getOrCreateTrunkForPort(ctx context.Context, eventObject runtime.Object, port *ports.Port) (*trunks.Trunk, error) {
+	trunkList, err := s.client.ListTrunk(ctx, trunks.ListOpts{
 		Name:   port.Name,
 		PortID: port.ID,
 	})
@@ -69,7 +69,7 @@ func (s *Service) getOrCreateTrunkForPort(eventObject runtime.Object, port *port
 		Description: port.Description,
 	}
 
-	trunk, err := s.client.CreateTrunk(trunkCreateOpts)
+	trunk, err := s.client.CreateTrunk(ctx, trunkCreateOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +78,8 @@ func (s *Service) getOrCreateTrunkForPort(eventObject runtime.Object, port *port
 	return trunk, nil
 }
 
-func (s *Service) RemoveTrunkSubports(trunkID string) error {
-	subports, err := s.client.ListTrunkSubports(trunkID)
+func (s *Service) RemoveTrunkSubports(ctx context.Context, trunkID string) error {
+	subports, err := s.client.ListTrunkSubports(ctx, trunkID)
 	if err != nil {
 		return err
 	}
@@ -99,13 +99,13 @@ func (s *Service) RemoveTrunkSubports(trunkID string) error {
 		Subports: portList,
 	}
 
-	err = s.client.RemoveSubports(trunkID, removeSubportsOpts)
+	err = s.client.RemoveSubports(ctx, trunkID, removeSubportsOpts)
 	if err != nil {
 		return err
 	}
 
 	for _, subPort := range subports {
-		err := s.client.DeletePort(subPort.PortID)
+		err := s.client.DeletePort(ctx, subPort.PortID)
 		if err != nil {
 			return err
 		}
@@ -114,11 +114,11 @@ func (s *Service) RemoveTrunkSubports(trunkID string) error {
 	return nil
 }
 
-func (s *Service) DeleteTrunk(eventObject runtime.Object, portID string) error {
+func (s *Service) DeleteTrunk(ctx context.Context, eventObject runtime.Object, portID string) error {
 	listOpts := trunks.ListOpts{
 		PortID: portID,
 	}
-	trunkInfo, err := s.client.ListTrunk(listOpts)
+	trunkInfo, err := s.client.ListTrunk(ctx, listOpts)
 	if err != nil {
 		return err
 	}
@@ -126,8 +126,8 @@ func (s *Service) DeleteTrunk(eventObject runtime.Object, portID string) error {
 		return nil
 	}
 	// Delete sub-ports if trunk is associated with sub-ports
-	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalSubportDelete, timeoutTrunkDelete, true, func(_ context.Context) (bool, error) {
-		if err := s.RemoveTrunkSubports(trunkInfo[0].ID); err != nil {
+	err = wait.PollUntilContextTimeout(ctx, retryIntervalSubportDelete, timeoutTrunkDelete, true, func(_ context.Context) (bool, error) {
+		if err := s.RemoveTrunkSubports(ctx, trunkInfo[0].ID); err != nil {
 			if capoerrors.IsNotFound(err) || capoerrors.IsConflict(err) || capoerrors.IsRetryable(err) {
 				return false, nil
 			}
@@ -142,8 +142,8 @@ func (s *Service) DeleteTrunk(eventObject runtime.Object, portID string) error {
 
 	record.Eventf(eventObject, "SuccessfulRemoveTrunkSubports", "Removed trunk sub ports %s with id %s", trunkInfo[0].Name, trunkInfo[0].ID)
 
-	err = wait.PollUntilContextTimeout(context.TODO(), retryIntervalTrunkDelete, timeoutTrunkDelete, true, func(_ context.Context) (bool, error) {
-		if err := s.client.DeleteTrunk(trunkInfo[0].ID); err != nil {
+	err = wait.PollUntilContextTimeout(ctx, retryIntervalTrunkDelete, timeoutTrunkDelete, true, func(_ context.Context) (bool, error) {
+		if err := s.client.DeleteTrunk(ctx, trunkInfo[0].ID); err != nil {
 			if capoerrors.IsNotFound(err) {
 				record.Eventf(eventObject, "SuccessfulDeleteTrunk", "Trunk %s with id %s did not exist", trunkInfo[0].Name, trunkInfo[0].ID)
 				return true, nil

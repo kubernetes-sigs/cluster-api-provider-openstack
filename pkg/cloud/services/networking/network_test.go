@@ -17,7 +17,9 @@ limitations under the License.
 package networking
 
 import (
+	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/go-logr/logr/testr"
@@ -42,6 +44,8 @@ const (
 	clusterResourceName = "test-cluster"
 )
 
+var ctxMatcher = gomock.AssignableToTypeOf(reflect.TypeFor[context.Context]())
+
 func Test_updateSubnetDNSNameservers(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -65,7 +69,7 @@ func Test_updateSubnetDNSNameservers(t *testing.T) {
 			currentNameservers: []string{"8.8.8.8", "8.8.4.4"},
 			desiredNameservers: []string{"1.1.1.1", "1.0.0.1"},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.UpdateSubnet(subnetID, subnets.UpdateOpts{
+				m.UpdateSubnet(ctxMatcher, subnetID, subnets.UpdateOpts{
 					DNSNameservers: &[]string{"1.1.1.1", "1.0.0.1"},
 				}).Return(&subnets.Subnet{
 					ID:             subnetID,
@@ -78,7 +82,7 @@ func Test_updateSubnetDNSNameservers(t *testing.T) {
 			currentNameservers: []string{"8.8.8.8"},
 			desiredNameservers: []string{"8.8.8.8", "8.8.4.4"},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.UpdateSubnet(subnetID, subnets.UpdateOpts{
+				m.UpdateSubnet(ctxMatcher, subnetID, subnets.UpdateOpts{
 					DNSNameservers: &[]string{"8.8.8.8", "8.8.4.4"},
 				}).Return(&subnets.Subnet{
 					ID:             subnetID,
@@ -91,7 +95,7 @@ func Test_updateSubnetDNSNameservers(t *testing.T) {
 			currentNameservers: []string{"8.8.8.8", "8.8.4.4"},
 			desiredNameservers: []string{"8.8.4.4", "8.8.8.8"},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
-				m.UpdateSubnet(subnetID, subnets.UpdateOpts{
+				m.UpdateSubnet(ctxMatcher, subnetID, subnets.UpdateOpts{
 					DNSNameservers: &[]string{"8.8.4.4", "8.8.8.8"},
 				}).Return(&subnets.Subnet{
 					ID:             subnetID,
@@ -103,6 +107,7 @@ func Test_updateSubnetDNSNameservers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
@@ -128,7 +133,7 @@ func Test_updateSubnetDNSNameservers(t *testing.T) {
 				scope:  scope.NewWithLogger(scopeFactory, log),
 			}
 
-			err := s.updateSubnetDNSNameservers(cluster, subnet)
+			err := s.updateSubnetDNSNameservers(ctx, cluster, subnet)
 			g.Expect(err).ShouldNot(HaveOccurred())
 			g.Expect(subnet.DNSNameservers).To(Equal(tt.desiredNameservers))
 		})
@@ -156,7 +161,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					ListNetwork(ctxMatcher, networks.ListOpts{Name: expectedNetworkName}).
 					Return([]networks.Network{
 						{
 							ID:   fakeNetworkID,
@@ -184,11 +189,11 @@ func Test_ReconcileNetwork(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					ListNetwork(ctxMatcher, networks.ListOpts{Name: expectedNetworkName}).
 					Return([]networks.Network{}, nil)
 
 				m.
-					CreateNetwork(createOpts{
+					CreateNetwork(ctxMatcher, createOpts{
 						AdminStateUp: gophercloud.Enabled,
 						Name:         expectedNetworkName,
 					}).
@@ -221,11 +226,11 @@ func Test_ReconcileNetwork(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					ListNetwork(ctxMatcher, networks.ListOpts{Name: expectedNetworkName}).
 					Return([]networks.Network{}, nil)
 
 				m.
-					CreateNetwork(createOpts{
+					CreateNetwork(ctxMatcher, createOpts{
 						AdminStateUp:        gophercloud.Enabled,
 						Name:                expectedNetworkName,
 						PortSecurityEnabled: gophercloud.Disabled,
@@ -259,14 +264,14 @@ func Test_ReconcileNetwork(t *testing.T) {
 				// standard-attr-tag support must be checked before the network
 				// is created, and ReplaceAllAttributesTags must not be called
 				// since the extension is not advertised.
-				m.ListExtensions().Return([]extensions.Extension{}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{}, nil)
 
 				m.
-					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					ListNetwork(ctxMatcher, networks.ListOpts{Name: expectedNetworkName}).
 					Return([]networks.Network{}, nil)
 
 				m.
-					CreateNetwork(createOpts{
+					CreateNetwork(ctxMatcher, createOpts{
 						AdminStateUp: gophercloud.Enabled,
 						Name:         expectedNetworkName,
 					}).
@@ -306,14 +311,14 @@ func Test_ReconcileNetwork(t *testing.T) {
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				standardAttrTagExt := extensions.Extension{}
 				standardAttrTagExt.Alias = "standard-attr-tag"
-				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{standardAttrTagExt}, nil)
 
 				m.
-					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					ListNetwork(ctxMatcher, networks.ListOpts{Name: expectedNetworkName}).
 					Return([]networks.Network{}, nil)
 
 				m.
-					CreateNetwork(createOpts{
+					CreateNetwork(ctxMatcher, createOpts{
 						AdminStateUp: gophercloud.Enabled,
 						Name:         expectedNetworkName,
 					}).
@@ -322,7 +327,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 						Name: expectedNetworkName,
 					}, nil)
 
-				m.ReplaceAllAttributesTags("networks", fakeNetworkID, attributestags.ReplaceAllOpts{
+				m.ReplaceAllAttributesTags(ctxMatcher, "networks", fakeNetworkID, attributestags.ReplaceAllOpts{
 					Tags: []string{"cluster-tag"},
 				}).Return([]string{"cluster-tag"}, nil)
 			},
@@ -350,11 +355,11 @@ func Test_ReconcileNetwork(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					ListNetwork(ctxMatcher, networks.ListOpts{Name: expectedNetworkName}).
 					Return([]networks.Network{}, nil)
 
 				// ListExtensions fails before CreateNetwork is ever called.
-				m.ListExtensions().Return(nil, errors.New("boom"))
+				m.ListExtensions(ctxMatcher).Return(nil, errors.New("boom"))
 			},
 			wantErr: true,
 		},
@@ -369,11 +374,11 @@ func Test_ReconcileNetwork(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListNetwork(networks.ListOpts{Name: expectedNetworkName}).
+					ListNetwork(ctxMatcher, networks.ListOpts{Name: expectedNetworkName}).
 					Return([]networks.Network{}, nil)
 
 				m.
-					CreateNetwork(createOpts{
+					CreateNetwork(ctxMatcher, createOpts{
 						AdminStateUp: gophercloud.Enabled,
 						Name:         expectedNetworkName,
 						MTU:          ptr.To[int32](1500),
@@ -400,6 +405,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewWithT(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
 			tt.expect(mockClient.EXPECT())
@@ -410,7 +416,7 @@ func Test_ReconcileNetwork(t *testing.T) {
 				client: mockClient,
 				scope:  scope.NewWithLogger(scopeFactory, log),
 			}
-			err := s.ReconcileNetwork(tt.openStackCluster, clusterResourceName)
+			err := s.ReconcileNetwork(ctx, tt.openStackCluster, clusterResourceName)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return
@@ -428,8 +434,8 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 	fakeNetworkname := "external-network"
 
 	// Use gomega to match the ListOptsBuilder argument
-	getExternalNetwork := func(g Gomega, listOpts networks.ListOpts, ret []networks.Network) func(networks.ListOptsBuilder) ([]networks.Network, error) {
-		return func(opts networks.ListOptsBuilder) ([]networks.Network, error) {
+	getExternalNetwork := func(g Gomega, listOpts networks.ListOpts, ret []networks.Network) func(context.Context, networks.ListOptsBuilder) ([]networks.Network, error) {
+		return func(_ context.Context, opts networks.ListOptsBuilder) ([]networks.Network, error) {
 			expected := &external.ListOptsExt{
 				ListOptsBuilder: listOpts,
 				External:        ptr.To(true),
@@ -457,7 +463,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				},
 			},
 			expect: func(_ Gomega, m *mock.MockNetworkClientMockRecorder) {
-				m.GetNetwork(fakeNetworkID).Return(&networks.Network{
+				m.GetNetwork(ctxMatcher, fakeNetworkID).Return(&networks.Network{
 					ID:   fakeNetworkID,
 					Name: fakeNetworkname,
 				}, nil)
@@ -487,7 +493,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				},
 			},
 			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
-				m.ListNetwork(gomock.Any()).
+				m.ListNetwork(ctxMatcher, gomock.Any()).
 					DoAndReturn(getExternalNetwork(g, networks.ListOpts{Name: fakeNetworkname}, []networks.Network{
 						{
 							ID:   fakeNetworkID,
@@ -520,7 +526,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				},
 			},
 			expect: func(_ Gomega, m *mock.MockNetworkClientMockRecorder) {
-				m.GetNetwork(fakeNetworkID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
+				m.GetNetwork(ctxMatcher, fakeNetworkID).Return(nil, gophercloud.ErrUnexpectedResponseCode{Actual: 404})
 			},
 			want: &infrav1.OpenStackCluster{
 				Spec: infrav1.OpenStackClusterSpec{
@@ -541,7 +547,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				},
 			},
 			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
-				m.ListNetwork(gomock.Any()).
+				m.ListNetwork(ctxMatcher, gomock.Any()).
 					DoAndReturn(getExternalNetwork(g, networks.ListOpts{Name: fakeNetworkname}, []networks.Network{}))
 			},
 			want: &infrav1.OpenStackCluster{
@@ -577,7 +583,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				Spec: infrav1.OpenStackClusterSpec{},
 			},
 			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
-				m.ListNetwork(gomock.Any()).
+				m.ListNetwork(ctxMatcher, gomock.Any()).
 					DoAndReturn(getExternalNetwork(g, networks.ListOpts{}, []networks.Network{}))
 			},
 			want: &infrav1.OpenStackCluster{
@@ -594,7 +600,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				Spec: infrav1.OpenStackClusterSpec{},
 			},
 			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
-				m.ListNetwork(gomock.Any()).
+				m.ListNetwork(ctxMatcher, gomock.Any()).
 					DoAndReturn(getExternalNetwork(g, networks.ListOpts{}, []networks.Network{
 						{
 							ID:   fakeNetworkID,
@@ -620,8 +626,8 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 			},
 			expect: func(g Gomega, m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListNetwork(gomock.Any()).
-					DoAndReturn(func(opts networks.ListOptsBuilder) ([]networks.Network, error) {
+					ListNetwork(ctxMatcher, gomock.Any()).
+					DoAndReturn(func(_ context.Context, opts networks.ListOptsBuilder) ([]networks.Network, error) {
 						expected := &external.ListOptsExt{
 							ListOptsBuilder: networks.ListOpts{},
 							External:        ptr.To(true),
@@ -647,6 +653,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 
@@ -660,7 +667,7 @@ func Test_ReconcileExternalNetwork(t *testing.T) {
 				client: mockClient,
 				scope:  scope.NewWithLogger(scopeFactory, log),
 			}
-			err := s.ReconcileExternalNetwork(tt.openStackCluster)
+			err := s.ReconcileExternalNetwork(ctx, tt.openStackCluster)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReconcileExternalNetwork() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -708,7 +715,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{
 						{
 							ID:   fakeSubnetID,
@@ -752,11 +759,11 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{}, nil)
 
 				m.
-					CreateSubnet(subnets.CreateOpts{
+					CreateSubnet(ctxMatcher, subnets.CreateOpts{
 						NetworkID:   fakeNetworkID,
 						Name:        expectedSubnetName,
 						IPVersion:   4,
@@ -807,14 +814,14 @@ func Test_ReconcileSubnet(t *testing.T) {
 				// standard-attr-tag support must be checked before the subnet
 				// is created, and ReplaceAllAttributesTags must not be called
 				// since the extension is not advertised.
-				m.ListExtensions().Return([]extensions.Extension{}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{}, nil)
 
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{}, nil)
 
 				m.
-					CreateSubnet(subnets.CreateOpts{
+					CreateSubnet(ctxMatcher, subnets.CreateOpts{
 						NetworkID:   fakeNetworkID,
 						Name:        expectedSubnetName,
 						IPVersion:   4,
@@ -864,14 +871,14 @@ func Test_ReconcileSubnet(t *testing.T) {
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				standardAttrTagExt := extensions.Extension{}
 				standardAttrTagExt.Alias = "standard-attr-tag"
-				m.ListExtensions().Return([]extensions.Extension{standardAttrTagExt}, nil)
+				m.ListExtensions(ctxMatcher).Return([]extensions.Extension{standardAttrTagExt}, nil)
 
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{}, nil)
 
 				m.
-					CreateSubnet(subnets.CreateOpts{
+					CreateSubnet(ctxMatcher, subnets.CreateOpts{
 						NetworkID:   fakeNetworkID,
 						Name:        expectedSubnetName,
 						IPVersion:   4,
@@ -884,7 +891,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 						CIDR: fakeCIDR,
 					}, nil)
 
-				m.ReplaceAllAttributesTags("subnets", fakeSubnetID, attributestags.ReplaceAllOpts{
+				m.ReplaceAllAttributesTags(ctxMatcher, "subnets", fakeSubnetID, attributestags.ReplaceAllOpts{
 					Tags: []string{"cluster-tag"},
 				}).Return([]string{"cluster-tag"}, nil)
 			},
@@ -924,11 +931,11 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{}, nil)
 
 				// ListExtensions fails before CreateSubnet is ever called.
-				m.ListExtensions().Return(nil, errors.New("boom"))
+				m.ListExtensions(ctxMatcher).Return(nil, errors.New("boom"))
 			},
 			wantErr: true,
 		},
@@ -953,11 +960,11 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{}, nil)
 
 				m.
-					CreateSubnet(subnets.CreateOpts{
+					CreateSubnet(ctxMatcher, subnets.CreateOpts{
 						NetworkID:      fakeNetworkID,
 						Name:           expectedSubnetName,
 						IPVersion:      4,
@@ -1016,11 +1023,11 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{}, nil)
 
 				m.
-					CreateSubnet(subnets.CreateOpts{
+					CreateSubnet(ctxMatcher, subnets.CreateOpts{
 						NetworkID:   fakeNetworkID,
 						Name:        expectedSubnetName,
 						IPVersion:   4,
@@ -1079,7 +1086,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{
 						{
 							ID:             fakeSubnetID,
@@ -1093,7 +1100,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					DNSNameservers: &[]string{fakeDNS1},
 				}
 
-				m.UpdateSubnet(fakeSubnetID, updateOpts).
+				m.UpdateSubnet(ctxMatcher, fakeSubnetID, updateOpts).
 					Return(&subnets.Subnet{
 						ID:             fakeSubnetID,
 						Name:           expectedSubnetName,
@@ -1138,7 +1145,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{
 						{
 							ID:             fakeSubnetID,
@@ -1184,7 +1191,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{
 						{
 							ID:             fakeSubnetID,
@@ -1198,7 +1205,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					DNSNameservers: &[]string{fakeDNS1, fakeDNS2},
 				}
 
-				m.UpdateSubnet(fakeSubnetID, updateOpts).
+				m.UpdateSubnet(ctxMatcher, fakeSubnetID, updateOpts).
 					Return(&subnets.Subnet{
 						ID:             fakeSubnetID,
 						Name:           expectedSubnetName,
@@ -1243,7 +1250,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{
 						{
 							ID:             fakeSubnetID,
@@ -1257,7 +1264,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					DNSNameservers: &[]string{fakeDNS2, fakeDNS1},
 				}
 
-				m.UpdateSubnet(fakeSubnetID, updateOpts).
+				m.UpdateSubnet(ctxMatcher, fakeSubnetID, updateOpts).
 					Return(&subnets.Subnet{
 						ID:             fakeSubnetID,
 						Name:           expectedSubnetName,
@@ -1302,7 +1309,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: fakeCIDR}).
 					Return([]subnets.Subnet{
 						{
 							ID:             fakeSubnetID,
@@ -1316,7 +1323,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 					DNSNameservers: &[]string{fakeDNS1},
 				}
 
-				m.UpdateSubnet(fakeSubnetID, updateOpts).
+				m.UpdateSubnet(ctxMatcher, fakeSubnetID, updateOpts).
 					Return(&subnets.Subnet{
 						ID:             fakeSubnetID,
 						Name:           expectedSubnetName,
@@ -1360,11 +1367,11 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: "fd12:3456:789a::/48"}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: "fd12:3456:789a::/48"}).
 					Return([]subnets.Subnet{}, nil)
 
 				m.
-					CreateSubnet(subnets.CreateOpts{
+					CreateSubnet(ctxMatcher, subnets.CreateOpts{
 						NetworkID:   fakeNetworkID,
 						Name:        expectedSubnetName,
 						IPVersion:   6,
@@ -1412,7 +1419,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 			},
 			expect: func(m *mock.MockNetworkClientMockRecorder) {
 				m.
-					ListSubnet(subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: "fd12:3456:789a::/48"}).
+					ListSubnet(ctxMatcher, subnets.ListOpts{NetworkID: fakeNetworkID, CIDR: "fd12:3456:789a::/48"}).
 					Return([]subnets.Subnet{
 						{
 							ID:   fakeSubnetID,
@@ -1440,6 +1447,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
 			g := NewWithT(t)
 			log := testr.New(t)
 			mockClient := mock.NewMockNetworkClient(mockCtrl)
@@ -1449,7 +1457,7 @@ func Test_ReconcileSubnet(t *testing.T) {
 				client: mockClient,
 				scope:  scope.NewWithLogger(mockScopeFactory, log),
 			}
-			err := s.ReconcileSubnet(tt.openStackCluster, clusterResourceName)
+			err := s.ReconcileSubnet(ctx, tt.openStackCluster, clusterResourceName)
 			if tt.wantErr {
 				g.Expect(err).To(HaveOccurred())
 				return

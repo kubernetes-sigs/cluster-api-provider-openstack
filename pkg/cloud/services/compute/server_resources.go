@@ -17,16 +17,18 @@ limitations under the License.
 package compute
 
 import (
+	"context"
+
 	infrav1alpha1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1alpha1"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/cloud/services/networking"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
 )
 
-func AdoptServerResources(scope *scope.WithLogger, resolved *infrav1alpha1.ResolvedServerSpec, resources *infrav1alpha1.ServerResources) error {
+func AdoptServerResources(ctx context.Context, scope *scope.WithLogger, resolved *infrav1alpha1.ResolvedServerSpec, resources *infrav1alpha1.ServerResources) error {
 	networkingService, err := networking.NewService(scope)
 	if err != nil {
 		return err
 	}
 
-	return networkingService.AdoptPortsServer(scope, resolved.Ports, resources)
+	return networkingService.AdoptPortsServer(ctx, scope, resolved.Ports, resources)
 }

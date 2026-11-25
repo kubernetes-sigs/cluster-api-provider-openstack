@@ -25,6 +25,7 @@ limitations under the License.
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	attachinterfaces "github.com/gophercloud/gophercloud/v2/openstack/compute/v2/attachinterfaces"
@@ -61,166 +62,166 @@ func (m *MockComputeClient) EXPECT() *MockComputeClientMockRecorder {
 }
 
 // CreateServer mocks base method.
-func (m *MockComputeClient) CreateServer(createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
+func (m *MockComputeClient) CreateServer(ctx context.Context, createOpts servers.CreateOptsBuilder, schedulerHints servers.SchedulerHintOptsBuilder) (*servers.Server, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateServer", createOpts, schedulerHints)
+	ret := m.ctrl.Call(m, "CreateServer", ctx, createOpts, schedulerHints)
 	ret0, _ := ret[0].(*servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateServer indicates an expected call of CreateServer.
-func (mr *MockComputeClientMockRecorder) CreateServer(createOpts, schedulerHints any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) CreateServer(ctx, createOpts, schedulerHints any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), createOpts, schedulerHints)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServer", reflect.TypeOf((*MockComputeClient)(nil).CreateServer), ctx, createOpts, schedulerHints)
 }
 
 // DeleteAttachedInterface mocks base method.
-func (m *MockComputeClient) DeleteAttachedInterface(serverID, portID string) error {
+func (m *MockComputeClient) DeleteAttachedInterface(ctx context.Context, serverID, portID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAttachedInterface", serverID, portID)
+	ret := m.ctrl.Call(m, "DeleteAttachedInterface", ctx, serverID, portID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteAttachedInterface indicates an expected call of DeleteAttachedInterface.
-func (mr *MockComputeClientMockRecorder) DeleteAttachedInterface(serverID, portID any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) DeleteAttachedInterface(ctx, serverID, portID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachedInterface", reflect.TypeOf((*MockComputeClient)(nil).DeleteAttachedInterface), serverID, portID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAttachedInterface", reflect.TypeOf((*MockComputeClient)(nil).DeleteAttachedInterface), ctx, serverID, portID)
 }
 
 // DeleteServer mocks base method.
-func (m *MockComputeClient) DeleteServer(serverID string) error {
+func (m *MockComputeClient) DeleteServer(ctx context.Context, serverID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteServer", serverID)
+	ret := m.ctrl.Call(m, "DeleteServer", ctx, serverID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteServer indicates an expected call of DeleteServer.
-func (mr *MockComputeClientMockRecorder) DeleteServer(serverID any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) DeleteServer(ctx, serverID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), serverID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServer", reflect.TypeOf((*MockComputeClient)(nil).DeleteServer), ctx, serverID)
 }
 
 // GetConsoleOutput mocks base method.
-func (m *MockComputeClient) GetConsoleOutput(serverID string) (string, error) {
+func (m *MockComputeClient) GetConsoleOutput(ctx context.Context, serverID string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConsoleOutput", serverID)
+	ret := m.ctrl.Call(m, "GetConsoleOutput", ctx, serverID)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetConsoleOutput indicates an expected call of GetConsoleOutput.
-func (mr *MockComputeClientMockRecorder) GetConsoleOutput(serverID any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) GetConsoleOutput(ctx, serverID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConsoleOutput", reflect.TypeOf((*MockComputeClient)(nil).GetConsoleOutput), serverID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConsoleOutput", reflect.TypeOf((*MockComputeClient)(nil).GetConsoleOutput), ctx, serverID)
 }
 
 // GetFlavor mocks base method.
-func (m *MockComputeClient) GetFlavor(flavorID string) (*flavors.Flavor, error) {
+func (m *MockComputeClient) GetFlavor(ctx context.Context, flavorID string) (*flavors.Flavor, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFlavor", flavorID)
+	ret := m.ctrl.Call(m, "GetFlavor", ctx, flavorID)
 	ret0, _ := ret[0].(*flavors.Flavor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFlavor indicates an expected call of GetFlavor.
-func (mr *MockComputeClientMockRecorder) GetFlavor(flavorID any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) GetFlavor(ctx, flavorID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlavor", reflect.TypeOf((*MockComputeClient)(nil).GetFlavor), flavorID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlavor", reflect.TypeOf((*MockComputeClient)(nil).GetFlavor), ctx, flavorID)
 }
 
 // GetServer mocks base method.
-func (m *MockComputeClient) GetServer(serverID string) (*servers.Server, error) {
+func (m *MockComputeClient) GetServer(ctx context.Context, serverID string) (*servers.Server, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetServer", serverID)
+	ret := m.ctrl.Call(m, "GetServer", ctx, serverID)
 	ret0, _ := ret[0].(*servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetServer indicates an expected call of GetServer.
-func (mr *MockComputeClientMockRecorder) GetServer(serverID any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) GetServer(ctx, serverID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServer", reflect.TypeOf((*MockComputeClient)(nil).GetServer), serverID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServer", reflect.TypeOf((*MockComputeClient)(nil).GetServer), ctx, serverID)
 }
 
 // ListAttachedInterfaces mocks base method.
-func (m *MockComputeClient) ListAttachedInterfaces(serverID string) ([]attachinterfaces.Interface, error) {
+func (m *MockComputeClient) ListAttachedInterfaces(ctx context.Context, serverID string) ([]attachinterfaces.Interface, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAttachedInterfaces", serverID)
+	ret := m.ctrl.Call(m, "ListAttachedInterfaces", ctx, serverID)
 	ret0, _ := ret[0].([]attachinterfaces.Interface)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListAttachedInterfaces indicates an expected call of ListAttachedInterfaces.
-func (mr *MockComputeClientMockRecorder) ListAttachedInterfaces(serverID any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListAttachedInterfaces(ctx, serverID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAttachedInterfaces", reflect.TypeOf((*MockComputeClient)(nil).ListAttachedInterfaces), serverID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAttachedInterfaces", reflect.TypeOf((*MockComputeClient)(nil).ListAttachedInterfaces), ctx, serverID)
 }
 
 // ListAvailabilityZones mocks base method.
-func (m *MockComputeClient) ListAvailabilityZones() ([]availabilityzones.AvailabilityZone, error) {
+func (m *MockComputeClient) ListAvailabilityZones(ctx context.Context) ([]availabilityzones.AvailabilityZone, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAvailabilityZones")
+	ret := m.ctrl.Call(m, "ListAvailabilityZones", ctx)
 	ret0, _ := ret[0].([]availabilityzones.AvailabilityZone)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListAvailabilityZones indicates an expected call of ListAvailabilityZones.
-func (mr *MockComputeClientMockRecorder) ListAvailabilityZones() *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListAvailabilityZones(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAvailabilityZones", reflect.TypeOf((*MockComputeClient)(nil).ListAvailabilityZones))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAvailabilityZones", reflect.TypeOf((*MockComputeClient)(nil).ListAvailabilityZones), ctx)
 }
 
 // ListFlavors mocks base method.
-func (m *MockComputeClient) ListFlavors() ([]flavors.Flavor, error) {
+func (m *MockComputeClient) ListFlavors(ctx context.Context) ([]flavors.Flavor, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListFlavors")
+	ret := m.ctrl.Call(m, "ListFlavors", ctx)
 	ret0, _ := ret[0].([]flavors.Flavor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListFlavors indicates an expected call of ListFlavors.
-func (mr *MockComputeClientMockRecorder) ListFlavors() *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListFlavors(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFlavors", reflect.TypeOf((*MockComputeClient)(nil).ListFlavors))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFlavors", reflect.TypeOf((*MockComputeClient)(nil).ListFlavors), ctx)
 }
 
 // ListServerGroups mocks base method.
-func (m *MockComputeClient) ListServerGroups() ([]servergroups.ServerGroup, error) {
+func (m *MockComputeClient) ListServerGroups(ctx context.Context) ([]servergroups.ServerGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListServerGroups")
+	ret := m.ctrl.Call(m, "ListServerGroups", ctx)
 	ret0, _ := ret[0].([]servergroups.ServerGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListServerGroups indicates an expected call of ListServerGroups.
-func (mr *MockComputeClientMockRecorder) ListServerGroups() *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListServerGroups(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServerGroups", reflect.TypeOf((*MockComputeClient)(nil).ListServerGroups))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServerGroups", reflect.TypeOf((*MockComputeClient)(nil).ListServerGroups), ctx)
 }
 
 // ListServers mocks base method.
-func (m *MockComputeClient) ListServers(listOpts servers.ListOptsBuilder) ([]servers.Server, error) {
+func (m *MockComputeClient) ListServers(ctx context.Context, listOpts servers.ListOptsBuilder) ([]servers.Server, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListServers", listOpts)
+	ret := m.ctrl.Call(m, "ListServers", ctx, listOpts)
 	ret0, _ := ret[0].([]servers.Server)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListServers indicates an expected call of ListServers.
-func (mr *MockComputeClientMockRecorder) ListServers(listOpts any) *gomock.Call {
+func (mr *MockComputeClientMockRecorder) ListServers(ctx, listOpts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockComputeClient)(nil).ListServers), listOpts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServers", reflect.TypeOf((*MockComputeClient)(nil).ListServers), ctx, listOpts)
 }
 
 // WithMicroversion mocks base method.

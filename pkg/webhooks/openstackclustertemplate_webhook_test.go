@@ -17,7 +17,6 @@ limitations under the License.
 package webhooks
 
 import (
-	"context"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -96,7 +95,7 @@ func TestOpenStackClusterTemplate_ValidateUpdate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewWithT(t)
-			ctx := context.TODO()
+			ctx := t.Context()
 
 			webhook := &openStackClusterTemplateWebhook{}
 			warn, err := webhook.ValidateUpdate(ctx, tt.oldTemplate, tt.newTemplate)
@@ -126,7 +125,7 @@ func TestOpenStackClusterTemplate_ValidateCreateRejectsManagedFailureDomainSubne
 	}
 
 	webhook := &openStackClusterTemplateWebhook{}
-	_, err := webhook.ValidateCreate(context.TODO(), clusterTemplate)
+	_, err := webhook.ValidateCreate(t.Context(), clusterTemplate)
 	if err == nil {
 		t.Fatal("ValidateCreate() error = nil, want an incompatibility error")
 	}

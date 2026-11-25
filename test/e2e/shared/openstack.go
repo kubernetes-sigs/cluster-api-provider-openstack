@@ -655,7 +655,7 @@ func GetOpenStackServerWithIP(e2eCtx *E2EContext, id string, openStackCluster *i
 	if err != nil {
 		return srvExtWithIP, fmt.Errorf("unable to create compute client: %w", err)
 	}
-	srvExt, err := computeClient.GetServer(id)
+	srvExt, err := computeClient.GetServer(context.TODO(), id)
 	if err != nil {
 		return srvExtWithIP, fmt.Errorf("unable to get server: %w", err)
 	}
@@ -1024,5 +1024,5 @@ func GetOpenStackServerConsoleLog(e2eCtx *E2EContext, id string) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("unable to create compute client: %w", err)
 	}
-	return computeClient.GetConsoleOutput(id)
+	return computeClient.GetConsoleOutput(context.TODO(), id)
 }
