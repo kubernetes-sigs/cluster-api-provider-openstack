@@ -233,11 +233,6 @@ func (r *OpenStackMachineReconciler) SetupWithManager(ctx context.Context, mgr c
 func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope *scope.WithLogger, clusterResourceName string, openStackCluster *infrav1.OpenStackCluster, machine *clusterv1.Machine, openStackMachine *infrav1.OpenStackMachine) (ctrl.Result, error) { //nolint:unparam
 	scope.Logger().Info("Reconciling Machine delete")
 
-	computeService, err := compute.NewService(scope)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// Nothing to do if the cluster infrastructure was never provisioned because no machine resources were created.
 	if openStackCluster.Status.Initialization == nil || !openStackCluster.Status.Initialization.Provisioned || openStackCluster.Status.Network == nil {
 		// The finalizer should not have been added yet in this case,
@@ -251,16 +246,8 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 		return ctrl.Result{}, err
 	}
 
-	var instanceStatus *compute.InstanceStatus
-	if machineServer != nil && machineServer.Status.InstanceID != nil {
-		instanceStatus, err = computeService.GetInstanceStatus(*machineServer.Status.InstanceID)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
 	if util.IsControlPlaneMachine(machine) {
-		if err := removeAPIServerEndpoint(scope, openStackCluster, openStackMachine, instanceStatus, clusterResourceName); err != nil {
+		if err := removeAPIServerEndpoint(scope, openStackCluster, openStackMachine, clusterResourceName); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
@@ -288,7 +275,7 @@ func (r *OpenStackMachineReconciler) reconcileDelete(ctx context.Context, scope 
 	return ctrl.Result{}, nil
 }
 
-func removeAPIServerEndpoint(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, instanceStatus *compute.InstanceStatus, clusterResourceName string) error {
+func removeAPIServerEndpoint(scope *scope.WithLogger, openStackCluster *infrav1.OpenStackCluster, openStackMachine *infrav1.OpenStackMachine, clusterResourceName string) error {
 	if openStackCluster.Spec.APIServer.GetManagedLoadBalancer().IsEnabled() {
 		loadBalancerService, err := loadbalancer.NewService(scope)
 		if err != nil {
@@ -308,41 +295,27 @@ func removeAPIServerEndpoint(scope *scope.WithLogger, openStackCluster *infrav1.
 		return nil
 	}
 
-	// XXX(mdbooth): This looks wrong to me. Surely we should only ever
-	// disassociate the floating IP here. I would expect the API server
-	// floating IP to be created and deleted with the cluster. And if the
-	// delete behaviour is correct, we leak it if the instance was
-	// previously deleted.
-	if openStackCluster.Spec.APIServer.GetFloatingIP() == nil && instanceStatus != nil {
-		instanceNS, err := instanceStatus.NetworkStatus()
-		if err != nil {
-			conditions.Set(openStackMachine, metav1.Condition{
-				Type:    clusterv1.ReadyCondition,
-				Status:  metav1.ConditionFalse,
-				Reason:  infrav1.OpenStackErrorReason,
-				Message: fmt.Sprintf("get network status for OpenStack instance %s with ID %s: %v", instanceStatus.Name(), instanceStatus.ID(), err),
-			})
-			return nil
-		}
-
+	if openStackCluster.Spec.APIServer.GetFloatingIP() == nil &&
+		openStackCluster.Spec.ControlPlaneEndpoint != nil &&
+		openStackCluster.Spec.ControlPlaneEndpoint.IsValid() {
 		networkingService, err := networking.NewService(scope)
 		if err != nil {
 			return err
 		}
 
-		addresses := instanceNS.Addresses()
-		for _, address := range addresses {
-			if address.Type == corev1.NodeExternalIP {
-				if err = networkingService.DeleteFloatingIP(openStackMachine, address.Address); err != nil {
-					conditions.Set(openStackMachine, metav1.Condition{
-						Type:    infrav1.APIServerIngressReadyCondition,
-						Status:  metav1.ConditionFalse,
-						Reason:  infrav1.FloatingIPErrorReason,
-						Message: fmt.Sprintf("Deleting floating IP failed: %v", err),
-					})
-					return fmt.Errorf("delete floating IP %q: %w", address.Address, err)
-				}
-			}
+		_, err = networkingService.DisassociateFloatingIPCreatedForCluster(
+			openStackMachine,
+			openStackCluster.Spec.ControlPlaneEndpoint.Host,
+			clusterResourceName,
+		)
+		if err != nil {
+			conditions.Set(openStackMachine, metav1.Condition{
+				Type:    infrav1.APIServerIngressReadyCondition,
+				Status:  metav1.ConditionFalse,
+				Reason:  infrav1.FloatingIPErrorReason,
+				Message: fmt.Sprintf("Disassociating floating IP failed: %v", err),
+			})
+			return fmt.Errorf("disassociate floating IP %q: %w", openStackCluster.Spec.ControlPlaneEndpoint.Host, err)
 		}
 	}
 

@@ -31,6 +31,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	"sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/names"
 )
 
 func Test_GetOrCreateFloatingIP(t *testing.T) {
@@ -167,4 +168,93 @@ func Test_GetOrCreateFloatingIP(t *testing.T) {
 			g.Expect(got).To(Equal(tt.want))
 		})
 	}
+}
+
+func TestFloatingIPCreatedForClusterLifecycle(t *testing.T) {
+	const (
+		clusterResourceName = "test-cluster"
+		floatingIP          = "192.168.111.0"
+		floatingIPID        = "floating-ip-id"
+		portID              = "port-id"
+	)
+
+	newService := func(t *testing.T) (*Service, *mock.MockNetworkClient) {
+		t.Helper()
+		mockCtrl := gomock.NewController(t)
+		t.Cleanup(mockCtrl.Finish)
+		mockScopeFactory := scope.NewMockScopeFactory(mockCtrl, "")
+		return &Service{
+			scope:  scope.NewWithLogger(mockScopeFactory, testr.New(t)),
+			client: mockScopeFactory.NetworkClient,
+		}, mockScopeFactory.NetworkClient
+	}
+
+	t.Run("deletes a CAPO-created floating IP", func(t *testing.T) {
+		g := NewWithT(t)
+		service, networkClient := newService(t)
+		fip := floatingips.FloatingIP{
+			ID:          floatingIPID,
+			FloatingIP:  floatingIP,
+			Description: names.GetDescription(clusterResourceName),
+		}
+		networkClient.EXPECT().ListFloatingIP(floatingips.ListOpts{FloatingIP: floatingIP}).Return([]floatingips.FloatingIP{fip}, nil)
+		networkClient.EXPECT().DeleteFloatingIP(floatingIPID).Return(nil)
+
+		handled, err := service.DeleteFloatingIPCreatedForCluster(&infrav1.OpenStackCluster{}, floatingIP, clusterResourceName)
+
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(handled).To(BeTrue())
+	})
+
+	t.Run("does not delete a user-provided floating IP", func(t *testing.T) {
+		g := NewWithT(t)
+		service, networkClient := newService(t)
+		fip := floatingips.FloatingIP{
+			ID:          floatingIPID,
+			FloatingIP:  floatingIP,
+			Description: "created by a user",
+		}
+		networkClient.EXPECT().ListFloatingIP(floatingips.ListOpts{FloatingIP: floatingIP}).Return([]floatingips.FloatingIP{fip}, nil)
+
+		handled, err := service.DeleteFloatingIPCreatedForCluster(&infrav1.OpenStackCluster{}, floatingIP, clusterResourceName)
+
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(handled).To(BeFalse())
+	})
+
+	t.Run("disassociates a CAPO-created floating IP", func(t *testing.T) {
+		g := NewWithT(t)
+		service, networkClient := newService(t)
+		fip := floatingips.FloatingIP{
+			ID:          floatingIPID,
+			FloatingIP:  floatingIP,
+			Description: names.GetDescription(clusterResourceName),
+			PortID:      portID,
+		}
+		networkClient.EXPECT().ListFloatingIP(floatingips.ListOpts{FloatingIP: floatingIP}).Return([]floatingips.FloatingIP{fip}, nil)
+		networkClient.EXPECT().UpdateFloatingIP(floatingIPID, &floatingips.UpdateOpts{PortID: nil}).Return(nil, nil)
+		networkClient.EXPECT().GetFloatingIP(floatingIPID).Return(&floatingips.FloatingIP{Status: "DOWN"}, nil)
+
+		handled, err := service.DisassociateFloatingIPCreatedForCluster(&infrav1.OpenStackMachine{}, floatingIP, clusterResourceName)
+
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(handled).To(BeTrue())
+	})
+
+	t.Run("does not disassociate a user-provided floating IP", func(t *testing.T) {
+		g := NewWithT(t)
+		service, networkClient := newService(t)
+		fip := floatingips.FloatingIP{
+			ID:          floatingIPID,
+			FloatingIP:  floatingIP,
+			Description: "created by a user",
+			PortID:      portID,
+		}
+		networkClient.EXPECT().ListFloatingIP(floatingips.ListOpts{FloatingIP: floatingIP}).Return([]floatingips.FloatingIP{fip}, nil)
+
+		handled, err := service.DisassociateFloatingIPCreatedForCluster(&infrav1.OpenStackMachine{}, floatingIP, clusterResourceName)
+
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(handled).To(BeFalse())
+	})
 }
