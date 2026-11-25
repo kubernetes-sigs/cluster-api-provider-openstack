@@ -147,7 +147,8 @@ var _ = BeforeSuite(func() {
 	DeferCleanup(func() {
 		By("Tearing down manager")
 		mgrCancel()
-		Eventually(mgrDone).WithTimeout(time.Second*5).Should(BeClosed(), "Manager should stop")
+		// Allow the manager's default 30-second graceful shutdown period plus some margin.
+		Eventually(mgrDone).WithTimeout(60*time.Second).Should(BeClosed(), "Manager should stop")
 	})
 })
 
