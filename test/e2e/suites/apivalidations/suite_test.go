@@ -81,6 +81,8 @@ var _ = BeforeSuite(func() {
 		CRDDirectoryPaths:     []string{testCRDs},
 		ErrorIfCRDPathMissing: true,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
+			// Note: Ensure conversion is configured even if the types do not implement ConvertTo/ConvertFrom/Hub.
+			IgnoreSchemeConvertible: true,
 			Paths: []string{
 				filepath.Join("..", "..", "..", "..", "config", "webhook"),
 			},
