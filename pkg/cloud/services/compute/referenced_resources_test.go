@@ -18,6 +18,7 @@ package compute
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -39,6 +40,7 @@ import (
 	infrav1 "sigs.k8s.io/cluster-api-provider-openstack/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/clients/mock"
 	"sigs.k8s.io/cluster-api-provider-openstack/pkg/scope"
+	capoerrors "sigs.k8s.io/cluster-api-provider-openstack/pkg/utils/errors"
 )
 
 func Test_ResolveServerSpec(t *testing.T) {
@@ -77,6 +79,7 @@ func Test_ResolveServerSpec(t *testing.T) {
 		before               *infrav1alpha1.ResolvedServerSpec
 		want                 *infrav1alpha1.ResolvedServerSpec
 		wantErr              bool
+		wantTerminalReason   string
 	}{
 		{
 			testName: "Resources ID passed",
@@ -148,6 +151,68 @@ func Test_ResolveServerSpec(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			testName: "local devices fit",
+			spec: infrav1alpha1.OpenStackServerSpec{
+				Image:    infrav1.ImageParam{ID: ptr.To(imageID1)},
+				FlavorID: ptr.To(flavorID),
+				Ports:    defaultPortOpts,
+				AdditionalBlockDevices: []infrav1.AdditionalBlockDevice{
+					{
+						Name:    "data1",
+						SizeGiB: 2,
+						Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+					},
+				},
+			},
+			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
+				m.GetFlavor(flavorID).Return(&flavors.Flavor{ID: flavorID, Ephemeral: 2}, nil)
+			},
+			want: &infrav1alpha1.ResolvedServerSpec{
+				ImageID:  imageID1,
+				FlavorID: flavorID,
+				Ports:    defaultPortSpec,
+			},
+		},
+		{
+			testName: "local devices too big",
+			spec: infrav1alpha1.OpenStackServerSpec{
+				Image:    infrav1.ImageParam{ID: ptr.To(imageID1)},
+				FlavorID: ptr.To(flavorID),
+				Ports:    defaultPortOpts,
+				AdditionalBlockDevices: []infrav1.AdditionalBlockDevice{
+					{
+						Name:    "data1",
+						SizeGiB: 3,
+						Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+					},
+				},
+			},
+			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
+				m.GetFlavor(flavorID).Return(&flavors.Flavor{ID: flavorID, Ephemeral: 2}, nil)
+			},
+			wantErr:            true,
+			wantTerminalReason: infrav1.InvalidMachineSpecReason,
+		},
+		{
+			testName: "GetFlavor fails",
+			spec: infrav1alpha1.OpenStackServerSpec{
+				Image:    infrav1.ImageParam{ID: ptr.To(imageID1)},
+				FlavorID: ptr.To(flavorID),
+				Ports:    defaultPortOpts,
+				AdditionalBlockDevices: []infrav1.AdditionalBlockDevice{
+					{
+						Name:    "data1",
+						SizeGiB: 1,
+						Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+					},
+				},
+			},
+			expectComputeMock: func(m *mock.MockComputeClientMockRecorder) {
+				m.GetFlavor(flavorID).Return(nil, fmt.Errorf("nova unavailable"))
+			},
+			wantErr: true,
+		},
 	}
 	for i, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
@@ -190,6 +255,12 @@ func Test_ResolveServerSpec(t *testing.T) {
 			_, _, _, err := ResolveServerSpec(context.TODO(), scope, fakeClient, openStackServer)
 			if tt.wantErr {
 				g.Expect(err).Error()
+				if tt.wantTerminalReason != "" {
+					terminalErr := &capoerrors.TerminalError{}
+					g.Expect(errors.As(err, &terminalErr)).To(BeTrue())
+					g.Expect(terminalErr.Reason).To(Equal(tt.wantTerminalReason))
+					g.Expect(resources.FlavorID).To(BeEmpty())
+				}
 				return
 			}
 
@@ -382,4 +453,138 @@ func TestGetFlavorID_ByFilter_ListError(t *testing.T) {
 
 	g.Expect(err).To(HaveOccurred())
 	g.Expect(err.Error()).To(ContainSubstring("nova unavailable"))
+}
+
+func Test_validateLocalBlockDevices(t *testing.T) {
+	tests := []struct {
+		name         string
+		ephemeral    int
+		blockDevices []infrav1.AdditionalBlockDevice
+		wantErr      bool
+	}{
+		{
+			name:         "no additional devices",
+			ephemeral:    0,
+			blockDevices: nil,
+			wantErr:      false,
+		},
+		{
+			name:      "volumes only, which are ignored",
+			ephemeral: 0,
+			blockDevices: []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "vol1",
+					SizeGiB: 100,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.VolumeBlockDevice},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:      "exactly fits",
+			ephemeral: 2,
+			blockDevices: []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "data1",
+					SizeGiB: 2,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:      "several fit",
+			ephemeral: 3,
+			blockDevices: []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "data1",
+					SizeGiB: 1,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+				{
+					Name:    "data2",
+					SizeGiB: 1,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:      "sum too big",
+			ephemeral: 2,
+			blockDevices: []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "data1",
+					SizeGiB: 2,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+				{
+					Name:    "data2",
+					SizeGiB: 2,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:      "one disk too big",
+			ephemeral: 2,
+			blockDevices: []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "data1",
+					SizeGiB: 3,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:      "flavor has no ephemeral",
+			ephemeral: 0,
+			blockDevices: []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "data1",
+					SizeGiB: 1,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:      "mixed: the volume is not counted",
+			ephemeral: 2,
+			blockDevices: []infrav1.AdditionalBlockDevice{
+				{
+					Name:    "vol1",
+					SizeGiB: 100,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.VolumeBlockDevice},
+				},
+				{
+					Name:    "data1",
+					SizeGiB: 2,
+					Storage: infrav1.BlockDeviceStorage{Type: infrav1.LocalBlockDevice},
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			flavor := &flavors.Flavor{
+				Name:      "test-flavor",
+				Ephemeral: tt.ephemeral,
+			}
+
+			err := validateLocalBlockDevices(flavor, tt.blockDevices)
+			if tt.wantErr {
+				g.Expect(err).To(HaveOccurred())
+				g.Expect(err.Error()).To(ContainSubstring(flavor.Name))
+				return
+			}
+
+			g.Expect(err).NotTo(HaveOccurred())
+		})
+	}
 }
